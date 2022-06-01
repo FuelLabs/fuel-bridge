@@ -1,0 +1,12 @@
+[[package]]
+name = 'core'
+dependencies = []
+
+[[package]]
+name = 'predicate_test'
+dependencies = ['std git+https://github.com/fuellabs/sway?tag=v0.14.2#6fc5c69f29a5aab0b6ca677d9384d0d5eaffb232']
+
+[[package]]
+name = 'std'
+source = 'git+https://github.com/fuellabs/sway?tag=v0.14.2#6fc5c69f29a5aab0b6ca677d9384d0d5eaffb232'
+dependencies = ['core']
