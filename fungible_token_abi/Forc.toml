@@ -1,0 +1,9 @@
+[project]
+authors = ["Fuel Labs <contact@fuel.sh>"]
+entry = "lib.sw"
+license = "Apache-2.0"
+name = "fungible_token_abi"
+
+[dependencies]
+# TODO: remove & use explicit std afternext forc release (0.17.0) !
+std = { path = "../../sway/sway-lib-std" }
