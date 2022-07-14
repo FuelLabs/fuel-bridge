@@ -1,0 +1,22 @@
+[[package]]
+name = 'L2ERC20Gateway_abi'
+source = 'path+from-root-BEA8832E928BEC3A'
+dependencies = ['std']
+
+[[package]]
+name = 'L2ERC20Gateway_caller_script'
+source = 'root'
+dependencies = [
+    'L2ERC20Gateway_abi',
+    'std',
+]
+
+[[package]]
+name = 'core'
+source = 'path+from-root-246CF71949A65439'
+dependencies = []
+
+[[package]]
+name = 'std'
+source = 'git+https://github.com/fuellabs/sway?tag=v0.18.0#ada0d294a68e5ca3070e3c46eb89619e7d87caf2'
+dependencies = ['core']

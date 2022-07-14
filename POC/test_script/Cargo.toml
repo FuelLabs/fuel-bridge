@@ -1,13 +1,13 @@
 [project]
-name = "predicate_test"
+name = "test-script"
 version = "0.1.0"
-authors = ["Simon"]
+authors = ["Fuel Labs <contact@fuel.sh>"]
 edition = "2021"
 license = "Apache-2.0"
 
 [dependencies]
-fuels = "0.14"
-fuels-abigen-macro = "0.14"
+fuel-crypto = "0.5"
+fuels = { version = "0.17", features = ["fuel-core-lib"] }
 tokio = { version = "1.12", features = ["rt", "macros"] }
 
 [[test]]
