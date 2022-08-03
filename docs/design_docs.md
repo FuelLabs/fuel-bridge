@@ -25,7 +25,7 @@ The ETH bridge facilitates the transfer of ETH from Ethereum to be represented a
 ### ETH Bridge Withdrawal
 
 1. User starts a withdrawal by creating a transaction that outputs a message output with a specific amount of ETH
-1. `MessageOutput` is noted on L1 by including the messagId in a merkle root in the state header committed to L1
+1. `OutputMessage` is noted on L1 by including the messagId in a merkle root in the state header committed to L1
 1. After any necessary finalization period, the user calls to the `FuelMessageInbox` with a merkle proof of the previous sent message
 1. The `FuelMessageInbox` verifies the given merkle proof and send the ETH to the designated message recipient
 
@@ -39,7 +39,7 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 
 1. User starts a deposit by calling deposit (has already approved token transfer to `L1ERC20Gateway`)
 1. `L1ERC20Gateway` transfers tokens to itself to custody while bridged
-1. `L1ERC20Gateway` creates a message in the `FuelMessageOutbox` to be relayed on Fuel with the `MessageToFungibleTokenPredicate` so that anyone can spend the `MessageInput` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
+1. `L1ERC20Gateway` creates a message in the `FuelMessageOutbox` to be relayed on Fuel with the `MessageToFungibleTokenPredicate` so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
 1. Client sees the message on L1 via event logs
 1. A transaction is built and submitted by either the user or some relayer that meets the requirements of the `MessageToFungibleTokenPredicate`
 1. A single call is made from the transaction script to the intended recipient Fuel token contract. This function verifies the sender and predicate owner of the `InputMessage`, parses the data from the `InputMessage` data field and mints the appropriate amount of tokens
@@ -49,8 +49,8 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 ### ERC-20 Bridge Withdrawal
 
 1. User starts a withdrawal by calling the `FuelMyToken` contract sending some coins to withdraw along with it
-1. `FuelMyToken` contract looks to see what coins it was sent, burns them and then creates a `MessageOutput` via opcode
-1. `MessageOutput` is noted on L1 by including the messagId in a merkle root in the state header committed to L1
+1. `FuelMyToken` contract looks to see what coins it was sent, burns them and then creates a `OutputMessage` via opcode
+1. `OutputMessage` is noted on L1 by including the messagId in a merkle root in the state header committed to L1
 1. After any necessary finalization period, the user calls to the `FuelMessageInbox` with a merkle proof of the previous sent message
 1. The `FuelMessageInbox` verifies the given merkle proof and makes the message call to the `L1ERC20Gatewa`y specified in the message
 1. The `L1ERC20Gateway` verifies it’s being called by the `FuelMessageInbox` and releases the specified amount of tokens to the specified address
@@ -61,7 +61,7 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 
 In order to prevent messages getting lost during generic messaging from L1 to Fuel, developers should follow the following standard practice utilizing common libraries.
 
-1. Either a contract or EOA calls `sendMessage` on the `FuelMessageOutbox` that creates a message to be relayed on Fuel with the `MessageToContractPredicate` so that anyone can spend the `MessageInput` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
+1. Either a contract or EOA calls `sendMessage` on the `FuelMessageOutbox` that creates a message to be relayed on Fuel with the `MessageToContractPredicate` so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
 1. Client sees the message on L1 via event logs
 1. A transaction is built and submitted by either the user or some relayer that meets the requirements of the `MessageToContractPredicate`
 1. The transaction script sends any amount on the message to the recipient contract and calls `processMessage` on the recipient Fuel token contract
