@@ -17,8 +17,8 @@ The ETH bridge facilitates the transfer of ETH from Ethereum to be represented a
 ### ETH Bridge Deposit
 
 1. User starts a deposit by calling `sendETH()` on `FuelMessagePortal` which accepts an amount of ETH that gets custodied while bridged
-1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated owner
-1. The owner can now spend the amount value in the input message like any other input
+1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated recipient
+1. The recipient can now spend the amount value in the input message like any other input
 
 ![ETH Deposit Diagram](/docs/imgs/FuelMessagingETHDeposit.png)
 
@@ -38,10 +38,10 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 
 1. User starts a deposit by calling the `deposit()` function on the `L1ERC20Gateway` (after they have approved token transfer to `L1ERC20Gateway`)
 1. The `L1ERC20Gateway` transfers tokens to itself to custody while they are bridged
-1. The `L1ERC20Gateway` creates a message in the `FuelMessagePortal` to be relayed on Fuel with the `MessageToFungibleTokenPredicate` so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
-1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated owner
-1. A transaction is built and submitted by either the user or a relayer service that meets the requirements of the `MessageToFungibleTokenPredicate`
-1. A single call is made from the transaction script to the intended recipient Fuel token contract. This function verifies the sender and predicate owner of the `InputMessage`, parses the data from the `InputMessage` data field and mints the appropriate amount of tokens to the designated recipient
+1. The `L1ERC20Gateway` creates a message in the `FuelMessagePortal` to be relayed on Fuel with the `MessageToFungibleTokenPredicate` as the recipient so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
+1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated recipient predicate
+1. A transaction is built and submitted by either the user or a relayer service that meets the requirements of the `MessageToFungibleTokenPredicate` recipient
+1. A single call is made from the transaction script to the intended target Fuel token contract specified in the messages data field. This function verifies the sender and predicate recipient of the `InputMessage`, parses the data from the `InputMessage` data field and mints the appropriate amount of tokens
 
 ![ERC20 Deposit Diagram](/docs/imgs/FuelMessagingERC20Deposit.png)
 
@@ -59,10 +59,10 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 
 In order to prevent messages getting lost during generic messaging from L1 to Fuel, developers should follow the following standard practice utilizing common libraries.
 
-1. Either a contract or EOA calls `sendMessage()` on the `FuelMessagePortal` that creates a message to be relayed on Fuel with the `MessageToContractPredicate` so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
-1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated predicate owner
-1. A transaction is built and submitted by either the user or some relayer that meets the requirements of the `MessageToContractPredicate`
-1. The transaction script sends any amount on the message to the recipient contract and calls `processMessage()` on the recipient Fuel token contract
-1. This contract extends the standard `MessageRetryable` code which checks if the transaction includes the appropriate variable outputs exist on the transaction (if any) otherwise the `messageId` gets placed in storage to be retried in a later transaction
+1. Either a contract or EOA calls `sendMessage()` on the `FuelMessagePortal` that creates a message to be relayed on Fuel with the `MessageToContractPredicate` as the recipient so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
+1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated recipient predicate
+1. A transaction is built and submitted by either the user or some relayer service that meets the requirements of the `MessageToContractPredicate` recipient
+1. The transaction script sends the amount of ETH noted on the message and calls `processMessage()` on the contract specified in the message data field
+1. This contract extends the standard `MessageRetryable` code which checks that the transaction includes the appropriate variable outputs (if any) on the transaction otherwise the `messageId` gets placed in storage to be retried in a later transaction
 
 ![Retryable Messages Diagram](/docs/imgs/FuelMessagingRetryableMessages.png)
