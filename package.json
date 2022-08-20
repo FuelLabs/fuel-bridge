@@ -1,0 +1,22 @@
+{
+	"name": "fuel-bridge-integration-tests",
+	"version": "0.0.0",
+	"description": "The Fuel Messaging Bridge integration tests.",
+	"main": "test/index.js",
+	"private": false,
+	"license": "UNLICENSED",
+	"scripts": {
+		"test": "npx mocha -r ts-node/register 'tests/**/*.ts'"
+	},
+	"devDependencies": {
+		"@types/chai": "^4.3.1",
+		"@types/mocha": "^9.1.1",
+		"axios": "^0.27.2",
+		"chai": "^4.3.6",
+		"ethereum-waffle": "^4.0.2",
+		"ethers": "^5.1.4",
+		"fuels": "^0.11.0",
+		"mocha": "^10.0.0",
+		"ts-node": "^10.9.1"
+	}
+}
