@@ -1,7 +1,15 @@
 [[package]]
-name = 'contract-message-script'
-source = 'root'
+name = 'contract_message_receiver'
+source = 'path+from-root-748332DF73A38030'
 dependencies = ['std']
+
+[[package]]
+name = 'contract_message_script'
+source = 'root'
+dependencies = [
+    'contract_message_receiver',
+    'std',
+]
 
 [[package]]
 name = 'core'

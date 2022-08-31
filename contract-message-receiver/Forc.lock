@@ -1,5 +1,5 @@
 [[package]]
-name = 'contract_message_predicate'
+name = 'contract_message_receiver'
 source = 'root'
 dependencies = ['std']
 

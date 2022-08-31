@@ -41,14 +41,16 @@ The message to contract predicate relies on a script that performs only the foll
 Build:
 
 ```sh
-forc build -p contract-message-script
 forc build -p contract-message-predicate
+forc build -p contract-message-receiver
+forc build -p contract-message-script
+forc build -p contract-message-test
 ```
 
 Run tests:
 
 ```sh
-cd contract-message-predicate && forc test && cd ..
+cd contract-message-test && forc test && cd ..
 ```
 
 ## Contributing
@@ -56,9 +58,11 @@ cd contract-message-predicate && forc test && cd ..
 Code must be formatted.
 
 ```sh
-forc-fmt -p contract-message-script
 forc-fmt -p contract-message-predicate
-cd contract-message-predicate && cargo fmt && cd ..
+forc-fmt -p contract-message-receiver
+forc-fmt -p contract-message-script
+forc-fmt -p contract-message-test
+cd contract-message-test && cargo fmt && cd ..
 ```
 
 ## License

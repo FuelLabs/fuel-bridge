@@ -1,7 +1,15 @@
 [[package]]
-name = 'contract_message_predicate'
-source = 'root'
+name = 'contract_message_receiver'
+source = 'path+from-root-933B6D22BD4A72D1'
 dependencies = ['std']
+
+[[package]]
+name = 'contract_message_test'
+source = 'root'
+dependencies = [
+    'contract_message_receiver',
+    'std',
+]
 
 [[package]]
 name = 'core'

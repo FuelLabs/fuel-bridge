@@ -41,8 +41,10 @@ jobs:
     strategy:
       matrix:
         project: [
+          'contract-message-predicate',
+          'contract-message-receiver',
           'contract-message-script',
-          'contract-message-predicate'
+          'contract-message-test'
           ]
 
     steps:

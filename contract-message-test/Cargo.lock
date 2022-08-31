@@ -854,7 +854,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fbdcdcb6d86f71c5e97409ad45898af11cbc995b4ee8112d59095a28d376c935"
 
 [[package]]
-name = "contract-message-predicate-test"
+name = "contract-message-test"
 version = "0.1.0"
 dependencies = [
  "fuel-crypto",

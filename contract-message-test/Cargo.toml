@@ -1,5 +1,5 @@
 [project]
-name = "contract-message-predicate-test"
+name = "contract-message-test"
 version = "0.1.0"
 authors = ["Fuel Labs <contact@fuel.sh>"]
 edition = "2021"
