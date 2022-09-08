@@ -41,12 +41,8 @@ jobs:
     strategy:
       matrix:
         project: [
-          'fungible_token_abi',
-          'L2ERC20Gateway_abi',
-          'L2ERC20Gateway_caller_script',
-          'message_to_fungible_token_predicate', 
-          'POC/test_predicate',
-          'POC/test_script'
+          'bridge-fungible-token',
+          'bridge-fungible-token-abi'
           ]
 
     steps:

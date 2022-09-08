@@ -54,15 +54,3 @@ The ERC-20 bridge facilitates the transfer of ERC-20 tokens from Ethereum to be 
 1. The `L1ERC20Gateway` verifies it’s being called by the `FuelMessagePortal` and releases the specified amount of tokens to the specified address
 
 ![ERC20 Withdrawal Diagram](/docs/imgs/FuelMessagingERC20Withdraw.png)
-
-## Retryable Messages
-
-In order to prevent messages getting lost during generic messaging from L1 to Fuel, developers should follow the following standard practice utilizing common libraries.
-
-1. Either a contract or EOA calls `sendMessage()` on the `FuelMessagePortal` that creates a message to be relayed on Fuel with the `MessageToContractPredicate` as the recipient so that anyone can spend the `InputMessage` on a user's behalf but with guarantees that the transaction is built as it’s supposed to
-1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated recipient predicate
-1. A transaction is built and submitted by either the user or some relayer service that meets the requirements of the `MessageToContractPredicate` recipient
-1. The transaction script sends the amount of ETH noted on the message and calls `processMessage()` on the contract specified in the message data field
-1. This contract extends the standard `MessageRetryable` code which checks that the transaction includes the appropriate variable outputs (if any) on the transaction otherwise the `messageId` gets placed in storage to be retried in a later transaction
-
-![Retryable Messages Diagram](/docs/imgs/FuelMessagingRetryableMessages.png)

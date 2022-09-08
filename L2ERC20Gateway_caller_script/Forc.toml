@@ -1,8 +1,0 @@
-[project]
-authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "main.sw"
-license = "Apache-2.0"
-name = "L2ERC20Gateway_caller_script"
-
-[dependencies]
-L2ERC20Gateway_abi = { path = "../L2ERC20Gateway_abi" }
