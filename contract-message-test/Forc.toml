@@ -1,6 +1,6 @@
 [project]
 authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "main.sw"
+entry = "contract_message_test.sw"
 license = "Apache-2.0"
 name = "contract_message_test"
 

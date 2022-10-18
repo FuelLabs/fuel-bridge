@@ -6,19 +6,17 @@ Most messages sent from the base chain to Fuel will use a predicate as the messa
 
 The Message to Contract Predicate is for messages that are trying to send a data payload to a designated Fuel contract. This predicate runs through the following checks:
 - Verify Inputs
-  - There is exactly one `InputCoin` and it has `asset_id` set as the base asset to cover gas costs
-  - There is exactly one `InputMessage` (the message with a data payload to send to a contract)
-  - There is at least one `InputContract` with `contractID` that matches the first 32 bytes in the message data field
-  - Additional `InputContract` are allowed but are not required
+  - There are only 3 total inputs
+  - The first input is an `InputContract` with `contractID` that matches the first 32 bytes in the message data field
+  - The second input is an `InputMessage` and is the only `InputMessage` (the message with a data payload to send to a contract)
+  - The third input is an `InputCoin` with `asset_id` set as the base asset (to cover gas costs)
 - Verify Outputs
-  - There is exactly one `OutputChange` and it has `asset_id` set as the base asset to collect unused gas fees
-  - There is at least one `OutputContract` with `contractID` that matches the first 32 bytes in the message data field
-  - Additional `OutputContract` are allowed but are not required
-  - Any number of `OutputVariable` are allowed but are not required
-  - Any number of `OutputMessage` are allowed but are not required
-  - There are no `OutputCoin` allowed on the transaction
+  - There are only 3 total outputs
+  - The first output is an `OutputContract` with `inputIndex` set as `0`
+  - The second output is an `OutputChange` with `asset_id` set as the base asset to collect unused gas fees
+  - The third is an `OutputVariable` which may or may not be used by the receiving contract
 - Verify script bytecode hash for the transaction matches for the designated [Message to Contract Script](#message-to-contract-script)
-- Verify that the `InputCoin` has an `amount` greater than the gas minimum
+- Verify that the amount in the `InputCoin` input is greater than the gas minimum
 
 If all of these conditions are met, then the predicate evaluates as true.
 
@@ -34,7 +32,7 @@ The message to contract predicate relies on a script that performs only the foll
 
 | dep     | version                                                  |
 | ------- | -------------------------------------------------------- |
-| Forc    | [>=v0.19.1](https://fuellabs.github.io/sway/v0.19.1/introduction/installation.html) |
+| Forc    | [0.26.0](https://fuellabs.github.io/sway/v0.26.0/introduction/installation.html) |
 
 ### Building
 
@@ -42,7 +40,6 @@ Build:
 
 ```sh
 forc build -p contract-message-predicate
-forc build -p contract-message-receiver
 forc build -p contract-message-script
 forc build -p contract-message-test
 ```
@@ -50,7 +47,7 @@ forc build -p contract-message-test
 Run tests:
 
 ```sh
-cd contract-message-test && forc test && cd ..
+cd contract-message-test && cargo test && cd ..
 ```
 
 ## Contributing
