@@ -15,7 +15,7 @@ concurrency:
 env:
   CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
-  RUST_VERSION: 1.61.0
+  RUST_VERSION: 1.64.0
   PATH_TO_SCRIPTS: .github/scripts
 
 
@@ -83,6 +83,6 @@ jobs:
 
       - name: Check Rust formatting
         run: sh ${{ env.PATH_TO_SCRIPTS }}/fmt.sh ${{ matrix.project }}
-          
+
       - name: Run tests
         run: sh ${{ env.PATH_TO_SCRIPTS }}/test.sh ${{ matrix.project }}

@@ -1,6 +1,6 @@
 [project]
 authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "lib.sw"
+entry = "bridge_fungible_token_abi.sw"
 license = "Apache-2.0"
 name = "bridge_fungible_token_abi"
 

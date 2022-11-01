@@ -8,5 +8,5 @@ if [ $PROJECT = 'bridge-fungible-token' ]; then
     forc build --path ../bridge-fungible-token-abi
     forc build --path ../bridge-fungible-token
 
-    forc test
+    cargo test
 fi
