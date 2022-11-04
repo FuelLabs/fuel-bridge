@@ -1,6 +1,6 @@
 library transaction_utils;
 
-use std::{constants::ZERO_B256, mem::read};
+use std::constants::ZERO_B256;
 
 // TODO: replace GTF consts with direct references to tx.sw, inputs.sw, and outputs.sw from std lib
 const GTF_SCRIPT_GAS_PRICE = 0x002;
@@ -73,7 +73,9 @@ pub fn input_message_data_length(index: u64) -> u64 {
 
 /// Get the data of a message input
 pub fn input_message_data<T>(index: u64, offset: u64) -> T {
-    read::<T>(__gtf::<u64>(index, GTF_INPUT_MESSAGE_DATA) + offset)
+    // TODO: look into supporting per byte offsets
+    let data_ptr = __gtf::<raw_ptr>(index, GTF_INPUT_MESSAGE_DATA);
+    data_ptr.add::<u64>(offset / 8).read::<T>()
 }
 
 /// Get the ID of a contract input

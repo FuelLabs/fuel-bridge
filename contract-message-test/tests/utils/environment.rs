@@ -5,12 +5,11 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 use fuel_core_interfaces::model::{Coin, Message};
-use fuels::contract::script::Script;
 use fuels::prelude::*;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config};
 use fuels::tx::{
-    Address, AssetId, Bytes32, Input, Output, Receipt, Transaction, TxPointer, UtxoId, Word,
+    Address, AssetId, Bytes32, Input, Output, Receipt, Script, TxPointer, UtxoId, Word,
 };
 
 abigen!(
@@ -71,8 +70,7 @@ pub async fn setup_environment(
         .collect();
 
     // Create the client and provider
-    let mut provider_config = Config::local_node();
-    provider_config.predicates = true;
+    let provider_config = Config::local_node();
     let (client, _) = setup_test_client(
         all_coins.clone(),
         all_messages.clone(),
@@ -94,8 +92,7 @@ pub async fn setup_environment(
     )
     .await
     .unwrap();
-    let test_contract =
-        TestContractBuilder::new(test_contract_id.to_string(), wallet.clone()).build();
+    let test_contract = TestContract::new(test_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs: Vec<Input> = all_coins
@@ -120,7 +117,6 @@ pub async fn setup_environment(
             recipient: Address::from(message.recipient.clone()),
             amount: message.amount,
             nonce: message.nonce,
-            owner: Address::from(message.owner.clone()),
             data: message.data.clone(),
             predicate: predicate_bytecode.clone(),
             predicate_data: vec![],
@@ -170,21 +166,20 @@ pub async fn relay_message_to_contract(
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Transaction) -> Vec<Receipt> {
+pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Script) -> Vec<Receipt> {
     // Get provider and client
     let provider = wallet.get_provider().unwrap();
 
     // Sign transaction and call
     wallet.sign_transaction(tx).await.unwrap();
-    let script = Script::new(tx.clone());
-    script.call(provider).await.unwrap()
+    provider.send_transaction(tx).await.unwrap()
 }
 
 /// Prefixes the given bytes with the test contract ID
 pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
     // Compute the test contract ID
     let storage_configuration = StorageConfiguration::default();
-    let compiled_contract = Contract::load_sway_contract(
+    let compiled_contract = Contract::load_contract(
         TEST_RECEIVER_CONTRACT_BINARY,
         &storage_configuration.storage_path,
     )

@@ -44,12 +44,13 @@ mod success {
         .await;
 
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract._get_contract_id().into();
-        let test_contract_counter = test_contract.get_test_counter().call().await.unwrap().value;
-        let test_contract_data1 = test_contract.get_test_data1().call().await.unwrap().value;
-        let test_contract_data2 = test_contract.get_test_data2().call().await.unwrap().value;
-        let test_contract_data3 = test_contract.get_test_data3().call().await.unwrap().value;
-        let test_contract_data4 = test_contract.get_test_data4().call().await.unwrap().value;
+        let test_contract_id: ContractId = test_contract.get_contract_id().into();
+        let methods = test_contract.methods();
+        let test_contract_counter = methods.get_test_counter().call().await.unwrap().value;
+        let test_contract_data1 = methods.get_test_data1().call().await.unwrap().value;
+        let test_contract_data2 = methods.get_test_data2().call().await.unwrap().value;
+        let test_contract_data3 = methods.get_test_data3().call().await.unwrap().value;
+        let test_contract_data4 = methods.get_test_data4().call().await.unwrap().value;
         assert_eq!(test_contract_counter, 1);
         assert_eq!(test_contract_data1, test_contract_id);
         assert_eq!(test_contract_data2, data_word);
@@ -59,7 +60,7 @@ mod success {
         // Verify the message value was received by the test contract
         let provider = wallet.get_provider().unwrap();
         let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract._get_contract_id(), AssetId::default())
+            .get_contract_asset_balance(test_contract.get_contract_id(), AssetId::default())
             .await
             .unwrap();
         assert_eq!(test_contract_balance, 100);
@@ -76,6 +77,11 @@ mod fail {
     use fuels::prelude::Salt;
     use fuels::prelude::TxParameters;
     use fuels::test_helpers::DEFAULT_COIN_AMOUNT;
+    use fuels::tx::field::GasLimit;
+    use fuels::tx::field::GasPrice;
+    use fuels::tx::field::Inputs;
+    use fuels::tx::field::Maturity;
+    use fuels::tx::field::Outputs;
     use fuels::tx::{Address, AssetId, Input, Output, Transaction, TxPointer, UtxoId, Word};
 
     pub const RANDOM_SALT: &str =
@@ -130,13 +136,11 @@ mod fail {
         )
         .await;
 
-        // Modify the transaction
-        let outputs_length = tx.outputs().len();
-        if let Transaction::Script { outputs, .. } = &mut tx {
-            // Swap the output contract at the start with the output variable at the end then pop it off
-            outputs.swap(0, outputs_length - 1);
-            outputs.pop();
-        }
+        // Swap the output contract at the start with the output variable at the end then pop it off
+        let outputs_len = tx.outputs().len();
+        let outputs = tx.outputs_mut();
+        outputs.swap(0, outputs_len - 1);
+        outputs.pop();
 
         // Note: tx inputs[coin2, message, coin1], tx outputs[variable, change, variable]
         let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
@@ -233,12 +237,10 @@ mod fail {
         )
         .await;
 
-        // Modify the transaction
-        let outputs_length = tx.outputs().len();
-        if let Transaction::Script { outputs, .. } = &mut tx {
-            // Swap the output contract at the start with the output variable at the end
-            outputs.swap(0, outputs_length - 1);
-        }
+        // Swap the output contract at the start with the output variable at the end
+        let outputs_len = tx.outputs().len();
+        let outputs = tx.outputs_mut();
+        outputs.swap(0, outputs_len - 1);
 
         // Note: tx inputs[contract, message, coin], tx outputs[variable, change, contract]
         let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
@@ -269,13 +271,11 @@ mod fail {
         )
         .await;
 
-        // Modify the transaction
-        let outputs_length = tx.outputs().len();
-        if let Transaction::Script { outputs, .. } = &mut tx {
-            // Swap the output change with the output variable at the end then pop it off
-            outputs.swap(1, outputs_length - 1);
-            outputs.pop();
-        }
+        // Swap the output change with the output variable at the end then pop it off
+        let outputs_len = tx.outputs().len();
+        let outputs = tx.outputs_mut();
+        outputs.swap(1, outputs_len - 1);
+        outputs.pop();
 
         // Note: tx inputs[contract, message, coin], tx outputs[contract, variable, variable]
         let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
@@ -312,7 +312,7 @@ mod fail {
     }
 
     #[tokio::test]
-    #[should_panic(expected = "The transaction contains a predicate which failed to validate")]
+    #[should_panic(expected = "transaction predicate verification failed")]
     async fn relay_message_with_too_little_gas() {
         let message_data = env::prefix_contract_id(vec![]).await;
         let message = (100, message_data);
@@ -345,7 +345,7 @@ mod fail {
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
-        let mut tx = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             contract_input,
             coin_inputs[0].clone(),
@@ -356,11 +356,18 @@ mod fail {
         .await;
 
         // Modify the script bytecode
-        if let Transaction::Script { script, .. } = &mut tx {
-            *script = vec![0u8, 1u8, 2u8, 3u8];
-        }
+        let mut modified_tx = Transaction::script(
+            tx.gas_price().clone(),
+            tx.gas_limit().clone(),
+            tx.maturity().clone(),
+            vec![0u8, 1u8, 2u8, 3u8],
+            vec![],
+            tx.inputs().clone(),
+            tx.outputs().clone(),
+            vec![],
+        );
 
         // Note: tx inputs[contract, message, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _receipts = env::sign_and_call_tx(&wallet, &mut modified_tx).await;
     }
 }

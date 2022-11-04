@@ -10,10 +10,10 @@ use std::constants::ZERO_B256;
 
 storage {
     counter: u64 = 0,
-    data1: ContractId = ~ContractId::from(ZERO_B256),
+    data1: ContractId = ContractId::from(ZERO_B256),
     data2: u64 = 0,
     data3: b256 = ZERO_B256,
-    data4: Address = ~Address::from(ZERO_B256),
+    data4: Address = Address::from(ZERO_B256),
 }
 
 // Implement the process_message function required to be a message receiver
@@ -26,7 +26,7 @@ impl MessageReceiver for Contract {
         let data_length = input_message_data_length(msg_idx);
         if (data_length >= 32) {
             let contract_id: b256 = input_message_data(msg_idx, 0);
-            storage.data1 = ~ContractId::from(contract_id);
+            storage.data1 = ContractId::from(contract_id);
         }
         if (data_length >= 32 + 8) {
             let num: u64 = input_message_data(msg_idx, 32);
@@ -38,7 +38,7 @@ impl MessageReceiver for Contract {
         }
         if (data_length >= 32 + 8 + 32 + 32) {
             let address: b256 = input_message_data(msg_idx, 32 + 8 + 32);
-            storage.data4 = ~Address::from(address);
+            storage.data4 = Address::from(address);
         }
     }
 }

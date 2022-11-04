@@ -31,7 +31,7 @@ use transaction_utils::{
 const MIN_GAS = 1_200_000;
 
 // The hash of the script which must spend the input belonging to this predicate
-const SPENDING_SCRIPT_HASH = 0x2df68a844ce3a795e8776a3bb2a404a1ad97b32cc1449af06a692bce85a5d7ab;
+const SPENDING_SCRIPT_HASH = 0x94de8159a7879edada9b0837456a917d4ba4f1eb68cae2d63ad3dc080bb4b372;
 
 // The input and output index values
 const INPUT_CONTRACT_INDEX = 0u8;
