@@ -5,14 +5,60 @@ use std::num::ParseIntError;
 use std::str::FromStr;
 
 use fuel_core_interfaces::model::Message;
-use fuels::contract::script::Script;
 use fuels::prelude::*;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config, DEFAULT_COIN_AMOUNT};
-use fuels::tx::Output;
-use fuels::tx::Receipt;
-use fuels::tx::Transaction;
-use fuels::tx::{Address, AssetId, Bytes32, Input, TxPointer, UtxoId, Word};
+use fuels::tx::{
+    Address, AssetId, Bytes32, ConsensusParameters, Input, Output, Receipt, Script, TxPointer,
+    UtxoId, Word,
+};
+use primitive_types::U256;
+
+pub struct TestConfig {
+    pub adjustment_factor: U256,
+    pub min_amount: U256,
+    pub max_amount: U256,
+    pub test_amount: U256,
+    pub not_enough: U256,
+    pub overflow_1: U256,
+    pub overflow_2: U256,
+    pub overflow_3: U256,
+}
+
+pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
+    let l1_decimals = U256::from(decimals.0);
+    let l2_decimals = U256::from(decimals.1);
+    let one = U256::from(1);
+
+    let adjustment_factor = if l1_decimals > l2_decimals {
+        U256::from(10).pow(l1_decimals - l2_decimals)
+    } else {
+        one
+    };
+
+    let min_amount = U256::from(1) * adjustment_factor;
+    let max_amount = U256::from(u64::MAX) * adjustment_factor;
+    let test_amount = ((U256::from(1) + U256::from(u64::MAX)) / U256::from(2)) * adjustment_factor;
+    let not_enough = min_amount - one;
+    let overflow_1 = max_amount + one;
+    let overflow_2 = max_amount + (one << 160);
+    let overflow_3 = max_amount + (one << 224);
+
+    TestConfig {
+        adjustment_factor,
+        min_amount,
+        test_amount,
+        max_amount,
+        not_enough,
+        overflow_1,
+        overflow_2,
+        overflow_3,
+    }
+}
+
+pub fn l2_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
+    (test_amount / config.adjustment_factor).as_u64()
+}
 
 abigen!(
     BridgeFungibleTokenContract,
@@ -86,13 +132,15 @@ pub async fn setup_environment(
         .collect();
 
     // Create the client and provider
-    let mut provider_config = Config::local_node();
-    provider_config.predicates = true;
+    let provider_config = Config::local_node();
+    let consensus_parameters_config = ConsensusParameters::DEFAULT.with_max_gas_per_tx(300_000_000);
+
     let (client, _) = setup_test_client(
         all_coins.clone(),
         all_messages.clone(),
         Some(provider_config),
         None,
+        Some(consensus_parameters_config),
     )
     .await;
     let provider = Provider::new(client);
@@ -184,14 +232,13 @@ pub async fn relay_message_to_contract(
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Transaction) -> Vec<Receipt> {
+pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Script) -> Vec<Receipt> {
     // Get provider and client
     let provider = wallet.get_provider().unwrap();
 
     // Sign transaction and call
     wallet.sign_transaction(tx).await.unwrap();
-    let script = Script::new(tx.clone());
-    script.call(provider).await.unwrap()
+    provider.send_transaction(tx).await.unwrap()
 }
 
 /// Prefixes the given bytes with the test contract ID
@@ -240,17 +287,23 @@ pub async fn get_fungible_token_instance(
     (fungible_token_instance, fungible_token_contract_id.into())
 }
 
+pub fn encode_hex(val: U256) -> [u8; 32] {
+    let mut arr = [0u8; 32];
+    val.to_big_endian(&mut arr);
+    arr
+}
+
 pub async fn construct_msg_data(
     l1_token: &str,
     from: &str,
     mut to: Vec<u8>,
-    amount: &str,
+    amount: U256,
 ) -> ((u64, Vec<u8>), (u64, AssetId)) {
     let mut message_data = Vec::with_capacity(5);
     message_data.append(&mut decode_hex(&l1_token));
     message_data.append(&mut decode_hex(&from));
     message_data.append(&mut to);
-    message_data.append(&mut decode_hex(&amount));
+    message_data.append(&mut encode_hex(amount).to_vec());
 
     let message_data = prefix_contract_id(message_data).await;
     let message = (100, message_data);
@@ -265,17 +318,12 @@ pub fn generate_outputs() -> Vec<Output> {
     v
 }
 
-pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, u64) {
-    let selector = &data[4..8];
-    let to: [u8; 32] = data[8..40].try_into().unwrap();
-    let token_array: [u8; 32] = data[40..72].try_into().unwrap();
+pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256) {
+    let selector = &data[0..4];
+    let to: [u8; 32] = data[4..36].try_into().unwrap();
+    let token_array: [u8; 32] = data[36..68].try_into().unwrap();
     let l1_token = Bits256(token_array);
-    let amount_array: [u8; 8] = data[96..].try_into().unwrap();
-    let amount: u64 = u64::from_be_bytes(amount_array);
+    let amount_array: [u8; 32] = data[68..100].try_into().unwrap();
+    let amount: U256 = U256::from_big_endian(&amount_array.to_vec());
     (selector.to_vec(), Bits256(to), l1_token, amount)
-}
-
-pub fn hex_to_uint_128(hex: &str) -> u128 {
-    let trimmed = hex.trim_start_matches("0x");
-    u128::from_str_radix(trimmed, 16).unwrap()
 }

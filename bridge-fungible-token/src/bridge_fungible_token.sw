@@ -10,17 +10,16 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use std::{
-    chain::auth::{
+    auth::{
         msg_sender,
     },
-    constants::ZERO_B256,
-    context::{
-        call_frames::{
-            contract_id,
-            msg_asset_id,
-        },
-        msg_amount,
+    call_frames::{
+        contract_id,
+        msg_asset_id,
     },
+    constants::ZERO_B256,
+    context::msg_amount,
+    convert::From,
     logging::log,
     message::send_message,
     storage::StorageMap,
@@ -36,9 +35,6 @@ use utils::{
     compose,
     decompose,
     encode_data,
-    input_message_data,
-    input_message_data_length,
-    input_message_recipient,
     input_message_sender,
     parse_message_data,
 };
@@ -49,7 +45,7 @@ storage {
 }
 
 // Storage-dependant private functions
-#[storage(write)]
+#[storage(read, write)]
 fn register_refund(from: b256, asset: b256, amount: b256) {
     storage.refund_amounts.insert((from, asset), amount);
     log(RefundRegisteredEvent {
@@ -67,13 +63,15 @@ impl MessageReceiver for Contract {
         let input_sender = input_message_sender(1);
         require(input_sender.value == LAYER_1_ERC20_GATEWAY, BridgeFungibleTokenError::UnauthorizedSender);
         let message_data = parse_message_data(msg_idx);
+        require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        // Register a refund if tokens don't match
-        if message_data.l1_asset != LAYER_1_TOKEN {
+        // Register a refund if tokens don't match, or if delta decimals is too large
+        if (message_data.l1_asset != LAYER_1_TOKEN)
+            || (LAYER_1_DECIMALS - DECIMALS > 19u8)
+        {
             register_refund(message_data.from, message_data.l1_asset, message_data.amount);
             return;
         };
-
         let res_amount = adjust_deposit_decimals(message_data.amount);
         match res_amount {
             Result::Err(e) => {
@@ -91,23 +89,24 @@ impl MessageReceiver for Contract {
         }
     }
 }
-
 impl BridgeFungibleToken for Contract {
     #[storage(read, write)]
     fn claim_refund(originator: b256, asset: b256) {
         let stored_amount = storage.refund_amounts.get((originator, asset));
         require(stored_amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
+
         // reset the refund amount to 0
         storage.refund_amounts.insert((originator, asset), ZERO_B256);
+
         // send a message to unlock this amount on the ethereum (L1) bridge contract
         send_message(LAYER_1_ERC20_GATEWAY, encode_data(originator, stored_amount), 0);
     }
-
     fn withdraw_to(to: b256) {
         let amount = msg_amount();
-        require(amount != 0, BridgeFungibleTokenError::NoCoinsForwarded);
+        require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
         let origin_contract_id = msg_asset_id();
         let sender = msg_sender().unwrap();
+
         // check that the correct asset was sent with call
         require(contract_id() == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
         burn(amount);
@@ -119,23 +118,18 @@ impl BridgeFungibleToken for Contract {
             amount: amount,
         });
     }
-
     fn name() -> str[32] {
         NAME
     }
-
     fn symbol() -> str[32] {
         SYMBOL
     }
-
     fn decimals() -> u8 {
         DECIMALS
     }
-
     fn layer1_token() -> b256 {
         LAYER_1_TOKEN
     }
-
     fn layer1_decimals() -> u8 {
         LAYER_1_DECIMALS
     }

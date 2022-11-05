@@ -3,6 +3,7 @@ mod utils {
     pub mod environment;
 }
 
+use primitive_types::U256;
 use std::str::FromStr;
 use utils::builder;
 use utils::environment as env;
@@ -15,15 +16,12 @@ pub const LAYER_1_ERC20_GATEWAY: &str =
     "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc";
 pub const TO: &str = "0x0000000000000000000000000000000000000000000000000000000000000777";
 pub const FROM: &str = "0x0000000000000000000000008888888888888888888888888888888888888888";
-pub const MINIMUM_BRIDGABLE_AMOUNT: &str =
-    "0x000000000000000000000000000000000000000000000000000000003B9ACA00";
-pub const DUST: &str = "0x000000000000000000000000000000000000000000000000000000003B9AC9FF";
-// 18446744073709551615000000000 (u64::max() * 10 ^ 19)
-pub const MAXIMUM_BRIDGABLE_AMOUNT: &str =
-    "0x00000000000000000000000000000000000000003B9AC9FFFFFFFFFFC4653600";
-pub const OVERFLOWING_AMOUNT: &str =
-    "0x00000000000000000000000000000000000000003B9ACA000000000000000000";
-pub const DECIMAL_ADJUSTMENT_FACTOR: u64 = 1_000_000_000;
+// In the case where (LAYER_1_DECIMALS - LAYER_2_DECIMALS) > 19, some tests
+// will fail with RevertTransactionError("ArithmeticOverflow").
+// BridgeFungibleToken contracts should not be deployed in this configuration
+// as it could lead to lost L1 tokens.
+pub const LAYER_1_DECIMALS: u8 = 18u8;
+pub const LAYER_2_DECIMALS: u8 = 9u8;
 
 mod success {
     use super::*;
@@ -32,11 +30,13 @@ mod success {
     async fn relay_message_with_predicate_and_script_constraint() -> Result<(), Error> {
         let mut wallet = env::setup_wallet();
 
+        // generate the test config struct based on the decimals
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
         let (message, coin) = env::construct_msg_data(
             L1_TOKEN,
             FROM,
             wallet.address().hash().to_vec(),
-            MINIMUM_BRIDGABLE_AMOUNT,
+            config.test_amount,
         )
         .await;
 
@@ -73,7 +73,10 @@ mod success {
         // Verify the message value was received by the test contract
         assert_eq!(test_contract_base_asset_balance, 100);
         // Check that wallet now has bridged coins
-        assert_eq!(balance, 1);
+        assert_eq!(
+            balance,
+            env::l2_equivalent_amount(config.test_amount, &config)
+        );
         Ok(())
     }
 
@@ -81,11 +84,13 @@ mod success {
     async fn depositing_max_amount_ok() -> Result<(), Error> {
         let mut wallet = env::setup_wallet();
 
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+
         let (message, coin) = env::construct_msg_data(
             L1_TOKEN,
             FROM,
             wallet.address().hash().to_vec(),
-            MAXIMUM_BRIDGABLE_AMOUNT,
+            config.max_amount,
         )
         .await;
 
@@ -122,11 +127,11 @@ mod success {
         // Verify the message value was received by the test contract
         assert_eq!(test_contract_base_asset_balance, 100);
 
-        let intermediate_val = env::hex_to_uint_128(MAXIMUM_BRIDGABLE_AMOUNT);
-        let l2_token_amount = u64::try_from(intermediate_val / 1_000_000_000u128).unwrap();
-
         // Check that wallet now has bridged coins
-        assert_eq!(balance, l2_token_amount);
+        assert_eq!(
+            balance,
+            env::l2_equivalent_amount(config.max_amount, &config)
+        );
         Ok(())
     }
 
@@ -134,8 +139,16 @@ mod success {
     async fn claim_refund() -> Result<(), Error> {
         // perform a failing deposit first to register a refund & verify it, then claim and verify output message is created as expected
         let mut wallet = env::setup_wallet();
-        let (message, coin) =
-            env::construct_msg_data(L1_TOKEN, FROM, wallet.address().hash().to_vec(), DUST).await;
+
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+
+        let (message, coin) = env::construct_msg_data(
+            L1_TOKEN,
+            FROM,
+            wallet.address().hash().to_vec(),
+            config.overflow_2,
+        )
+        .await;
 
         // Set up the environment
         let (
@@ -175,15 +188,15 @@ mod success {
         assert_eq!(test_contract_balance, 100);
         assert_eq!(
             refund_registered_event[0].amount,
-            Bits256(*Address::from_str(&DUST).unwrap())
+            Bits256(env::encode_hex(config.overflow_2))
         );
         assert_eq!(
             refund_registered_event[0].asset,
-            Bits256(*Address::from_str(&L1_TOKEN).unwrap())
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
         );
         assert_eq!(
             refund_registered_event[0].from,
-            Bits256(*Address::from_str(&FROM).unwrap())
+            Bits256::from_hex_str(&FROM).unwrap()
         );
 
         // verify that no tokens were minted for message.data.to
@@ -191,8 +204,8 @@ mod success {
         let call_response = test_contract
             .methods()
             .claim_refund(
-                Bits256(*Address::from_str(&FROM).unwrap()),
-                Bits256(*Address::from_str(&L1_TOKEN).unwrap()),
+                Bits256::from_hex_str(&FROM).unwrap(),
+                Bits256::from_hex_str(&L1_TOKEN).unwrap(),
             )
             .append_message_outputs(1)
             .call()
@@ -221,10 +234,10 @@ mod success {
         let (selector, to, l1_token, amount) =
             env::parse_output_message_data(message_receipt.data().unwrap());
         assert_eq!(selector, env::decode_hex("0x53ef1461").to_vec());
-        assert_eq!(to, Bits256(*Address::from_str(&FROM).unwrap()));
-        assert_eq!(l1_token, Bits256(*Address::from_str(&L1_TOKEN).unwrap()));
-        // Compare the value output in the message with the original value (DUST) as a uint.
-        assert_eq!(amount, 999999999);
+        assert_eq!(to, Bits256::from_hex_str(&FROM).unwrap());
+        assert_eq!(l1_token, Bits256::from_hex_str(&L1_TOKEN).unwrap());
+        // Compare the value output in the message with the original value sent
+        assert_eq!(amount, config.overflow_2);
 
         Ok(())
     }
@@ -233,12 +246,12 @@ mod success {
     async fn withdraw_from_bridge() -> Result<(), Error> {
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = env::setup_wallet();
-
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
         let (message, coin) = env::construct_msg_data(
             L1_TOKEN,
             FROM,
             wallet.address().hash().to_vec(),
-            MAXIMUM_BRIDGABLE_AMOUNT,
+            config.max_amount,
         )
         .await;
 
@@ -275,17 +288,17 @@ mod success {
         // Verify the message value was received by the test contract
         assert_eq!(test_contract_base_asset_balance, 100);
 
-        let intermediate_val = env::hex_to_uint_128(MAXIMUM_BRIDGABLE_AMOUNT);
-        let l2_token_amount = u64::try_from(intermediate_val / 1_000_000_000u128).unwrap();
-
         // Check that wallet now has bridged coins
-        assert_eq!(balance, l2_token_amount);
+        assert_eq!(
+            balance,
+            env::l2_equivalent_amount(config.max_amount, &config)
+        );
 
         // Now try to withdraw
-        let custom_tx_params = TxParameters::new(None, Some(5_000_000), None);
-        let l2_token_amount = 3000;
+        let custom_tx_params = TxParameters::new(None, Some(30_000_000), None);
+        let withdrawal_amount = 3000;
         let call_params = CallParameters::new(
-            Some(l2_token_amount),
+            Some(withdrawal_amount),
             Some(AssetId::new(*test_contract_id.hash())),
             None,
         );
@@ -322,8 +335,11 @@ mod success {
             env::parse_output_message_data(message_receipt.data().unwrap());
         assert_eq!(selector, env::decode_hex("0x53ef1461").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
-        assert_eq!(l1_token, Bits256(*Address::from_str(&L1_TOKEN).unwrap()));
-        assert_eq!(amount, l2_token_amount * DECIMAL_ADJUSTMENT_FACTOR);
+        assert_eq!(l1_token, Bits256::from_hex_str(&L1_TOKEN).unwrap());
+        assert_eq!(
+            amount,
+            U256::from(withdrawal_amount) * &config.adjustment_factor
+        );
 
         Ok(())
     }
@@ -337,11 +353,12 @@ mod success {
 
         // first make a deposit
         let mut wallet = env::setup_wallet();
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
         let (message, coin) = env::construct_msg_data(
             L1_TOKEN,
             FROM,
             wallet.address().hash().to_vec(),
-            MINIMUM_BRIDGABLE_AMOUNT,
+            config.min_amount,
         )
         .await;
 
@@ -379,13 +396,12 @@ mod success {
         assert_eq!(test_contract_base_asset_balance, 100);
         // Check that wallet now has bridged coins
 
-        let intermediate_val = env::hex_to_uint_128(MINIMUM_BRIDGABLE_AMOUNT);
-        let l2_token_amount = u64::try_from(intermediate_val / 1_000_000_000u128).unwrap();
+        let l2_token_amount = env::l2_equivalent_amount(config.min_amount, &config);
 
         assert_eq!(balance, l2_token_amount);
 
         // Now try to withdraw
-        let custom_tx_params = TxParameters::new(None, Some(5_000_000), None);
+        let custom_tx_params = TxParameters::new(None, Some(30_000_000), None);
         let call_params = CallParameters::new(
             Some(l2_token_amount),
             Some(AssetId::new(*test_contract_id.hash())),
@@ -424,28 +440,26 @@ mod success {
             env::parse_output_message_data(message_receipt.data().unwrap());
         assert_eq!(selector, env::decode_hex("0x53ef1461").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
-        assert_eq!(l1_token, Bits256(*Address::from_str(&L1_TOKEN).unwrap()));
-        assert_eq!(
-            u128::try_from(msg_data_amount).unwrap(),
-            u128::try_from(l2_token_amount).unwrap()
-                * u128::try_from(DECIMAL_ADJUSTMENT_FACTOR).unwrap()
-        );
+        assert_eq!(l1_token, Bits256::from_hex_str(&L1_TOKEN).unwrap());
 
         // now verify that the initial amount == the final amount
-        assert_eq!(u128::try_from(msg_data_amount).unwrap(), intermediate_val);
+        assert_eq!(msg_data_amount, config.min_amount);
 
         Ok(())
     }
 
     #[tokio::test]
-    async fn depositing_dust_registers_refund() -> Result<(), Error> {
-        // "dust" here refers to any amount less than 1_000_000_000.
-        // This is to account for conversion between the 18 decimals on most erc20 contracts, and the 9 decimals in the Fuel BridgeFungibleToken contract
-
+    async fn depositing_amount_too_small_registers_refund() -> Result<(), Error> {
+        // In cases where LAYER_1_DECIMALS == LAYER_2_DECIMALS or LAYER_1_DECIMALS < LAYER_2_DECIMALS, this test will fail because it will attempt to bridge 0 coins which will always revert.
         let mut wallet = env::setup_wallet();
-
-        let (message, coin) =
-            env::construct_msg_data(L1_TOKEN, FROM, wallet.address().hash().to_vec(), DUST).await;
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+        let (message, coin) = env::construct_msg_data(
+            L1_TOKEN,
+            FROM,
+            wallet.address().hash().to_vec(),
+            config.not_enough,
+        )
+        .await;
 
         // Set up the environment
         let (
@@ -485,15 +499,15 @@ mod success {
         assert_eq!(test_contract_balance, 100);
         assert_eq!(
             refund_registered_event[0].amount,
-            Bits256(*Address::from_str(&DUST).unwrap())
+            Bits256(env::encode_hex(config.not_enough))
         );
         assert_eq!(
             refund_registered_event[0].asset,
-            Bits256(*Address::from_str(&L1_TOKEN).unwrap())
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
         );
         assert_eq!(
             refund_registered_event[0].from,
-            Bits256(*Address::from_str(&FROM).unwrap())
+            Bits256::from_hex_str(&FROM).unwrap()
         );
 
         // verify that no tokens were minted for message.data.to
@@ -504,12 +518,12 @@ mod success {
     #[tokio::test]
     async fn depositing_amount_too_large_registers_refund() -> Result<(), Error> {
         let mut wallet = env::setup_wallet();
-
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
         let (message, coin) = env::construct_msg_data(
             L1_TOKEN,
             FROM,
             wallet.address().hash().to_vec(),
-            OVERFLOWING_AMOUNT,
+            config.overflow_1,
         )
         .await;
 
@@ -553,15 +567,153 @@ mod success {
         // check that the RefundRegisteredEvent receipt is populated correctly
         assert_eq!(
             refund_registered_event[0].amount,
-            Bits256(*Address::from_str(&OVERFLOWING_AMOUNT).unwrap())
+            Bits256(env::encode_hex(config.overflow_1))
         );
         assert_eq!(
             refund_registered_event[0].asset,
-            Bits256(*Address::from_str(&L1_TOKEN).unwrap())
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
         );
         assert_eq!(
             refund_registered_event[0].from,
-            Bits256(*Address::from_str(&FROM).unwrap())
+            Bits256::from_hex_str(&FROM).unwrap()
+        );
+
+        // verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn depositing_amount_too_large_registers_refund_2() -> Result<(), Error> {
+        let mut wallet = env::setup_wallet();
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+
+        let (message, coin) = env::construct_msg_data(
+            L1_TOKEN,
+            FROM,
+            wallet.address().hash().to_vec(),
+            config.overflow_2,
+        )
+        .await;
+
+        // Set up the environment
+        let (
+            test_contract,
+            contract_input,
+            coin_inputs,
+            message_inputs,
+            test_contract_id,
+            provider,
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+
+        // Relay the test message to the test contract
+        let receipts = env::relay_message_to_contract(
+            &wallet,
+            message_inputs[0].clone(),
+            contract_input,
+            &coin_inputs[..],
+            &vec![],
+            &env::generate_outputs(),
+        )
+        .await;
+
+        let refund_registered_event = test_contract
+            .logs_with_type::<utils::environment::bridgefungibletokencontract_mod::RefundRegisteredEvent>(
+            &receipts,
+        )?;
+
+        let test_contract_balance = provider
+            .get_contract_asset_balance(test_contract.get_contract_id(), AssetId::default())
+            .await
+            .unwrap();
+        let balance = wallet
+            .get_asset_balance(&AssetId::new(*test_contract_id.hash()))
+            .await?;
+
+        // Verify the message value was received by the test contract
+        assert_eq!(test_contract_balance, 100);
+
+        // check that the RefundRegisteredEvent receipt is populated correctly
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.overflow_2))
+        );
+        assert_eq!(
+            refund_registered_event[0].asset,
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(&FROM).unwrap()
+        );
+
+        // verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn depositing_amount_too_large_registers_refund_3() -> Result<(), Error> {
+        let mut wallet = env::setup_wallet();
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+
+        let (message, coin) = env::construct_msg_data(
+            L1_TOKEN,
+            FROM,
+            wallet.address().hash().to_vec(),
+            config.overflow_3,
+        )
+        .await;
+
+        // Set up the environment
+        let (
+            test_contract,
+            contract_input,
+            coin_inputs,
+            message_inputs,
+            test_contract_id,
+            provider,
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+
+        // Relay the test message to the test contract
+        let receipts = env::relay_message_to_contract(
+            &wallet,
+            message_inputs[0].clone(),
+            contract_input,
+            &coin_inputs[..],
+            &vec![],
+            &env::generate_outputs(),
+        )
+        .await;
+
+        let refund_registered_event = test_contract
+            .logs_with_type::<utils::environment::bridgefungibletokencontract_mod::RefundRegisteredEvent>(
+            &receipts,
+        )?;
+
+        let test_contract_balance = provider
+            .get_contract_asset_balance(test_contract.get_contract_id(), AssetId::default())
+            .await
+            .unwrap();
+        let balance = wallet
+            .get_asset_balance(&AssetId::new(*test_contract_id.hash()))
+            .await?;
+
+        // Verify the message value was received by the test contract
+        assert_eq!(test_contract_balance, 100);
+
+        // check that the RefundRegisteredEvent receipt is populated correctly
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.overflow_3))
+        );
+        assert_eq!(
+            refund_registered_event[0].asset,
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(&FROM).unwrap()
         );
 
         // verify that no tokens were minted for message.data.to
@@ -596,7 +748,7 @@ mod success {
         let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
 
         let call_response = contract.methods().decimals().call().await.unwrap();
-        assert_eq!(call_response.value, 9)
+        assert_eq!(call_response.value, LAYER_2_DECIMALS)
     }
 
     #[tokio::test]
@@ -617,7 +769,7 @@ mod success {
         let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
 
         let call_response = contract.methods().layer1_decimals().call().await.unwrap();
-        assert_eq!(call_response.value, 18)
+        assert_eq!(call_response.value, LAYER_1_DECIMALS)
     }
 }
 
@@ -630,11 +782,13 @@ mod revert {
         let wrong_token_value: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+
         let (message, coin) = env::construct_msg_data(
             wrong_token_value,
             FROM,
             env::decode_hex(TO),
-            MINIMUM_BRIDGABLE_AMOUNT,
+            config.min_amount,
         )
         .await;
 
@@ -680,15 +834,15 @@ mod revert {
         // check that the RefundRegisteredEvent receipt is populated correctly
         assert_eq!(
             refund_registered_event[0].amount,
-            Bits256(*Address::from_str(&MINIMUM_BRIDGABLE_AMOUNT).unwrap())
+            Bits256(env::encode_hex(config.min_amount))
         );
         assert_eq!(
             refund_registered_event[0].asset,
-            Bits256(*Address::from_str(&wrong_token_value).unwrap())
+            Bits256::from_hex_str(&wrong_token_value).unwrap()
         );
         assert_eq!(
             refund_registered_event[0].from,
-            Bits256(*Address::from_str(&FROM).unwrap())
+            Bits256::from_hex_str(&FROM).unwrap()
         );
 
         // verify that no tokens were minted for message.data.to
@@ -697,16 +851,12 @@ mod revert {
     }
 
     #[tokio::test]
-    #[should_panic(expected = "Revert(42)")]
+    #[should_panic(expected = "Revert(18446744073709486080)")]
     async fn verification_fails_with_wrong_sender() {
         let mut wallet = env::setup_wallet();
-        let (message, coin) = env::construct_msg_data(
-            L1_TOKEN,
-            FROM,
-            env::decode_hex(TO),
-            MINIMUM_BRIDGABLE_AMOUNT,
-        )
-        .await;
+        let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+        let (message, coin) =
+            env::construct_msg_data(L1_TOKEN, FROM, env::decode_hex(TO), config.min_amount).await;
 
         let bad_sender: &str =
             "0x55555500000000000000000000000000000000000000000000000000005555555";
@@ -732,4 +882,72 @@ mod revert {
         )
         .await;
     }
+}
+
+#[tokio::test]
+async fn delta_decimals_too_big_registers_refund() -> Result<(), Error> {
+    // In cases where LAYER_1_DECIMALS - LAYER_2_DECIMALS > 19,
+    // there would be arithmetic overflow and possibly tokens lost.
+    // We want to catch these cases eraly and register a refund.
+    let mut wallet = env::setup_wallet();
+    let config = env::generate_test_config((LAYER_1_DECIMALS, LAYER_2_DECIMALS));
+    let (message, coin) = env::construct_msg_data(
+        L1_TOKEN,
+        FROM,
+        wallet.address().hash().to_vec(),
+        config.test_amount,
+    )
+    .await;
+
+    // Set up the environment
+    let (test_contract, contract_input, coin_inputs, message_inputs, test_contract_id, provider) =
+        env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+
+    // Relay the test message to the test contract
+    let receipts = env::relay_message_to_contract(
+        &wallet,
+        message_inputs[0].clone(),
+        contract_input,
+        &coin_inputs[..],
+        &vec![],
+        &env::generate_outputs(),
+    )
+    .await;
+
+    if LAYER_1_DECIMALS - LAYER_2_DECIMALS > 19 {
+        let refund_registered_event = test_contract
+            .logs_with_type::<utils::environment::bridgefungibletokencontract_mod::RefundRegisteredEvent>(
+            &receipts,
+        )?;
+
+        // Verify the message value was received by the test contract
+        let test_contract_balance = provider
+            .get_contract_asset_balance(test_contract.get_contract_id(), AssetId::default())
+            .await
+            .unwrap();
+        let balance = wallet
+            .get_asset_balance(&AssetId::new(*test_contract_id.hash()))
+            .await?;
+
+        assert_eq!(test_contract_balance, 100);
+
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.test_amount))
+        );
+
+        assert_eq!(
+            refund_registered_event[0].asset,
+            Bits256::from_hex_str(&L1_TOKEN).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(&FROM).unwrap()
+        );
+
+        // verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+    }
+
+    Ok(())
 }

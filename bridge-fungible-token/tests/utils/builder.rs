@@ -6,9 +6,11 @@
 use fuels::signers::fuel_crypto::Hasher;
 
 use fuels::prelude::*;
-use fuels::tx::{Address, AssetId, Bytes32, Contract as tx_contract, Input, Output, Transaction};
+use fuels::tx::{
+    Address, AssetId, Bytes32, Contract as tx_contract, Input, Output, Script, Transaction,
+};
 
-const CONTRACT_MESSAGE_MIN_GAS: u64 = 3_000_000;
+const CONTRACT_MESSAGE_MIN_GAS: u64 = 30_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
     "../bridge-message-predicates/contract_message_script.bin";
 const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
@@ -37,7 +39,7 @@ pub async fn build_contract_message_tx(
     optional_inputs: &[Input],
     optional_outputs: &[Output],
     params: TxParameters,
-) -> Transaction {
+) -> Script {
     // Get the script and predicate for contract messages
     let (script_bytecode, _) = get_contract_message_script().await;
 
@@ -77,17 +79,15 @@ pub async fn build_contract_message_tx(
     tx_inputs.append(&mut optional_inputs.to_vec());
     tx_outputs.append(&mut optional_outputs.to_vec());
 
-    // Create the trnsaction
-    Transaction::Script {
-        gas_price: params.gas_price,
-        gas_limit: CONTRACT_MESSAGE_MIN_GAS * 10,
-        maturity: params.maturity,
-        receipts_root: Default::default(),
-        script: script_bytecode,
-        script_data: vec![],
-        inputs: tx_inputs,
-        outputs: tx_outputs,
-        witnesses: vec![],
-        metadata: None,
-    }
+    // Create the transaction
+    Transaction::script(
+        params.gas_price,
+        CONTRACT_MESSAGE_MIN_GAS * 10,
+        params.maturity,
+        script_bytecode,
+        vec![],
+        tx_inputs,
+        tx_outputs,
+        vec![],
+    )
 }
