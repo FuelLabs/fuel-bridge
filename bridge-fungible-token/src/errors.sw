@@ -6,4 +6,5 @@ pub enum BridgeFungibleTokenError {
     NoCoinsSent: (),
     NoRefundAvailable: (),
     BridgedValueIncompatability: (),
+    OverflowError: (),
 }

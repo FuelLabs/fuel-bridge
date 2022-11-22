@@ -65,10 +65,8 @@ impl MessageReceiver for Contract {
         let message_data = parse_message_data(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        // Register a refund if tokens don't match, or if delta decimals is too large
-        if (message_data.l1_asset != LAYER_1_TOKEN)
-            || (LAYER_1_DECIMALS - DECIMALS > 19u8)
-        {
+        // Register a refund if tokens don't match
+        if (message_data.l1_asset != LAYER_1_TOKEN) {
             register_refund(message_data.from, message_data.l1_asset, message_data.amount);
             return;
         };

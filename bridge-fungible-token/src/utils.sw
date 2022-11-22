@@ -4,7 +4,16 @@ dep errors;
 dep events;
 dep data;
 
-use std::{constants::ZERO_B256, math::*, u256::U256, vec::Vec};
+use std::{
+    constants::ZERO_B256,
+    flags::{
+        disable_panic_on_overflow,
+        enable_panic_on_overflow,
+    },
+    math::*,
+    u256::U256,
+    vec::Vec,
+};
 
 use errors::BridgeFungibleTokenError;
 use data::MessageData;
@@ -19,14 +28,48 @@ const GTF_INPUT_MESSAGE_DATA = 0x11E;
 const GTF_INPUT_MESSAGE_SENDER = 0x115;
 const GTF_INPUT_MESSAGE_RECIPIENT = 0x116;
 
+fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError> {
+    let mut bn_clone = bn;
+    let mut decimals_to_shift = asm(r1: d) { r1: u64 };
+
+    // the zero case
+    if (decimals_to_shift == 0) {
+        return Result::Ok(bn);
+    };
+
+    // the too large case
+    // (there are only 78 decimal digits in a 256bit number)
+    if (decimals_to_shift > 77) {
+        return Result::Err(BridgeFungibleTokenError::OverflowError);
+    };
+
+    // math time
+    while (decimals_to_shift > 0) {
+        if (decimals_to_shift < 20) {
+            let (prod, overflow) = bn_mult(bn_clone, 10.pow(decimals_to_shift));
+            if (overflow != 0) {
+                return Result::Err(BridgeFungibleTokenError::OverflowError);
+            };
+            return Result::Ok(prod);
+        } else {
+            let (prod, overflow) = bn_mult(bn_clone, 10.pow(19));
+            if (overflow != 0) {
+                return Result::Err(BridgeFungibleTokenError::OverflowError);
+            };
+            decimals_to_shift = decimals_to_shift - 19;
+            bn_clone += prod;
+        };
+    };
+    Result::Ok(bn_clone)
+}
+
 /// Make any necessary adjustments to decimals(precision) on the amount
 /// to be withdrawn. This amount needs to be passed via message.data as a b256
 pub fn adjust_withdrawal_decimals(val: u64) -> b256 {
     if DECIMALS < LAYER_1_DECIMALS {
         let amount = U256::from((0, 0, 0, val));
-        let factor = U256::from((0, 0, 0, 10.pow(LAYER_1_DECIMALS - DECIMALS)));
-        let components = amount.multiply(factor).into();
-        compose(components)
+        let result = shift_decimals_left(amount, LAYER_1_DECIMALS - DECIMALS);
+        compose(result.unwrap().into())
     } else {
         // Either decimals are the same, or decimals are negative.
         // TODO: Decide how to handle negative decimals before mainnet.
@@ -37,16 +80,31 @@ pub fn adjust_withdrawal_decimals(val: u64) -> b256 {
 
 /// Make any necessary adjustments to decimals(precision) on the deposited value, and return either a converted u64 or an error if the conversion can't be achieved without overflow or loss of precision.
 pub fn adjust_deposit_decimals(msg_val: b256) -> Result<u64, BridgeFungibleTokenError> {
-    let decomposed = decompose(msg_val);
-    let value = U256::from((decomposed.0, decomposed.1, decomposed.2, decomposed.3));
+    let value = U256::from(decompose(msg_val));
 
     if LAYER_1_DECIMALS > DECIMALS {
-        let adjustment_factor = U256::from((0, 0, 0, 10.pow(LAYER_1_DECIMALS - DECIMALS)));
-        if value.divide(adjustment_factor).multiply(adjustment_factor) == value
-            && (value.gt(adjustment_factor)
-            || value.eq(adjustment_factor))
+        let decimal_diff = LAYER_1_DECIMALS - DECIMALS;
+        //10.pow(19) fits in a u64, but 10.pow(20) would overflow when
+        // calculating adjustment_factor below.
+        // There's no need to check this in adjust_withdrawal_decimals();
+        // if an overflow is going to occur when calculating adjustment_factor,
+        // it will be caught here first.
+        if decimal_diff > 19u8 {
+            return Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability);
+        };
+        let adjustment_factor = 10.pow(LAYER_1_DECIMALS - DECIMALS);
+        let bn_factor = U256::from((0, 0, 0, adjustment_factor));
+        let adjusted = value.divide(bn_factor);
+
+        let result = shift_decimals_left(adjusted, decimal_diff);
+        if result.is_err() {
+            return Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability);
+        };
+
+        if result.unwrap() == value
+            && (value > bn_factor
+            || value == bn_factor)
         {
-            let adjusted = value.divide(adjustment_factor);
             let val_result = adjusted.as_u64();
             match val_result {
                 Result::Err(e) => {
@@ -146,4 +204,51 @@ pub fn input_message_data<T>(index: u64, offset: u64) -> T {
 // TODO: [std-lib] replace with 'input_message_sender'
 pub fn input_message_sender(index: u64) -> Address {
     Address::from(__gtf::<b256>(index, GTF_INPUT_MESSAGE_SENDER))
+}
+
+// TODO: [std-lib] replace when added as a method to U128/U256
+fn bn_mult(bn: U256, factor: u64) -> (U256, u64) {
+    disable_panic_on_overflow();
+    let result = (
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0,
+    );
+    let result = asm(bn: __addr_of(bn), factor: factor, carry_0, carry_1, value, product, sum, result: __addr_of(result)) {
+        // Run multiplication on the lower 64bit word
+        lw value bn i3; // load the word in (bn + 3 words) into value
+        mul product value factor; // mult value * factor and save in product
+        move carry_0 of; // record the carry
+        sw result product i3;
+
+        // Run multiplication on the next 64bit word
+        lw value bn i2; // load the word in (bn + 2 words) into value
+        mul product value factor; // mult value * factor and save in product
+        move carry_1 of; // record the carry
+        add sum product carry_0; // add previous carry + product
+        add carry_0 carry_1 of; // record the total new carry
+        sw result sum i2;
+
+        // Run multiplication on the next 64bit word
+        lw value bn i1; // load the word in (bn + 1 words) into value
+        mul product value factor; // mult value * factor and save in product
+        move carry_1 of; // record the carry
+        add sum product carry_0; // add previous carry + product
+        add carry_0 carry_1 of; // record the total new carry
+        sw result sum i1;
+
+        // Run multiplication on the next 64bit word
+        lw value bn i0; // load the word in bn into value
+        mul product value factor; // mult value * factor and save in product
+        move carry_1 of; // record the carry
+        add sum product carry_0; // add previous carry + product
+        add carry_0 carry_1 of; // record the total new carry
+        move carry_1 of; // record any overflow
+        sw result sum i0;
+        sw result carry_0 i4;
+
+        result: (U256, u64)
+    };
+
+    enable_panic_on_overflow();
+    result
 }
