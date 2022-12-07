@@ -46,29 +46,22 @@ contract FuelMessagesEnabled {
     ////////////////////////
 
     /// @notice Send a message to a recipient on Fuel
-    /// @param recipient The target message receiver
-    /// @param owner The owner predicate required to play message
+    /// @param recipient The message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
-    function sendMessage(
-        bytes32 recipient,
-        bytes32 owner,
-        bytes memory data
-    ) internal {
-        FUEL_MESSAGE_PORTAL.sendMessage(recipient, owner, data);
+    function sendMessage(bytes32 recipient, bytes memory data) internal {
+        FUEL_MESSAGE_PORTAL.sendMessage(recipient, data);
     }
 
     /// @notice Send a message to a recipient on Fuel
-    /// @param recipient The target message receiver
-    /// @param owner The owner predicate required to play message
+    /// @param recipient The message receiver address or predicate root
     /// @param amount The amount of ETH to send with message
     /// @param data The message data to be sent to the receiver
     function sendMessage(
         bytes32 recipient,
-        bytes32 owner,
         uint256 amount,
         bytes memory data
     ) internal {
-        FUEL_MESSAGE_PORTAL.sendMessage{value: amount}(recipient, owner, data);
+        FUEL_MESSAGE_PORTAL.sendMessage{value: amount}(recipient, data);
     }
 
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message

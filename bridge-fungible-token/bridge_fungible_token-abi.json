@@ -1,0 +1,352 @@
+{
+  "types": [
+    {
+      "typeId": 0,
+      "type": "()",
+      "components": [],
+      "typeParameters": null
+    },
+    {
+      "typeId": 1,
+      "type": "b256",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 2,
+      "type": "enum BridgeFungibleTokenError",
+      "components": [
+        {
+          "name": "UnauthorizedSender",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "IncorrectAssetDeposited",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "NoCoinsSent",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "NoRefundAvailable",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "BridgedValueIncompatability",
+          "type": 0,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 3,
+      "type": "enum Identity",
+      "components": [
+        {
+          "name": "Address",
+          "type": 5,
+          "typeArguments": null
+        },
+        {
+          "name": "ContractId",
+          "type": 6,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 4,
+      "type": "str[32]",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 5,
+      "type": "struct Address",
+      "components": [
+        {
+          "name": "value",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 6,
+      "type": "struct ContractId",
+      "components": [
+        {
+          "name": "value",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 7,
+      "type": "struct DepositEvent",
+      "components": [
+        {
+          "name": "to",
+          "type": 5,
+          "typeArguments": null
+        },
+        {
+          "name": "from",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 10,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 8,
+      "type": "struct RefundRegisteredEvent",
+      "components": [
+        {
+          "name": "from",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "asset",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 9,
+      "type": "struct WithdrawalEvent",
+      "components": [
+        {
+          "name": "to",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "from",
+          "type": 3,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 10,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 10,
+      "type": "u64",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 11,
+      "type": "u8",
+      "components": null,
+      "typeParameters": null
+    }
+  ],
+  "functions": [
+    {
+      "inputs": [
+        {
+          "name": "msg_idx",
+          "type": 11,
+          "typeArguments": null
+        }
+      ],
+      "name": "process_message",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [
+        {
+          "name": "originator",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "asset",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "name": "claim_refund",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [
+        {
+          "name": "to",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "name": "withdraw_to",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "output": {
+        "name": "",
+        "type": 4,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "output": {
+        "name": "",
+        "type": 4,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "output": {
+        "name": "",
+        "type": 11,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "layer1_token",
+      "output": {
+        "name": "",
+        "type": 1,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "layer1_decimals",
+      "output": {
+        "name": "",
+        "type": 11,
+        "typeArguments": null
+      }
+    }
+  ],
+  "loggedTypes": [
+    {
+      "logId": 0,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 1,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 2,
+      "loggedType": {
+        "name": "",
+        "type": 8,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 3,
+      "loggedType": {
+        "name": "",
+        "type": 8,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 4,
+      "loggedType": {
+        "name": "",
+        "type": 7,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 5,
+      "loggedType": {
+        "name": "",
+        "type": 7,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 6,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 7,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 8,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 9,
+      "loggedType": {
+        "name": "",
+        "type": 9,
+        "typeArguments": []
+      }
+    }
+  ]
+}

@@ -1,11 +1,11 @@
 {
-	"compilerOptions": {
-		"target": "es5",
-		"module": "commonjs",
-		"esModuleInterop": true,
-		"outDir": "dist",
-		"resolveJsonModule": true,
-		"lib": ["es2015", "dom"]
-	},
-	"include": ["./tests", "./scripts", "./fuel-v2-contracts-typechain", "./**/*.ts"]
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "lib": ["es2015", "dom"]
+  },
+  "include": ["./tests", "./scripts", "./**/*.ts"]
 }

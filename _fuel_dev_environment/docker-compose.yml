@@ -4,8 +4,8 @@ services:
   l1_chain:
     image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
     build:
-      context: ./docker/l1-chain
-      dockerfile: Dockerfile
+      context: ./
+      dockerfile: ./docker/l1-chain/Dockerfile
     env_file:
       - ./envs/l1_chain.env
     ports:
@@ -19,8 +19,6 @@ services:
     build:
       context: ./
       dockerfile: ./docker/deployer/Dockerfile
-    env_file:
-      - ./envs/l1_chain.env
     environment:
       # Env vars for the deployment script.
       CONTRACTS_RPC_URL: http://l1_chain:8545
@@ -44,6 +42,19 @@ services:
       # Env vars for the fuel core script.
       L1_CHAIN_HTTP: http://l1_chain:8545
       DEPLOYER_ADDRESSES_PATH: http://deployer:8081/addresses.json
+      CONSENSUS_KEY_SECRET: 'a449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298'
     ports:
       # expose the service to the host for integration testing
       - ${FULE_CORE_HTTP_PORT:-4000}:4000
+
+  #msg_executor:
+  #  depends_on:
+  #    - fuel_core
+  #  image: fueldev/msgexecutor:${DOCKER_TAG_MSG_EXECUTOR:-latest}
+  #  build:
+  #    context: ./
+  #    dockerfile: ./docker/msg-executor/Dockerfile
+  #  environment:
+  #    # Env vars for the fuel core script.
+  #    FUEL_CHAIN_HTTP: http://fuel_core:4000
+  #    EXECUTOR_KEY: 'a449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298'

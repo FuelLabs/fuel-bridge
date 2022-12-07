@@ -28,11 +28,7 @@ library CryptographyLib {
         // https://eips.ethereum.org/EIPS/eip-2
         require(uint256(s) <= MAX_SIGNATURE_S_VALUE, "signature-invalid-s");
 
-        // Get the message hash that the signature must be over
-        bytes32 signedMessageHash =
-            keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", message));
-
-        address signer = ecrecover(signedMessageHash, v, r, s);
+        address signer = ecrecover(message, v, r, s);
         require(signer != address(0), "signature-invalid");
 
         return signer;

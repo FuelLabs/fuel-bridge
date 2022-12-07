@@ -12,7 +12,6 @@ import {
   Contract,
   ContractTransaction,
   Overrides,
-  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -20,32 +19,19 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
-interface L1ERC20GatewayInterface extends ethers.utils.Interface {
+interface FuelSidechainConsensusInterface extends ethers.utils.Interface {
   functions: {
-    "FUEL_MESSAGE_PORTAL()": FunctionFragment;
-    "deposit(bytes32,address,bytes32,uint256)": FunctionFragment;
-    "finalizeWithdrawal(address,address,uint256)": FunctionFragment;
     "owner()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "s_deposits(address,bytes32)": FunctionFragment;
+    "s_authorityKey()": FunctionFragment;
+    "setAuthorityKey(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
+    "verifyBlock(bytes32,bytes)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "FUEL_MESSAGE_PORTAL",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deposit",
-    values: [BytesLike, string, BytesLike, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "finalizeWithdrawal",
-    values: [string, string, BigNumberish]
-  ): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
@@ -54,24 +40,23 @@ interface L1ERC20GatewayInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "s_deposits",
-    values: [string, BytesLike]
+    functionFragment: "s_authorityKey",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setAuthorityKey",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "verifyBlock",
+    values: [BytesLike, BytesLike]
+  ): string;
 
-  decodeFunctionResult(
-    functionFragment: "FUEL_MESSAGE_PORTAL",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "finalizeWithdrawal",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
@@ -79,12 +64,23 @@ interface L1ERC20GatewayInterface extends ethers.utils.Interface {
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(functionFragment: "s_deposits", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "s_authorityKey",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setAuthorityKey",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "verifyBlock",
+    data: BytesLike
+  ): Result;
 
   events: {
     "OwnershipTransferred(address,address)": EventFragment;
@@ -97,7 +93,7 @@ interface L1ERC20GatewayInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
 }
 
-export class L1ERC20Gateway extends Contract {
+export class FuelSidechainConsensus extends Contract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -138,43 +134,9 @@ export class L1ERC20Gateway extends Contract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: L1ERC20GatewayInterface;
+  interface: FuelSidechainConsensusInterface;
 
   functions: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<[string]>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<[string]>;
-
-    deposit(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "deposit(bytes32,address,bytes32,uint256)"(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    finalizeWithdrawal(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "finalizeWithdrawal(address,address,uint256)"(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     "owner()"(overrides?: CallOverrides): Promise<[string]>;
@@ -199,17 +161,19 @@ export class L1ERC20Gateway extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    s_deposits(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    s_authorityKey(overrides?: CallOverrides): Promise<[string]>;
 
-    "s_deposits(address,bytes32)"(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
+    "s_authorityKey()"(overrides?: CallOverrides): Promise<[string]>;
+
+    setAuthorityKey(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "setAuthorityKey(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     transferOwnership(
       newOwner: string,
@@ -228,41 +192,19 @@ export class L1ERC20Gateway extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    verifyBlock(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    "verifyBlock(bytes32,bytes)"(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
   };
-
-  FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<string>;
-
-  "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<string>;
-
-  deposit(
-    to: BytesLike,
-    tokenId: string,
-    fuelTokenId: BytesLike,
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "deposit(bytes32,address,bytes32,uint256)"(
-    to: BytesLike,
-    tokenId: string,
-    fuelTokenId: BytesLike,
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  finalizeWithdrawal(
-    to: string,
-    tokenId: string,
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "finalizeWithdrawal(address,address,uint256)"(
-    to: string,
-    tokenId: string,
-    amount: BigNumberish,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -288,17 +230,19 @@ export class L1ERC20Gateway extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  s_deposits(
-    arg0: string,
-    arg1: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  s_authorityKey(overrides?: CallOverrides): Promise<string>;
 
-  "s_deposits(address,bytes32)"(
-    arg0: string,
-    arg1: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
+  "s_authorityKey()"(overrides?: CallOverrides): Promise<string>;
+
+  setAuthorityKey(
+    authorityKey: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "setAuthorityKey(address)"(
+    authorityKey: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   transferOwnership(
     newOwner: string,
@@ -318,41 +262,19 @@ export class L1ERC20Gateway extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  verifyBlock(
+    blockHash: BytesLike,
+    signature: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "verifyBlock(bytes32,bytes)"(
+    blockHash: BytesLike,
+    signature: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
   callStatic: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<string>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<string>;
-
-    deposit(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "deposit(bytes32,address,bytes32,uint256)"(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    finalizeWithdrawal(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "finalizeWithdrawal(address,address,uint256)"(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     owner(overrides?: CallOverrides): Promise<string>;
 
     "owner()"(overrides?: CallOverrides): Promise<string>;
@@ -369,17 +291,19 @@ export class L1ERC20Gateway extends Contract {
 
     "renounceOwnership()"(overrides?: CallOverrides): Promise<void>;
 
-    s_deposits(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    s_authorityKey(overrides?: CallOverrides): Promise<string>;
 
-    "s_deposits(address,bytes32)"(
-      arg0: string,
-      arg1: BytesLike,
+    "s_authorityKey()"(overrides?: CallOverrides): Promise<string>;
+
+    setAuthorityKey(
+      authorityKey: string,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<void>;
+
+    "setAuthorityKey(address)"(
+      authorityKey: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     transferOwnership(
       newOwner: string,
@@ -394,6 +318,18 @@ export class L1ERC20Gateway extends Contract {
     unpause(overrides?: CallOverrides): Promise<void>;
 
     "unpause()"(overrides?: CallOverrides): Promise<void>;
+
+    verifyBlock(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "verifyBlock(bytes32,bytes)"(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
   };
 
   filters: {
@@ -411,40 +347,6 @@ export class L1ERC20Gateway extends Contract {
   };
 
   estimateGas: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    deposit(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "deposit(bytes32,address,bytes32,uint256)"(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    finalizeWithdrawal(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "finalizeWithdrawal(address,address,uint256)"(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     "owner()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -469,16 +371,18 @@ export class L1ERC20Gateway extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    s_deposits(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
+    s_authorityKey(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "s_authorityKey()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    setAuthorityKey(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "s_deposits(address,bytes32)"(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
+    "setAuthorityKey(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     transferOwnership(
@@ -498,47 +402,21 @@ export class L1ERC20Gateway extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    verifyBlock(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "verifyBlock(bytes32,bytes)"(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    FUEL_MESSAGE_PORTAL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "FUEL_MESSAGE_PORTAL()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    deposit(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "deposit(bytes32,address,bytes32,uint256)"(
-      to: BytesLike,
-      tokenId: string,
-      fuelTokenId: BytesLike,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    finalizeWithdrawal(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "finalizeWithdrawal(address,address,uint256)"(
-      to: string,
-      tokenId: string,
-      amount: BigNumberish,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -563,16 +441,20 @@ export class L1ERC20Gateway extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    s_deposits(
-      arg0: string,
-      arg1: BytesLike,
+    s_authorityKey(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "s_authorityKey()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "s_deposits(address,bytes32)"(
-      arg0: string,
-      arg1: BytesLike,
-      overrides?: CallOverrides
+    setAuthorityKey(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "setAuthorityKey(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     transferOwnership(
@@ -591,6 +473,18 @@ export class L1ERC20Gateway extends Contract {
 
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    verifyBlock(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "verifyBlock(bytes32,bytes)"(
+      blockHash: BytesLike,
+      signature: BytesLike,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
 }

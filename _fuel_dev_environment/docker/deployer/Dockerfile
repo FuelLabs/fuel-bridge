@@ -12,6 +12,9 @@ WORKDIR /deployer/fuel-v2-contracts
 RUN npm ci
 RUN npm run build
 
+# expose deployer port
+EXPOSE 8081
+
 # copy over script and run
 COPY ./scripts/deployer.sh .
 CMD ["sh", "./deployer.sh"]

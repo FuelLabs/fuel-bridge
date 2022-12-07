@@ -1,13 +1,11 @@
 {
   "chain_name": "local_testnet",
-  "block_production": "Instant",
-  "parent_network": {
-    "type": "LocalTest"
+  "block_production": {
+    "ProofOfAuthority": {
+      "trigger": "instant"
+    }
   },
-  "wallet": {
-    "address": "0x94ffcc53b892684acefaebc8a3d4a595e528a8cf664eeb3ef36f1020b0809d0d",
-    "privateKey": "0xa449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298"
-  },
+  "block_gas_limit": 10000000000000,
   "initial_state": {
     "coins": [
       {
@@ -25,17 +23,6 @@
         "amount": "0x000000E8D4A51000",
         "asset_id": "0x0000000000000000000000000000000000000000000000000000000000000000"
       }
-    ],
-    "messages": [
-      {
-        "sender": "0x000000000000000000000000f39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
-        "recipient": "0x94ffcc53b892684acefaebc8a3d4a595e528a8cf664eeb3ef36f1020b0809d0d",
-        "owner": "0x94ffcc53b892684acefaebc8a3d4a595e528a8cf664eeb3ef36f1020b0809d0d",
-        "nonce": "0x01",
-        "amount": "0x0000000000000001",
-        "data": "0x",
-        "da_height": "0x00"
-      }
     ]
   },
   "transaction_parameters": {
@@ -43,7 +30,7 @@
     "max_inputs": 255,
     "max_outputs": 255,
     "max_witnesses": 255,
-    "max_gas_per_tx": 100000000,
+    "max_gas_per_tx": 1000000000000,
     "max_script_length": 1048576,
     "max_script_data_length": 1048576,
     "max_static_contracts": 255,

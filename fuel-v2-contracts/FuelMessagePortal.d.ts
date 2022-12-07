@@ -25,23 +25,20 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     "ETH_DECIMALS()": FunctionFragment;
     "FUEL_BASE_ASSET_DECIMALS()": FunctionFragment;
     "MAX_MESSAGE_DATA_SIZE()": FunctionFragment;
-    "c_0x2b840827(bytes32)": FunctionFragment;
-    "commitMessageRoot(bytes32)": FunctionFragment;
+    "SIDECHAIN_CONSENSUS()": FunctionFragment;
     "getFuelBaseAssetDecimals()": FunctionFragment;
     "getMessageSender()": FunctionFragment;
     "owner()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
-    "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,tuple)": FunctionFragment;
+    "relayMessageFromFuelBlock(tuple,tuple,tuple,bytes)": FunctionFragment;
+    "relayMessageFromPrevFuelBlock(tuple,tuple,tuple,tuple,tuple,bytes)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
-    "s_incomingMessageRootCommitter()": FunctionFragment;
-    "s_incomingMessageRoots(bytes32)": FunctionFragment;
     "s_incomingMessageSuccessful(bytes32)": FunctionFragment;
     "s_incomingMessageTimelock()": FunctionFragment;
     "s_outgoingMessageNonce()": FunctionFragment;
     "sendETH(bytes32)": FunctionFragment;
-    "sendMessage(bytes32,bytes32,bytes)": FunctionFragment;
-    "setIncomingMessageRootCommitter(address)": FunctionFragment;
+    "sendMessage(bytes32,bytes)": FunctionFragment;
     "setIncomingMessageTimelock(uint64)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
@@ -60,12 +57,8 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "c_0x2b840827",
-    values: [BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "commitMessageRoot",
-    values: [BytesLike]
+    functionFragment: "SIDECHAIN_CONSENSUS",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getFuelBaseAssetDecimals",
@@ -79,32 +72,63 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
-    functionFragment: "relayMessage",
+    functionFragment: "relayMessageFromFuelBlock",
     values: [
-      BytesLike,
-      BytesLike,
-      BytesLike,
-      BigNumberish,
-      BytesLike,
       {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
-      }
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      { key: BigNumberish; proof: BytesLike[] },
+      BytesLike
+    ]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "relayMessageFromPrevFuelBlock",
+    values: [
+      {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      { key: BigNumberish; proof: BytesLike[] },
+      { key: BigNumberish; proof: BytesLike[] },
+      BytesLike
     ]
   ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "s_incomingMessageRootCommitter",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "s_incomingMessageRoots",
-    values: [BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "s_incomingMessageSuccessful",
@@ -121,11 +145,7 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
   encodeFunctionData(functionFragment: "sendETH", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "sendMessage",
-    values: [BytesLike, BytesLike, BytesLike]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "setIncomingMessageRootCommitter",
-    values: [string]
+    values: [BytesLike, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setIncomingMessageTimelock",
@@ -150,11 +170,7 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "c_0x2b840827",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "commitMessageRoot",
+    functionFragment: "SIDECHAIN_CONSENSUS",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -169,19 +185,15 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "relayMessage",
+    functionFragment: "relayMessageFromFuelBlock",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "relayMessageFromPrevFuelBlock",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_incomingMessageRootCommitter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_incomingMessageRoots",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -202,10 +214,6 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setIncomingMessageRootCommitter",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setIncomingMessageTimelock",
     data: BytesLike
   ): Result;
@@ -218,7 +226,7 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
   events: {
     "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
-    "SentMessage(bytes32,bytes32,bytes32,uint64,uint64,bytes)": EventFragment;
+    "SentMessage(bytes32,bytes32,uint64,uint64,bytes)": EventFragment;
     "Unpaused(address)": EventFragment;
   };
 
@@ -286,25 +294,9 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    c_0x2b840827(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
+    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<[string]>;
 
-    "c_0x2b840827(bytes32)"(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[void]>;
-
-    commitMessageRoot(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "commitMessageRoot(bytes32)"(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
+    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<[string]>;
 
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<[number]>;
 
@@ -330,33 +322,109 @@ export class FuelMessagePortal extends Contract {
 
     "paused()"(overrides?: CallOverrides): Promise<[boolean]>;
 
-    relayMessage(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    relayMessageFromFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,(bytes32,uint256,uint256,bytes32[]))"(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    "relayMessageFromFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    relayMessageFromPrevFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "relayMessageFromPrevFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,bytes32),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -367,24 +435,6 @@ export class FuelMessagePortal extends Contract {
     "renounceOwnership()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    s_incomingMessageRootCommitter(
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    "s_incomingMessageRootCommitter()"(
-      overrides?: CallOverrides
-    ): Promise<[string]>;
-
-    s_incomingMessageRoots(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    "s_incomingMessageRoots(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
 
     s_incomingMessageSuccessful(
       arg0: BytesLike,
@@ -418,26 +468,14 @@ export class FuelMessagePortal extends Contract {
 
     sendMessage(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "sendMessage(bytes32,bytes32,bytes)"(
+    "sendMessage(bytes32,bytes)"(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    setIncomingMessageRootCommitter(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "setIncomingMessageRootCommitter(address)"(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     setIncomingMessageTimelock(
@@ -481,25 +519,9 @@ export class FuelMessagePortal extends Contract {
 
   "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-  c_0x2b840827(
-    c__0x2b840827: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
+  SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<string>;
 
-  "c_0x2b840827(bytes32)"(
-    c__0x2b840827: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<void>;
-
-  commitMessageRoot(
-    messageRoot: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "commitMessageRoot(bytes32)"(
-    messageRoot: BytesLike,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
+  "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<string>;
 
   getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
 
@@ -525,33 +547,109 @@ export class FuelMessagePortal extends Contract {
 
   "paused()"(overrides?: CallOverrides): Promise<boolean>;
 
-  relayMessage(
-    sender: BytesLike,
-    recipient: BytesLike,
-    nonce: BytesLike,
-    amount: BigNumberish,
-    data: BytesLike,
-    merkleProof: {
-      root: BytesLike;
-      key: BigNumberish;
-      numLeaves: BigNumberish;
-      proof: BytesLike[];
+  relayMessageFromFuelBlock(
+    message: {
+      sender: BytesLike;
+      recipient: BytesLike;
+      nonce: BytesLike;
+      amount: BigNumberish;
+      data: BytesLike;
     },
+    blockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      daHeight: BigNumberish;
+      txCount: BigNumberish;
+      outputMessagesCount: BigNumberish;
+      txRoot: BytesLike;
+      outputMessagesRoot: BytesLike;
+    },
+    messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+    poaSignature: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,(bytes32,uint256,uint256,bytes32[]))"(
-    sender: BytesLike,
-    recipient: BytesLike,
-    nonce: BytesLike,
-    amount: BigNumberish,
-    data: BytesLike,
-    merkleProof: {
-      root: BytesLike;
-      key: BigNumberish;
-      numLeaves: BigNumberish;
-      proof: BytesLike[];
+  "relayMessageFromFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),bytes)"(
+    message: {
+      sender: BytesLike;
+      recipient: BytesLike;
+      nonce: BytesLike;
+      amount: BigNumberish;
+      data: BytesLike;
     },
+    blockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      daHeight: BigNumberish;
+      txCount: BigNumberish;
+      outputMessagesCount: BigNumberish;
+      txRoot: BytesLike;
+      outputMessagesRoot: BytesLike;
+    },
+    messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+    poaSignature: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  relayMessageFromPrevFuelBlock(
+    message: {
+      sender: BytesLike;
+      recipient: BytesLike;
+      nonce: BytesLike;
+      amount: BigNumberish;
+      data: BytesLike;
+    },
+    rootBlockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      applicationHash: BytesLike;
+    },
+    blockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      daHeight: BigNumberish;
+      txCount: BigNumberish;
+      outputMessagesCount: BigNumberish;
+      txRoot: BytesLike;
+      outputMessagesRoot: BytesLike;
+    },
+    blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+    messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+    poaSignature: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "relayMessageFromPrevFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,bytes32),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),(uint256,bytes32[]),bytes)"(
+    message: {
+      sender: BytesLike;
+      recipient: BytesLike;
+      nonce: BytesLike;
+      amount: BigNumberish;
+      data: BytesLike;
+    },
+    rootBlockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      applicationHash: BytesLike;
+    },
+    blockHeader: {
+      prevRoot: BytesLike;
+      height: BigNumberish;
+      timestamp: BigNumberish;
+      daHeight: BigNumberish;
+      txCount: BigNumberish;
+      outputMessagesCount: BigNumberish;
+      txRoot: BytesLike;
+      outputMessagesRoot: BytesLike;
+    },
+    blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+    messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+    poaSignature: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -562,22 +660,6 @@ export class FuelMessagePortal extends Contract {
   "renounceOwnership()"(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
-
-  s_incomingMessageRootCommitter(overrides?: CallOverrides): Promise<string>;
-
-  "s_incomingMessageRootCommitter()"(
-    overrides?: CallOverrides
-  ): Promise<string>;
-
-  s_incomingMessageRoots(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
-
-  "s_incomingMessageRoots(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<BigNumber>;
 
   s_incomingMessageSuccessful(
     arg0: BytesLike,
@@ -609,26 +691,14 @@ export class FuelMessagePortal extends Contract {
 
   sendMessage(
     recipient: BytesLike,
-    owner: BytesLike,
     data: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "sendMessage(bytes32,bytes32,bytes)"(
+  "sendMessage(bytes32,bytes)"(
     recipient: BytesLike,
-    owner: BytesLike,
     data: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  setIncomingMessageRootCommitter(
-    messageRootCommitter: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "setIncomingMessageRootCommitter(address)"(
-    messageRootCommitter: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   setIncomingMessageTimelock(
@@ -672,25 +742,9 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    c_0x2b840827(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<string>;
 
-    "c_0x2b840827(bytes32)"(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    commitMessageRoot(
-      messageRoot: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "commitMessageRoot(bytes32)"(
-      messageRoot: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<string>;
 
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
 
@@ -712,55 +766,115 @@ export class FuelMessagePortal extends Contract {
 
     "paused()"(overrides?: CallOverrides): Promise<boolean>;
 
-    relayMessage(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    relayMessageFromFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,(bytes32,uint256,uint256,bytes32[]))"(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    "relayMessageFromFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    relayMessageFromPrevFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "relayMessageFromPrevFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,bytes32),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
     "renounceOwnership()"(overrides?: CallOverrides): Promise<void>;
-
-    s_incomingMessageRootCommitter(overrides?: CallOverrides): Promise<string>;
-
-    "s_incomingMessageRootCommitter()"(
-      overrides?: CallOverrides
-    ): Promise<string>;
-
-    s_incomingMessageRoots(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "s_incomingMessageRoots(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
 
     s_incomingMessageSuccessful(
       arg0: BytesLike,
@@ -791,25 +905,13 @@ export class FuelMessagePortal extends Contract {
 
     sendMessage(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    "sendMessage(bytes32,bytes32,bytes)"(
+    "sendMessage(bytes32,bytes)"(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setIncomingMessageRootCommitter(
-      messageRootCommitter: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    "setIncomingMessageRootCommitter(address)"(
-      messageRootCommitter: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -852,16 +954,14 @@ export class FuelMessagePortal extends Contract {
     SentMessage(
       sender: BytesLike | null,
       recipient: BytesLike | null,
-      owner: null,
       nonce: null,
       amount: null,
       data: null
     ): TypedEventFilter<
-      [string, string, string, BigNumber, BigNumber, string],
+      [string, string, BigNumber, BigNumber, string],
       {
         sender: string;
         recipient: string;
-        owner: string;
         nonce: BigNumber;
         amount: BigNumber;
         data: string;
@@ -884,25 +984,9 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    c_0x2b840827(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "c_0x2b840827(bytes32)"(
-      c__0x2b840827: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    commitMessageRoot(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "commitMessageRoot(bytes32)"(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
+    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -928,33 +1012,109 @@ export class FuelMessagePortal extends Contract {
 
     "paused()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    relayMessage(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    relayMessageFromFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,(bytes32,uint256,uint256,bytes32[]))"(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    "relayMessageFromFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    relayMessageFromPrevFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "relayMessageFromPrevFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,bytes32),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -964,24 +1124,6 @@ export class FuelMessagePortal extends Contract {
 
     "renounceOwnership()"(
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    s_incomingMessageRootCommitter(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "s_incomingMessageRootCommitter()"(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    s_incomingMessageRoots(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "s_incomingMessageRoots(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     s_incomingMessageSuccessful(
@@ -1016,26 +1158,14 @@ export class FuelMessagePortal extends Contract {
 
     sendMessage(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "sendMessage(bytes32,bytes32,bytes)"(
+    "sendMessage(bytes32,bytes)"(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    setIncomingMessageRootCommitter(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "setIncomingMessageRootCommitter(address)"(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     setIncomingMessageTimelock(
@@ -1088,24 +1218,12 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    c_0x2b840827(
-      c__0x2b840827: BytesLike,
+    SIDECHAIN_CONSENSUS(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "c_0x2b840827(bytes32)"(
-      c__0x2b840827: BytesLike,
+    "SIDECHAIN_CONSENSUS()"(
       overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    commitMessageRoot(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "commitMessageRoot(bytes32)"(
-      messageRoot: BytesLike,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     getFuelBaseAssetDecimals(
@@ -1138,33 +1256,109 @@ export class FuelMessagePortal extends Contract {
 
     "paused()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    relayMessage(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    relayMessageFromFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "relayMessage(bytes32,bytes32,bytes32,uint64,bytes,(bytes32,uint256,uint256,bytes32[]))"(
-      sender: BytesLike,
-      recipient: BytesLike,
-      nonce: BytesLike,
-      amount: BigNumberish,
-      data: BytesLike,
-      merkleProof: {
-        root: BytesLike;
-        key: BigNumberish;
-        numLeaves: BigNumberish;
-        proof: BytesLike[];
+    "relayMessageFromFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
       },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    relayMessageFromPrevFuelBlock(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "relayMessageFromPrevFuelBlock((bytes32,bytes32,bytes32,uint64,bytes),(bytes32,uint64,uint64,bytes32),(bytes32,uint64,uint64,uint64,uint64,uint64,bytes32,bytes32),(uint256,bytes32[]),(uint256,bytes32[]),bytes)"(
+      message: {
+        sender: BytesLike;
+        recipient: BytesLike;
+        nonce: BytesLike;
+        amount: BigNumberish;
+        data: BytesLike;
+      },
+      rootBlockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        applicationHash: BytesLike;
+      },
+      blockHeader: {
+        prevRoot: BytesLike;
+        height: BigNumberish;
+        timestamp: BigNumberish;
+        daHeight: BigNumberish;
+        txCount: BigNumberish;
+        outputMessagesCount: BigNumberish;
+        txRoot: BytesLike;
+        outputMessagesRoot: BytesLike;
+      },
+      blockInHistoryProof: { key: BigNumberish; proof: BytesLike[] },
+      messageInBlockProof: { key: BigNumberish; proof: BytesLike[] },
+      poaSignature: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1174,24 +1368,6 @@ export class FuelMessagePortal extends Contract {
 
     "renounceOwnership()"(
       overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    s_incomingMessageRootCommitter(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "s_incomingMessageRootCommitter()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    s_incomingMessageRoots(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "s_incomingMessageRoots(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     s_incomingMessageSuccessful(
@@ -1232,26 +1408,14 @@ export class FuelMessagePortal extends Contract {
 
     sendMessage(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "sendMessage(bytes32,bytes32,bytes)"(
+    "sendMessage(bytes32,bytes)"(
       recipient: BytesLike,
-      owner: BytesLike,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    setIncomingMessageRootCommitter(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "setIncomingMessageRootCommitter(address)"(
-      messageRootCommitter: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     setIncomingMessageTimelock(

@@ -76,7 +76,7 @@ contract L1ERC20Gateway is FuelMessagesEnabled, Ownable, Pausable {
                 to,
                 bytes32(amount)
             );
-        sendMessage(fuelTokenId, InputMessagePredicates.MESSAGE_TO_FUNGIBLE_TOKEN, data);
+        sendMessage(InputMessagePredicates.CONTRACT_MESSAGE_PREDICATE, data);
     }
 
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
