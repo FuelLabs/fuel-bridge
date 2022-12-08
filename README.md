@@ -20,7 +20,7 @@ npm ci
 
 ### Running Tests
 
-Before running the integration tests, you need to spin up a full development stack complete with an Ethereum client and Fuel client. You can use the easy docker setup detailed [here](../_fuel_dev_environment).
+Before running the integration tests, you need to spin up a full development stack complete with an Ethereum client and Fuel client. You can use the easy docker setup detailed [here](./_fuel_dev_environment).
 
 Run tests:
 
