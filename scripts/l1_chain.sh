@@ -25,7 +25,7 @@ echo "Connected to l1 chain."
 
 # deploy contracts
 echo "Deploying contracts to L1."
-LOCALHOST_HTTP=$L1_CHAIN_HTTP npm run node-deploy
+LOCALHOST_HTTP=$L1_CHAIN_HTTP AUTHORITY_KEY=$POA_AUTHORITY_KEY npm run node-deploy
 
 # serve contract deployment data
 echo "Starting deployment data server."
