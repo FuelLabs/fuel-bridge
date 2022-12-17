@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import {
-    BinaryMerkleTree
-} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
 import {FuelSidechainConsensus} from "./FuelSidechainConsensus.sol";
 import {SidechainBlockHeader, SidechainBlockHeaderLib} from "./types/SidechainBlockHeader.sol";
-import {
-    SidechainBlockHeaderLite,
-    SidechainBlockHeaderLiteLib
-} from "./types/SidechainBlockHeaderLite.sol";
+import {SidechainBlockHeaderLite, SidechainBlockHeaderLiteLib} from "./types/SidechainBlockHeaderLite.sol";
 import {ExcessivelySafeCall} from "../vendor/ExcessivelySafeCall.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 import {IFuelMessagePortal} from "../messaging/IFuelMessagePortal.sol";
@@ -34,7 +31,14 @@ struct Message {
 
 /// @title FuelMessagePortal
 /// @notice The Fuel Message Portal contract sends messages to and from Fuel
-contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyGuard {
+contract FuelMessagePortal is
+    IFuelMessagePortal,
+    Initializable,
+    OwnableUpgradeable,
+    PausableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    UUPSUpgradeable
+{
     using SidechainBlockHeaderLib for SidechainBlockHeader;
     using SidechainBlockHeaderLiteLib for SidechainBlockHeaderLite;
 
@@ -47,14 +51,10 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
     uint256 public constant ETH_DECIMALS = 18;
 
     /// @dev The max message data size in bytes
-    uint256 public constant MAX_MESSAGE_DATA_SIZE = 2**16;
+    uint256 public constant MAX_MESSAGE_DATA_SIZE = 2 ** 16;
 
     /// @dev Non-zero null value to optimize gas costs
-    bytes32 internal constant NULL_MESSAGE_SENDER =
-        0x000000000000000000000000000000000000000000000000000000000000dead;
-
-    /// @dev The Fuel sidechain consensus contract
-    FuelSidechainConsensus public immutable SIDECHAIN_CONSENSUS;
+    bytes32 internal constant NULL_MESSAGE_SENDER = 0x000000000000000000000000000000000000000000000000000000000000dead;
 
     /////////////
     // Storage //
@@ -62,6 +62,9 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
 
     /// @notice Current message sender for other contracts to reference
     bytes32 internal s_incomingMessageSender;
+
+    /// @notice The Fuel sidechain consensus contract
+    FuelSidechainConsensus public s_sidechainConsensus;
 
     /// @notice The waiting period for message root states (in milliseconds)
     uint64 public s_incomingMessageTimelock;
@@ -72,13 +75,26 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
     /// @notice Mapping of message hash to boolean success value
     mapping(bytes32 => bool) public s_incomingMessageSuccessful;
 
-    /////////////////
-    // Constructor //
-    /////////////////
+    /////////////////////////////
+    // Constructor/Initializer //
+    /////////////////////////////
 
-    /// @notice Contract constructor to setup immutable values and default values
-    constructor(FuelSidechainConsensus sidechainConsensus) Ownable() {
-        SIDECHAIN_CONSENSUS = sidechainConsensus;
+    /// @notice Constructor disables initialization for the implementation contract
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Contract initializer to setup starting values
+    /// @param sidechainConsensus Consensus contract
+    function initialize(FuelSidechainConsensus sidechainConsensus) public initializer {
+        __Ownable_init();
+        __Pausable_init();
+        __ReentrancyGuard_init();
+        __UUPSUpgradeable_init();
+
+        //consensus contract
+        s_sidechainConsensus = sidechainConsensus;
 
         //outgoing message data
         s_outgoingMessageNonce = 0;
@@ -123,10 +139,10 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
         SidechainBlockHeader calldata blockHeader,
         MerkleProof calldata messageInBlockProof,
         bytes calldata poaSignature
-    ) external payable nonReentrant whenNotPaused {
+    ) external payable whenNotPaused {
         //verify block header
         require(
-            SIDECHAIN_CONSENSUS.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
+            s_sidechainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid block"
         );
 
@@ -149,19 +165,16 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
         MerkleProof calldata blockInHistoryProof,
         MerkleProof calldata messageInBlockProof,
         bytes calldata poaSignature
-    ) external payable nonReentrant whenNotPaused {
+    ) external payable whenNotPaused {
         //verify root block header
         require(
-            SIDECHAIN_CONSENSUS.verifyBlock(
-                rootBlockHeader.computeConsensusHeaderHash(),
-                poaSignature
-            ),
+            s_sidechainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid root block"
         );
 
         //verify block in history
         require(
-            BinaryMerkleTree.verify(
+            verifyBinaryTree(
                 rootBlockHeader.prevRoot,
                 abi.encodePacked(blockHeader.computeConsensusHeaderHash()),
                 blockInHistoryProof.proof,
@@ -223,11 +236,11 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
             require(data.length < MAX_MESSAGE_DATA_SIZE, "message-data-too-large");
 
             //make sure amount fits into the Fuel base asset decimal level
-            uint256 precision = 10**(ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
+            uint256 precision = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
             uint256 amount = msg.value / precision;
             if (msg.value > 0) {
                 require(amount * precision == msg.value, "amount-precision-incompatability");
-                require(amount <= ((2**64) - 1), "amount-precision-incompatability");
+                require(amount <= ((2 ** 64) - 1), "amount-precision-incompatability");
             }
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
@@ -246,18 +259,11 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
         Message calldata message,
         SidechainBlockHeader calldata blockHeader,
         MerkleProof calldata messageInBlockProof
-    ) private {
+    ) private nonReentrant {
         //verify message validity
-        bytes32 messageId =
-            CryptographyLib.hash(
-                abi.encodePacked(
-                    message.sender,
-                    message.recipient,
-                    message.nonce,
-                    message.amount,
-                    message.data
-                )
-            );
+        bytes32 messageId = CryptographyLib.hash(
+            abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
+        );
         require(!s_incomingMessageSuccessful[messageId], "Already relayed");
         require(
             (blockHeader.timestamp - 4611686018427387914) <=
@@ -268,7 +274,7 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
 
         //verify message in block
         require(
-            BinaryMerkleTree.verify(
+            verifyBinaryTree(
                 blockHeader.outputMessagesRoot,
                 abi.encodePacked(messageId),
                 messageInBlockProof.proof,
@@ -286,14 +292,13 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
         s_incomingMessageSender = message.sender;
 
         //relay message
-        (bool success, ) =
-            ExcessivelySafeCall.excessivelySafeCall(
-                address(uint160(uint256(message.recipient))),
-                gasleft() - 40000,
-                message.amount * (10**(ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS)),
-                0,
-                message.data
-            );
+        (bool success, ) = ExcessivelySafeCall.excessivelySafeCall(
+            address(uint160(uint256(message.recipient))),
+            gasleft() - 40000,
+            message.amount * (10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS)),
+            0,
+            message.data
+        );
 
         //make sure relay succeeded
         require(success, "Message relay failed");
@@ -305,9 +310,9 @@ contract FuelMessagePortal is IFuelMessagePortal, Ownable, Pausable, ReentrancyG
         s_incomingMessageSuccessful[messageId] = true;
     }
 
-    /// @notice Default receive function
+    /// @notice Executes a message in the given header
     // solhint-disable-next-line no-empty-blocks
-    receive() external payable {
-        // handle incoming eth
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
     }
 }

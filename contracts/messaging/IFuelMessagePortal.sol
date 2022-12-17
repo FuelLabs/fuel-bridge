@@ -15,13 +15,7 @@ interface IFuelMessagePortal {
     ////////////
 
     /// @notice Emitted when a Message is sent from the EVM to Fuel
-    event SentMessage(
-        bytes32 indexed sender,
-        bytes32 indexed recipient,
-        uint64 nonce,
-        uint64 amount,
-        bytes data
-    );
+    event SentMessage(bytes32 indexed sender, bytes32 indexed recipient, uint64 nonce, uint64 amount, bytes data);
 
     ///////////////////////////////
     // Public Functions Outgoing //

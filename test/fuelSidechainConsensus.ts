@@ -12,9 +12,7 @@ const { expect } = chai;
 
 // Create a simple block
 function createBlock(blockIds: string[], messageIds: string[]): BlockHeader {
-	const tai64Time = BigNumber.from(Math.floor(new Date().getTime() / 1000)).add(
-		'4611686018427387914'
-	);
+	const tai64Time = BigNumber.from(Math.floor(new Date().getTime() / 1000)).add('4611686018427387914');
 	const header: BlockHeader = {
 		prevRoot: EMPTY,
 		height: blockIds.length.toString(),
@@ -76,8 +74,7 @@ describe('Sidechain Consensus', async () => {
 			expect(await env.fuelSidechain.owner()).to.not.be.equal(signer0);
 
 			// Transfer ownership
-			await expect(env.fuelSidechain.connect(env.signers[1]).transferOwnership(signer0)).to
-				.not.be.reverted;
+			await expect(env.fuelSidechain.connect(env.signers[1]).transferOwnership(signer0)).to.not.be.reverted;
 			expect(await env.fuelSidechain.owner()).to.be.equal(signer0);
 		});
 	});
@@ -110,8 +107,7 @@ describe('Sidechain Consensus', async () => {
 			expect(await env.fuelSidechain.s_authorityKey()).to.not.be.equal(env.poaSignerAddress);
 
 			// Set authority
-			await expect(env.fuelSidechain.setAuthorityKey(env.poaSignerAddress)).to.not.be
-				.reverted;
+			await expect(env.fuelSidechain.setAuthorityKey(env.poaSignerAddress)).to.not.be.reverted;
 			expect(await env.fuelSidechain.s_authorityKey()).to.be.equal(env.poaSignerAddress);
 		});
 	});
@@ -119,9 +115,7 @@ describe('Sidechain Consensus', async () => {
 	describe('Verify valid blocks', async () => {
 		let badSignature: string;
 		before(async () => {
-			const badSigner = new SigningKey(
-				'0x44bacb478cbed5efcae784d7bf4f2ff80ac0974bec39a17e36ba4a6b4d238ff9'
-			);
+			const badSigner = new SigningKey('0x44bacb478cbed5efcae784d7bf4f2ff80ac0974bec39a17e36ba4a6b4d238ff9');
 			badSignature = await compactSign(badSigner, blockId);
 		});
 
@@ -164,9 +158,7 @@ describe('Sidechain Consensus', async () => {
 		});
 
 		it('Should not be able to verify block messages when paused', async () => {
-			await expect(env.fuelSidechain.verifyBlock(blockId, blockSignature)).to.be.revertedWith(
-				'Pausable: paused'
-			);
+			await expect(env.fuelSidechain.verifyBlock(blockId, blockSignature)).to.be.revertedWith('Pausable: paused');
 		});
 
 		it('Should be able to unpause as owner', async () => {

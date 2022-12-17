@@ -40,11 +40,7 @@ library SidechainBlockHeaderLib {
     /// @notice Serialize a block application header.
     /// @param header The block header structure.
     /// @return The serialized block application header.
-    function serializeApplicationHeader(SidechainBlockHeader memory header)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function serializeApplicationHeader(SidechainBlockHeader memory header) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 header.daHeight,
@@ -58,22 +54,14 @@ library SidechainBlockHeaderLib {
     /// @notice Produce the block application header hash.
     /// @param header The block header structure.
     /// @return The block application header hash.
-    function computeApplicationHeaderHash(SidechainBlockHeader memory header)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function computeApplicationHeaderHash(SidechainBlockHeader memory header) internal pure returns (bytes32) {
         return CryptographyLib.hash(serializeApplicationHeader(header));
     }
 
     /// @notice Serialize a block consensus header.
     /// @param header The block header structure.
     /// @return The serialized block consensus header.
-    function serializeConsensusHeader(SidechainBlockHeader memory header)
-        internal
-        pure
-        returns (bytes memory)
-    {
+    function serializeConsensusHeader(SidechainBlockHeader memory header) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 header.prevRoot,
@@ -86,11 +74,7 @@ library SidechainBlockHeaderLib {
     /// @notice Produce the block consensus header hash.
     /// @param header The block header structure.
     /// @return The block consensus header hash.
-    function computeConsensusHeaderHash(SidechainBlockHeader memory header)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function computeConsensusHeaderHash(SidechainBlockHeader memory header) internal pure returns (bytes32) {
         return CryptographyLib.hash(serializeConsensusHeader(header));
     }
 }

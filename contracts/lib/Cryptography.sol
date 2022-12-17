@@ -8,8 +8,7 @@ library CryptographyLib {
     /////////////
 
     // secp256k1n / 2
-    uint256 private constant MAX_SIGNATURE_S_VALUE =
-        0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
+    uint256 private constant MAX_SIGNATURE_S_VALUE = 0x7fffffffffffffffffffffffffffffff5d576e7357a4501ddfe92f46681b20a0;
 
     /// @notice The primary hash method for Fuel.
     /// @param data The bytes input data.
@@ -38,11 +37,7 @@ library CryptographyLib {
     /// @param signature: The compact (64 byte) ECDSA signature
     /// @param message: The message which was signed over
     /// @return : The address of the signer, or address(0) in case of an error
-    function addressFromSignature(bytes memory signature, bytes32 message)
-        internal
-        pure
-        returns (address)
-    {
+    function addressFromSignature(bytes memory signature, bytes32 message) internal pure returns (address) {
         // ECDSA signatures must be 64 bytes (https://eips.ethereum.org/EIPS/eip-2098)
         require(signature.length == 64, "signature-invalid-length");
 

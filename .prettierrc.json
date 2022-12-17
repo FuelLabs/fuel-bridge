@@ -3,18 +3,17 @@
 		{
 			"files": "*.sol",
 			"options": {
-				"printWidth": 100,
+				"printWidth": 120,
 				"tabWidth": 4,
 				"useTabs": false,
 				"singleQuote": false,
-				"bracketSpacing": false,
-				"explicitTypes": "preserve"
+				"bracketSpacing": false
 			}
 		},
 		{
 			"files": ["*.js", "*.ts"],
 			"options": {
-				"printWidth": 100,
+				"printWidth": 120,
 				"semi": true,
 				"tabWidth": 4,
 				"useTabs": false,

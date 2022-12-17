@@ -17,11 +17,7 @@ contract MockCryptography {
         return CryptographyLib.addressFromSignatureComponents(v, r, s, message);
     }
 
-    function addressFromSignature(bytes memory signature, bytes32 message)
-        external
-        pure
-        returns (address)
-    {
+    function addressFromSignature(bytes memory signature, bytes32 message) external pure returns (address) {
         return CryptographyLib.addressFromSignature(signature, message);
     }
 }

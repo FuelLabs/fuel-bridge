@@ -18,9 +18,7 @@ describe('ECDSA', async () => {
 		mockCrypto = await mockCryptoFactory.deploy();
 		await mockCrypto.deployed();
 
-		signer = new SigningKey(
-			'0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80'
-		);
+		signer = new SigningKey('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
 	});
 
 	it('rejects component signatures with high s-value', async () => {
@@ -35,9 +33,9 @@ describe('ECDSA', async () => {
 		const sFlipped = SECP256K1N.sub(sig.s);
 		const badSig = { v: vFlipped, r: sig.r, s: sFlipped };
 
-		await expect(
-			mockCrypto.addressFromSignatureComponents(badSig.v, badSig.r, badSig.s, msg)
-		).to.be.revertedWith('signature-invalid-s');
+		await expect(mockCrypto.addressFromSignatureComponents(badSig.v, badSig.r, badSig.s, msg)).to.be.revertedWith(
+			'signature-invalid-s'
+		);
 	});
 
 	it('rejects component signatures from the zero address', async () => {
@@ -46,9 +44,9 @@ describe('ECDSA', async () => {
 		// an r value < 1 makes the signature invalid. ecrecover will return 0x0
 		const badSig = { v: sig.v, r: ethers.constants.HashZero, s: sig.s };
 
-		await expect(
-			mockCrypto.addressFromSignatureComponents(badSig.v, badSig.r, badSig.s, msg)
-		).to.be.revertedWith('signature-invalid');
+		await expect(mockCrypto.addressFromSignatureComponents(badSig.v, badSig.r, badSig.s, msg)).to.be.revertedWith(
+			'signature-invalid'
+		);
 	});
 
 	it('rejects invalid compact signatures', async () => {
@@ -59,22 +57,16 @@ describe('ECDSA', async () => {
 		const badRValue = ethers.constants.HashZero;
 		// eslint-disable-next-line no-underscore-dangle
 		const badSigCompact = badRValue.concat(sig._vs.slice(2));
-		await expect(mockCrypto.addressFromSignature(badSigCompact, msg)).to.be.revertedWith(
-			'signature-invalid'
-		);
+		await expect(mockCrypto.addressFromSignature(badSigCompact, msg)).to.be.revertedWith('signature-invalid');
 
 		// signature too short
 		// eslint-disable-next-line no-underscore-dangle
 		const shortSig = sig.r.concat(sig._vs.slice(4));
-		await expect(mockCrypto.addressFromSignature(shortSig, msg)).to.be.revertedWith(
-			'signature-invalid-length'
-		);
+		await expect(mockCrypto.addressFromSignature(shortSig, msg)).to.be.revertedWith('signature-invalid-length');
 
 		// signature too long
 		// eslint-disable-next-line no-underscore-dangle
 		const longSig = sig.r.concat(sig._vs.slice(2)).concat('aa');
-		await expect(mockCrypto.addressFromSignature(longSig, msg)).to.be.revertedWith(
-			'signature-invalid-length'
-		);
+		await expect(mockCrypto.addressFromSignature(longSig, msg)).to.be.revertedWith('signature-invalid-length');
 	});
 });

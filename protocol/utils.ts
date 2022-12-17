@@ -15,10 +15,7 @@ export function randomInt(max: number): number {
 }
 
 export function randomBytes(length: number): string {
-	return hash(BN.from(Math.floor(Math.random() * 1_000_000)).toHexString()).slice(
-		0,
-		length * 2 + 2
-	);
+	return hash(BN.from(Math.floor(Math.random() * 1_000_000)).toHexString()).slice(0, length * 2 + 2);
 }
 
 export function uintToBytes32(i: number): string {

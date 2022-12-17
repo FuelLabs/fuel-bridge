@@ -1,0 +1,8 @@
+{
+ "FuelSidechainConsensus": "0xF712e555ce59858f680890DA7dc2B51eD048580d",
+ "FuelMessagePortal": "0x4c7181fff2053D232Fc74Ff165b83FE8Dcb65910",
+ "L1ERC20Gateway": "0x96c53cd98B7297564716a8f2E1de2C83928Af2fe",
+ "FuelSidechainConsensus_impl": "0xF712e555ce59858f680890DA7dc2B51eD048580d",
+ "FuelMessagePortal_impl": "0x4c7181fff2053D232Fc74Ff165b83FE8Dcb65910",
+ "L1ERC20Gateway_impl": "0x96c53cd98B7297564716a8f2E1de2C83928Af2fe"
+}

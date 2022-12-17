@@ -26,28 +26,14 @@ library SidechainBlockHeaderLiteLib {
     /// @notice Serialize a block consensus header.
     /// @param header The block header structure.
     /// @return The serialized block consensus header.
-    function serializeConsensusHeader(SidechainBlockHeaderLite memory header)
-        internal
-        pure
-        returns (bytes memory)
-    {
-        return
-            abi.encodePacked(
-                header.prevRoot,
-                (uint32)(header.height),
-                header.timestamp,
-                header.applicationHash
-            );
+    function serializeConsensusHeader(SidechainBlockHeaderLite memory header) internal pure returns (bytes memory) {
+        return abi.encodePacked(header.prevRoot, (uint32)(header.height), header.timestamp, header.applicationHash);
     }
 
     /// @notice Produce the block consensus header hash.
     /// @param header The block header structure.
     /// @return The block consensus header hash.
-    function computeConsensusHeaderHash(SidechainBlockHeaderLite memory header)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function computeConsensusHeaderHash(SidechainBlockHeaderLite memory header) internal pure returns (bytes32) {
         return CryptographyLib.hash(serializeConsensusHeader(header));
     }
 }

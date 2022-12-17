@@ -41,12 +41,7 @@ export function computeApplicationHeaderHash(blockHeader: BlockHeader): string {
 export function serializeConsensusHeader(blockHeader: BlockHeader): string {
 	return utils.solidityPack(
 		['bytes32', 'uint32', 'uint64', 'bytes32'],
-		[
-			blockHeader.prevRoot,
-			blockHeader.height,
-			blockHeader.timestamp,
-			computeApplicationHeaderHash(blockHeader),
-		]
+		[blockHeader.prevRoot, blockHeader.height, blockHeader.timestamp, computeApplicationHeaderHash(blockHeader)]
 	);
 }
 

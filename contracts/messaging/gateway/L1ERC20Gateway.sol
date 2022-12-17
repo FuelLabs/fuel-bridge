@@ -1,18 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {Pausable} from "@openzeppelin/contracts/security/Pausable.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
+import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
+import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {IFuelMessagePortal, InputMessagePredicates} from "../IFuelMessagePortal.sol";
-import {FuelMessagesEnabled} from "../FuelMessagesEnabled.sol";
+import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
 
 /// @title L1ERC20Gateway
 /// @notice The L1 side of the general ERC20 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
-contract L1ERC20Gateway is FuelMessagesEnabled, Ownable, Pausable {
-    using SafeERC20 for IERC20;
+contract L1ERC20Gateway is
+    Initializable,
+    FuelMessagesEnabledUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable,
+    UUPSUpgradeable
+{
+    using SafeERC20Upgradeable for IERC20Upgradeable;
 
     /////////////
     // Storage //
@@ -21,18 +29,23 @@ contract L1ERC20Gateway is FuelMessagesEnabled, Ownable, Pausable {
     /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
     mapping(address => mapping(bytes32 => uint256)) public s_deposits;
 
-    /////////////////
-    // Constructor //
-    /////////////////
+    /////////////////////////////
+    // Constructor/Initializer //
+    /////////////////////////////
 
-    /// @notice Contract constructor to setup immutable values
+    /// @notice Constructor disables initialization for the implementation contract
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
+    /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The IfuelMessagePortal contract
-    constructor(IFuelMessagePortal fuelMessagePortal)
-        FuelMessagesEnabled(fuelMessagePortal)
-        Ownable()
-    // solhint-disable-next-line no-empty-blocks
-    {
-        //nothing to do
+    function initialize(IFuelMessagePortal fuelMessagePortal) public initializer {
+        __FuelMessagesEnabled_init(fuelMessagePortal);
+        __Ownable_init();
+        __Pausable_init();
+        __UUPSUpgradeable_init();
     }
 
     //////////////////////
@@ -55,27 +68,21 @@ contract L1ERC20Gateway is FuelMessagesEnabled, Ownable, Pausable {
     /// @param fuelTokenId ID of the token on Fuel that represent the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
-    function deposit(
-        bytes32 to,
-        address tokenId,
-        bytes32 fuelTokenId,
-        uint256 amount
-    ) external payable whenNotPaused {
+    function deposit(bytes32 to, address tokenId, bytes32 fuelTokenId, uint256 amount) external payable whenNotPaused {
         require(amount > 0, "Cannot deposit zero");
 
         //transfer tokens to this contract and update deposit balance
-        IERC20(tokenId).safeTransferFrom(msg.sender, address(this), amount);
+        IERC20Upgradeable(tokenId).safeTransferFrom(msg.sender, address(this), amount);
         s_deposits[tokenId][fuelTokenId] = s_deposits[tokenId][fuelTokenId] + amount;
 
         //send message to gateway on Fuel to finalize the deposit
-        bytes memory data =
-            abi.encodePacked(
-                fuelTokenId,
-                bytes32(uint256(uint160(tokenId))),
-                bytes32(uint256(uint160(msg.sender))), //from
-                to,
-                bytes32(amount)
-            );
+        bytes memory data = abi.encodePacked(
+            fuelTokenId,
+            bytes32(uint256(uint160(tokenId))),
+            bytes32(uint256(uint160(msg.sender))), //from
+            to,
+            bytes32(amount)
+        );
         sendMessage(InputMessagePredicates.CONTRACT_MESSAGE_PREDICATE, data);
     }
 
@@ -94,6 +101,16 @@ contract L1ERC20Gateway is FuelMessagesEnabled, Ownable, Pausable {
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         s_deposits[tokenId][fuelTokenId] = s_deposits[tokenId][fuelTokenId] - amount;
-        IERC20(tokenId).safeTransfer(to, amount);
+        IERC20Upgradeable(tokenId).safeTransfer(to, amount);
+    }
+
+    ////////////////////////
+    // Internal Functions //
+    ////////////////////////
+
+    /// @notice Executes a message in the given header
+    // solhint-disable-next-line no-empty-blocks
+    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+        //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
     }
 }
