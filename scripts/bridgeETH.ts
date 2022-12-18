@@ -1,10 +1,18 @@
 import { formatEther, parseEther } from 'ethers/lib/utils';
 import { Address, BN, TransactionResultMessageOutReceipt, ZeroBytes32 } from 'fuels';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { fuels_formatEther, fuels_messageToCoin, fuels_parseEther, fuels_waitForMessage } from '../scripts/utils';
+import {
+  delay,
+  fuels_formatEther,
+  fuels_messageToCoin,
+  fuels_parseEther,
+  fuels_waitForMessage,
+} from '../scripts/utils';
 
 const ETH_AMOUNT = '0.1';
-const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
+const FUEL_MESSAGE_TIMEOUT_MS = 1_000_000;
+const FUEL_GAS_LIMIT = 500_000_000;
+const FUEL_GAS_PRICE = 1;
 
 // This script is a demonstration of how the base asset (ETH) is bridged to and from the Fuel chain
 (async function () {
@@ -19,6 +27,10 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
   const fuelAccount = env.fuel.signers[0];
   const fuelAccountAddress = fuelAccount.address.toHexString();
   const fuelMessagePortal = env.eth.fuelMessagePortal.connect(ethereumAccount);
+  const fuelTxParams = {
+    gasLimit: process.env.FUEL_GAS_LIMIT || FUEL_GAS_LIMIT,
+    gasPrice: process.env.FUEL_GAS_PRICE || FUEL_GAS_PRICE,
+  };
 
   /////////////////////////////
   // Bridge Ethereum -> Fuel //
@@ -26,13 +38,15 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
 
   // note balances of both accounts before transfer
   console.log('Account balances:');
-  console.log('  Ethereum - ' + formatEther(await ethereumAccount.getBalance()) + ' ETH (' + ethereumAccountAddress + ')');
-  console.log('  Fuel - ' + fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32)) + ' ETH (' + fuelAccountAddress + ')');
+  console.log(`  Ethereum - ${formatEther(await ethereumAccount.getBalance())}  ETH (${ethereumAccountAddress})`);
+  console.log(`  Fuel - ${fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32))} ETH (${fuelAccountAddress})`);
   console.log('');
 
   // use the FuelMessagePortal to directly send ETH to the fuel account
-  console.log('Sending ' + ETH_AMOUNT + ' ETH from Ethereum...');
-  const eSendTx = await fuelMessagePortal.sendETH(fuelAccountAddress, { value: parseEther(ETH_AMOUNT) });
+  console.log(`Sending ${ETH_AMOUNT} ETH from Ethereum...`);
+  const eSendTx = await fuelMessagePortal.sendETH(fuelAccountAddress, {
+    value: parseEther(ETH_AMOUNT),
+  });
   const eSendTxResult = await eSendTx.wait();
   if (eSendTxResult.status !== 1) {
     console.log(eSendTxResult);
@@ -45,9 +59,14 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
 
   // wait for message to appear in fuel client
   console.log('Waiting for ETH to arrive on Fuel...');
-  const depositMessage = await fuels_waitForMessage(env.fuel.provider, fuelAccount.address, depositMessageNonce, FUEL_MESSAGE_TIMEOUT_MS);
+  const depositMessage = await fuels_waitForMessage(
+    env.fuel.provider,
+    fuelAccount.address,
+    depositMessageNonce,
+    FUEL_MESSAGE_TIMEOUT_MS
+  );
   if (depositMessage == null)
-    throw new Error('message took longer than ' + FUEL_MESSAGE_TIMEOUT_MS + 'ms to arrive on Fuel');
+    throw new Error(`message took longer than ${FUEL_MESSAGE_TIMEOUT_MS}ms to arrive on Fuel`);
   console.log('');
 
   // the sent ETH is now spendable on Fuel
@@ -55,20 +74,8 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
 
   // note balances of both accounts after transfer
   console.log('Account balances:');
-  console.log('  Ethereum - ' + formatEther(await ethereumAccount.getBalance()) + ' ETH (' + ethereumAccountAddress + ')');
-  console.log('  Fuel - ' + fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32)) + ' ETH (' + fuelAccountAddress + ')');
-  console.log('');
-
-  // TODO: the below step is only there to avoid a bug in the SDK when a wallet has spendable messages
-  console.log('[BUG FIX] Converting message input to coin input...');
-  const fMessageToCoinTx = await fuels_messageToCoin(fuelAccount, depositMessage);
-  const fMessageToCoinTxResult = await fMessageToCoinTx.waitForResult();
-  if (fMessageToCoinTxResult.status.type !== 'success') {
-    console.log(fMessageToCoinTxResult);
-    throw new Error('failed to convert message to coin');
-  }
-  console.log('  Ethereum - ' + formatEther(await ethereumAccount.getBalance()) + ' ETH (' + ethereumAccountAddress + ')');
-  console.log('  Fuel - ' + fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32)) + ' ETH (' + fuelAccountAddress + ')');
+  console.log(`  Ethereum - ${formatEther(await ethereumAccount.getBalance())} ETH (${ethereumAccountAddress})`);
+  console.log(`  Fuel - ${fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32))} ETH (${fuelAccountAddress})`);
   console.log('');
 
   /////////////////////////////
@@ -76,8 +83,12 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
   /////////////////////////////
 
   // withdraw ETH back to the base chain
-  console.log('Sending ' + ETH_AMOUNT + ' ETH from Fuel...');
-  const fWithdrawTx = await fuelAccount.withdrawToBaseLayer(Address.fromString(ethereumAccountAddress), fuels_parseEther(ETH_AMOUNT));
+  console.log(`Sending ${ETH_AMOUNT} ETH from Fuel...`);
+  const fWithdrawTx = await fuelAccount.withdrawToBaseLayer(
+    Address.fromString(ethereumAccountAddress),
+    fuels_parseEther(ETH_AMOUNT),
+    fuelTxParams
+  );
   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
   if (fWithdrawTxResult.status.type !== 'success') {
     console.log(fWithdrawTxResult);
@@ -88,6 +99,7 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
   console.log('Building message proof...');
   const messageOutReceipt = <TransactionResultMessageOutReceipt>fWithdrawTxResult.receipts[0];
   const withdrawMessageProof = await env.fuel.provider.getMessageProof(fWithdrawTx.id, messageOutReceipt.messageID);
+  await delay(20_000); // even though the timelock is 0, we still wait a bit in case the fuel clock is running fast
 
   // construct relay message proof data
   const messageOutput: MessageOutput = {
@@ -132,8 +144,8 @@ const FUEL_MESSAGE_TIMEOUT_MS = 60_000;
 
   // note balances of both accounts after transfer
   console.log('Account balances:');
-  console.log('  Ethereum - ' + formatEther(await ethereumAccount.getBalance()) + ' ETH (' + ethereumAccountAddress + ')');
-  console.log('  Fuel - ' + fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32)) + ' ETH (' + fuelAccountAddress + ')');
+  console.log(`  Ethereum - ${formatEther(await ethereumAccount.getBalance())} ETH (${ethereumAccountAddress})`);
+  console.log(`  Fuel - ${fuels_formatEther(await fuelAccount.getBalance(ZeroBytes32))} ETH (${fuelAccountAddress})`);
   console.log('');
 
   // done!

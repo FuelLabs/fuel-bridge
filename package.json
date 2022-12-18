@@ -7,8 +7,8 @@
   "license": "UNLICENSED",
   "scripts": {
     "test": "npx mocha -r ts-node/register 'tests/**/*.ts'",
-    "test:ETH": "npx ts-node scripts/bridgeETH.ts",
-    "test:ERC20": "npx ts-node scripts/bridgeERC20.ts",
+    "bridgeETH": "npx ts-node scripts/bridgeETH.ts",
+    "bridgeERC20": "npx ts-node scripts/bridgeERC20.ts",
     "prettier:check": "prettier --check ./",
     "prettier:format": "prettier --write ./"
   },
@@ -17,9 +17,10 @@
     "@types/mocha": "^9.1.1",
     "axios": "^0.27.2",
     "chai": "^4.3.6",
+    "dotenv": "^16.0.3",
     "ethereum-waffle": "^4.0.2",
     "ethers": "^5.7.2",
-    "fuels": "^0.20.0",
+    "fuels": "^0.25.1",
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.1"

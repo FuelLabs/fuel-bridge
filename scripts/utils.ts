@@ -108,12 +108,7 @@ export async function fuels_relayCommonMessage(
   if (messageRelayDetails == null) throw new Error('message is not a common relayable message');
 
   // build and send transaction
-  let transaction = await messageRelayDetails.buildTx(
-    relayer,
-    message,
-    messageRelayDetails,
-    txParams
-  );
+  let transaction = await messageRelayDetails.buildTx(relayer, message, messageRelayDetails, txParams);
   return relayer.sendTransaction(transaction);
 }
 
@@ -123,25 +118,24 @@ export async function fuels_messageToCoin(
   message: Message,
   txParams: Pick<TransactionRequestLike, 'gasLimit' | 'gasPrice' | 'maturity'> = {}
 ): Promise<TransactionResponse> {
-
   // build the transaction
   const transaction = new ScriptTransactionRequest({ gasLimit: MAX_GAS_PER_TX, ...txParams });
   transaction.inputs.push({
-	type: InputType.Message,
-	amount: message.amount,
-	sender: message.sender.toHexString(),
-	recipient: message.recipient.toHexString(),
-	witnessIndex: 0,
-	data: message.data,
-	nonce: message.nonce,
+    type: InputType.Message,
+    amount: message.amount,
+    sender: message.sender.toHexString(),
+    recipient: message.recipient.toHexString(),
+    witnessIndex: 0,
+    data: message.data,
+    nonce: message.nonce,
   });
   transaction.outputs.push({
-	type: OutputType.Change,
-	to: message.recipient.toHexString(),
-	assetId: ZeroBytes32,
+    type: OutputType.Change,
+    to: message.recipient.toHexString(),
+    assetId: ZeroBytes32,
   });
   transaction.witnesses.push('0x');
-  
+
   const signedTransaction = await wallet.signTransaction(transaction);
   transaction.updateWitness(0, signedTransaction);
 
@@ -149,7 +143,7 @@ export async function fuels_messageToCoin(
 }
 
 // Simple async delay function
-function delay(ms: number) {
+export function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -174,9 +168,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       const predicate = arrayify(details.predicate);
 
       // find a UTXO that can cover gas costs
-      let coins = (await relayer.getCoins()).filter(
-        (coin) => coin.assetId == ZeroBytes32 && coin.amount.gt(minGas)
-      );
+      let coins = (await relayer.getCoins()).filter((coin) => coin.assetId == ZeroBytes32 && coin.amount.gt(minGas));
       if (coins.length == 0) throw new Error('wallet has no single UTXO that can cover gas costs');
       let gas_coin = coins[0];
 
@@ -205,7 +197,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       transaction.inputs.push({
         type: InputType.Coin,
         id: gas_coin.id,
-        owner: gas_coin.owner,
+        owner: hexlify(gas_coin.owner.toBytes()),
         amount: gas_coin.amount,
         assetId: ZeroBytes32,
         txPointer: ZeroBytes32,
@@ -217,7 +209,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       });
       transaction.outputs.push({
         type: OutputType.Change,
-        to: gas_coin.owner,
+        to: hexlify(gas_coin.owner.toBytes()),
         assetId: ZeroBytes32,
       });
       transaction.outputs.push({

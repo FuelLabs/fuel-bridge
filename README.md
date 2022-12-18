@@ -20,13 +20,26 @@ npm ci
 
 ### Running Tests
 
-Before running the integration tests, you need to spin up a full development stack complete with an Ethereum client and Fuel client. You can use the easy docker setup detailed [here](./_fuel_dev_environment).
+Before running the integration tests, you need to spin up a full development stack complete with an Ethereum client and Fuel client. You can use the easy docker setup detailed [here](https://github.com/FuelLabs/fuel-dev-env).
 
 Run tests:
 
 ```sh
 npm test
 ```
+
+### Example Scripts
+
+The test logic can also be run in script form. These scripts act as examples for how to bridge ETH and ERC-20 based assets to and from Fuel using the TS-SDK.
+
+```sh
+npm run bridgeETH
+npm run bridgeERC20
+```
+
+### Running on Goerli
+
+The scripts can easily be run on other network setups like Goerli by modifying environment variables. Refer to the example [environment file](./.env.example) for creating your own .env file configured for your target. You will need to provide URLs for both Fuel and Ethereum providers as well as private keys for executing transactions on the networks. You will also need to provide the bridge contract addresses and ERC-20/fungible token contract addresses if you wish to test bridging ERC-20 tokens.
 
 ## License
 

@@ -40,6 +40,11 @@
           "name": "BridgedValueIncompatability",
           "type": 0,
           "typeArguments": null
+        },
+        {
+          "name": "OverflowError",
+          "type": 0,
+          "typeArguments": null
         }
       ],
       "typeParameters": null
@@ -207,17 +212,29 @@
       }
     },
     {
-      "inputs": [
-        {
-          "name": "to",
-          "type": 1,
-          "typeArguments": null
-        }
-      ],
-      "name": "withdraw_to",
+      "inputs": [],
+      "name": "decimals",
       "output": {
         "name": "",
-        "type": 0,
+        "type": 11,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "layer1_decimals",
+      "output": {
+        "name": "",
+        "type": 11,
+        "typeArguments": null
+      }
+    },
+    {
+      "inputs": [],
+      "name": "layer1_token",
+      "output": {
+        "name": "",
+        "type": 1,
         "typeArguments": null
       }
     },
@@ -240,29 +257,17 @@
       }
     },
     {
-      "inputs": [],
-      "name": "decimals",
+      "inputs": [
+        {
+          "name": "to",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "name": "withdraw_to",
       "output": {
         "name": "",
-        "type": 11,
-        "typeArguments": null
-      }
-    },
-    {
-      "inputs": [],
-      "name": "layer1_token",
-      "output": {
-        "name": "",
-        "type": 1,
-        "typeArguments": null
-      }
-    },
-    {
-      "inputs": [],
-      "name": "layer1_decimals",
-      "output": {
-        "name": "",
-        "type": 11,
+        "type": 0,
         "typeArguments": null
       }
     }

@@ -12,6 +12,7 @@ import {
   Contract,
   ContractTransaction,
   Overrides,
+  PayableOverrides,
   CallOverrides,
 } from "ethers";
 import { BytesLike } from "@ethersproject/bytes";
@@ -21,20 +22,29 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface FuelSidechainConsensusInterface extends ethers.utils.Interface {
   functions: {
+    "initialize(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
+    "proxiableUUID()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "s_authorityKey()": FunctionFragment;
     "setAuthorityKey(address)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
     "verifyBlock(bytes32,bytes)": FunctionFragment;
   };
 
+  encodeFunctionData(functionFragment: "initialize", values: [string]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "proxiableUUID",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -52,14 +62,24 @@ interface FuelSidechainConsensusInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
   encodeFunctionData(
     functionFragment: "verifyBlock",
     values: [BytesLike, BytesLike]
   ): string;
 
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "proxiableUUID",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
@@ -77,20 +97,33 @@ interface FuelSidechainConsensusInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "verifyBlock",
     data: BytesLike
   ): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
+    "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
     "Unpaused(address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class FuelSidechainConsensus extends Contract {
@@ -137,6 +170,16 @@ export class FuelSidechainConsensus extends Contract {
   interface: FuelSidechainConsensusInterface;
 
   functions: {
+    initialize(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     "owner()"(overrides?: CallOverrides): Promise<[string]>;
@@ -152,6 +195,10 @@ export class FuelSidechainConsensus extends Contract {
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
     "paused()"(overrides?: CallOverrides): Promise<[boolean]>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -193,6 +240,28 @@ export class FuelSidechainConsensus extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     verifyBlock(
       blockHash: BytesLike,
       signature: BytesLike,
@@ -205,6 +274,16 @@ export class FuelSidechainConsensus extends Contract {
       overrides?: CallOverrides
     ): Promise<[boolean]>;
   };
+
+  initialize(
+    authorityKey: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address)"(
+    authorityKey: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -221,6 +300,10 @@ export class FuelSidechainConsensus extends Contract {
   paused(overrides?: CallOverrides): Promise<boolean>;
 
   "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+  proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+  "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -262,6 +345,28 @@ export class FuelSidechainConsensus extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   verifyBlock(
     blockHash: BytesLike,
     signature: BytesLike,
@@ -275,6 +380,13 @@ export class FuelSidechainConsensus extends Contract {
   ): Promise<boolean>;
 
   callStatic: {
+    initialize(authorityKey: string, overrides?: CallOverrides): Promise<void>;
+
+    "initialize(address)"(
+      authorityKey: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
     "owner()"(overrides?: CallOverrides): Promise<string>;
@@ -286,6 +398,10 @@ export class FuelSidechainConsensus extends Contract {
     paused(overrides?: CallOverrides): Promise<boolean>;
 
     "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -319,6 +435,28 @@ export class FuelSidechainConsensus extends Contract {
 
     "unpause()"(overrides?: CallOverrides): Promise<void>;
 
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     verifyBlock(
       blockHash: BytesLike,
       signature: BytesLike,
@@ -333,6 +471,20 @@ export class FuelSidechainConsensus extends Contract {
   };
 
   filters: {
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
+    Initialized(version: null): TypedEventFilter<[number], { version: number }>;
+
     OwnershipTransferred(
       previousOwner: string | null,
       newOwner: string | null
@@ -344,9 +496,23 @@ export class FuelSidechainConsensus extends Contract {
     Paused(account: null): TypedEventFilter<[string], { account: string }>;
 
     Unpaused(account: null): TypedEventFilter<[string], { account: string }>;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
+    initialize(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
     "owner()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -362,6 +528,10 @@ export class FuelSidechainConsensus extends Contract {
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
     "paused()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -403,6 +573,28 @@ export class FuelSidechainConsensus extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     verifyBlock(
       blockHash: BytesLike,
       signature: BytesLike,
@@ -417,6 +609,16 @@ export class FuelSidechainConsensus extends Contract {
   };
 
   populateTransaction: {
+    initialize(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address)"(
+      authorityKey: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -432,6 +634,10 @@ export class FuelSidechainConsensus extends Contract {
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "paused()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -473,6 +679,28 @@ export class FuelSidechainConsensus extends Contract {
 
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     verifyBlock(

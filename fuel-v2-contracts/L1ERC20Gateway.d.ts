@@ -22,22 +22,22 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface L1ERC20GatewayInterface extends ethers.utils.Interface {
   functions: {
-    "FUEL_MESSAGE_PORTAL()": FunctionFragment;
     "deposit(bytes32,address,bytes32,uint256)": FunctionFragment;
     "finalizeWithdrawal(address,address,uint256)": FunctionFragment;
+    "initialize(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
+    "proxiableUUID()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "s_deposits(address,bytes32)": FunctionFragment;
+    "s_fuelMessagePortal()": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
   };
 
-  encodeFunctionData(
-    functionFragment: "FUEL_MESSAGE_PORTAL",
-    values?: undefined
-  ): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [BytesLike, string, BytesLike, BigNumberish]
@@ -46,9 +46,14 @@ interface L1ERC20GatewayInterface extends ethers.utils.Interface {
     functionFragment: "finalizeWithdrawal",
     values: [string, string, BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "initialize", values: [string]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "proxiableUUID",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
     values?: undefined
@@ -58,43 +63,70 @@ interface L1ERC20GatewayInterface extends ethers.utils.Interface {
     values: [string, BytesLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "s_fuelMessagePortal",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
 
-  decodeFunctionResult(
-    functionFragment: "FUEL_MESSAGE_PORTAL",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "finalizeWithdrawal",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "proxiableUUID",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "s_deposits", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "s_fuelMessagePortal",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
+    "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
     "Unpaused(address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class L1ERC20Gateway extends Contract {
@@ -141,10 +173,6 @@ export class L1ERC20Gateway extends Contract {
   interface: L1ERC20GatewayInterface;
 
   functions: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<[string]>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<[string]>;
-
     deposit(
       to: BytesLike,
       tokenId: string,
@@ -175,6 +203,16 @@ export class L1ERC20Gateway extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    initialize(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address)"(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     owner(overrides?: CallOverrides): Promise<[string]>;
 
     "owner()"(overrides?: CallOverrides): Promise<[string]>;
@@ -190,6 +228,10 @@ export class L1ERC20Gateway extends Contract {
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
     "paused()"(overrides?: CallOverrides): Promise<[boolean]>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<[string]>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -211,6 +253,10 @@ export class L1ERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<[BigNumber]>;
 
+    s_fuelMessagePortal(overrides?: CallOverrides): Promise<[string]>;
+
+    "s_fuelMessagePortal()"(overrides?: CallOverrides): Promise<[string]>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -228,11 +274,29 @@ export class L1ERC20Gateway extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
-
-  FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<string>;
-
-  "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<string>;
 
   deposit(
     to: BytesLike,
@@ -264,6 +328,16 @@ export class L1ERC20Gateway extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  initialize(
+    fuelMessagePortal: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address)"(
+    fuelMessagePortal: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   owner(overrides?: CallOverrides): Promise<string>;
 
   "owner()"(overrides?: CallOverrides): Promise<string>;
@@ -279,6 +353,10 @@ export class L1ERC20Gateway extends Contract {
   paused(overrides?: CallOverrides): Promise<boolean>;
 
   "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+  proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+  "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -300,6 +378,10 @@ export class L1ERC20Gateway extends Contract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
+  s_fuelMessagePortal(overrides?: CallOverrides): Promise<string>;
+
+  "s_fuelMessagePortal()"(overrides?: CallOverrides): Promise<string>;
+
   transferOwnership(
     newOwner: string,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -318,11 +400,29 @@ export class L1ERC20Gateway extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<string>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<string>;
-
     deposit(
       to: BytesLike,
       tokenId: string,
@@ -353,6 +453,16 @@ export class L1ERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    initialize(
+      fuelMessagePortal: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "initialize(address)"(
+      fuelMessagePortal: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     owner(overrides?: CallOverrides): Promise<string>;
 
     "owner()"(overrides?: CallOverrides): Promise<string>;
@@ -364,6 +474,10 @@ export class L1ERC20Gateway extends Contract {
     paused(overrides?: CallOverrides): Promise<boolean>;
 
     "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
 
@@ -381,6 +495,10 @@ export class L1ERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    s_fuelMessagePortal(overrides?: CallOverrides): Promise<string>;
+
+    "s_fuelMessagePortal()"(overrides?: CallOverrides): Promise<string>;
+
     transferOwnership(
       newOwner: string,
       overrides?: CallOverrides
@@ -394,9 +512,45 @@ export class L1ERC20Gateway extends Contract {
     unpause(overrides?: CallOverrides): Promise<void>;
 
     "unpause()"(overrides?: CallOverrides): Promise<void>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
+    Initialized(version: null): TypedEventFilter<[number], { version: number }>;
+
     OwnershipTransferred(
       previousOwner: string | null,
       newOwner: string | null
@@ -408,13 +562,13 @@ export class L1ERC20Gateway extends Contract {
     Paused(account: null): TypedEventFilter<[string], { account: string }>;
 
     Unpaused(account: null): TypedEventFilter<[string], { account: string }>;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
-    FUEL_MESSAGE_PORTAL(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "FUEL_MESSAGE_PORTAL()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     deposit(
       to: BytesLike,
       tokenId: string,
@@ -443,6 +597,16 @@ export class L1ERC20Gateway extends Contract {
       tokenId: string,
       amount: BigNumberish,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    initialize(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address)"(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
@@ -461,6 +625,10 @@ export class L1ERC20Gateway extends Contract {
 
     "paused()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -481,6 +649,10 @@ export class L1ERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    s_fuelMessagePortal(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "s_fuelMessagePortal()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -498,17 +670,31 @@ export class L1ERC20Gateway extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
-    FUEL_MESSAGE_PORTAL(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "FUEL_MESSAGE_PORTAL()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     deposit(
       to: BytesLike,
       tokenId: string,
@@ -539,6 +725,16 @@ export class L1ERC20Gateway extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
+    initialize(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address)"(
+      fuelMessagePortal: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -554,6 +750,10 @@ export class L1ERC20Gateway extends Contract {
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "paused()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -575,6 +775,14 @@ export class L1ERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    s_fuelMessagePortal(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "s_fuelMessagePortal()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     transferOwnership(
       newOwner: string,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -591,6 +799,28 @@ export class L1ERC20Gateway extends Contract {
 
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }

@@ -78,11 +78,9 @@ describe('Transferring ETH', async function () {
 
     it('Send ETH via MessagePortal', async () => {
       // use the FuelMessagePortal to directly send ETH which should be immediately spendable
-      let tx = await env.eth.fuelMessagePortal
-        .connect(ethereumETHSender)
-        .sendETH(fuelETHReceiverAddress, {
-          value: parseEther(NUM_ETH),
-        });
+      let tx = await env.eth.fuelMessagePortal.connect(ethereumETHSender).sendETH(fuelETHReceiverAddress, {
+        value: parseEther(NUM_ETH),
+      });
       let result = await tx.wait();
       expect(result.status).to.equal(1);
 
@@ -92,11 +90,8 @@ describe('Transferring ETH', async function () {
 
       // check that the sender balance has decreased by the expected amount
       let newSenderBalance = await env.eth.provider.getBalance(ethereumETHSenderAddress);
-      let ethereumETHSenderBalanceMinusGas = ethereumETHSenderBalance.sub(
-        result.gasUsed.mul(result.effectiveGasPrice)
-      );
-      expect(newSenderBalance.eq(ethereumETHSenderBalanceMinusGas.sub(parseEther(NUM_ETH)))).to.be
-        .true;
+      let ethereumETHSenderBalanceMinusGas = ethereumETHSenderBalance.sub(result.gasUsed.mul(result.effectiveGasPrice));
+      expect(newSenderBalance.eq(ethereumETHSenderBalanceMinusGas.sub(parseEther(NUM_ETH)))).to.be.true;
     });
 
     it('Wait for ETH to arrive on Fuel', async function () {
@@ -105,18 +100,12 @@ describe('Transferring ETH', async function () {
 
       // wait for message to appear in fuel client
       expect(
-        await fuels_waitForMessage(
-          env.fuel.provider,
-          fuelETHReceiver,
-          fuelETHMessageNonce,
-          FUEL_MESSAGE_TIMEOUT_MS
-        )
+        await fuels_waitForMessage(env.fuel.provider, fuelETHReceiver, fuelETHMessageNonce, FUEL_MESSAGE_TIMEOUT_MS)
       ).to.not.be.null;
 
       // check that the recipient balance has increased by the expected amount
       let newReceiverBalance = await env.fuel.provider.getBalance(fuelETHReceiver, ETH_ASSET_ID);
-      expect(newReceiverBalance.eq(fuelETHReceiverBalance.add(fuels_parseEther(NUM_ETH)))).to.be
-        .true;
+      expect(newReceiverBalance.eq(fuelETHReceiverBalance.add(fuels_parseEther(NUM_ETH)))).to.be.true;
     });
   });
 
@@ -149,10 +138,7 @@ describe('Transferring ETH', async function () {
 
       // get message proof
       const messageOutReceipt = <TransactionResultMessageOutReceipt>result.receipts[0];
-      withdrawMessageProof = await env.fuel.provider.getMessageProof(
-        tx.id,
-        messageOutReceipt.messageID
-      );
+      withdrawMessageProof = await env.fuel.provider.getMessageProof(tx.id, messageOutReceipt.messageID);
 
       // check that the sender balance has decreased by the expected amount
       let newSenderBalance = await fuelETHSender.getBalance(ETH_ASSET_ID);

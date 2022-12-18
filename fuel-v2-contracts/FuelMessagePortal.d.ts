@@ -25,23 +25,27 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     "ETH_DECIMALS()": FunctionFragment;
     "FUEL_BASE_ASSET_DECIMALS()": FunctionFragment;
     "MAX_MESSAGE_DATA_SIZE()": FunctionFragment;
-    "SIDECHAIN_CONSENSUS()": FunctionFragment;
     "getFuelBaseAssetDecimals()": FunctionFragment;
     "getMessageSender()": FunctionFragment;
+    "initialize(address)": FunctionFragment;
     "owner()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
+    "proxiableUUID()": FunctionFragment;
     "relayMessageFromFuelBlock(tuple,tuple,tuple,bytes)": FunctionFragment;
     "relayMessageFromPrevFuelBlock(tuple,tuple,tuple,tuple,tuple,bytes)": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
     "s_incomingMessageSuccessful(bytes32)": FunctionFragment;
     "s_incomingMessageTimelock()": FunctionFragment;
     "s_outgoingMessageNonce()": FunctionFragment;
+    "s_sidechainConsensus()": FunctionFragment;
     "sendETH(bytes32)": FunctionFragment;
     "sendMessage(bytes32,bytes)": FunctionFragment;
     "setIncomingMessageTimelock(uint64)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
     "unpause()": FunctionFragment;
+    "upgradeTo(address)": FunctionFragment;
+    "upgradeToAndCall(address,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
@@ -57,10 +61,6 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "SIDECHAIN_CONSENSUS",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
     functionFragment: "getFuelBaseAssetDecimals",
     values?: undefined
   ): string;
@@ -68,9 +68,14 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     functionFragment: "getMessageSender",
     values?: undefined
   ): string;
+  encodeFunctionData(functionFragment: "initialize", values: [string]): string;
   encodeFunctionData(functionFragment: "owner", values?: undefined): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "proxiableUUID",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "relayMessageFromFuelBlock",
     values: [
@@ -142,6 +147,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     functionFragment: "s_outgoingMessageNonce",
     values?: undefined
   ): string;
+  encodeFunctionData(
+    functionFragment: "s_sidechainConsensus",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "sendETH", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "sendMessage",
@@ -156,6 +165,11 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
+  encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "upgradeToAndCall",
+    values: [string, BytesLike]
+  ): string;
 
   decodeFunctionResult(
     functionFragment: "ETH_DECIMALS",
@@ -170,10 +184,6 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "SIDECHAIN_CONSENSUS",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "getFuelBaseAssetDecimals",
     data: BytesLike
   ): Result;
@@ -181,9 +191,14 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     functionFragment: "getMessageSender",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "proxiableUUID",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "relayMessageFromFuelBlock",
     data: BytesLike
@@ -208,6 +223,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     functionFragment: "s_outgoingMessageNonce",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "s_sidechainConsensus",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "sendETH", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "sendMessage",
@@ -222,18 +241,31 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "upgradeTo", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "upgradeToAndCall",
+    data: BytesLike
+  ): Result;
 
   events: {
+    "AdminChanged(address,address)": EventFragment;
+    "BeaconUpgraded(address)": EventFragment;
+    "Initialized(uint8)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
     "SentMessage(bytes32,bytes32,uint64,uint64,bytes)": EventFragment;
     "Unpaused(address)": EventFragment;
+    "Upgraded(address)": EventFragment;
   };
 
+  getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SentMessage"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
 export class FuelMessagePortal extends Contract {
@@ -294,10 +326,6 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<[string]>;
-
-    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<[string]>;
-
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<[number]>;
 
     "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<[number]>;
@@ -305,6 +333,16 @@ export class FuelMessagePortal extends Contract {
     getMessageSender(overrides?: CallOverrides): Promise<[string]>;
 
     "getMessageSender()"(overrides?: CallOverrides): Promise<[string]>;
+
+    initialize(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "initialize(address)"(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
     owner(overrides?: CallOverrides): Promise<[string]>;
 
@@ -321,6 +359,10 @@ export class FuelMessagePortal extends Contract {
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
     "paused()"(overrides?: CallOverrides): Promise<[boolean]>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<[string]>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<[string]>;
 
     relayMessageFromFuelBlock(
       message: {
@@ -456,6 +498,10 @@ export class FuelMessagePortal extends Contract {
 
     "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
+    s_sidechainConsensus(overrides?: CallOverrides): Promise<[string]>;
+
+    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<[string]>;
+
     sendETH(
       recipient: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -505,6 +551,28 @@ export class FuelMessagePortal extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
   };
 
   ETH_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
@@ -519,10 +587,6 @@ export class FuelMessagePortal extends Contract {
 
   "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-  SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<string>;
-
-  "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<string>;
-
   getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
 
   "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
@@ -530,6 +594,16 @@ export class FuelMessagePortal extends Contract {
   getMessageSender(overrides?: CallOverrides): Promise<string>;
 
   "getMessageSender()"(overrides?: CallOverrides): Promise<string>;
+
+  initialize(
+    sidechainConsensus: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "initialize(address)"(
+    sidechainConsensus: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   owner(overrides?: CallOverrides): Promise<string>;
 
@@ -546,6 +620,10 @@ export class FuelMessagePortal extends Contract {
   paused(overrides?: CallOverrides): Promise<boolean>;
 
   "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+  proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+  "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
   relayMessageFromFuelBlock(
     message: {
@@ -679,6 +757,10 @@ export class FuelMessagePortal extends Contract {
 
   "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+  s_sidechainConsensus(overrides?: CallOverrides): Promise<string>;
+
+  "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<string>;
+
   sendETH(
     recipient: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -729,6 +811,28 @@ export class FuelMessagePortal extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  upgradeTo(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeTo(address)"(
+    newImplementation: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  upgradeToAndCall(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "upgradeToAndCall(address,bytes)"(
+    newImplementation: string,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   callStatic: {
     ETH_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -742,10 +846,6 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<string>;
-
-    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<string>;
-
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
 
     "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
@@ -753,6 +853,16 @@ export class FuelMessagePortal extends Contract {
     getMessageSender(overrides?: CallOverrides): Promise<string>;
 
     "getMessageSender()"(overrides?: CallOverrides): Promise<string>;
+
+    initialize(
+      sidechainConsensus: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "initialize(address)"(
+      sidechainConsensus: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
 
     owner(overrides?: CallOverrides): Promise<string>;
 
@@ -765,6 +875,10 @@ export class FuelMessagePortal extends Contract {
     paused(overrides?: CallOverrides): Promise<boolean>;
 
     "paused()"(overrides?: CallOverrides): Promise<boolean>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<string>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<string>;
 
     relayMessageFromFuelBlock(
       message: {
@@ -896,6 +1010,10 @@ export class FuelMessagePortal extends Contract {
 
     "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    s_sidechainConsensus(overrides?: CallOverrides): Promise<string>;
+
+    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<string>;
+
     sendETH(recipient: BytesLike, overrides?: CallOverrides): Promise<void>;
 
     "sendETH(bytes32)"(
@@ -938,9 +1056,45 @@ export class FuelMessagePortal extends Contract {
     unpause(overrides?: CallOverrides): Promise<void>;
 
     "unpause()"(overrides?: CallOverrides): Promise<void>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
   };
 
   filters: {
+    AdminChanged(
+      previousAdmin: null,
+      newAdmin: null
+    ): TypedEventFilter<
+      [string, string],
+      { previousAdmin: string; newAdmin: string }
+    >;
+
+    BeaconUpgraded(
+      beacon: string | null
+    ): TypedEventFilter<[string], { beacon: string }>;
+
+    Initialized(version: null): TypedEventFilter<[number], { version: number }>;
+
     OwnershipTransferred(
       previousOwner: string | null,
       newOwner: string | null
@@ -969,6 +1123,10 @@ export class FuelMessagePortal extends Contract {
     >;
 
     Unpaused(account: null): TypedEventFilter<[string], { account: string }>;
+
+    Upgraded(
+      implementation: string | null
+    ): TypedEventFilter<[string], { implementation: string }>;
   };
 
   estimateGas: {
@@ -984,10 +1142,6 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    SIDECHAIN_CONSENSUS(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "SIDECHAIN_CONSENSUS()"(overrides?: CallOverrides): Promise<BigNumber>;
-
     getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<BigNumber>;
 
     "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -995,6 +1149,16 @@ export class FuelMessagePortal extends Contract {
     getMessageSender(overrides?: CallOverrides): Promise<BigNumber>;
 
     "getMessageSender()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    initialize(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "initialize(address)"(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
     owner(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -1011,6 +1175,10 @@ export class FuelMessagePortal extends Contract {
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
     "paused()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     relayMessageFromFuelBlock(
       message: {
@@ -1146,6 +1314,10 @@ export class FuelMessagePortal extends Contract {
 
     "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
 
+    s_sidechainConsensus(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     sendETH(
       recipient: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -1195,6 +1367,28 @@ export class FuelMessagePortal extends Contract {
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
@@ -1218,14 +1412,6 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    SIDECHAIN_CONSENSUS(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "SIDECHAIN_CONSENSUS()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
     getFuelBaseAssetDecimals(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -1238,6 +1424,16 @@ export class FuelMessagePortal extends Contract {
 
     "getMessageSender()"(
       overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    initialize(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "initialize(address)"(
+      sidechainConsensus: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -1255,6 +1451,10 @@ export class FuelMessagePortal extends Contract {
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "paused()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    proxiableUUID(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "proxiableUUID()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     relayMessageFromFuelBlock(
       message: {
@@ -1396,6 +1596,14 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    s_sidechainConsensus(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "s_sidechainConsensus()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     sendETH(
       recipient: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
@@ -1444,6 +1652,28 @@ export class FuelMessagePortal extends Contract {
 
     "unpause()"(
       overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeTo(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeTo(address)"(
+      newImplementation: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    upgradeToAndCall(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "upgradeToAndCall(address,bytes)"(
+      newImplementation: string,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };
 }
