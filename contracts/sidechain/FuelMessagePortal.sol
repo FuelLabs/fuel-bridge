@@ -3,7 +3,7 @@ pragma solidity 0.8.9;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
@@ -34,8 +34,8 @@ struct Message {
 contract FuelMessagePortal is
     IFuelMessagePortal,
     Initializable,
-    OwnableUpgradeable,
     PausableUpgradeable,
+    AccessControlUpgradeable,
     ReentrancyGuardUpgradeable,
     UUPSUpgradeable
 {
@@ -45,6 +45,9 @@ contract FuelMessagePortal is
     ///////////////
     // Constants //
     ///////////////
+
+    /// @dev The admin related contract roles
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /// @dev The number of decimals that the base Fuel asset uses
     uint256 public constant FUEL_BASE_ASSET_DECIMALS = 9;
@@ -88,10 +91,14 @@ contract FuelMessagePortal is
     /// @notice Contract initializer to setup starting values
     /// @param sidechainConsensus Consensus contract
     function initialize(FuelSidechainConsensus sidechainConsensus) public initializer {
-        __Ownable_init();
         __Pausable_init();
+        __AccessControl_init();
         __ReentrancyGuard_init();
         __UUPSUpgradeable_init();
+
+        //grant initial roles
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
 
         //consensus contract
         s_sidechainConsensus = sidechainConsensus;
@@ -109,18 +116,18 @@ contract FuelMessagePortal is
     /////////////////////
 
     /// @notice Pause outbound messages
-    function pause() external onlyOwner {
+    function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
     /// @notice Unpause outbound messages
-    function unpause() external onlyOwner {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
     /// @notice Sets the waiting period for message root states
     /// @param messageTimelock The waiting period for message root states (in milliseconds)
-    function setIncomingMessageTimelock(uint64 messageTimelock) external onlyOwner {
+    function setIncomingMessageTimelock(uint64 messageTimelock) external onlyRole(DEFAULT_ADMIN_ROLE) {
         s_incomingMessageTimelock = messageTimelock;
     }
 
@@ -312,7 +319,7 @@ contract FuelMessagePortal is
 
     /// @notice Executes a message in the given header
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
-        //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
+        //should revert if msg.sender is not authorized to upgrade the contract (currently only admin)
     }
 }

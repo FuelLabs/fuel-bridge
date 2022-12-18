@@ -21,11 +21,15 @@ describe('Contract Upgradability', async () => {
 	});
 
 	describe('Upgrade contracts', async () => {
+		const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
 		it('Should be able to upgrade contracts', async () => {
 			const contracts = {
 				FuelSidechainConsensus: env.fuelSidechain.address,
 				FuelMessagePortal: env.fuelMessagePortal.address,
 				L1ERC20Gateway: env.l1ERC20Gateway.address,
+				FuelSidechainConsensus_impl: '',
+				FuelMessagePortal_impl: '',
+				L1ERC20Gateway_impl: '',
 			};
 			const upgradedContracts = await upgradeFuel(contracts);
 
@@ -55,12 +59,12 @@ describe('Contract Upgradability', async () => {
 			).to.be.revertedWith('Initializable: contract is not initializing');
 		});
 
-		it('Should not be able to upgrade contracts as non-owner', async () => {
+		it('Should not be able to upgrade contracts as non-admin', async () => {
 			await expect(env.fuelSidechain.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
 				'Ownable: caller is not the owner'
 			);
 			await expect(env.fuelMessagePortal.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
-				'Ownable: caller is not the owner'
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
 			);
 			await expect(env.l1ERC20Gateway.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
 				'Ownable: caller is not the owner'

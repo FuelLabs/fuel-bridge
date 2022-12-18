@@ -252,42 +252,98 @@ describe('Incoming Messages', async () => {
 		});
 	});
 
-	describe('Verify ownership', async () => {
+	describe('Verify access control', async () => {
+		const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
+		const pauserRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSER_ROLE'));
 		let signer0: string;
 		let signer1: string;
+		let signer2: string;
 		before(async () => {
 			signer0 = env.addresses[0];
 			signer1 = env.addresses[1];
+			signer2 = env.addresses[2];
 		});
 
-		it('Should be able to switch owner as owner', async () => {
-			expect(await env.fuelMessagePortal.owner()).to.not.be.equal(signer1);
+		it('Should be able to grant admin role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer1)).to.equal(false);
 
-			// Transfer ownership
-			await expect(env.fuelMessagePortal.transferOwnership(signer1)).to.not.be.reverted;
-			expect(await env.fuelMessagePortal.owner()).to.be.equal(signer1);
+			// Grant admin role
+			await expect(env.fuelMessagePortal.grantRole(defaultAdminRole, signer1)).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer1)).to.equal(true);
 		});
 
-		it('Should not be able to switch owner as non-owner', async () => {
-			expect(await env.fuelMessagePortal.owner()).to.be.equal(signer1);
+		it('Should be able to renounce admin role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(true);
 
-			// Attempt transfer ownership
-			await expect(env.fuelMessagePortal.transferOwnership(signer0)).to.be.revertedWith(
-				'Ownable: caller is not the owner'
+			// Revoke admin role
+			await expect(env.fuelMessagePortal.renounceRole(defaultAdminRole, signer0)).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(false);
+		});
+
+		it('Should not be able to grant admin role as non-admin', async () => {
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(false);
+
+			// Attempt grant admin role
+			await expect(env.fuelMessagePortal.grantRole(defaultAdminRole, signer0)).to.be.revertedWith(
+				`AccessControl: account ${env.addresses[0].toLowerCase()} is missing role ${defaultAdminRole}`
 			);
-			expect(await env.fuelMessagePortal.owner()).to.be.equal(signer1);
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(false);
 		});
 
-		it('Should be able to switch owner back', async () => {
-			expect(await env.fuelMessagePortal.owner()).to.not.be.equal(signer0);
+		it('Should be able to grant then revoke admin role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(false);
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer1)).to.equal(true);
 
-			// Transfer ownership
-			await expect(env.fuelMessagePortal.connect(env.signers[1]).transferOwnership(signer0)).to.not.be.reverted;
-			expect(await env.fuelMessagePortal.owner()).to.be.equal(signer0);
+			// Grant admin role
+			await expect(env.fuelMessagePortal.connect(env.signers[1]).grantRole(defaultAdminRole, signer0)).to.not.be
+				.reverted;
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer0)).to.equal(true);
+
+			// Revoke previous admin
+			await expect(env.fuelMessagePortal.revokeRole(defaultAdminRole, signer1)).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer1)).to.equal(false);
+		});
+
+		it('Should be able to grant pauser role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer1)).to.equal(false);
+
+			// Grant pauser role
+			await expect(env.fuelMessagePortal.grantRole(pauserRole, signer1)).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer1)).to.equal(true);
+		});
+
+		it('Should not be able to grant permission as pauser', async () => {
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer2)).to.equal(false);
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer2)).to.equal(false);
+
+			// Attempt grant admin role
+			await expect(
+				env.fuelMessagePortal.connect(env.signers[1]).grantRole(defaultAdminRole, signer2)
+			).to.be.revertedWith(
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+			);
+			expect(await env.fuelMessagePortal.hasRole(defaultAdminRole, signer2)).to.equal(false);
+
+			// Attempt grant pauser role
+			await expect(
+				env.fuelMessagePortal.connect(env.signers[1]).grantRole(pauserRole, signer2)
+			).to.be.revertedWith(
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+			);
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer2)).to.equal(false);
+		});
+
+		it('Should be able to revoke pauser role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer1)).to.equal(true);
+
+			// Grant pauser role
+			await expect(env.fuelMessagePortal.revokeRole(pauserRole, signer1)).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, signer1)).to.equal(false);
 		});
 	});
 
-	describe('Verify owner functions', async () => {
+	describe('Verify admin functions', async () => {
+		const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
 		let messageNodes: TreeNode[];
 		let blockHeader: BlockHeader;
 		let poaSignature: string;
@@ -297,17 +353,19 @@ describe('Incoming Messages', async () => {
 			poaSignature = blockSignatures[0];
 		});
 
-		it('Should not be able to set timelock as non-owner', async () => {
+		it('Should not be able to set timelock as non-admin', async () => {
 			expect(await env.fuelMessagePortal.s_incomingMessageTimelock()).to.be.equal(BN.from(0));
 
 			// Attempt set timelock
 			await expect(
 				env.fuelMessagePortal.connect(env.signers[1]).setIncomingMessageTimelock(10)
-			).to.be.revertedWith('Ownable: caller is not the owner');
+			).to.be.revertedWith(
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+			);
 			expect(await env.fuelMessagePortal.s_incomingMessageTimelock()).to.be.equal(BN.from(0));
 		});
 
-		it('Should be able to set the timelock as owner', async () => {
+		it('Should be able to set the timelock as admin', async () => {
 			const newTimelockValue = 7 * 24 * 60 * 60 * 1000;
 			expect(await env.fuelMessagePortal.s_incomingMessageTimelock()).to.not.be.equal(BN.from(newTimelockValue));
 
@@ -832,6 +890,8 @@ describe('Incoming Messages', async () => {
 	});
 
 	describe('Verify pause and unpause', async () => {
+		const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
+		const pauserRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSER_ROLE'));
 		let messageNodes: TreeNode[];
 		let prevBlockNodes: TreeNode[];
 		let blockHeader: BlockHeader;
@@ -848,30 +908,48 @@ describe('Incoming Messages', async () => {
 			prevBlockNodes = constructTree(prevBlockIds);
 		});
 
-		it('Should not be able to pause as non-owner', async () => {
+		it('Should be able to grant pauser role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, env.addresses[2])).to.equal(false);
+
+			// Grant pauser role
+			await expect(env.fuelMessagePortal.grantRole(pauserRole, env.addresses[2])).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, env.addresses[2])).to.equal(true);
+		});
+
+		it('Should not be able to pause as non-pauser', async () => {
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(false);
 
 			// Attempt pause
 			await expect(env.fuelMessagePortal.connect(env.signers[1]).pause()).to.be.revertedWith(
-				'Ownable: caller is not the owner'
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${pauserRole}`
 			);
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(false);
 		});
 
-		it('Should be able to pause as owner', async () => {
+		it('Should be able to pause as pauser', async () => {
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(false);
 
 			// Pause
-			await expect(env.fuelMessagePortal.pause()).to.not.be.reverted;
+			await expect(env.fuelMessagePortal.connect(env.signers[2]).pause()).to.not.be.reverted;
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
 		});
 
-		it('Should not be able to unpause as non-owner', async () => {
+		it('Should not be able to unpause as pauser (and not admin)', async () => {
+			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
+
+			// Attempt unpause
+			await expect(env.fuelMessagePortal.connect(env.signers[2]).unpause()).to.be.revertedWith(
+				`AccessControl: account ${env.addresses[2].toLowerCase()} is missing role ${defaultAdminRole}`
+			);
+			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
+		});
+
+		it('Should not be able to unpause as non-admin', async () => {
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
 
 			// Attempt unpause
 			await expect(env.fuelMessagePortal.connect(env.signers[1]).unpause()).to.be.revertedWith(
-				'Ownable: caller is not the owner'
+				`AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
 			);
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
 		});
@@ -911,7 +989,7 @@ describe('Incoming Messages', async () => {
 			expect(await env.fuelMessagePortal.s_incomingMessageSuccessful(messageID)).to.be.equal(false);
 		});
 
-		it('Should be able to unpause as owner', async () => {
+		it('Should be able to unpause as admin', async () => {
 			expect(await env.fuelMessagePortal.paused()).to.be.equal(true);
 
 			// Unpause
@@ -938,6 +1016,14 @@ describe('Incoming Messages', async () => {
 			expect(await env.fuelMessagePortal.s_incomingMessageSuccessful(messageID)).to.be.equal(true);
 			expect(await messageTester.data1()).to.be.equal(messageTestData2);
 			expect(await messageTester.data2()).to.be.equal(messageTestData1);
+		});
+
+		it('Should be able to revoke pauser role', async () => {
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, env.addresses[2])).to.equal(true);
+
+			// Grant pauser role
+			await expect(env.fuelMessagePortal.revokeRole(pauserRole, env.addresses[2])).to.not.be.reverted;
+			expect(await env.fuelMessagePortal.hasRole(pauserRole, env.addresses[2])).to.equal(false);
 		});
 	});
 });
