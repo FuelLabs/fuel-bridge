@@ -58,7 +58,6 @@ describe('Incoming Messages', async () => {
 	let env: HarnessObject;
 	let fuelBaseAssetDecimals: number;
 	let baseAssetConversion: number;
-	let onlyEnoughGasForProving: number;
 
 	// Message data
 	const messageTestData1 = randomBytes32();
@@ -93,7 +92,6 @@ describe('Incoming Messages', async () => {
 		env = await setupFuel();
 		fuelBaseAssetDecimals = await env.fuelMessagePortal.getFuelBaseAssetDecimals();
 		baseAssetConversion = 10 ** (18 - fuelBaseAssetDecimals);
-		onlyEnoughGasForProving = process.argv.indexOf('coverage') > 0 ? 155000 : 140000;
 
 		// Deploy contracts for message testing.
 		const messageTesterContractFactory = await ethers.getContractFactory('MessageTester');
@@ -630,7 +628,7 @@ describe('Incoming Messages', async () => {
 				proof: getProof(messageNodes, leafIndexKey),
 			};
 			const options = {
-				gasLimit: onlyEnoughGasForProving,
+				gasLimit: 140000,
 			};
 			expect(await env.fuelMessagePortal.s_incomingMessageSuccessful(messageID)).to.be.equal(false);
 			await expect(
@@ -643,7 +641,7 @@ describe('Incoming Messages', async () => {
 					prevRootPoaSignature,
 					options
 				)
-			).to.be.revertedWith('Insufficient gas for relay');
+			).to.be.reverted;
 			expect(await env.fuelMessagePortal.s_incomingMessageSuccessful(messageID)).to.be.equal(false);
 		});
 

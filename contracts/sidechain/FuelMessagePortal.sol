@@ -10,7 +10,7 @@ import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary
 import {FuelSidechainConsensus} from "./FuelSidechainConsensus.sol";
 import {SidechainBlockHeader, SidechainBlockHeaderLib} from "./types/SidechainBlockHeader.sol";
 import {SidechainBlockHeaderLite, SidechainBlockHeaderLiteLib} from "./types/SidechainBlockHeaderLite.sol";
-import {ExcessivelySafeCall} from "../vendor/ExcessivelySafeCall.sol";
+import {SafeCall} from "../vendor/SafeCall.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 import {IFuelMessagePortal} from "../messaging/IFuelMessagePortal.sol";
 
@@ -291,19 +291,14 @@ contract FuelMessagePortal is
             "Invalid message in block proof"
         );
 
-        //make sure we have enough gas to finish after function
-        //TODO: revisit these values
-        require(gasleft() >= 45000, "Insufficient gas for relay");
-
         //set message sender for receiving contract to reference
         s_incomingMessageSender = message.sender;
 
         //relay message
-        (bool success, ) = ExcessivelySafeCall.excessivelySafeCall(
+        //solhint-disable-next-line avoid-low-level-calls
+        bool success = SafeCall.call(
             address(uint160(uint256(message.recipient))),
-            gasleft() - 40000,
             message.amount * (10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS)),
-            0,
             message.data
         );
 
