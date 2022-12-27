@@ -10,10 +10,10 @@ import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ER
 import {IFuelMessagePortal, InputMessagePredicates} from "../IFuelMessagePortal.sol";
 import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
 
-/// @title L1ERC20Gateway
+/// @title FuelERC20Gateway
 /// @notice The L1 side of the general ERC20 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
-contract L1ERC20Gateway is
+contract FuelERC20Gateway is
     Initializable,
     FuelMessagesEnabledUpgradeable,
     OwnableUpgradeable,
@@ -27,7 +27,7 @@ contract L1ERC20Gateway is
     /////////////
 
     /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
-    mapping(address => mapping(bytes32 => uint256)) public s_deposits;
+    mapping(address => mapping(bytes32 => uint256)) private _deposits;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -48,9 +48,9 @@ contract L1ERC20Gateway is
         __UUPSUpgradeable_init();
     }
 
-    //////////////////////
-    // Public Functions //
-    //////////////////////
+    /////////////////////
+    // Admin Functions //
+    /////////////////////
 
     /// @notice Pause ERC20 transfers
     function pause() external onlyOwner {
@@ -60,6 +60,18 @@ contract L1ERC20Gateway is
     /// @notice Unpause ERC20 transfers
     function unpause() external onlyOwner {
         _unpause();
+    }
+
+    //////////////////////
+    // Public Functions //
+    //////////////////////
+
+    /// @notice Gets the amount of tokens deposited to a corresponding token on Fuel
+    /// @param tokenAddress ERC-20 token address
+    /// @param fuelTokenId ID of the corresponding token on Fuel
+    /// @return amount of tokens deposited
+    function tokensDeposited(address tokenAddress, bytes32 fuelTokenId) public view returns (uint256) {
+        return _deposits[tokenAddress][fuelTokenId];
     }
 
     /// @notice Deposits the given tokens to an address on Fuel
@@ -73,7 +85,7 @@ contract L1ERC20Gateway is
 
         //transfer tokens to this contract and update deposit balance
         IERC20Upgradeable(tokenId).safeTransferFrom(msg.sender, address(this), amount);
-        s_deposits[tokenId][fuelTokenId] = s_deposits[tokenId][fuelTokenId] + amount;
+        _deposits[tokenId][fuelTokenId] = _deposits[tokenId][fuelTokenId] + amount;
 
         //send message to gateway on Fuel to finalize the deposit
         bytes memory data = abi.encodePacked(
@@ -97,10 +109,10 @@ contract L1ERC20Gateway is
         uint256 amount
     ) external payable whenNotPaused onlyFromPortal {
         require(amount > 0, "Cannot withdraw zero");
-        bytes32 fuelTokenId = getMessageSender();
+        bytes32 fuelTokenId = messageSender();
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        s_deposits[tokenId][fuelTokenId] = s_deposits[tokenId][fuelTokenId] - amount;
+        _deposits[tokenId][fuelTokenId] = _deposits[tokenId][fuelTokenId] - amount;
         IERC20Upgradeable(tokenId).safeTransfer(to, amount);
     }
 

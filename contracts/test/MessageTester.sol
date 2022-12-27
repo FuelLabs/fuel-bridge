@@ -15,7 +15,7 @@ contract MessageTester is FuelMessagesEnabled {
     /// @notice Constructor.
     /// @param fuelMessagePortal The IFuelMessagePortal contract
     constructor(IFuelMessagePortal fuelMessagePortal) {
-        s_fuelMessagePortal = fuelMessagePortal;
+        _fuelMessagePortal = fuelMessagePortal;
     }
 
     /// @notice Message receiving function.

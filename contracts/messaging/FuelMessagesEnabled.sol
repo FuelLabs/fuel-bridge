@@ -11,7 +11,7 @@ abstract contract FuelMessagesEnabled {
     /////////////
 
     /// @notice IFuelMessagePortal contract used to send and receive messages from Fuel
-    IFuelMessagePortal public s_fuelMessagePortal;
+    IFuelMessagePortal internal _fuelMessagePortal;
 
     ////////////////////////
     // Function Modifiers //
@@ -19,16 +19,26 @@ abstract contract FuelMessagesEnabled {
 
     /// @notice Enforces that the modified function is only callable by the Fuel message portal
     modifier onlyFromPortal() {
-        require(msg.sender == address(s_fuelMessagePortal), "Caller is not the portal");
+        require(msg.sender == address(_fuelMessagePortal), "Caller is not the portal");
         _;
     }
 
     /// @notice Enforces that the modified function is only callable by the portal and a specific Fuel account
     /// @param fuelSender The only sender on Fuel which is authenticated to call this function
     modifier onlyFromFuelSender(bytes32 fuelSender) {
-        require(msg.sender == address(s_fuelMessagePortal), "Caller is not the portal");
-        require(s_fuelMessagePortal.getMessageSender() == fuelSender, "Invalid message sender");
+        require(msg.sender == address(_fuelMessagePortal), "Caller is not the portal");
+        require(_fuelMessagePortal.messageSender() == fuelSender, "Invalid message sender");
         _;
+    }
+
+    //////////////////////
+    // Public Functions //
+    //////////////////////
+
+    /// @notice Gets the currently set PoA key
+    /// @return fuelMessagePortal Fuel message portal address
+    function fuelMessagePortal() public view returns (address) {
+        return address(_fuelMessagePortal);
     }
 
     ////////////////////////
@@ -39,7 +49,7 @@ abstract contract FuelMessagesEnabled {
     /// @param recipient The message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
     function sendMessage(bytes32 recipient, bytes memory data) internal {
-        s_fuelMessagePortal.sendMessage(recipient, data);
+        _fuelMessagePortal.sendMessage(recipient, data);
     }
 
     /// @notice Send a message to a recipient on Fuel
@@ -47,11 +57,11 @@ abstract contract FuelMessagesEnabled {
     /// @param amount The amount of ETH to send with message
     /// @param data The message data to be sent to the receiver
     function sendMessage(bytes32 recipient, uint256 amount, bytes memory data) internal {
-        s_fuelMessagePortal.sendMessage{value: amount}(recipient, data);
+        _fuelMessagePortal.sendMessage{value: amount}(recipient, data);
     }
 
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
-    function getMessageSender() internal view returns (bytes32) {
-        return s_fuelMessagePortal.getMessageSender();
+    function messageSender() internal view returns (bytes32) {
+        return _fuelMessagePortal.messageSender();
     }
 }

@@ -20,7 +20,7 @@ abstract contract FuelMessagesEnabledUpgradeable is Initializable, FuelMessagesE
 
     // solhint-disable-next-line func-name-mixedcase
     function __FuelMessagesEnabled_init_unchained(IFuelMessagePortal fuelMessagePortal) internal onlyInitializing {
-        s_fuelMessagePortal = fuelMessagePortal;
+        _fuelMessagePortal = fuelMessagePortal;
     }
 
     /**

@@ -28,12 +28,12 @@ interface IFuelMessagePortal {
 
     /// @notice Send only ETH to the given recipient
     /// @param recipient The recipient address
-    function sendETH(bytes32 recipient) external payable;
+    function depositETH(bytes32 recipient) external payable;
 
     ///////////////////////////////
     // Public Functions Incoming //
     ///////////////////////////////
 
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
-    function getMessageSender() external view returns (bytes32);
+    function messageSender() external view returns (bytes32);
 }

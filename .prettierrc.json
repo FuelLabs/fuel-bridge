@@ -23,7 +23,7 @@
 			}
 		},
 		{
-			"files": ["*.js", "*.ts", "*.json"],
+			"files": ["*.json"],
 			"options": {
 				"useTabs": true
 			}

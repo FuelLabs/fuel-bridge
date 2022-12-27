@@ -64,19 +64,19 @@ contract FuelMessagePortal is
     /////////////
 
     /// @notice Current message sender for other contracts to reference
-    bytes32 internal s_incomingMessageSender;
+    bytes32 internal _incomingMessageSender;
 
     /// @notice The Fuel sidechain consensus contract
-    FuelSidechainConsensus public s_sidechainConsensus;
+    FuelSidechainConsensus private _sidechainConsensus;
 
     /// @notice The waiting period for message root states (in milliseconds)
-    uint64 public s_incomingMessageTimelock;
+    uint64 private _incomingMessageTimelock;
 
     /// @notice Nonce for the next message to be sent
-    uint64 public s_outgoingMessageNonce;
+    uint64 private _outgoingMessageNonce;
 
     /// @notice Mapping of message hash to boolean success value
-    mapping(bytes32 => bool) public s_incomingMessageSuccessful;
+    mapping(bytes32 => bool) private _incomingMessageSuccessful;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -101,14 +101,14 @@ contract FuelMessagePortal is
         _grantRole(PAUSER_ROLE, msg.sender);
 
         //consensus contract
-        s_sidechainConsensus = sidechainConsensus;
+        _sidechainConsensus = sidechainConsensus;
 
         //outgoing message data
-        s_outgoingMessageNonce = 0;
+        _outgoingMessageNonce = 0;
 
         //incoming message data
-        s_incomingMessageSender = NULL_MESSAGE_SENDER;
-        s_incomingMessageTimelock = 0;
+        _incomingMessageSender = NULL_MESSAGE_SENDER;
+        _incomingMessageTimelock = 0;
     }
 
     /////////////////////
@@ -128,7 +128,23 @@ contract FuelMessagePortal is
     /// @notice Sets the waiting period for message root states
     /// @param messageTimelock The waiting period for message root states (in milliseconds)
     function setIncomingMessageTimelock(uint64 messageTimelock) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        s_incomingMessageTimelock = messageTimelock;
+        _incomingMessageTimelock = messageTimelock;
+    }
+
+    //////////////////////
+    // Public Functions //
+    //////////////////////
+
+    /// @notice Gets the number of decimals used in the Fuel base asset
+    /// @return decimals of the Fuel base asset
+    function fuelBaseAssetDecimals() public pure returns (uint8) {
+        return uint8(FUEL_BASE_ASSET_DECIMALS);
+    }
+
+    /// @notice Gets the set sidechain consensus contract
+    /// @return sidechain consensus contract
+    function sidechainConsensusContract() public view returns (address) {
+        return address(_sidechainConsensus);
     }
 
     ///////////////////////////////////////
@@ -149,7 +165,7 @@ contract FuelMessagePortal is
     ) external payable whenNotPaused {
         //verify block header
         require(
-            s_sidechainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
+            _sidechainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid block"
         );
 
@@ -175,7 +191,7 @@ contract FuelMessagePortal is
     ) external payable whenNotPaused {
         //verify root block header
         require(
-            s_sidechainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
+            _sidechainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid root block"
         );
 
@@ -195,6 +211,26 @@ contract FuelMessagePortal is
         _executeMessageInHeader(message, blockHeader, messageInBlockProof);
     }
 
+    /// @notice Gets the currently set timelock for all incoming messages (in milliseconds)
+    /// @return incoming message timelock
+    function incomingMessageTimelock() public view returns (uint64) {
+        return _incomingMessageTimelock;
+    }
+
+    /// @notice Gets if the given message ID has been relayed successfully
+    /// @param messageId Message ID
+    /// @return true if message has been relayed successfully
+    function incomingMessageSuccessful(bytes32 messageId) public view returns (bool) {
+        return _incomingMessageSuccessful[messageId];
+    }
+
+    /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
+    /// @return sender the address of the sender on Fuel
+    function messageSender() external view returns (bytes32) {
+        require(_incomingMessageSender != NULL_MESSAGE_SENDER, "Current message sender not set");
+        return _incomingMessageSender;
+    }
+
     ///////////////////////////////////////
     // Outgoing Message Public Functions //
     ///////////////////////////////////////
@@ -208,25 +244,8 @@ contract FuelMessagePortal is
 
     /// @notice Send only ETH to the given recipient
     /// @param recipient The target message receiver
-    function sendETH(bytes32 recipient) external payable whenNotPaused {
+    function depositETH(bytes32 recipient) external payable whenNotPaused {
         _sendOutgoingMessage(recipient, new bytes(0));
-    }
-
-    //////////////////////////////
-    // General Public Functions //
-    //////////////////////////////
-
-    /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
-    /// @return sender the address of the sender on Fuel
-    function getMessageSender() external view returns (bytes32) {
-        require(s_incomingMessageSender != NULL_MESSAGE_SENDER, "Current message sender not set");
-        return s_incomingMessageSender;
-    }
-
-    /// @notice Gets the number of decimals used in the Fuel base asset
-    /// @return decimals of the Fuel base asset
-    function getFuelBaseAssetDecimals() public pure returns (uint8) {
-        return uint8(FUEL_BASE_ASSET_DECIMALS);
     }
 
     ////////////////////////
@@ -251,10 +270,10 @@ contract FuelMessagePortal is
             }
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            emit SentMessage(sender, recipient, s_outgoingMessageNonce, uint64(amount), data);
+            emit SentMessage(sender, recipient, _outgoingMessageNonce, uint64(amount), data);
 
             // increment nonce for next message
-            ++s_outgoingMessageNonce;
+            ++_outgoingMessageNonce;
         }
     }
 
@@ -271,11 +290,11 @@ contract FuelMessagePortal is
         bytes32 messageId = CryptographyLib.hash(
             abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
         );
-        require(!s_incomingMessageSuccessful[messageId], "Already relayed");
+        require(!_incomingMessageSuccessful[messageId], "Already relayed");
         require(
             (blockHeader.timestamp - 4611686018427387914) <=
                 // solhint-disable-next-line not-rely-on-time
-                (block.timestamp - s_incomingMessageTimelock),
+                (block.timestamp - _incomingMessageTimelock),
             "Timelock not elapsed"
         );
 
@@ -292,7 +311,7 @@ contract FuelMessagePortal is
         );
 
         //set message sender for receiving contract to reference
-        s_incomingMessageSender = message.sender;
+        _incomingMessageSender = message.sender;
 
         //relay message
         //solhint-disable-next-line avoid-low-level-calls
@@ -306,10 +325,10 @@ contract FuelMessagePortal is
         require(success, "Message relay failed");
 
         //unset message sender reference
-        s_incomingMessageSender = NULL_MESSAGE_SENDER;
+        _incomingMessageSender = NULL_MESSAGE_SENDER;
 
         //keep track of successfully relayed messages
-        s_incomingMessageSuccessful[messageId] = true;
+        _incomingMessageSuccessful[messageId] = true;
     }
 
     /// @notice Executes a message in the given header

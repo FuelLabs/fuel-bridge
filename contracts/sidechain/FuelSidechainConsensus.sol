@@ -14,7 +14,7 @@ contract FuelSidechainConsensus is Initializable, OwnableUpgradeable, PausableUp
     /////////////
 
     /// @dev The Current PoA key
-    address public s_authorityKey;
+    address private _authorityKey;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -27,14 +27,14 @@ contract FuelSidechainConsensus is Initializable, OwnableUpgradeable, PausableUp
     }
 
     /// @notice Contract initializer to setup starting values
-    /// @param authorityKey Public key of the block producer authority
-    function initialize(address authorityKey) public initializer {
+    /// @param key Public key of the block producer authority
+    function initialize(address key) public initializer {
         __Pausable_init();
         __Ownable_init();
         __UUPSUpgradeable_init();
 
         // data
-        s_authorityKey = authorityKey;
+        _authorityKey = key;
     }
 
     /////////////////////
@@ -42,9 +42,9 @@ contract FuelSidechainConsensus is Initializable, OwnableUpgradeable, PausableUp
     /////////////////////
 
     /// @notice Sets the PoA key
-    /// @param authorityKey Address of the PoA authority
-    function setAuthorityKey(address authorityKey) external onlyOwner {
-        s_authorityKey = authorityKey;
+    /// @param key Address of the PoA authority
+    function setAuthorityKey(address key) external onlyOwner {
+        _authorityKey = key;
     }
 
     /// @notice Pause block commitments
@@ -61,11 +61,17 @@ contract FuelSidechainConsensus is Initializable, OwnableUpgradeable, PausableUp
     // Public Functions //
     //////////////////////
 
+    /// @notice Gets the currently set PoA key
+    /// @return authority key
+    function authorityKey() public view returns (address) {
+        return _authorityKey;
+    }
+
     /// @notice Verify a given block.
     /// @param blockHash The hash of a block
     /// @param signature The signature over the block hash
     function verifyBlock(bytes32 blockHash, bytes calldata signature) external view whenNotPaused returns (bool) {
-        return CryptographyLib.addressFromSignature(signature, blockHash) == s_authorityKey;
+        return CryptographyLib.addressFromSignature(signature, blockHash) == _authorityKey;
     }
 
     ////////////////////////
