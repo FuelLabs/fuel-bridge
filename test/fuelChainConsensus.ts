@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, { computeBlockId } from '../protocol/sidechainBlock';
+import BlockHeader, { computeBlockId } from '../protocol/blockHeader';
 import { EMPTY } from '../protocol/constants';
 import { compactSign } from '../protocol/validators';
 import { SigningKey } from 'ethers/lib/utils';
@@ -27,7 +27,7 @@ function createBlock(blockIds: string[], messageIds: string[]): BlockHeader {
     return header;
 }
 
-describe('Sidechain Consensus', async () => {
+describe('Fuel Chain Consensus', async () => {
     let env: HarnessObject;
 
     // Arrays of committed block headers and their IDs
@@ -53,29 +53,29 @@ describe('Sidechain Consensus', async () => {
         });
 
         it('Should be able to switch owner as owner', async () => {
-            expect(await env.fuelSidechain.owner()).to.not.be.equal(signer1);
+            expect(await env.fuelChainConsensus.owner()).to.not.be.equal(signer1);
 
             // Transfer ownership
-            await expect(env.fuelSidechain.transferOwnership(signer1)).to.not.be.reverted;
-            expect(await env.fuelSidechain.owner()).to.be.equal(signer1);
+            await expect(env.fuelChainConsensus.transferOwnership(signer1)).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.owner()).to.be.equal(signer1);
         });
 
         it('Should not be able to switch owner as non-owner', async () => {
-            expect(await env.fuelSidechain.owner()).to.be.equal(signer1);
+            expect(await env.fuelChainConsensus.owner()).to.be.equal(signer1);
 
             // Attempt transfer ownership
-            await expect(env.fuelSidechain.transferOwnership(signer0)).to.be.revertedWith(
+            await expect(env.fuelChainConsensus.transferOwnership(signer0)).to.be.revertedWith(
                 'Ownable: caller is not the owner'
             );
-            expect(await env.fuelSidechain.owner()).to.be.equal(signer1);
+            expect(await env.fuelChainConsensus.owner()).to.be.equal(signer1);
         });
 
         it('Should be able to switch owner back', async () => {
-            expect(await env.fuelSidechain.owner()).to.not.be.equal(signer0);
+            expect(await env.fuelChainConsensus.owner()).to.not.be.equal(signer0);
 
             // Transfer ownership
-            await expect(env.fuelSidechain.connect(env.signers[1]).transferOwnership(signer0)).to.not.be.reverted;
-            expect(await env.fuelSidechain.owner()).to.be.equal(signer0);
+            await expect(env.fuelChainConsensus.connect(env.signers[1]).transferOwnership(signer0)).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.owner()).to.be.equal(signer0);
         });
     });
 
@@ -86,29 +86,29 @@ describe('Sidechain Consensus', async () => {
         });
 
         it('Should be able to set authority as owner', async () => {
-            expect(await env.fuelSidechain.authorityKey()).to.not.be.equal(signer1);
+            expect(await env.fuelChainConsensus.authorityKey()).to.not.be.equal(signer1);
 
             // Set authority
-            await expect(env.fuelSidechain.setAuthorityKey(signer1)).to.not.be.reverted;
-            expect(await env.fuelSidechain.authorityKey()).to.be.equal(signer1);
+            await expect(env.fuelChainConsensus.setAuthorityKey(signer1)).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.authorityKey()).to.be.equal(signer1);
         });
 
         it('Should not be able to set authority as non-owner', async () => {
-            expect(await env.fuelSidechain.authorityKey()).to.be.equal(signer1);
+            expect(await env.fuelChainConsensus.authorityKey()).to.be.equal(signer1);
 
             // Attempt set authority
             await expect(
-                env.fuelSidechain.connect(env.signers[1]).setAuthorityKey(env.poaSignerAddress)
+                env.fuelChainConsensus.connect(env.signers[1]).setAuthorityKey(env.poaSignerAddress)
             ).to.be.revertedWith('Ownable: caller is not the owner');
-            expect(await env.fuelSidechain.authorityKey()).to.be.equal(signer1);
+            expect(await env.fuelChainConsensus.authorityKey()).to.be.equal(signer1);
         });
 
         it('Should be able to switch authority back', async () => {
-            expect(await env.fuelSidechain.authorityKey()).to.not.be.equal(env.poaSignerAddress);
+            expect(await env.fuelChainConsensus.authorityKey()).to.not.be.equal(env.poaSignerAddress);
 
             // Set authority
-            await expect(env.fuelSidechain.setAuthorityKey(env.poaSignerAddress)).to.not.be.reverted;
-            expect(await env.fuelSidechain.authorityKey()).to.be.equal(env.poaSignerAddress);
+            await expect(env.fuelChainConsensus.setAuthorityKey(env.poaSignerAddress)).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.authorityKey()).to.be.equal(env.poaSignerAddress);
         });
     });
 
@@ -120,57 +120,59 @@ describe('Sidechain Consensus', async () => {
         });
 
         it('Should be able to verify valid block', async () => {
-            expect(await env.fuelSidechain.verifyBlock(blockId, blockSignature)).to.be.equal(true);
+            expect(await env.fuelChainConsensus.verifyBlock(blockId, blockSignature)).to.be.equal(true);
         });
 
         it('Should not be able to verify invalid block', async () => {
-            expect(await env.fuelSidechain.verifyBlock(blockId, badSignature)).to.be.equal(false);
+            expect(await env.fuelChainConsensus.verifyBlock(blockId, badSignature)).to.be.equal(false);
         });
     });
 
     describe('Verify pause and unpause', async () => {
         it('Should not be able to pause as non-owner', async () => {
-            expect(await env.fuelSidechain.paused()).to.be.equal(false);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(false);
 
             // Attempt pause
-            await expect(env.fuelSidechain.connect(env.signers[1]).pause()).to.be.revertedWith(
+            await expect(env.fuelChainConsensus.connect(env.signers[1]).pause()).to.be.revertedWith(
                 'Ownable: caller is not the owner'
             );
-            expect(await env.fuelSidechain.paused()).to.be.equal(false);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(false);
         });
 
         it('Should be able to pause as owner', async () => {
-            expect(await env.fuelSidechain.paused()).to.be.equal(false);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(false);
 
             // Pause
-            await expect(env.fuelSidechain.pause()).to.not.be.reverted;
-            expect(await env.fuelSidechain.paused()).to.be.equal(true);
+            await expect(env.fuelChainConsensus.pause()).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(true);
         });
 
         it('Should not be able to unpause as non-owner', async () => {
-            expect(await env.fuelSidechain.paused()).to.be.equal(true);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(true);
 
             // Attempt unpause
-            await expect(env.fuelSidechain.connect(env.signers[1]).unpause()).to.be.revertedWith(
+            await expect(env.fuelChainConsensus.connect(env.signers[1]).unpause()).to.be.revertedWith(
                 'Ownable: caller is not the owner'
             );
-            expect(await env.fuelSidechain.paused()).to.be.equal(true);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(true);
         });
 
         it('Should not be able to verify block messages when paused', async () => {
-            await expect(env.fuelSidechain.verifyBlock(blockId, blockSignature)).to.be.revertedWith('Pausable: paused');
+            await expect(env.fuelChainConsensus.verifyBlock(blockId, blockSignature)).to.be.revertedWith(
+                'Pausable: paused'
+            );
         });
 
         it('Should be able to unpause as owner', async () => {
-            expect(await env.fuelSidechain.paused()).to.be.equal(true);
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(true);
 
             // Unpause
-            await expect(env.fuelSidechain.unpause()).to.not.be.reverted;
-            expect(await env.fuelSidechain.paused()).to.be.equal(false);
+            await expect(env.fuelChainConsensus.unpause()).to.not.be.reverted;
+            expect(await env.fuelChainConsensus.paused()).to.be.equal(false);
         });
 
         it('Should be able to verify block when unpaused', async () => {
-            expect(await env.fuelSidechain.verifyBlock(blockId, blockSignature)).to.be.equal(true);
+            expect(await env.fuelChainConsensus.verifyBlock(blockId, blockSignature)).to.be.equal(true);
         });
     });
 });

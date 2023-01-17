@@ -68,11 +68,11 @@ export async function confirmationPrompt(prompt: string): Promise<boolean> {
 
 // Publishes source code for verification of proxy contracts.
 export async function publishProxySourceVerification(deployments: DeployedContractAddresses) {
-    await verifyEtherscan('FuelSidechainConsensus proxy', deployments.FuelSidechainConsensus);
+    await verifyEtherscan('FuelChainConsensus proxy', deployments.FuelChainConsensus);
     await verifyEtherscan('FuelMessagePortal proxy', deployments.FuelMessagePortal);
     await verifyEtherscan('FuelERC20Gateway proxy', deployments.FuelERC20Gateway);
 
-    await verifySourcifyFromEtherscan('FuelSidechainConsensus proxy', deployments.FuelSidechainConsensus);
+    await verifySourcifyFromEtherscan('FuelChainConsensus proxy', deployments.FuelChainConsensus);
     await verifySourcifyFromEtherscan('FuelMessagePortal proxy', deployments.FuelMessagePortal);
     await verifySourcifyFromEtherscan('FuelERC20Gateway proxy', deployments.FuelERC20Gateway);
 }
@@ -80,16 +80,13 @@ export async function publishProxySourceVerification(deployments: DeployedContra
 // Publishes source code for verification of implementation contracts.
 export async function publishImplementationSourceVerification(
     deployments: DeployedContractAddresses,
-    publishFuelSidechainConsensus: boolean,
+    publishFuelChainConsensus: boolean,
     publishFuelMessagePortal: boolean,
     publishFuelERC20Gateway: boolean
 ) {
-    if (publishFuelSidechainConsensus) {
-        await verifyEtherscan('FuelSidechainConsensus implementation', deployments.FuelSidechainConsensus_impl);
-        await verifySourcifyFromEtherscan(
-            'FuelSidechainConsensus implementation',
-            deployments.FuelSidechainConsensus_impl
-        );
+    if (publishFuelChainConsensus) {
+        await verifyEtherscan('FuelChainConsensus implementation', deployments.FuelChainConsensus_impl);
+        await verifySourcifyFromEtherscan('FuelChainConsensus implementation', deployments.FuelChainConsensus_impl);
     }
 
     if (publishFuelMessagePortal) {

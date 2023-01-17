@@ -24,25 +24,25 @@ describe('Contract Upgradability', async () => {
         const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
         it('Should be able to upgrade contracts', async () => {
             const contracts = {
-                FuelSidechainConsensus: env.fuelSidechain.address,
+                FuelChainConsensus: env.fuelChainConsensus.address,
                 FuelMessagePortal: env.fuelMessagePortal.address,
                 FuelERC20Gateway: env.fuelERC20Gateway.address,
-                FuelSidechainConsensus_impl: '',
+                FuelChainConsensus_impl: '',
                 FuelMessagePortal_impl: '',
                 FuelERC20Gateway_impl: '',
             };
             const upgradedContracts = await upgradeFuel(contracts);
 
-            expect(upgradedContracts.FuelSidechainConsensus).to.equal(env.fuelSidechain.address);
+            expect(upgradedContracts.FuelChainConsensus).to.equal(env.fuelChainConsensus.address);
             expect(upgradedContracts.FuelMessagePortal).to.equal(env.fuelMessagePortal.address);
             expect(upgradedContracts.FuelERC20Gateway).to.equal(env.fuelERC20Gateway.address);
         });
 
         it('Should not be able to call initializers', async () => {
-            await expect(env.fuelSidechain.initialize(env.signer)).to.be.revertedWith(
+            await expect(env.fuelChainConsensus.initialize(env.signer)).to.be.revertedWith(
                 'Initializable: contract is already initialized'
             );
-            await expect(env.fuelMessagePortal.initialize(env.fuelSidechain.address)).to.be.revertedWith(
+            await expect(env.fuelMessagePortal.initialize(env.fuelChainConsensus.address)).to.be.revertedWith(
                 'Initializable: contract is already initialized'
             );
             await expect(env.fuelERC20Gateway.initialize(env.fuelMessagePortal.address)).to.be.revertedWith(
@@ -60,7 +60,7 @@ describe('Contract Upgradability', async () => {
         });
 
         it('Should not be able to upgrade contracts as non-admin', async () => {
-            await expect(env.fuelSidechain.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
+            await expect(env.fuelChainConsensus.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
                 'Ownable: caller is not the owner'
             );
             await expect(env.fuelMessagePortal.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(

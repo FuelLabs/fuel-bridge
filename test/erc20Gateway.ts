@@ -5,7 +5,7 @@ import { BigNumber, BigNumber as BN } from 'ethers';
 import { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, { computeBlockId } from '../protocol/sidechainBlock';
+import BlockHeader, { computeBlockId } from '../protocol/blockHeader';
 import { EMPTY } from '../protocol/constants';
 import { compactSign } from '../protocol/validators';
 import Message, { computeMessageId } from '../protocol/message';

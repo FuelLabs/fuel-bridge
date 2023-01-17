@@ -37,8 +37,8 @@ async function main() {
 
     // Get confirmation
     console.log(''); // eslint-disable-line no-console
-    const confirmFuelSidechainConsensus = await confirmationPrompt(
-        `Are you sure you want to deploy the implementation for FuelSidechainConsensus on "${networkName}" (Y/n)? `
+    const confirmFuelChainConsensus = await confirmationPrompt(
+        `Are you sure you want to deploy the implementation for FuelChainConsensus on "${networkName}" (Y/n)? `
     );
     const confirmFuelMessagePortal = await confirmationPrompt(
         `Are you sure you want to deploy the implementation for FuelMessagePortal on "${networkName}" (Y/n)? `
@@ -47,12 +47,12 @@ async function main() {
         `Are you sure you want to deploy the implementation for FuelERC20Gateway on "${networkName}" (Y/n)? `
     );
 
-    // Deploy FuelSidechainConsensus implementation
-    let fuelSidechainConsensusAddress = null;
-    if (confirmFuelSidechainConsensus) {
-        console.log('Deploying FuelSidechainConsensus implementation...'); // eslint-disable-line no-console
-        const FuelSidechainConsensus = await ethers.getContractFactory('FuelSidechainConsensus');
-        fuelSidechainConsensusAddress = (await upgrades.deployImplementation(FuelSidechainConsensus)).toString();
+    // Deploy FuelChainConsensus implementation
+    let fuelChainConsensusAddress = null;
+    if (confirmFuelChainConsensus) {
+        console.log('Deploying FuelChainConsensus implementation...'); // eslint-disable-line no-console
+        const FuelChainConsensus = await ethers.getContractFactory('FuelChainConsensus');
+        fuelChainConsensusAddress = (await upgrades.deployImplementation(FuelChainConsensus)).toString();
     }
 
     // Deploy FuelMessagePortal implementation
@@ -76,9 +76,9 @@ async function main() {
 
     // Emit the addresses of the deployed contracts
     console.log('Successfully deployed contract implementations!\n'); // eslint-disable-line no-console
-    if (fuelSidechainConsensusAddress) {
-        console.log(`FuelSidechainConsensus: ${fuelSidechainConsensusAddress}`); // eslint-disable-line no-console
-        deployments.FuelSidechainConsensus_impl = fuelSidechainConsensusAddress;
+    if (fuelChainConsensusAddress) {
+        console.log(`FuelChainConsensus: ${fuelChainConsensusAddress}`); // eslint-disable-line no-console
+        deployments.FuelChainConsensus_impl = fuelChainConsensusAddress;
     }
     if (fuelMessagePortalAddress) {
         console.log(`FuelMessagePortal: ${fuelMessagePortalAddress}`); // eslint-disable-line no-console
@@ -102,7 +102,7 @@ async function main() {
             await waitForConfirmations(deployedBlock, 5);
             await publishImplementationSourceVerification(
                 deployments,
-                confirmFuelSidechainConsensus,
+                confirmFuelChainConsensus,
                 confirmFuelMessagePortal,
                 confirmFuelERC20Gateway
             );

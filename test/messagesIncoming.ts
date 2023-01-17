@@ -6,7 +6,7 @@ import { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import { MessageTester } from '../typechain/MessageTester.d';
 import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, { BlockHeaderLite, computeBlockId, generateBlockHeaderLite } from '../protocol/sidechainBlock';
+import BlockHeader, { BlockHeaderLite, computeBlockId, generateBlockHeaderLite } from '../protocol/blockHeader';
 import { EMPTY } from '../protocol/constants';
 import { compactSign } from '../protocol/validators';
 import Message, { computeMessageId } from '../protocol/message';
@@ -250,7 +250,7 @@ describe('Incoming Messages', async () => {
         });
 
         // Verify contract getters
-        expect(await env.fuelMessagePortal.sidechainConsensusContract()).to.equal(env.fuelSidechain.address);
+        expect(await env.fuelMessagePortal.fuelChainConsensusContract()).to.equal(env.fuelChainConsensus.address);
         expect(await messageTester.fuelMessagePortal()).to.equal(env.fuelMessagePortal.address);
     });
 

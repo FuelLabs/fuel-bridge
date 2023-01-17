@@ -7,9 +7,9 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
-import {FuelSidechainConsensus} from "./FuelSidechainConsensus.sol";
-import {SidechainBlockHeader, SidechainBlockHeaderLib} from "./types/SidechainBlockHeader.sol";
-import {SidechainBlockHeaderLite, SidechainBlockHeaderLiteLib} from "./types/SidechainBlockHeaderLite.sol";
+import {FuelChainConsensus} from "./FuelChainConsensus.sol";
+import {FuelBlockHeader, FuelBlockHeaderLib} from "./types/FuelBlockHeader.sol";
+import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "./types/FuelBlockHeaderLite.sol";
 import {SafeCall} from "../vendor/SafeCall.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 import {IFuelMessagePortal} from "../messaging/IFuelMessagePortal.sol";
@@ -39,8 +39,8 @@ contract FuelMessagePortal is
     ReentrancyGuardUpgradeable,
     UUPSUpgradeable
 {
-    using SidechainBlockHeaderLib for SidechainBlockHeader;
-    using SidechainBlockHeaderLiteLib for SidechainBlockHeaderLite;
+    using FuelBlockHeaderLib for FuelBlockHeader;
+    using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
 
     ///////////////
     // Constants //
@@ -66,8 +66,8 @@ contract FuelMessagePortal is
     /// @notice Current message sender for other contracts to reference
     bytes32 internal _incomingMessageSender;
 
-    /// @notice The Fuel sidechain consensus contract
-    FuelSidechainConsensus private _sidechainConsensus;
+    /// @notice The Fuel chain consensus contract
+    FuelChainConsensus private _fuelChainConsensus;
 
     /// @notice The waiting period for message root states (in milliseconds)
     uint64 private _incomingMessageTimelock;
@@ -89,8 +89,8 @@ contract FuelMessagePortal is
     }
 
     /// @notice Contract initializer to setup starting values
-    /// @param sidechainConsensus Consensus contract
-    function initialize(FuelSidechainConsensus sidechainConsensus) public initializer {
+    /// @param fuelChainConsensus Consensus contract
+    function initialize(FuelChainConsensus fuelChainConsensus) public initializer {
         __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
@@ -101,7 +101,7 @@ contract FuelMessagePortal is
         _grantRole(PAUSER_ROLE, msg.sender);
 
         //consensus contract
-        _sidechainConsensus = sidechainConsensus;
+        _fuelChainConsensus = fuelChainConsensus;
 
         //outgoing message data
         _outgoingMessageNonce = 0;
@@ -141,10 +141,10 @@ contract FuelMessagePortal is
         return uint8(FUEL_BASE_ASSET_DECIMALS);
     }
 
-    /// @notice Gets the set sidechain consensus contract
-    /// @return sidechain consensus contract
-    function sidechainConsensusContract() public view returns (address) {
-        return address(_sidechainConsensus);
+    /// @notice Gets the set Fuel chain consensus contract
+    /// @return fuel chain consensus contract
+    function fuelChainConsensusContract() public view returns (address) {
+        return address(_fuelChainConsensus);
     }
 
     ///////////////////////////////////////
@@ -159,13 +159,13 @@ contract FuelMessagePortal is
     /// @dev Made payable to reduce gas costs
     function relayMessageFromFuelBlock(
         Message calldata message,
-        SidechainBlockHeader calldata blockHeader,
+        FuelBlockHeader calldata blockHeader,
         MerkleProof calldata messageInBlockProof,
         bytes calldata poaSignature
     ) external payable whenNotPaused {
         //verify block header
         require(
-            _sidechainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
+            _fuelChainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid block"
         );
 
@@ -183,15 +183,15 @@ contract FuelMessagePortal is
     /// @dev Made payable to reduce gas costs
     function relayMessageFromPrevFuelBlock(
         Message calldata message,
-        SidechainBlockHeaderLite calldata rootBlockHeader,
-        SidechainBlockHeader calldata blockHeader,
+        FuelBlockHeaderLite calldata rootBlockHeader,
+        FuelBlockHeader calldata blockHeader,
         MerkleProof calldata blockInHistoryProof,
         MerkleProof calldata messageInBlockProof,
         bytes calldata poaSignature
     ) external payable whenNotPaused {
         //verify root block header
         require(
-            _sidechainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
+            _fuelChainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
             "Invalid root block"
         );
 
@@ -283,7 +283,7 @@ contract FuelMessagePortal is
     /// @param messageInBlockProof Proof that message exists in block
     function _executeMessageInHeader(
         Message calldata message,
-        SidechainBlockHeader calldata blockHeader,
+        FuelBlockHeader calldata blockHeader,
         MerkleProof calldata messageInBlockProof
     ) private nonReentrant {
         //verify message validity

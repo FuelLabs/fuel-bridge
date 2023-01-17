@@ -7,8 +7,8 @@ import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/Own
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 
-/// @notice The Fuel v2 Sidechain PoA system.
-contract FuelSidechainConsensus is Initializable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
+/// @notice The Fuel v2 chain state consensus
+contract FuelChainConsensus is Initializable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
     /////////////
     // Storage //
     /////////////

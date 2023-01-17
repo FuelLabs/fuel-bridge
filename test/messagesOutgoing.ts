@@ -34,7 +34,7 @@ describe('Outgoing Messages', async () => {
         await transaction.wait();
 
         // Verify contract getters
-        expect(await env.fuelMessagePortal.sidechainConsensusContract()).to.equal(env.fuelSidechain.address);
+        expect(await env.fuelMessagePortal.fuelChainConsensusContract()).to.equal(env.fuelChainConsensus.address);
         expect(await messageTester.fuelMessagePortal()).to.equal(env.fuelMessagePortal.address);
     });
 

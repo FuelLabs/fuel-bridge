@@ -3,9 +3,9 @@ pragma solidity 0.8.9;
 
 import {CryptographyLib} from "../../lib/Cryptography.sol";
 
-/// @title Fuel Sidechain Block Header
-/// @dev The Fuel sidechain block header structure
-struct SidechainBlockHeader {
+/// @title Fuel Chain Block Header
+/// @dev The Fuel chain block header structure
+struct FuelBlockHeader {
     ///////////////
     // Consensus //
     ///////////////
@@ -32,7 +32,7 @@ struct SidechainBlockHeader {
 
 /// @title Block Header Library
 /// @dev Provides useful functions for dealing with Fuel blocks
-library SidechainBlockHeaderLib {
+library FuelBlockHeaderLib {
     /////////////
     // Methods //
     /////////////
@@ -40,7 +40,7 @@ library SidechainBlockHeaderLib {
     /// @notice Serialize a block application header.
     /// @param header The block header structure.
     /// @return The serialized block application header.
-    function serializeApplicationHeader(SidechainBlockHeader memory header) internal pure returns (bytes memory) {
+    function serializeApplicationHeader(FuelBlockHeader memory header) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 header.daHeight,
@@ -54,14 +54,14 @@ library SidechainBlockHeaderLib {
     /// @notice Produce the block application header hash.
     /// @param header The block header structure.
     /// @return The block application header hash.
-    function computeApplicationHeaderHash(SidechainBlockHeader memory header) internal pure returns (bytes32) {
+    function computeApplicationHeaderHash(FuelBlockHeader memory header) internal pure returns (bytes32) {
         return CryptographyLib.hash(serializeApplicationHeader(header));
     }
 
     /// @notice Serialize a block consensus header.
     /// @param header The block header structure.
     /// @return The serialized block consensus header.
-    function serializeConsensusHeader(SidechainBlockHeader memory header) internal pure returns (bytes memory) {
+    function serializeConsensusHeader(FuelBlockHeader memory header) internal pure returns (bytes memory) {
         return
             abi.encodePacked(
                 header.prevRoot,
@@ -74,7 +74,7 @@ library SidechainBlockHeaderLib {
     /// @notice Produce the block consensus header hash.
     /// @param header The block header structure.
     /// @return The block consensus header hash.
-    function computeConsensusHeaderHash(SidechainBlockHeader memory header) internal pure returns (bytes32) {
+    function computeConsensusHeaderHash(FuelBlockHeader memory header) internal pure returns (bytes32) {
         return CryptographyLib.hash(serializeConsensusHeader(header));
     }
 }
