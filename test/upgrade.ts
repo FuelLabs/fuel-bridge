@@ -61,13 +61,13 @@ describe('Contract Upgradability', async () => {
 
         it('Should not be able to upgrade contracts as non-admin', async () => {
             await expect(env.fuelChainConsensus.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
-                'Ownable: caller is not the owner'
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
             );
             await expect(env.fuelMessagePortal.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
                 `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
             );
             await expect(env.fuelERC20Gateway.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
-                'Ownable: caller is not the owner'
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
             );
         });
     });

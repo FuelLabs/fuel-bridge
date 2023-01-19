@@ -3,7 +3,7 @@ pragma solidity 0.8.9;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
@@ -16,11 +16,18 @@ import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.
 contract FuelERC20Gateway is
     Initializable,
     FuelMessagesEnabledUpgradeable,
-    OwnableUpgradeable,
     PausableUpgradeable,
+    AccessControlUpgradeable,
     UUPSUpgradeable
 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
+
+    ///////////////
+    // Constants //
+    ///////////////
+
+    /// @dev The admin related contract roles
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
     /////////////
     // Storage //
@@ -43,9 +50,13 @@ contract FuelERC20Gateway is
     /// @param fuelMessagePortal The IfuelMessagePortal contract
     function initialize(IFuelMessagePortal fuelMessagePortal) public initializer {
         __FuelMessagesEnabled_init(fuelMessagePortal);
-        __Ownable_init();
         __Pausable_init();
+        __AccessControl_init();
         __UUPSUpgradeable_init();
+
+        //grant initial roles
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
     }
 
     /////////////////////
@@ -53,12 +64,12 @@ contract FuelERC20Gateway is
     /////////////////////
 
     /// @notice Pause ERC20 transfers
-    function pause() external onlyOwner {
+    function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
     /// @notice Unpause ERC20 transfers
-    function unpause() external onlyOwner {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
@@ -122,7 +133,7 @@ contract FuelERC20Gateway is
 
     /// @notice Executes a message in the given header
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
         //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
     }
 }

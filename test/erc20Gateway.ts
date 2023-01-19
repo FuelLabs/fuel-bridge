@@ -207,38 +207,93 @@ describe('ERC20 Gateway', async () => {
         await env.token.approve(env.fuelERC20Gateway.address, env.initialTokenAmount);
     });
 
-    describe('Verify ownership', async () => {
+    describe('Verify access control', async () => {
+        const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
+        const pauserRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSER_ROLE'));
         let signer0: string;
         let signer1: string;
+        let signer2: string;
         before(async () => {
             signer0 = env.addresses[0];
             signer1 = env.addresses[1];
+            signer2 = env.addresses[2];
         });
 
-        it('Should be able to switch owner as owner', async () => {
-            expect(await env.fuelERC20Gateway.owner()).to.not.be.equal(signer1);
+        it('Should be able to grant admin role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer1)).to.equal(false);
 
-            // Transfer ownership
-            await expect(env.fuelERC20Gateway.transferOwnership(signer1)).to.not.be.reverted;
-            expect(await env.fuelERC20Gateway.owner()).to.be.equal(signer1);
+            // Grant admin role
+            await expect(env.fuelERC20Gateway.grantRole(defaultAdminRole, signer1)).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer1)).to.equal(true);
         });
 
-        it('Should not be able to switch owner as non-owner', async () => {
-            expect(await env.fuelERC20Gateway.owner()).to.be.equal(signer1);
+        it('Should be able to renounce admin role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(true);
 
-            // Attempt transfer ownership
-            await expect(env.fuelERC20Gateway.transferOwnership(signer0)).to.be.revertedWith(
-                'Ownable: caller is not the owner'
+            // Revoke admin role
+            await expect(env.fuelERC20Gateway.renounceRole(defaultAdminRole, signer0)).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(false);
+        });
+
+        it('Should not be able to grant admin role as non-admin', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(false);
+
+            // Attempt grant admin role
+            await expect(env.fuelERC20Gateway.grantRole(defaultAdminRole, signer0)).to.be.revertedWith(
+                `AccessControl: account ${env.addresses[0].toLowerCase()} is missing role ${defaultAdminRole}`
             );
-            expect(await env.fuelERC20Gateway.owner()).to.be.equal(signer1);
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(false);
         });
 
-        it('Should be able to switch owner back', async () => {
-            expect(await env.fuelERC20Gateway.owner()).to.not.be.equal(signer0);
+        it('Should be able to grant then revoke admin role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(false);
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer1)).to.equal(true);
 
-            // Transfer ownership
-            await expect(env.fuelERC20Gateway.connect(env.signers[1]).transferOwnership(signer0)).to.not.be.reverted;
-            expect(await env.fuelERC20Gateway.owner()).to.be.equal(signer0);
+            // Grant admin role
+            await expect(env.fuelERC20Gateway.connect(env.signers[1]).grantRole(defaultAdminRole, signer0)).to.not.be
+                .reverted;
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer0)).to.equal(true);
+
+            // Revoke previous admin
+            await expect(env.fuelERC20Gateway.revokeRole(defaultAdminRole, signer1)).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer1)).to.equal(false);
+        });
+
+        it('Should be able to grant pauser role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer1)).to.equal(false);
+
+            // Grant pauser role
+            await expect(env.fuelERC20Gateway.grantRole(pauserRole, signer1)).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer1)).to.equal(true);
+        });
+
+        it('Should not be able to grant permission as pauser', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer2)).to.equal(false);
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer2)).to.equal(false);
+
+            // Attempt grant admin role
+            await expect(
+                env.fuelERC20Gateway.connect(env.signers[1]).grantRole(defaultAdminRole, signer2)
+            ).to.be.revertedWith(
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+            );
+            expect(await env.fuelERC20Gateway.hasRole(defaultAdminRole, signer2)).to.equal(false);
+
+            // Attempt grant pauser role
+            await expect(
+                env.fuelERC20Gateway.connect(env.signers[1]).grantRole(pauserRole, signer2)
+            ).to.be.revertedWith(
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+            );
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer2)).to.equal(false);
+        });
+
+        it('Should be able to revoke pauser role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer1)).to.equal(true);
+
+            // Grant pauser role
+            await expect(env.fuelERC20Gateway.revokeRole(pauserRole, signer1)).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, signer1)).to.equal(false);
         });
     });
 
@@ -494,6 +549,8 @@ describe('ERC20 Gateway', async () => {
     });
 
     describe('Verify pause and unpause', async () => {
+        const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
+        const pauserRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSER_ROLE'));
         let messageNodes: TreeNode[];
         let blockHeader: BlockHeader;
         let poaSignature: string;
@@ -503,30 +560,48 @@ describe('ERC20 Gateway', async () => {
             poaSignature = blockSignatures[0];
         });
 
-        it('Should not be able to pause as non-owner', async () => {
+        it('Should be able to grant pauser role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, env.addresses[2])).to.equal(false);
+
+            // Grant pauser role
+            await expect(env.fuelERC20Gateway.grantRole(pauserRole, env.addresses[2])).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, env.addresses[2])).to.equal(true);
+        });
+
+        it('Should not be able to pause as non-pauser', async () => {
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(false);
 
             // Attempt pause
             await expect(env.fuelERC20Gateway.connect(env.signers[1]).pause()).to.be.revertedWith(
-                'Ownable: caller is not the owner'
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${pauserRole}`
             );
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(false);
         });
 
-        it('Should be able to pause as owner', async () => {
+        it('Should be able to pause as pauser', async () => {
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(false);
 
             // Pause
-            await expect(env.fuelERC20Gateway.pause()).to.not.be.reverted;
+            await expect(env.fuelERC20Gateway.connect(env.signers[2]).pause()).to.not.be.reverted;
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
         });
 
-        it('Should not be able to unpause as non-owner', async () => {
+        it('Should not be able to unpause as pauser (and not admin)', async () => {
+            expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
+
+            // Attempt unpause
+            await expect(env.fuelERC20Gateway.connect(env.signers[2]).unpause()).to.be.revertedWith(
+                `AccessControl: account ${env.addresses[2].toLowerCase()} is missing role ${defaultAdminRole}`
+            );
+            expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
+        });
+
+        it('Should not be able to unpause as non-admin', async () => {
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
 
             // Attempt unpause
             await expect(env.fuelERC20Gateway.connect(env.signers[1]).unpause()).to.be.revertedWith(
-                'Ownable: caller is not the owner'
+                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
             );
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
         });
@@ -560,7 +635,7 @@ describe('ERC20 Gateway', async () => {
             expect(await env.token.balanceOf(env.fuelERC20Gateway.address)).to.be.equal(gatewayBalance);
         });
 
-        it('Should be able to unpause as owner', async () => {
+        it('Should be able to unpause as admin', async () => {
             expect(await env.fuelERC20Gateway.paused()).to.be.equal(true);
 
             // Unpause
@@ -589,6 +664,14 @@ describe('ERC20 Gateway', async () => {
             expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
             expect(await env.token.balanceOf(env.fuelERC20Gateway.address)).to.be.equal(gatewayBalance.sub(250));
             expect(await env.token.balanceOf(env.addresses[3])).to.be.equal(recipientBalance.add(250));
+        });
+
+        it('Should be able to revoke pauser role', async () => {
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, env.addresses[2])).to.equal(true);
+
+            // Grant pauser role
+            await expect(env.fuelERC20Gateway.revokeRole(pauserRole, env.addresses[2])).to.not.be.reverted;
+            expect(await env.fuelERC20Gateway.hasRole(pauserRole, env.addresses[2])).to.equal(false);
         });
     });
 });

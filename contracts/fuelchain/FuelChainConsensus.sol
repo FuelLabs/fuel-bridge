@@ -3,12 +3,19 @@ pragma solidity 0.8.9;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 
 /// @notice The Fuel v2 chain state consensus
-contract FuelChainConsensus is Initializable, OwnableUpgradeable, PausableUpgradeable, UUPSUpgradeable {
+contract FuelChainConsensus is Initializable, PausableUpgradeable, AccessControlUpgradeable, UUPSUpgradeable {
+    ///////////////
+    // Constants //
+    ///////////////
+
+    /// @dev The admin related contract roles
+    bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+
     /////////////
     // Storage //
     /////////////
@@ -30,8 +37,12 @@ contract FuelChainConsensus is Initializable, OwnableUpgradeable, PausableUpgrad
     /// @param key Public key of the block producer authority
     function initialize(address key) public initializer {
         __Pausable_init();
-        __Ownable_init();
+        __AccessControl_init();
         __UUPSUpgradeable_init();
+
+        //grant initial roles
+        _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _grantRole(PAUSER_ROLE, msg.sender);
 
         // data
         _authorityKey = key;
@@ -41,20 +52,20 @@ contract FuelChainConsensus is Initializable, OwnableUpgradeable, PausableUpgrad
     // Admin Functions //
     /////////////////////
 
-    /// @notice Sets the PoA key
-    /// @param key Address of the PoA authority
-    function setAuthorityKey(address key) external onlyOwner {
-        _authorityKey = key;
-    }
-
     /// @notice Pause block commitments
-    function pause() external onlyOwner {
+    function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
     /// @notice Unpause block commitments
-    function unpause() external onlyOwner {
+    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
+    }
+
+    /// @notice Sets the PoA key
+    /// @param key Address of the PoA authority
+    function setAuthorityKey(address key) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _authorityKey = key;
     }
 
     //////////////////////
@@ -80,7 +91,7 @@ contract FuelChainConsensus is Initializable, OwnableUpgradeable, PausableUpgrad
 
     /// @notice Executes a message in the given header
     // solhint-disable-next-line no-empty-blocks
-    function _authorizeUpgrade(address newImplementation) internal override onlyOwner {
+    function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
         //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
     }
 }
