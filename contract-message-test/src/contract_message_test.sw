@@ -19,6 +19,7 @@ storage {
 // Implement the process_message function required to be a message receiver
 impl MessageReceiver for Contract {
     #[storage(read, write)]
+    #[payable]
     fn process_message(msg_idx: u8) {
         storage.counter = storage.counter + 1;
 

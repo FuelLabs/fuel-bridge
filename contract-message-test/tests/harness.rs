@@ -10,9 +10,9 @@ mod success {
     use std::str::FromStr;
 
     use crate::utils::environment as env;
-    use fuels::prelude::Bits256;
     use fuels::test_helpers::DEFAULT_COIN_AMOUNT;
     use fuels::tx::{Address, AssetId, Bytes32, ContractId};
+    use fuels::types::Bits256;
 
     pub const RANDOM_SALT: &str =
         "0x1a896ebd5f55c10bc830755278e6d2b9278b4177b8bca400d3e7710eee293786";
@@ -44,7 +44,7 @@ mod success {
         .await;
 
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract.get_contract_id().into();
+        let test_contract_id: ContractId = test_contract.contract_id().into();
         let methods = test_contract.methods();
         let test_contract_counter = methods.get_test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.get_test_data1().call().await.unwrap().value;
@@ -60,7 +60,7 @@ mod success {
         // Verify the message value was received by the test contract
         let provider = wallet.get_provider().unwrap();
         let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract.get_contract_id(), AssetId::default())
+            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
             .await
             .unwrap();
         assert_eq!(test_contract_balance, 100);

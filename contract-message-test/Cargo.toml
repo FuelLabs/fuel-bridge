@@ -1,4 +1,4 @@
-[project]
+[package]
 name = "contract-message-test"
 version = "0.1.0"
 authors = ["Fuel Labs <contact@fuel.sh>"]
@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [dependencies]
 fuel-core-interfaces = "0.13.2"
-fuels = { version = "0.28", features = ["fuel-core-lib"] }
+fuels = { version = "0.36", features = ["fuel-core-lib"] }
 tokio = { version = "1.12", features = ["rt", "macros"] }
 
 [[test]]

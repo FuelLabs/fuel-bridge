@@ -32,22 +32,20 @@ The message to contract predicate relies on a script that performs only the foll
 
 | dep     | version                                                  |
 | ------- | -------------------------------------------------------- |
-| Forc    | [0.26.0](https://fuellabs.github.io/sway/v0.26.0/introduction/installation.html) |
+| Forc    | [0.35.0](https://fuellabs.github.io/sway/v0.35.0/introduction/installation.html) |
 
 ### Building
 
 Build:
 
 ```sh
-forc build -p contract-message-predicate
-forc build -p contract-message-script
-forc build -p contract-message-test
+forc build
 ```
 
 Run tests:
 
 ```sh
-cd contract-message-test && cargo test && cd ..
+cargo test
 ```
 
 ## Contributing
@@ -55,11 +53,8 @@ cd contract-message-test && cargo test && cd ..
 Code must be formatted.
 
 ```sh
-forc-fmt -p contract-message-predicate
-forc-fmt -p contract-message-receiver
-forc-fmt -p contract-message-script
-forc-fmt -p contract-message-test
-cd contract-message-test && cargo fmt && cd ..
+forc fmt
+cargo fmt
 ```
 
 ## License

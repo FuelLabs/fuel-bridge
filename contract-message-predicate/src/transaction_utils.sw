@@ -1,23 +1,29 @@
 library transaction_utils;
 
 use std::constants::ZERO_B256;
+use std::{
+    inputs::{
+        GTF_INPUT_COIN_AMOUNT,
+        GTF_INPUT_COIN_ASSET_ID,
+        GTF_INPUT_MESSAGE_DATA,
+        GTF_INPUT_MESSAGE_DATA_LENGTH,
+    },
+    outputs::{
+        GTF_OUTPUT_TYPE,
+    },
+    tx::{
+        GTF_SCRIPT_GAS_LIMIT,
+        GTF_SCRIPT_GAS_PRICE,
+        GTF_SCRIPT_INPUTS_COUNT,
+        GTF_SCRIPT_OUTPUTS_COUNT,
+        GTF_SCRIPT_SCRIPT,
+        GTF_SCRIPT_SCRIPT_LENGTH,
+    },
+};
 
 // TODO: replace GTF consts with direct references to tx.sw, inputs.sw, and outputs.sw from std lib
-const GTF_SCRIPT_GAS_PRICE = 0x002;
-const GTF_SCRIPT_GAS_LIMIT = 0x003;
-const GTF_SCRIPT_SCRIPT_LENGTH = 0x005;
-const GTF_SCRIPT_SCRIPT = 0x00B;
-const GTF_SCRIPT_INPUTS_COUNT = 0x007;
-const GTF_SCRIPT_OUTPUTS_COUNT = 0x008;
-
 const GTF_INPUT_TYPE = 0x101;
-const GTF_INPUT_COIN_AMOUNT = 0x105;
-const GTF_INPUT_COIN_ASSET_ID = 0x106;
 const GTF_INPUT_CONTRACT_CONTRACT_ID = 0x113;
-const GTF_INPUT_MESSAGE_DATA_LENGTH = 0x11B;
-const GTF_INPUT_MESSAGE_DATA = 0x11E;
-
-const GTF_OUTPUT_TYPE = 0x201;
 const GTF_OUTPUT_CONTRACT_INPUT_INDEX = 0x205;
 
 const OUTPUT_TYPE_CONTRACT = 1u8;

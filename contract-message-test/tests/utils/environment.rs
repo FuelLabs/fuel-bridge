@@ -4,18 +4,18 @@ use std::mem::size_of;
 use std::num::ParseIntError;
 use std::str::FromStr;
 
-use fuel_core_interfaces::model::{Coin, Message};
 use fuels::prelude::*;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config};
 use fuels::tx::{
     Address, AssetId, Bytes32, Input, Output, Receipt, Script, TxPointer, UtxoId, Word,
 };
+use fuels::types::message::Message;
 
-abigen!(
-    TestContract,
-    "../contract-message-test/out/debug/contract_message_test-abi.json"
-);
+abigen!(Contract(
+    name = "TestContract",
+    abi = "./contract-message-test/out/debug/contract_message_test-abi.json"
+));
 
 pub const MESSAGE_SENDER_ADDRESS: &str =
     "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc";
@@ -49,8 +49,7 @@ pub async fn setup_environment(
             coin_amount: coin.0,
         })
         .collect();
-    let all_coins: Vec<(UtxoId, Coin)> =
-        setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
+    let all_coins = setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
 
     // Generate messages
     let message_nonce: Word = Word::default();
@@ -76,6 +75,7 @@ pub async fn setup_environment(
         all_messages.clone(),
         Some(provider_config),
         None,
+        None,
     )
     .await;
     let provider = Provider::new(client);
@@ -98,10 +98,10 @@ pub async fn setup_environment(
     let coin_inputs: Vec<Input> = all_coins
         .into_iter()
         .map(|coin| Input::CoinSigned {
-            utxo_id: UtxoId::from(coin.0.clone()),
-            owner: Address::from(coin.1.owner.clone()),
-            amount: coin.1.amount.clone().into(),
-            asset_id: AssetId::from(coin.1.asset_id.clone()),
+            utxo_id: UtxoId::from(coin.utxo_id.clone()),
+            owner: Address::from(coin.owner.clone()),
+            amount: coin.amount.clone().into(),
+            asset_id: AssetId::from(coin.asset_id.clone()),
             tx_pointer: TxPointer::default(),
             witness_index: 0,
             maturity: 0,
@@ -112,7 +112,7 @@ pub async fn setup_environment(
     let message_inputs: Vec<Input> = all_messages
         .iter()
         .map(|message| Input::MessagePredicate {
-            message_id: message.id(),
+            message_id: message.message_id(),
             sender: Address::from(message.sender.clone()),
             recipient: Address::from(message.recipient.clone()),
             amount: message.amount,
@@ -195,7 +195,7 @@ pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
 
 /// Quickly converts the given hex string into a u8 vector
 pub fn decode_hex(s: &str) -> Vec<u8> {
-    let data: Result<Vec<u8>, ParseIntError> = (2..s.len())
+    let data: core::result::Result<Vec<u8>, ParseIntError> = (2..s.len())
         .step_by(2)
         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
         .collect();

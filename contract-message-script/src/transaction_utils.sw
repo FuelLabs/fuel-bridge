@@ -1,8 +1,9 @@
 library transaction_utils;
 
+use std::inputs::GTF_INPUT_MESSAGE_AMOUNT;
+
 // TODO: replace GTF consts with direct references to tx.sw, inputs.sw, and outputs.sw from std lib
 const GTF_INPUT_CONTRACT_CONTRACT_ID = 0x113;
-const GTF_INPUT_MESSAGE_AMOUNT = 0x117;
 
 /// Get the ID of a contract input
 pub fn input_contract_contract_id(index: u64) -> b256 {

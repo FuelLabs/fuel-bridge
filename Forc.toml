@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "contract-message-predicate",
+  "contract-message-receiver",
+  "contract-message-script",
+  "contract-message-test",
+]
