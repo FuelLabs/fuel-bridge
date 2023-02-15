@@ -1,6 +1,6 @@
 library bridge_fungible_token_abi;
 
-use std::{contract_id::ContractId, identity::Identity, vm::evm::evm_address::EvmAddress};
+use std::vm::evm::evm_address::EvmAddress;
 
 abi BridgeFungibleToken {
     /// Claim a refund for an address if one has been registered.
@@ -23,6 +23,7 @@ abi BridgeFungibleToken {
     ///
     /// * When no coins were sent with call
     /// * When the wrong asset was sent with the call
+    #[payable]
     fn withdraw_to(to: b256);
 
     /// Get the name of this token contract

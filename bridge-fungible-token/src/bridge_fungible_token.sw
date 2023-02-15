@@ -19,10 +19,8 @@ use std::{
     },
     constants::ZERO_B256,
     context::msg_amount,
-    convert::From,
-    logging::log,
+    inputs::input_message_sender,
     message::send_message,
-    storage::StorageMap,
     token::{
         burn,
         mint_to_address,
@@ -35,7 +33,6 @@ use utils::{
     compose,
     decompose,
     encode_data,
-    input_message_sender,
     parse_message_data,
 };
 
@@ -45,7 +42,7 @@ storage {
 }
 
 // Storage-dependant private functions
-#[storage(read, write)]
+#[storage(write)]
 fn register_refund(from: b256, asset: b256, amount: b256) {
     storage.refund_amounts.insert((from, asset), amount);
     log(RefundRegisteredEvent {
@@ -59,6 +56,7 @@ fn register_refund(from: b256, asset: b256, amount: b256) {
 // Implement the process_message function required to be a message receiver
 impl MessageReceiver for Contract {
     #[storage(read, write)]
+    #[payable]
     fn process_message(msg_idx: u8) {
         let input_sender = input_message_sender(1);
         require(input_sender.value == LAYER_1_ERC20_GATEWAY, BridgeFungibleTokenError::UnauthorizedSender);
@@ -90,7 +88,7 @@ impl MessageReceiver for Contract {
 impl BridgeFungibleToken for Contract {
     #[storage(read, write)]
     fn claim_refund(originator: b256, asset: b256) {
-        let stored_amount = storage.refund_amounts.get((originator, asset));
+        let stored_amount = storage.refund_amounts.get((originator, asset)).unwrap();
         require(stored_amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
 
         // reset the refund amount to 0
@@ -99,6 +97,8 @@ impl BridgeFungibleToken for Contract {
         // send a message to unlock this amount on the ethereum (L1) bridge contract
         send_message(LAYER_1_ERC20_GATEWAY, encode_data(originator, stored_amount), 0);
     }
+
+    #[payable]
     fn withdraw_to(to: b256) {
         let amount = msg_amount();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);

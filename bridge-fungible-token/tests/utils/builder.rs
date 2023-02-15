@@ -6,28 +6,17 @@
 use fuels::signers::fuel_crypto::Hasher;
 
 use fuels::prelude::*;
-use fuels::tx::{
-    Address, AssetId, Bytes32, Contract as tx_contract, Input, Output, Script, Transaction,
-};
+use fuels::tx::{AssetId, Bytes32, Input, Output, Script, Transaction};
 
 const CONTRACT_MESSAGE_MIN_GAS: u64 = 30_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
     "../bridge-message-predicates/contract_message_script.bin";
-const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
-    "../bridge-message-predicates/contract_message_predicate.bin";
 
 /// Gets the message to contract script
 pub async fn get_contract_message_script() -> (Vec<u8>, Bytes32) {
     let script_bytecode = std::fs::read(CONTRACT_MESSAGE_SCRIPT_BINARY).unwrap();
     let script_hash = Hasher::hash(&script_bytecode.clone());
     (script_bytecode, script_hash)
-}
-
-/// Gets the message to contract predicate
-pub async fn get_contract_message_predicate() -> (Vec<u8>, Address) {
-    let predicate_bytecode = std::fs::read(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
-    let predicate_root = Address::from(*tx_contract::root_from_code(&predicate_bytecode));
-    (predicate_bytecode, predicate_root)
 }
 
 /// Build a message-to-contract transaction with the given input coins and outputs

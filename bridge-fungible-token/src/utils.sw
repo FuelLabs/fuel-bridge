@@ -5,28 +5,19 @@ dep events;
 dep data;
 
 use std::{
+    bytes::Bytes,
     constants::ZERO_B256,
     flags::{
         disable_panic_on_overflow,
         enable_panic_on_overflow,
     },
+    inputs::input_message_data,
     math::*,
     u256::U256,
-    vec::Vec,
 };
 
 use errors::BridgeFungibleTokenError;
 use data::MessageData;
-
-// the function selector for finalizeWithdrawal on the L1ERC20Gateway contract:
-// finalizeWithdrawal(address,address,uint256)
-const FINALIZE_WITHDRAWAL_SELECTOR: u64 = 0x53ef146100000000;
-
-// TODO: [std-lib] remove once standard library functions have been added
-const GTF_INPUT_MESSAGE_DATA_LENGTH = 0x11B;
-const GTF_INPUT_MESSAGE_DATA = 0x11E;
-const GTF_INPUT_MESSAGE_SENDER = 0x115;
-const GTF_INPUT_MESSAGE_RECIPIENT = 0x116;
 
 fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError> {
     let mut bn_clone = bn;
@@ -84,7 +75,7 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
         if (decimals_to_shift < 9u32) {
             let (adjusted, remainder) = bn_div(bn_clone, 10u32.pow(decimals_to_shift));
             if remainder != 0u32 {
-                return Result::Err(BridgeFungibleTokenError::OverflowError)
+                return Result::Err(BridgeFungibleTokenError::OverflowError);
             };
             return Result::Ok(adjusted);
         } else {
@@ -93,11 +84,13 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
             decimals_to_shift = decimals_to_shift - 9u32;
             bn_clone = adjusted;
             if remainder != 0u32 {
-                return Result::Err(BridgeFungibleTokenError::OverflowError)
+                return Result::Err(BridgeFungibleTokenError::OverflowError);
             };
             return Result::Ok(adjusted);
         }
     };
+
+    return Result::Err(BridgeFungibleTokenError::OverflowError);
 }
 
 /// Make any necessary adjustments to decimals(precision) on the amount
@@ -173,56 +166,46 @@ pub fn parse_message_data(msg_idx: u8) -> MessageData {
     };
 
     // Parse the message data
-    msg_data.fuel_token = ContractId::from(input_message_data::<b256>(msg_idx, 0));
-    msg_data.l1_asset = input_message_data::<b256>(msg_idx, 8);
-    msg_data.from = input_message_data::<b256>(msg_idx, 8 + 8);
-    msg_data.to = Address::from(input_message_data::<b256>(msg_idx, 8 + 8 + 8));
-    msg_data.amount = input_message_data::<b256>(msg_idx, 8 + 8 + 8 + 8);
+    msg_data.fuel_token = ContractId::from(input_message_data(msg_idx, 0).into());
+    msg_data.l1_asset = input_message_data(msg_idx, 32).into();
+    msg_data.from = input_message_data(msg_idx, 32 + 32).into();
+    msg_data.to = Address::from(input_message_data(msg_idx, 32 + 32 + 32).into());
+    msg_data.amount = input_message_data(msg_idx, 32 + 32 + 32 + 32).into();
     msg_data
 }
 
+fn copy_bytes(dest: raw_ptr, src: raw_ptr, len: u64, offset: u64) {
+    asm(dst: dest, src: src, len: len) {
+        mcp  dst src len;
+    };
+}
+
 /// Encode the data to be passed out of the contract when sending a message
-pub fn encode_data(to: b256, amount: b256) -> Vec<u64> {
-    let mut data = Vec::with_capacity(13);
-    let (recip_1, recip_2, recip_3, recip_4) = decompose(to);
-    let (token_1, token_2, token_3, token_4) = decompose(LAYER_1_TOKEN);
-    let (amount_1, amount_2, amount_3, amount_4) = decompose(amount);
+pub fn encode_data(to: b256, amount: b256) -> Bytes {
+    // capacity is 4 + 32 + 32 + 32 = 100
+    let mut data = Bytes::with_capacity(100);
+    let padded_to_bytes = Bytes::from(to);
+    let padded_token_bytes = Bytes::from(LAYER_1_TOKEN);
+    let amount_bytes = Bytes::from(amount);
 
-    // start with the function selector
-    data.push(FINALIZE_WITHDRAWAL_SELECTOR + (recip_1 >> 32));
+    // first, we push the selector 1 byte at a time
+    // the function selector for finalizeWithdrawal on the L1ERC20Gateway contract:
+    // finalizeWithdrawal(address,address,uint256) = 0x53ef1461
+    data.push(0x53u8);
+    data.push(0xefu8);
+    data.push(0x14u8);
+    data.push(0x61u8);
 
-    // add the address to recieve coins
-    data.push((recip_1 << 32) + (recip_2 >> 32));
-    data.push((recip_2 << 32) + (recip_3 >> 32));
-    data.push((recip_3 << 32) + (recip_4 >> 32));
-    data.push((recip_4 << 32) + (token_1 >> 32));
+    // next, we append the `to` address including padding:
+    data.append(padded_to_bytes);
 
-    // add the address of the L1 token contract
-    data.push((token_1 << 32) + (token_2 >> 32));
-    data.push((token_2 << 32) + (token_3 >> 32));
-    data.push((token_3 << 32) + (token_4 >> 32));
-    data.push((token_4 << 32) + (amount_1 >> 32));
+    // next, we append the `LAYER_1_TOKEN` address including padding:
+    data.append(padded_token_bytes);
 
-    // add the amount of tokens
-    data.push((amount_1 << 32) + (amount_2 >> 32));
-    data.push((amount_2 << 32) + (amount_3 >> 32));
-    data.push((amount_3 << 32) + (amount_4 >> 32));
-    data.push(amount_4 << 32);
+    // next, we append the `amount`:
+    data.append(amount_bytes);
+
     data
-}
-
-/// Get the data of a message input
-// TODO: [std-lib] replace with 'input_message_data'
-pub fn input_message_data<T>(index: u64, offset: u64) -> T {
-    let data = __gtf::<raw_ptr>(index, GTF_INPUT_MESSAGE_DATA);
-    let data_with_offset = data.add(offset / 8);
-    data_with_offset.read::<T>()
-}
-
-/// Get the sender of the input message at `index`.
-// TODO: [std-lib] replace with 'input_message_sender'
-pub fn input_message_sender(index: u64) -> Address {
-    Address::from(__gtf::<b256>(index, GTF_INPUT_MESSAGE_SENDER))
 }
 
 // TODO: [std-lib] replace when added as a method to U128/U256
@@ -231,36 +214,36 @@ fn bn_mult(bn: U256, factor: u64) -> (U256, u64) {
     let result = U256::new();
     let result = asm(bn: __addr_of(bn), factor: factor, carry_0, carry_1, value, product, sum, result: __addr_of(result)) {
         // Run multiplication on the lower 64bit word
-        lw value bn i3; // load the word in (bn + 3 words) into value
-        mul product value factor; // mult value * factor and save in product
+        lw   value bn i3; // load the word in (bn + 3 words) into value
+        mul  product value factor; // mult value * factor and save in product
         move carry_0 of; // record the carry
-        sw result product i3;
+        sw   result product i3;
 
         // Run multiplication on the next 64bit word
-        lw value bn i2; // load the word in (bn + 2 words) into value
-        mul product value factor; // mult value * factor and save in product
+        lw   value bn i2; // load the word in (bn + 2 words) into value
+        mul  product value factor; // mult value * factor and save in product
         move carry_1 of; // record the carry
-        add sum product carry_0; // add previous carry + product
-        add carry_0 carry_1 of; // record the total new carry
-        sw result sum i2;
+        add  sum product carry_0; // add previous carry + product
+        add  carry_0 carry_1 of; // record the total new carry
+        sw   result sum i2;
 
         // Run multiplication on the next 64bit word
-        lw value bn i1; // load the word in (bn + 1 words) into value
-        mul product value factor; // mult value * factor and save in product
+        lw   value bn i1; // load the word in (bn + 1 words) into value
+        mul  product value factor; // mult value * factor and save in product
         move carry_1 of; // record the carry
-        add sum product carry_0; // add previous carry + product
-        add carry_0 carry_1 of; // record the total new carry
-        sw result sum i1;
+        add  sum product carry_0; // add previous carry + product
+        add  carry_0 carry_1 of; // record the total new carry
+        sw   result sum i1;
 
         // Run multiplication on the next 64bit word
-        lw value bn i0; // load the word in bn into value
-        mul product value factor; // mult value * factor and save in product
+        lw   value bn i0; // load the word in bn into value
+        mul  product value factor; // mult value * factor and save in product
         move carry_1 of; // record the carry
-        add sum product carry_0; // add previous carry + product
-        add carry_0 carry_1 of; // record the total new carry
+        add  sum product carry_0; // add previous carry + product
+        add  carry_0 carry_1 of; // record the total new carry
         move carry_1 of; // record any overflow
-        sw result sum i0;
-        sw result carry_0 i4;
+        sw   result sum i0;
+        sw   result carry_0 i4;
 
         result: (U256, u64)
     };
@@ -275,59 +258,59 @@ fn bn_div(bn: U256, d: u32) -> (U256, u32) {
     let result = (U256::new(), 0u32);
     asm(bn: __addr_of(bn), d: d, m: mask, r0, r1, r2, r3, v0, v1, sum_1, sum_2, q, result: __addr_of(result)) {
 		// The upper 64bits can just be divided normal
-        lw v0 bn i0;
-        mod r0 v0 d; // record the remainder
-        div q v0 d;
-        sw result q i0;
+        lw   v0 bn i0;
+        mod  r0 v0 d; // record the remainder
+        div  q v0 d;
+        sw   result q i0;
 
         // The next 64bits are broken into 2 32bit numbers
-        lw v0 bn i1;
-        and v1 v0 m;
+        lw   v0 bn i1;
+        and  v1 v0 m;
         srli v0 v0 i32;
         slli r1 r0 i32; // the previous remainder is shifted up and added before next division
-        add v0 r1 v0;
-        mod r2 v0 d; // record the remainder
-        div v0 v0 d;
+        add  v0 r1 v0;
+        mod  r2 v0 d; // record the remainder
+        div  v0 v0 d;
         slli r3 r2 i32; // the previous remainder is shifted up and added before next division
-        add sum_1 r3 v1;
-        mod r0 sum_1 d; // record the remainder
-        div q sum_1 d;
+        add  sum_1 r3 v1;
+        mod  r0 sum_1 d; // record the remainder
+        div  q sum_1 d;
         slli v0 v0 i32; // re-combine the 2 32bit numbers
-        add sum_2 v0 q;
-        sw result sum_2 i1;
+        add  sum_2 v0 q;
+        sw   result sum_2 i1;
 
         // The next 64bits are broken into 2 32bit numbers
-        lw v0 bn i2;
-        and v1 v0 m;
+        lw   v0 bn i2;
+        and  v1 v0 m;
         srli v0 v0 i32;
         slli r1 r0 i32; // the previous remainder is shifted up and added before next division
-        add v0 r1 v0;
-        mod r2 v0 d; // record the remainder
-        div v0 v0 d;
+        add  v0 r1 v0;
+        mod  r2 v0 d; // record the remainder
+        div  v0 v0 d;
         slli r3 r2 i32; // the previous remainder is shifted up and added before next division
-        add v1 r3 v1;
-        mod r0 v1 d; // record the remainder
-        div v1 v1 d;
+        add  v1 r3 v1;
+        mod  r0 v1 d; // record the remainder
+        div  v1 v1 d;
         slli v0 v0 i32; // re-combine the 2 32bit numbers
-        add v0 v0 v1;
-        sw result v0 i2;
+        add  v0 v0 v1;
+        sw   result v0 i2;
 
         // The next 64bits are broken into 2 32bit numbers
-        lw v0 bn i3;
-        and v1 v0 m;
+        lw   v0 bn i3;
+        and  v1 v0 m;
         srli v0 v0 i32;
         slli r1 r0 i32; // the previous remainder is shifted up and added before next division
-        add v0 r1 v0;
-        mod r2 v0 d; // record the remainder
-        div v0 v0 d;
+        add  v0 r1 v0;
+        mod  r2 v0 d; // record the remainder
+        div  v0 v0 d;
         slli r3 r2 i32; // the previous remainder is shifted up and added before next division
-        add v1 r3 v1;
-        mod r0 v1 d; // record the remainder
-        div v1 v1 d;
+        add  v1 r3 v1;
+        mod  r0 v1 d; // record the remainder
+        div  v1 v1 d;
         slli v0 v0 i32; // re-combine the 2 32bit numbers
-        add v0 v0 v1;
-        sw result v0 i3;
-        sw result r0 i4;
+        add  v0 v0 v1;
+        sw   result v0 i3;
+        sw   result r0 i4;
 
         result: (U256, u32)
     }

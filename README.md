@@ -20,14 +20,14 @@ This project uses the general contract message relaying script/predicate from th
 
 | dep     | version                                                  |
 | ------- | -------------------------------------------------------- |
-| Forc    | [v0.31.1](https://fuellabs.github.io/sway/v0.31.1/introduction/installation.html) |
+| Forc    | [v0.35.0](https://fuellabs.github.io/sway/v0.35.0/introduction/installation.html) |
 
 ### Building
 
 Build:
 
 ```sh
-forc build -p bridge-fungible-token
+forc build
 ```
 
 Run tests:
@@ -41,8 +41,8 @@ cd bridge-fungible-token && cargo test && cd ..
 Code must be formatted.
 
 ```sh
-forc-fmt -p bridge-fungible-token
-forc-fmt -p bridge-fungible-token-abi
+forc fmt
+forc fmt
 cd bridge-fungible-token && cargo fmt && cd ..
 ```
 

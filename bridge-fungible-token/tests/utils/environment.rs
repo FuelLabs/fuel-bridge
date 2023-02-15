@@ -1,18 +1,24 @@
-use crate::builder;
+use crate::utils::builder;
 
 use std::mem::size_of;
 use std::num::ParseIntError;
+use std::result::Result as StdResult;
 use std::str::FromStr;
 
-use fuel_core_interfaces::model::Message;
-use fuels::prelude::*;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config, DEFAULT_COIN_AMOUNT};
 use fuels::tx::{
     Address, AssetId, Bytes32, ConsensusParameters, Input, Output, Receipt, Script, TxPointer,
     UtxoId, Word,
 };
+use fuels::{
+    prelude::*,
+    types::{message::Message, Bits256},
+};
 use primitive_types::U256;
+
+const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
+    "../bridge-message-predicates/contract_message_predicate.bin";
 
 pub struct TestConfig {
     pub adjustment_factor: U256,
@@ -61,12 +67,22 @@ pub fn l2_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
 }
 
 abigen!(
-    BridgeFungibleTokenContract,
-    "../bridge-fungible-token/out/debug/bridge_fungible_token-abi.json"
+    Contract(
+        name = "BridgeFungibleTokenContract",
+        abi = "../bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
+    ),
+    Predicate(
+        name = "ContractMessagePredicate",
+        abi = "../bridge-message-predicates/contract_message_predicate-abi.json"
+    ),
+    Script(
+        name = "ContractMessageScript",
+        abi = "../bridge-message-predicates/contract_message_script-abi.json",
+    ),
 );
 
 pub const MESSAGE_SENDER_ADDRESS: &str =
-    "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc";
+    "0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe";
 pub const TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
     "../bridge-fungible-token/out/debug/bridge_fungible_token.bin";
 
@@ -117,13 +133,16 @@ pub async fn setup_environment(
         Some(v) => Address::from_str(v).unwrap(),
         None => Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap(),
     };
-    let (predicate_bytecode, predicate_root) = builder::get_contract_message_predicate().await;
+
+    let predicate = ContractMessagePredicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
+    let predicate_root = predicate.address();
+
     let all_messages: Vec<Message> = messages
         .iter()
         .flat_map(|message| {
             setup_single_message(
                 &message_sender.into(),
-                &predicate_root.into(),
+                &predicate_root,
                 message.0,
                 message_nonce,
                 message.1.clone(),
@@ -163,10 +182,10 @@ pub async fn setup_environment(
     let coin_inputs: Vec<Input> = all_coins
         .into_iter()
         .map(|coin| Input::CoinSigned {
-            utxo_id: UtxoId::from(coin.0.clone()),
-            owner: Address::from(coin.1.owner.clone()),
-            amount: coin.1.amount.clone().into(),
-            asset_id: AssetId::from(coin.1.asset_id.clone()),
+            utxo_id: UtxoId::from(coin.utxo_id.clone()),
+            owner: Address::from(coin.owner.clone()),
+            amount: coin.amount.clone().into(),
+            asset_id: AssetId::from(coin.asset_id.clone()),
             tx_pointer: TxPointer::default(),
             witness_index: 0,
             maturity: 0,
@@ -177,13 +196,13 @@ pub async fn setup_environment(
     let message_inputs: Vec<Input> = all_messages
         .iter()
         .map(|message| Input::MessagePredicate {
-            message_id: message.id(),
+            message_id: message.message_id(),
             sender: Address::from(message.sender.clone()),
             recipient: Address::from(message.recipient.clone()),
             amount: message.amount,
             nonce: message.nonce,
             data: message.data.clone(),
-            predicate: predicate_bytecode.clone(),
+            predicate: predicate.code().clone(),
             predicate_data: vec![],
         })
         .collect();
@@ -261,7 +280,7 @@ pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
 
 /// Quickly converts the given hex string into a u8 vector
 pub fn decode_hex(s: &str) -> Vec<u8> {
-    let data: Result<Vec<u8>, ParseIntError> = (2..s.len())
+    let data: StdResult<Vec<u8>, ParseIntError> = (2..s.len())
         .step_by(2)
         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
         .collect();
@@ -312,10 +331,8 @@ pub async fn construct_msg_data(
     (message, coin)
 }
 
-pub fn generate_outputs() -> Vec<Output> {
-    let mut v = vec![Output::variable(Address::zeroed(), 0, AssetId::default())];
-    v.push(Output::message(Address::zeroed(), 0));
-    v
+pub fn generate_variable_output() -> Vec<Output> {
+    vec![Output::variable(Address::zeroed(), 0, AssetId::default())]
 }
 
 pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256) {

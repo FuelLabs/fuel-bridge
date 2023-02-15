@@ -1,6 +1,6 @@
 library events;
 
-use std::{contract_id::ContractId, identity::Identity, u256::U256};
+use std::u256::U256;
 
 pub struct RefundRegisteredEvent {
     from: b256,

@@ -9,10 +9,9 @@ bridge_fungible_token_abi = { path = "../bridge-fungible-token-abi" }
 contract_message_receiver = { path = "../bridge-message-predicates/contract-message-receiver" }
 
 [constants]
-LAYER_1_ERC20_GATEWAY = { type = "b256", value = "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc" }
-# TODO: Set actual value here instead of placeholder
 DECIMALS = { type = "u8", value = "9u8" }
 LAYER_1_DECIMALS = { type = "u8", value = "18u8" }
+LAYER_1_ERC20_GATEWAY = { type = "b256", value = "0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe" }
 LAYER_1_TOKEN = { type = "b256", value = "0x00000000000000000000000000000000000000000000000000000000deadbeef" }
 NAME = { type = "str[32]", value = "\"________________________MY_TOKEN\"" }
 SYMBOL = { type = "str[32]", value = "\"___________________________MYTKN\"" }

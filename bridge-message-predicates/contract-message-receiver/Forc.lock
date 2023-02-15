@@ -1,14 +1,13 @@
 [[package]]
 name = 'contract_message_receiver'
-source = 'root'
+source = 'member'
 dependencies = ['std']
 
 [[package]]
 name = 'core'
-source = 'path+from-root-3851086A5CA5C88E'
-dependencies = []
+source = 'path+from-root-6CF211E057E4FBE9'
 
 [[package]]
 name = 'std'
-source = 'git+https://github.com/fuellabs/sway?tag=v0.24.1#54e1a340e6c0c9a675e8a66aab03f579d5d6b39b'
+source = 'git+https://github.com/fuellabs/sway?rev#7e861e44bd609c67db9b953fdd374106de1b03d0'
 dependencies = ['core']
