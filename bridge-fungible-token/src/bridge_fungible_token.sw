@@ -131,4 +131,7 @@ impl BridgeFungibleToken for Contract {
     fn layer1_decimals() -> u8 {
         LAYER_1_DECIMALS
     }
+    fn layer1_erc20_gateway() -> b256 {
+        LAYER_1_ERC20_GATEWAY
+    }
 }

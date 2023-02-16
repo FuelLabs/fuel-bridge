@@ -38,6 +38,9 @@ abi BridgeFungibleToken {
     /// Get the L1 token that this contract bridges
     fn layer1_token() -> b256;
 
-    /// Get the L1_decimals of this token contract
+    /// Get the L1 decimals of this token contract
     fn layer1_decimals() -> u8;
+
+    /// Get the Address of the L1 erc20 gateway used by this contract
+    fn layer1_erc20_gateway() -> b256;
 }
