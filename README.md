@@ -33,7 +33,7 @@ forc build
 Run tests:
 
 ```sh
-cd bridge-fungible-token && cargo test && cd ..
+cargo test
 ```
 
 ## Contributing
@@ -42,8 +42,7 @@ Code must be formatted.
 
 ```sh
 forc fmt
-forc fmt
-cd bridge-fungible-token && cargo fmt && cd ..
+cargo fmt
 ```
 
 ## License

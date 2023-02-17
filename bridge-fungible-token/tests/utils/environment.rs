@@ -69,15 +69,15 @@ pub fn l2_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "../bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
+        abi = "./bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
     ),
     Predicate(
         name = "ContractMessagePredicate",
-        abi = "../bridge-message-predicates/contract_message_predicate-abi.json"
+        abi = "./bridge-message-predicates/contract_message_predicate-abi.json"
     ),
     Script(
         name = "ContractMessageScript",
-        abi = "../bridge-message-predicates/contract_message_script-abi.json",
+        abi = "./bridge-message-predicates/contract_message_script-abi.json",
     ),
 );
 
