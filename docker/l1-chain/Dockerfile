@@ -8,8 +8,7 @@ RUN apk --no-cache add git
 WORKDIR /l1chain
 
 # clone the contracts repo
-#RUN git clone --depth 1 --branch <tag_name> https://github.com/FuelLabs/fuel-v2-contracts.git
-RUN git clone --depth 1 --branch master https://github.com/FuelLabs/fuel-v2-contracts.git
+RUN git clone --depth 1 --branch v0.1.0-beta.3 https://github.com/FuelLabs/fuel-v2-contracts.git
 WORKDIR /l1chain/fuel-v2-contracts
 
 # build the ethereum contracts and environment
