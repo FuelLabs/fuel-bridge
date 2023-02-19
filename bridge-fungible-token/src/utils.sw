@@ -57,7 +57,6 @@ fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError
 fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError> {
     let mut bn_clone = bn;
     let mut decimals_to_shift: u32 = asm(r1: d) { r1: u32 };
-    let mut r = 0u32;
 
     // the zero case
     if (decimals_to_shift == 0u32) {
@@ -93,26 +92,29 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
     return Result::Err(BridgeFungibleTokenError::OverflowError);
 }
 
-/// Make any necessary adjustments to decimals(precision) on the amount
-/// to be withdrawn. This amount needs to be passed via message.data as a b256
+/// Adjust decimals(precision) on a withdrawal amount to match the originating token decimals
+/// or return an error if the conversion can't be achieved without overflow/underflow.
 pub fn adjust_withdrawal_decimals(val: u64) -> b256 {
-    if DECIMALS < LAYER_1_DECIMALS {
-        let result = shift_decimals_left(U256::from((0, 0, 0, val)), LAYER_1_DECIMALS - DECIMALS);
+    let value = U256::from((0, 0, 0, val));
+
+    if BRIDGED_TOKEN_DECIMALS > DECIMALS {
+        let result = shift_decimals_left(value, BRIDGED_TOKEN_DECIMALS - DECIMALS);
         compose(result.unwrap().into())
     } else {
-        // Either decimals are the same, or decimals are negative.
-        // TODO: Decide how to handle negative decimals before mainnet.
+        // Either decimals are the same, or decimals shift left is negative.
+        // TODO: Decide how to handle cases where BRIDGED_TOKEN_DECIMALS < DECIMALS.
         // For now we make no decimal adjustment for either case.
         compose((0, 0, 0, val))
     }
 }
 
-/// Make any necessary adjustments to decimals(precision) on the deposited value, and return either a converted u64 or an error if the conversion can't be achieved without overflow or loss of precision.
-pub fn adjust_deposit_decimals(msg_val: b256) -> Result<u64, BridgeFungibleTokenError> {
-    let value = U256::from(decompose(msg_val));
+/// Adjust decimals(precision) on a deposit amount to match this proxy tokens decimals
+/// or return an error if the conversion can't be achieved without overflow/underflow.
+pub fn adjust_deposit_decimals(val: b256) -> Result<u64, BridgeFungibleTokenError> {
+    let value = U256::from(decompose(val));
 
-    if LAYER_1_DECIMALS > DECIMALS {
-        let decimal_diff = LAYER_1_DECIMALS - DECIMALS;
+    if BRIDGED_TOKEN_DECIMALS > DECIMALS {
+        let decimal_diff = BRIDGED_TOKEN_DECIMALS - DECIMALS;
         let result = shift_decimals_right(value, decimal_diff);
 
         // ensure that the value does not use higher precision than is bridgeable by this contract
@@ -125,21 +127,21 @@ pub fn adjust_deposit_decimals(msg_val: b256) -> Result<u64, BridgeFungibleToken
             Result::Err(e) => {
                 Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability)
             },
-            Result::Ok(val) => {
-                Result::Ok(val)
+            Result::Ok(v) => {
+                Result::Ok(v)
             },
         }
     } else {
-        // Either decimals are the same, or L2 decimals > L1 Decimals.
-        // TODO: Decide how to handle cases where L2 decimals > L1 Decimals before mainnet.
+        // Either decimals are the same, or decimal shift right is negative.
+        // TODO: Decide how to handle cases where BRIDGED_TOKEN_DECIMALS < DECIMALS.
         // For now we make no decimal adjustment for either case.
         let val_result = value.as_u64();
         match val_result {
             Result::Err(e) => {
                 Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability)
             },
-            Result::Ok(val) => {
-                Result::Ok(val)
+            Result::Ok(v) => {
+                Result::Ok(v)
             },
         }
     }
@@ -158,26 +160,18 @@ pub fn decompose(val: b256) -> (u64, u64, u64, u64) {
 /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
 pub fn parse_message_data(msg_idx: u8) -> MessageData {
     let mut msg_data = MessageData {
-        fuel_token: ContractId::from(ZERO_B256),
-        l1_asset: ZERO_B256,
+        token: ZERO_B256,
         from: ZERO_B256,
         to: Address::from(ZERO_B256),
         amount: ZERO_B256,
     };
 
     // Parse the message data
-    msg_data.fuel_token = ContractId::from(input_message_data(msg_idx, 0).into());
-    msg_data.l1_asset = input_message_data(msg_idx, 32).into();
+    msg_data.token = input_message_data(msg_idx, 32).into();
     msg_data.from = input_message_data(msg_idx, 32 + 32).into();
     msg_data.to = Address::from(input_message_data(msg_idx, 32 + 32 + 32).into());
     msg_data.amount = input_message_data(msg_idx, 32 + 32 + 32 + 32).into();
     msg_data
-}
-
-fn copy_bytes(dest: raw_ptr, src: raw_ptr, len: u64, offset: u64) {
-    asm(dst: dest, src: src, len: len) {
-        mcp  dst src len;
-    };
 }
 
 /// Encode the data to be passed out of the contract when sending a message
@@ -185,11 +179,11 @@ pub fn encode_data(to: b256, amount: b256) -> Bytes {
     // capacity is 4 + 32 + 32 + 32 = 100
     let mut data = Bytes::with_capacity(100);
     let padded_to_bytes = Bytes::from(to);
-    let padded_token_bytes = Bytes::from(LAYER_1_TOKEN);
+    let padded_token_bytes = Bytes::from(BRIDGED_TOKEN);
     let amount_bytes = Bytes::from(amount);
 
     // first, we push the selector 1 byte at a time
-    // the function selector for finalizeWithdrawal on the L1ERC20Gateway contract:
+    // the function selector for finalizeWithdrawal on the base layer gateway contract:
     // finalizeWithdrawal(address,address,uint256) = 0x53ef1461
     data.push(0x53u8);
     data.push(0xefu8);
@@ -199,7 +193,7 @@ pub fn encode_data(to: b256, amount: b256) -> Bytes {
     // next, we append the `to` address including padding:
     data.append(padded_to_bytes);
 
-    // next, we append the `LAYER_1_TOKEN` address including padding:
+    // next, we append the `BRIDGED_TOKEN` address including padding:
     data.append(padded_token_bytes);
 
     // next, we append the `amount`:

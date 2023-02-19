@@ -1,6 +1,6 @@
 # Contract Deploy for Bridge
 
-Each ERC-20 token to be bridged needs to have a corresponding fungible token contract defined on the Fuel chain. These contracts handle messaging with the base layer gateway contract and are responsible for minting and burning the Fuel side token equivalents.
+Each token to be bridged needs to have a corresponding bridge fungible token contract defined on the Fuel chain. These contracts handle messaging with the base layer gateway contract and are responsible for minting and burning the Fuel side token proxies.
 
 ## Dependencies
 
@@ -11,11 +11,11 @@ Each ERC-20 token to be bridged needs to have a corresponding fungible token con
 
 ## Configure
 
-Configure the target ERC-20 token by editing the `bridge-fungible-token/Forc.toml` file:
+Configure the target base layer token by editing the `bridge-fungible-token/Forc.toml` file:
 
-- **LAYER_1_ERC20_GATEWAY**: The address of the gateway contract on the base layer
-- **LAYER_1_TOKEN**: The address of the ERC-20 token contract on the base layer
-- **LAYER_1_DECIMALS**: The decimal value of the base layer ERC-20 token contract
+- **BRIDGED_TOKEN_GATEWAY**: The address of the gateway contract on the base layer
+- **BRIDGED_TOKEN**: The address of the token contract on the base layer
+- **BRIDGED_TOKEN_DECIMALS**: The decimal value of the base layer token contract
 - **NAME**: The token name (padded to 32 characters)
 - **SYMBOL**: The token symbol (padded to 32 characters)
 

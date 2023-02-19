@@ -1,6 +1,6 @@
 # Fuel Bridge Fungible Token
 
-The contract responsible for sending/receiving messages from the base layer ERC20 gateway to mint/burn representative tokens on the Fuel chain.
+The contract responsible for sending/receiving messages from the base layer gateway to mint/burn representative proxy tokens on the Fuel chain.
 
 ## Table of contents
 

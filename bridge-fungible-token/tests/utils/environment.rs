@@ -32,12 +32,12 @@ pub struct TestConfig {
 }
 
 pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
-    let l1_decimals = U256::from(decimals.0);
-    let l2_decimals = U256::from(decimals.1);
+    let bridged_token_decimals = U256::from(decimals.0);
+    let proxy_token_decimals = U256::from(decimals.1);
     let one = U256::from(1);
 
-    let adjustment_factor = if l1_decimals > l2_decimals {
-        U256::from(10).pow(l1_decimals - l2_decimals)
+    let adjustment_factor = if bridged_token_decimals > proxy_token_decimals {
+        U256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
     } else {
         one
     };
@@ -62,7 +62,7 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
     }
 }
 
-pub fn l2_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
+pub fn fuel_side_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
     (test_amount / config.adjustment_factor).as_u64()
 }
 
@@ -313,13 +313,13 @@ pub fn encode_hex(val: U256) -> [u8; 32] {
 }
 
 pub async fn construct_msg_data(
-    l1_token: &str,
+    token: &str,
     from: &str,
     mut to: Vec<u8>,
     amount: U256,
 ) -> ((u64, Vec<u8>), (u64, AssetId)) {
     let mut message_data = Vec::with_capacity(5);
-    message_data.append(&mut decode_hex(&l1_token));
+    message_data.append(&mut decode_hex(&token));
     message_data.append(&mut decode_hex(&from));
     message_data.append(&mut to);
     message_data.append(&mut encode_hex(amount).to_vec());
@@ -339,8 +339,8 @@ pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U25
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();
-    let l1_token = Bits256(token_array);
+    let token = Bits256(token_array);
     let amount_array: [u8; 32] = data[68..100].try_into().unwrap();
     let amount: U256 = U256::from_big_endian(&amount_array.to_vec());
-    (selector.to_vec(), Bits256(to), l1_token, amount)
+    (selector.to_vec(), Bits256(to), token, amount)
 }

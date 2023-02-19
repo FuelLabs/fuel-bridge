@@ -59,20 +59,21 @@ impl MessageReceiver for Contract {
     #[payable]
     fn process_message(msg_idx: u8) {
         let input_sender = input_message_sender(1);
-        require(input_sender.value == LAYER_1_ERC20_GATEWAY, BridgeFungibleTokenError::UnauthorizedSender);
+        require(input_sender.value == BRIDGED_TOKEN_GATEWAY, BridgeFungibleTokenError::UnauthorizedSender);
         let message_data = parse_message_data(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        // Register a refund if tokens don't match
-        if (message_data.l1_asset != LAYER_1_TOKEN) {
-            register_refund(message_data.from, message_data.l1_asset, message_data.amount);
+        // register a refund if tokens don't match
+        if (message_data.token != BRIDGED_TOKEN) {
+            register_refund(message_data.from, message_data.token, message_data.amount);
             return;
         };
+
         let res_amount = adjust_deposit_decimals(message_data.amount);
         match res_amount {
             Result::Err(e) => {
-                // Register a refund if value can't be adjusted
-                register_refund(message_data.from, message_data.l1_asset, message_data.amount);
+                // register a refund if value can't be adjusted
+                register_refund(message_data.from, message_data.token, message_data.amount);
             },
             Result::Ok(a) => {
                 mint_to_address(a, message_data.to);
@@ -94,22 +95,24 @@ impl BridgeFungibleToken for Contract {
         // reset the refund amount to 0
         storage.refund_amounts.insert((originator, asset), ZERO_B256);
 
-        // send a message to unlock this amount on the ethereum (L1) bridge contract
-        send_message(LAYER_1_ERC20_GATEWAY, encode_data(originator, stored_amount), 0);
+        // send a message to unlock this amount on the base layer gateway contract
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount), 0);
     }
 
     #[payable]
     fn withdraw_to(to: b256) {
         let amount = msg_amount();
-        require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
         let origin_contract_id = msg_asset_id();
-        let sender = msg_sender().unwrap();
+        require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
+        require(origin_contract_id == contract_id(), BridgeFungibleTokenError::IncorrectAssetDeposited);
 
-        // check that the correct asset was sent with call
-        require(contract_id() == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
-        burn(amount);
+        // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount);
-        send_message(LAYER_1_ERC20_GATEWAY, encode_data(to, adjusted_amount), 0);
+        burn(amount);
+
+        // send a message to unlock this amount on the base layer gateway contract
+        let sender = msg_sender().unwrap();
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
@@ -125,13 +128,13 @@ impl BridgeFungibleToken for Contract {
     fn decimals() -> u8 {
         DECIMALS
     }
-    fn layer1_token() -> b256 {
-        LAYER_1_TOKEN
+    fn bridged_token() -> b256 {
+        BRIDGED_TOKEN
     }
-    fn layer1_decimals() -> u8 {
-        LAYER_1_DECIMALS
+    fn bridged_token_decimals() -> u8 {
+        BRIDGED_TOKEN_DECIMALS
     }
-    fn layer1_erc20_gateway() -> b256 {
-        LAYER_1_ERC20_GATEWAY
+    fn bridged_token_gateway() -> b256 {
+        BRIDGED_TOKEN_GATEWAY
     }
 }
