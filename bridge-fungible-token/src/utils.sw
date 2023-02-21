@@ -26,32 +26,29 @@ fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError
     // the zero case
     if (decimals_to_shift == 0) {
         return Result::Ok(bn);
-    };
+    }
 
     // the too large case
     // (there are only 78 decimal digits in a 256bit number)
     if (decimals_to_shift > 77) {
         return Result::Err(BridgeFungibleTokenError::OverflowError);
-    };
+    }
 
-    // math time
-    while (decimals_to_shift > 0) {
-        if (decimals_to_shift < 20) {
-            let (prod, overflow) = bn_mult(bn_clone, 10.pow(decimals_to_shift));
-            if (overflow != 0) {
-                return Result::Err(BridgeFungibleTokenError::OverflowError);
-            };
-            return Result::Ok(prod);
-        } else {
-            let (prod, overflow) = bn_mult(bn_clone, 10.pow(19));
-            if (overflow != 0) {
-                return Result::Err(BridgeFungibleTokenError::OverflowError);
-            };
-            decimals_to_shift = decimals_to_shift - 19;
-            bn_clone += prod;
+    // shift decimals in increments of the max power of 10 that bn_mult will allow (10^19)
+    while (decimals_to_shift > 19) {
+        // note: 10_000_000_000_000_000_000 = 10.pow(19)
+        let (adjusted, overflow) = bn_mult(bn_clone, 10_000_000_000_000_000_000);
+        if (overflow != 0) {
+            return Result::Err(BridgeFungibleTokenError::OverflowError);
         };
-    };
-    Result::Ok(bn_clone)
+        decimals_to_shift = decimals_to_shift - 19;
+        bn_clone = adjusted;
+    }
+    let (adjusted, overflow) = bn_mult(bn_clone, 10.pow(decimals_to_shift));
+    if (overflow != 0) {
+        return Result::Err(BridgeFungibleTokenError::OverflowError);
+    }
+    Result::Ok(adjusted)
 }
 
 fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError> {
@@ -61,89 +58,75 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
     // the zero case
     if (decimals_to_shift == 0u32) {
         return Result::Ok(bn);
-    };
+    }
 
     // the too large case
     // (there are only 78 decimal digits in a 256bit number)
     if (decimals_to_shift > 77u32) {
-        return Result::Err(BridgeFungibleTokenError::OverflowError);
-    };
+        return Result::Err(BridgeFungibleTokenError::UnderflowError);
+    }
 
-    // math time
-    while (decimals_to_shift > 0u32) {
-        if (decimals_to_shift < 9u32) {
-            let (adjusted, remainder) = bn_div(bn_clone, 10u32.pow(decimals_to_shift));
-            if remainder != 0u32 {
-                return Result::Err(BridgeFungibleTokenError::OverflowError);
-            };
-            return Result::Ok(adjusted);
-        } else {
-            // Note: 1_000_000_000u32 = 10u32.pow(9u32)
-            let (adjusted, remainder) = bn_div(bn_clone, 1_000_000_000u32);
-            decimals_to_shift = decimals_to_shift - 9u32;
-            bn_clone = adjusted;
-            if remainder != 0u32 {
-                return Result::Err(BridgeFungibleTokenError::OverflowError);
-            };
-            return Result::Ok(adjusted);
-        }
-    };
-
-    return Result::Err(BridgeFungibleTokenError::OverflowError);
+    // shift decimals in increments of the max power of 10 that bn_div will allow (10^9)
+    while (decimals_to_shift > 9u32) {
+        // note: 1_000_000_000 = 10.pow(9)
+        let (adjusted, remainder) = bn_div(bn_clone, 1_000_000_000u32);
+        if remainder != 0u32 {
+            return Result::Err(BridgeFungibleTokenError::UnderflowError);
+        };
+        decimals_to_shift = decimals_to_shift - 9u32;
+        bn_clone = adjusted;
+    }
+    let (adjusted, remainder) = bn_div(bn_clone, 10u32.pow(decimals_to_shift));
+    if remainder != 0u32 {
+        return Result::Err(BridgeFungibleTokenError::UnderflowError);
+    }
+    return Result::Ok(adjusted)
 }
 
 /// Adjust decimals(precision) on a withdrawal amount to match the originating token decimals
 /// or return an error if the conversion can't be achieved without overflow/underflow.
-pub fn adjust_withdrawal_decimals(val: u64) -> b256 {
+pub fn adjust_withdrawal_decimals(val: u64) -> Result<b256, BridgeFungibleTokenError> {
     let value = U256::from((0, 0, 0, val));
-
-    if BRIDGED_TOKEN_DECIMALS > DECIMALS {
-        let result = shift_decimals_left(value, BRIDGED_TOKEN_DECIMALS - DECIMALS);
-        compose(result.unwrap().into())
+    let adjusted = if BRIDGED_TOKEN_DECIMALS > DECIMALS {
+        match shift_decimals_left(value, BRIDGED_TOKEN_DECIMALS - DECIMALS) {
+            Result::Err(e) => return Result::Err(e),
+            Result::Ok(v) => v.into(),
+        }
+    } else if BRIDGED_TOKEN_DECIMALS < DECIMALS {
+        match shift_decimals_right(value, DECIMALS - BRIDGED_TOKEN_DECIMALS) {
+            Result::Err(e) => return Result::Err(e),
+            Result::Ok(v) => v.into(),
+        }
     } else {
-        // Either decimals are the same, or decimals shift left is negative.
-        // TODO: Decide how to handle cases where BRIDGED_TOKEN_DECIMALS < DECIMALS.
-        // For now we make no decimal adjustment for either case.
-        compose((0, 0, 0, val))
-    }
+        (0, 0, 0, val)
+    };
+
+    Result::Ok(compose(adjusted))
 }
 
 /// Adjust decimals(precision) on a deposit amount to match this proxy tokens decimals
 /// or return an error if the conversion can't be achieved without overflow/underflow.
 pub fn adjust_deposit_decimals(val: b256) -> Result<u64, BridgeFungibleTokenError> {
     let value = U256::from(decompose(val));
-
-    if BRIDGED_TOKEN_DECIMALS > DECIMALS {
-        let decimal_diff = BRIDGED_TOKEN_DECIMALS - DECIMALS;
-        let result = shift_decimals_right(value, decimal_diff);
-
-        // ensure that the value does not use higher precision than is bridgeable by this contract
-        if result.is_err() {
-            return Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability);
-        };
-
-        let val_result = result.unwrap().as_u64();
-        match val_result {
-            Result::Err(e) => {
-                Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability)
-            },
-            Result::Ok(v) => {
-                Result::Ok(v)
-            },
+    let adjusted = if BRIDGED_TOKEN_DECIMALS > DECIMALS {
+        let result = shift_decimals_right(value, BRIDGED_TOKEN_DECIMALS - DECIMALS);
+        match result {
+            Result::Err(e) => return Result::Err(e),
+            Result::Ok(v) => v,
+        }
+    } else if BRIDGED_TOKEN_DECIMALS < DECIMALS {
+        let result = shift_decimals_left(value, DECIMALS - BRIDGED_TOKEN_DECIMALS);
+        match result {
+            Result::Err(e) => return Result::Err(e),
+            Result::Ok(v) => v,
         }
     } else {
-        // Either decimals are the same, or decimal shift right is negative.
-        // TODO: Decide how to handle cases where BRIDGED_TOKEN_DECIMALS < DECIMALS.
-        // For now we make no decimal adjustment for either case.
-        let val_result = value.as_u64();
-        match val_result {
-            Result::Err(e) => {
-                Result::Err(BridgeFungibleTokenError::BridgedValueIncompatability)
-            },
-            Result::Ok(v) => {
-                Result::Ok(v)
-            },
-        }
+        value
+    };
+
+    match adjusted.as_u64() {
+        Result::Err(e) => Result::Err(BridgeFungibleTokenError::OverflowError),
+        Result::Ok(v) => Result::Ok(v),
     }
 }
 

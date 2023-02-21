@@ -22,6 +22,7 @@ const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
 
 pub struct TestConfig {
     pub adjustment_factor: U256,
+    pub adjustment_is_div: bool,
     pub min_amount: U256,
     pub max_amount: U256,
     pub test_amount: U256,
@@ -38,13 +39,29 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
 
     let adjustment_factor = if bridged_token_decimals > proxy_token_decimals {
         U256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
+    } else if bridged_token_decimals < proxy_token_decimals {
+        U256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
     } else {
         one
     };
 
-    let min_amount = U256::from(1) * adjustment_factor;
-    let max_amount = U256::from(u64::MAX) * adjustment_factor;
-    let test_amount = ((U256::from(1) + U256::from(u64::MAX)) / U256::from(2)) * adjustment_factor;
+    let adjustment_is_div = bridged_token_decimals < proxy_token_decimals;
+
+    let min_amount = if bridged_token_decimals > proxy_token_decimals {
+        U256::from(1) * adjustment_factor
+    } else {
+        one
+    };
+
+    let max_amount = if bridged_token_decimals > proxy_token_decimals {
+        U256::from(u64::MAX) * adjustment_factor
+    } else if bridged_token_decimals < proxy_token_decimals {
+        U256::from(u64::MAX) / adjustment_factor
+    } else {
+        one
+    };
+
+    let test_amount = (min_amount + max_amount) / U256::from(2);
     let not_enough = min_amount - one;
     let overflow_1 = max_amount + one;
     let overflow_2 = max_amount + (one << 160);
@@ -52,6 +69,7 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
 
     TestConfig {
         adjustment_factor,
+        adjustment_is_div,
         min_amount,
         test_amount,
         max_amount,
@@ -63,7 +81,11 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
 }
 
 pub fn fuel_side_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
-    (test_amount / config.adjustment_factor).as_u64()
+    if config.adjustment_is_div {
+        (test_amount * config.adjustment_factor).as_u64()
+    } else {
+        (test_amount / config.adjustment_factor).as_u64()
+    }
 }
 
 abigen!(

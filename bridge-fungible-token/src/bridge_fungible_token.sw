@@ -107,7 +107,7 @@ impl BridgeFungibleToken for Contract {
         require(origin_contract_id == contract_id(), BridgeFungibleTokenError::IncorrectAssetDeposited);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(amount);
+        let adjusted_amount = adjust_withdrawal_decimals(amount).unwrap();
         burn(amount);
 
         // send a message to unlock this amount on the base layer gateway contract
