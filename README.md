@@ -36,7 +36,7 @@ A set of basic environment variables can be set before running. The defaults are
 ```bash
 L1_CHAIN_HTTP_PORT=9545
 DEPLOYMENTS_PORT=8080
-FULE_CORE_HTTP_PORT=4000
+FUEL_CORE_HTTP_PORT=4000
 ```
 
 For example:

@@ -30,5 +30,5 @@ services:
       CONSENSUS_KEY_SECRET: 'a449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298'
     ports:
       # expose the service to the host for integration testing
-      - ${FULE_CORE_HTTP_PORT:-4000}:4001
+      - ${FUEL_CORE_HTTP_PORT:-4000}:4001
       
