@@ -100,7 +100,7 @@ impl BridgeFungibleToken for Contract {
     }
 
     #[payable]
-    fn withdraw_to(to: b256) {
+    fn withdraw(to: b256) {
         let amount = msg_amount();
         let origin_contract_id = msg_asset_id();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
@@ -119,21 +119,27 @@ impl BridgeFungibleToken for Contract {
             amount: amount,
         });
     }
+
     fn name() -> str[32] {
         NAME
     }
+
     fn symbol() -> str[32] {
         SYMBOL
     }
+
     fn decimals() -> u8 {
         DECIMALS
     }
+
     fn bridged_token() -> b256 {
         BRIDGED_TOKEN
     }
+
     fn bridged_token_decimals() -> u8 {
         BRIDGED_TOKEN_DECIMALS
     }
+
     fn bridged_token_gateway() -> b256 {
         BRIDGED_TOKEN_GATEWAY
     }

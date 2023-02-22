@@ -301,7 +301,7 @@ mod success {
 
         let call_response = test_contract
             .methods()
-            .withdraw_to(Bits256(*wallet.address().hash()))
+            .withdraw(Bits256(*wallet.address().hash()))
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")
@@ -403,7 +403,7 @@ mod success {
 
         let call_response = test_contract
             .methods()
-            .withdraw_to(Bits256(*wallet.address().hash()))
+            .withdraw(Bits256(*wallet.address().hash()))
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")
@@ -865,7 +865,7 @@ mod revert {
         // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
         test_contract
             .methods()
-            .withdraw_to(Bits256(*wallet.address().hash()))
+            .withdraw(Bits256(*wallet.address().hash()))
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")

@@ -24,7 +24,7 @@ abi BridgeFungibleToken {
     /// * When the wrong asset was sent with the call
     /// * When the amount sent overflows/underflows during decimal conversion
     #[payable]
-    fn withdraw_to(to: b256);
+    fn withdraw(to: b256);
 
     /// Get the name of the proxy token
     fn name() -> str[32];
