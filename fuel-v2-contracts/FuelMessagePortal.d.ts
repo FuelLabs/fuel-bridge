@@ -22,32 +22,40 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
 interface FuelMessagePortalInterface extends ethers.utils.Interface {
   functions: {
+    "DEFAULT_ADMIN_ROLE()": FunctionFragment;
     "ETH_DECIMALS()": FunctionFragment;
     "FUEL_BASE_ASSET_DECIMALS()": FunctionFragment;
     "MAX_MESSAGE_DATA_SIZE()": FunctionFragment;
-    "getFuelBaseAssetDecimals()": FunctionFragment;
-    "getMessageSender()": FunctionFragment;
+    "PAUSER_ROLE()": FunctionFragment;
+    "depositETH(bytes32)": FunctionFragment;
+    "fuelBaseAssetDecimals()": FunctionFragment;
+    "fuelChainConsensusContract()": FunctionFragment;
+    "getRoleAdmin(bytes32)": FunctionFragment;
+    "grantRole(bytes32,address)": FunctionFragment;
+    "hasRole(bytes32,address)": FunctionFragment;
+    "incomingMessageSuccessful(bytes32)": FunctionFragment;
+    "incomingMessageTimelock()": FunctionFragment;
     "initialize(address)": FunctionFragment;
-    "owner()": FunctionFragment;
+    "messageSender()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
     "relayMessageFromFuelBlock(tuple,tuple,tuple,bytes)": FunctionFragment;
     "relayMessageFromPrevFuelBlock(tuple,tuple,tuple,tuple,tuple,bytes)": FunctionFragment;
-    "renounceOwnership()": FunctionFragment;
-    "s_incomingMessageSuccessful(bytes32)": FunctionFragment;
-    "s_incomingMessageTimelock()": FunctionFragment;
-    "s_outgoingMessageNonce()": FunctionFragment;
-    "s_sidechainConsensus()": FunctionFragment;
-    "sendETH(bytes32)": FunctionFragment;
+    "renounceRole(bytes32,address)": FunctionFragment;
+    "revokeRole(bytes32,address)": FunctionFragment;
     "sendMessage(bytes32,bytes)": FunctionFragment;
     "setIncomingMessageTimelock(uint64)": FunctionFragment;
-    "transferOwnership(address)": FunctionFragment;
+    "supportsInterface(bytes4)": FunctionFragment;
     "unpause()": FunctionFragment;
     "upgradeTo(address)": FunctionFragment;
     "upgradeToAndCall(address,bytes)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    values?: undefined
+  ): string;
   encodeFunctionData(
     functionFragment: "ETH_DECIMALS",
     values?: undefined
@@ -61,15 +69,46 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getFuelBaseAssetDecimals",
+    functionFragment: "PAUSER_ROLE",
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "getMessageSender",
+    functionFragment: "depositETH",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fuelBaseAssetDecimals",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "fuelChainConsensusContract",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getRoleAdmin",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "grantRole",
+    values: [BytesLike, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "hasRole",
+    values: [BytesLike, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "incomingMessageSuccessful",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "incomingMessageTimelock",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "initialize", values: [string]): string;
-  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "messageSender",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
@@ -132,26 +171,13 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     ]
   ): string;
   encodeFunctionData(
-    functionFragment: "renounceOwnership",
-    values?: undefined
+    functionFragment: "renounceRole",
+    values: [BytesLike, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "s_incomingMessageSuccessful",
-    values: [BytesLike]
+    functionFragment: "revokeRole",
+    values: [BytesLike, string]
   ): string;
-  encodeFunctionData(
-    functionFragment: "s_incomingMessageTimelock",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "s_outgoingMessageNonce",
-    values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "s_sidechainConsensus",
-    values?: undefined
-  ): string;
-  encodeFunctionData(functionFragment: "sendETH", values: [BytesLike]): string;
   encodeFunctionData(
     functionFragment: "sendMessage",
     values: [BytesLike, BytesLike]
@@ -161,8 +187,8 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "transferOwnership",
-    values: [string]
+    functionFragment: "supportsInterface",
+    values: [BytesLike]
   ): string;
   encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
   encodeFunctionData(functionFragment: "upgradeTo", values: [string]): string;
@@ -171,6 +197,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     values: [string, BytesLike]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "DEFAULT_ADMIN_ROLE",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "ETH_DECIMALS",
     data: BytesLike
@@ -184,15 +214,37 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getFuelBaseAssetDecimals",
+    functionFragment: "PAUSER_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "depositETH", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "fuelBaseAssetDecimals",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "getMessageSender",
+    functionFragment: "fuelChainConsensusContract",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getRoleAdmin",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "grantRole", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "hasRole", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "incomingMessageSuccessful",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "incomingMessageTimelock",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "initialize", data: BytesLike): Result;
-  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "messageSender",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
@@ -208,26 +260,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "renounceOwnership",
+    functionFragment: "renounceRole",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_incomingMessageSuccessful",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_incomingMessageTimelock",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_outgoingMessageNonce",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "s_sidechainConsensus",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(functionFragment: "sendETH", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "sendMessage",
     data: BytesLike
@@ -237,7 +273,7 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "transferOwnership",
+    functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
@@ -251,8 +287,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
     "Initialized(uint8)": EventFragment;
-    "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
+    "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
+    "RoleGranted(bytes32,address,address)": EventFragment;
+    "RoleRevoked(bytes32,address,address)": EventFragment;
     "SentMessage(bytes32,bytes32,uint64,uint64,bytes)": EventFragment;
     "Unpaused(address)": EventFragment;
     "Upgraded(address)": EventFragment;
@@ -261,8 +299,10 @@ interface FuelMessagePortalInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RoleGranted"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "SentMessage"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
@@ -312,6 +352,10 @@ export class FuelMessagePortal extends Contract {
   interface: FuelMessagePortalInterface;
 
   functions: {
+    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
+
+    "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
+
     ETH_DECIMALS(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "ETH_DECIMALS()"(overrides?: CallOverrides): Promise<[BigNumber]>;
@@ -326,27 +370,90 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<[number]>;
+    PAUSER_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
-    "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<[number]>;
+    "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
 
-    getMessageSender(overrides?: CallOverrides): Promise<[string]>;
+    depositETH(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
 
-    "getMessageSender()"(overrides?: CallOverrides): Promise<[string]>;
+    "depositETH(bytes32)"(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    fuelBaseAssetDecimals(overrides?: CallOverrides): Promise<[number]>;
+
+    "fuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<[number]>;
+
+    fuelChainConsensusContract(overrides?: CallOverrides): Promise<[string]>;
+
+    "fuelChainConsensusContract()"(
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
+
+    "getRoleAdmin(bytes32)"(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    grantRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "grantRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    hasRole(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    "hasRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    incomingMessageSuccessful(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    "incomingMessageSuccessful(bytes32)"(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    incomingMessageTimelock(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "incomingMessageTimelock()"(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
 
     initialize(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     "initialize(address)"(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    owner(overrides?: CallOverrides): Promise<[string]>;
+    messageSender(overrides?: CallOverrides): Promise<[string]>;
 
-    "owner()"(overrides?: CallOverrides): Promise<[string]>;
+    "messageSender()"(overrides?: CallOverrides): Promise<[string]>;
 
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -470,46 +577,28 @@ export class FuelMessagePortal extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    renounceOwnership(
+    renounceRole(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "renounceOwnership()"(
+    "renounceRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    s_incomingMessageSuccessful(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "s_incomingMessageSuccessful(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    s_incomingMessageTimelock(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "s_incomingMessageTimelock()"(
-      overrides?: CallOverrides
-    ): Promise<[BigNumber]>;
-
-    s_outgoingMessageNonce(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<[BigNumber]>;
-
-    s_sidechainConsensus(overrides?: CallOverrides): Promise<[string]>;
-
-    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<[string]>;
-
-    sendETH(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    revokeRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "sendETH(bytes32)"(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    "revokeRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
     sendMessage(
@@ -534,15 +623,15 @@ export class FuelMessagePortal extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
+    supportsInterface(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
+    "supportsInterface(bytes4)"(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
     unpause(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -575,6 +664,10 @@ export class FuelMessagePortal extends Contract {
     ): Promise<ContractTransaction>;
   };
 
+  DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+
+  "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
   ETH_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
 
   "ETH_DECIMALS()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -587,27 +680,86 @@ export class FuelMessagePortal extends Contract {
 
   "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-  getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
+  PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
-  "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
+  "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
-  getMessageSender(overrides?: CallOverrides): Promise<string>;
+  depositETH(
+    recipient: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
-  "getMessageSender()"(overrides?: CallOverrides): Promise<string>;
+  "depositETH(bytes32)"(
+    recipient: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  fuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
+
+  "fuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
+
+  fuelChainConsensusContract(overrides?: CallOverrides): Promise<string>;
+
+  "fuelChainConsensusContract()"(overrides?: CallOverrides): Promise<string>;
+
+  getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
+
+  "getRoleAdmin(bytes32)"(
+    role: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  grantRole(
+    role: BytesLike,
+    account: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "grantRole(bytes32,address)"(
+    role: BytesLike,
+    account: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  hasRole(
+    role: BytesLike,
+    account: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "hasRole(bytes32,address)"(
+    role: BytesLike,
+    account: string,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  incomingMessageSuccessful(
+    messageId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "incomingMessageSuccessful(bytes32)"(
+    messageId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "incomingMessageTimelock()"(overrides?: CallOverrides): Promise<BigNumber>;
 
   initialize(
-    sidechainConsensus: string,
+    fuelChainConsensus: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   "initialize(address)"(
-    sidechainConsensus: string,
+    fuelChainConsensus: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  owner(overrides?: CallOverrides): Promise<string>;
+  messageSender(overrides?: CallOverrides): Promise<string>;
 
-  "owner()"(overrides?: CallOverrides): Promise<string>;
+  "messageSender()"(overrides?: CallOverrides): Promise<string>;
 
   pause(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -731,44 +883,28 @@ export class FuelMessagePortal extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  renounceOwnership(
+  renounceRole(
+    role: BytesLike,
+    account: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "renounceOwnership()"(
+  "renounceRole(bytes32,address)"(
+    role: BytesLike,
+    account: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  s_incomingMessageSuccessful(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "s_incomingMessageSuccessful(bytes32)"(
-    arg0: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  s_incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "s_incomingMessageTimelock()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  s_outgoingMessageNonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-  "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-  s_sidechainConsensus(overrides?: CallOverrides): Promise<string>;
-
-  "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<string>;
-
-  sendETH(
-    recipient: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  revokeRole(
+    role: BytesLike,
+    account: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "sendETH(bytes32)"(
-    recipient: BytesLike,
-    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  "revokeRole(bytes32,address)"(
+    role: BytesLike,
+    account: string,
+    overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   sendMessage(
@@ -793,15 +929,15 @@ export class FuelMessagePortal extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  transferOwnership(
-    newOwner: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
+  supportsInterface(
+    interfaceId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
-  "transferOwnership(address)"(
-    newOwner: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
+  "supportsInterface(bytes4)"(
+    interfaceId: BytesLike,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
   unpause(
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -834,6 +970,10 @@ export class FuelMessagePortal extends Contract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
+
+    "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
     ETH_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
 
     "ETH_DECIMALS()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -846,27 +986,83 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
+    PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
-    "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
+    "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
-    getMessageSender(overrides?: CallOverrides): Promise<string>;
+    depositETH(recipient: BytesLike, overrides?: CallOverrides): Promise<void>;
 
-    "getMessageSender()"(overrides?: CallOverrides): Promise<string>;
+    "depositETH(bytes32)"(
+      recipient: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    fuelBaseAssetDecimals(overrides?: CallOverrides): Promise<number>;
+
+    "fuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<number>;
+
+    fuelChainConsensusContract(overrides?: CallOverrides): Promise<string>;
+
+    "fuelChainConsensusContract()"(overrides?: CallOverrides): Promise<string>;
+
+    getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
+
+    "getRoleAdmin(bytes32)"(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    grantRole(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "grantRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    hasRole(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "hasRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    incomingMessageSuccessful(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "incomingMessageSuccessful(bytes32)"(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "incomingMessageTimelock()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     initialize(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
     "initialize(address)"(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
-    owner(overrides?: CallOverrides): Promise<string>;
+    messageSender(overrides?: CallOverrides): Promise<string>;
 
-    "owner()"(overrides?: CallOverrides): Promise<string>;
+    "messageSender()"(overrides?: CallOverrides): Promise<string>;
 
     pause(overrides?: CallOverrides): Promise<void>;
 
@@ -986,38 +1182,27 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    renounceOwnership(overrides?: CallOverrides): Promise<void>;
-
-    "renounceOwnership()"(overrides?: CallOverrides): Promise<void>;
-
-    s_incomingMessageSuccessful(
-      arg0: BytesLike,
+    renounceRole(
+      role: BytesLike,
+      account: string,
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<void>;
 
-    "s_incomingMessageSuccessful(bytes32)"(
-      arg0: BytesLike,
+    "renounceRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
       overrides?: CallOverrides
-    ): Promise<boolean>;
+    ): Promise<void>;
 
-    s_incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "s_incomingMessageTimelock()"(
+    revokeRole(
+      role: BytesLike,
+      account: string,
       overrides?: CallOverrides
-    ): Promise<BigNumber>;
+    ): Promise<void>;
 
-    s_outgoingMessageNonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    s_sidechainConsensus(overrides?: CallOverrides): Promise<string>;
-
-    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<string>;
-
-    sendETH(recipient: BytesLike, overrides?: CallOverrides): Promise<void>;
-
-    "sendETH(bytes32)"(
-      recipient: BytesLike,
+    "revokeRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -1043,15 +1228,15 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<void>;
 
-    transferOwnership(
-      newOwner: string,
+    supportsInterface(
+      interfaceId: BytesLike,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
+    "supportsInterface(bytes4)"(
+      interfaceId: BytesLike,
       overrides?: CallOverrides
-    ): Promise<void>;
+    ): Promise<boolean>;
 
     unpause(overrides?: CallOverrides): Promise<void>;
 
@@ -1095,15 +1280,34 @@ export class FuelMessagePortal extends Contract {
 
     Initialized(version: null): TypedEventFilter<[number], { version: number }>;
 
-    OwnershipTransferred(
-      previousOwner: string | null,
-      newOwner: string | null
+    Paused(account: null): TypedEventFilter<[string], { account: string }>;
+
+    RoleAdminChanged(
+      role: BytesLike | null,
+      previousAdminRole: BytesLike | null,
+      newAdminRole: BytesLike | null
     ): TypedEventFilter<
-      [string, string],
-      { previousOwner: string; newOwner: string }
+      [string, string, string],
+      { role: string; previousAdminRole: string; newAdminRole: string }
     >;
 
-    Paused(account: null): TypedEventFilter<[string], { account: string }>;
+    RoleGranted(
+      role: BytesLike | null,
+      account: string | null,
+      sender: string | null
+    ): TypedEventFilter<
+      [string, string, string],
+      { role: string; account: string; sender: string }
+    >;
+
+    RoleRevoked(
+      role: BytesLike | null,
+      account: string | null,
+      sender: string | null
+    ): TypedEventFilter<
+      [string, string, string],
+      { role: string; account: string; sender: string }
+    >;
 
     SentMessage(
       sender: BytesLike | null,
@@ -1130,6 +1334,10 @@ export class FuelMessagePortal extends Contract {
   };
 
   estimateGas: {
+    DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     ETH_DECIMALS(overrides?: CallOverrides): Promise<BigNumber>;
 
     "ETH_DECIMALS()"(overrides?: CallOverrides): Promise<BigNumber>;
@@ -1142,27 +1350,91 @@ export class FuelMessagePortal extends Contract {
 
     "MAX_MESSAGE_DATA_SIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getFuelBaseAssetDecimals(overrides?: CallOverrides): Promise<BigNumber>;
+    PAUSER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "getFuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    getMessageSender(overrides?: CallOverrides): Promise<BigNumber>;
+    depositETH(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
 
-    "getMessageSender()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "depositETH(bytes32)"(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    fuelBaseAssetDecimals(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "fuelBaseAssetDecimals()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    fuelChainConsensusContract(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "fuelChainConsensusContract()"(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    getRoleAdmin(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "getRoleAdmin(bytes32)"(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    grantRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "grantRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    hasRole(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "hasRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    incomingMessageSuccessful(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "incomingMessageSuccessful(bytes32)"(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "incomingMessageTimelock()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     initialize(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     "initialize(address)"(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    owner(overrides?: CallOverrides): Promise<BigNumber>;
+    messageSender(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "owner()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "messageSender()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1286,46 +1558,28 @@ export class FuelMessagePortal extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    renounceOwnership(
+    renounceRole(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "renounceOwnership()"(
+    "renounceRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    s_incomingMessageSuccessful(
-      arg0: BytesLike,
-      overrides?: CallOverrides
+    revokeRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "s_incomingMessageSuccessful(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    s_incomingMessageTimelock(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "s_incomingMessageTimelock()"(
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    s_outgoingMessageNonce(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "s_outgoingMessageNonce()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    s_sidechainConsensus(overrides?: CallOverrides): Promise<BigNumber>;
-
-    "s_sidechainConsensus()"(overrides?: CallOverrides): Promise<BigNumber>;
-
-    sendETH(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "sendETH(bytes32)"(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    "revokeRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
     sendMessage(
@@ -1350,14 +1604,14 @@ export class FuelMessagePortal extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    supportsInterface(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    "supportsInterface(bytes4)"(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     unpause(
@@ -1392,6 +1646,14 @@ export class FuelMessagePortal extends Contract {
   };
 
   populateTransaction: {
+    DEFAULT_ADMIN_ROLE(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "DEFAULT_ADMIN_ROLE()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     ETH_DECIMALS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "ETH_DECIMALS()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -1412,33 +1674,101 @@ export class FuelMessagePortal extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getFuelBaseAssetDecimals(
+    PAUSER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    depositETH(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "depositETH(bytes32)"(
+      recipient: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    fuelBaseAssetDecimals(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "getFuelBaseAssetDecimals()"(
+    "fuelBaseAssetDecimals()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    getMessageSender(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    fuelChainConsensusContract(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
-    "getMessageSender()"(
+    "fuelChainConsensusContract()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    getRoleAdmin(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "getRoleAdmin(bytes32)"(
+      role: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    grantRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "grantRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    hasRole(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "hasRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    incomingMessageSuccessful(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "incomingMessageSuccessful(bytes32)"(
+      messageId: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    incomingMessageTimelock(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "incomingMessageTimelock()"(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     initialize(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     "initialize(address)"(
-      sidechainConsensus: string,
+      fuelChainConsensus: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    owner(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    messageSender(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "owner()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "messageSender()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     pause(
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1562,56 +1892,28 @@ export class FuelMessagePortal extends Contract {
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    renounceOwnership(
+    renounceRole(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "renounceOwnership()"(
+    "renounceRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    s_incomingMessageSuccessful(
-      arg0: BytesLike,
-      overrides?: CallOverrides
+    revokeRole(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "s_incomingMessageSuccessful(bytes32)"(
-      arg0: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    s_incomingMessageTimelock(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "s_incomingMessageTimelock()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    s_outgoingMessageNonce(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "s_outgoingMessageNonce()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    s_sidechainConsensus(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "s_sidechainConsensus()"(
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    sendETH(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "sendETH(bytes32)"(
-      recipient: BytesLike,
-      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    "revokeRole(bytes32,address)"(
+      role: BytesLike,
+      account: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
     sendMessage(
@@ -1636,14 +1938,14 @@ export class FuelMessagePortal extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    transferOwnership(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    supportsInterface(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    "transferOwnership(address)"(
-      newOwner: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
+    "supportsInterface(bytes4)"(
+      interfaceId: BytesLike,
+      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     unpause(

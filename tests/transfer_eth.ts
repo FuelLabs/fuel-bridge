@@ -78,7 +78,7 @@ describe('Transferring ETH', async function () {
 
     it('Send ETH via MessagePortal', async () => {
       // use the FuelMessagePortal to directly send ETH which should be immediately spendable
-      let tx = await env.eth.fuelMessagePortal.connect(ethereumETHSender).sendETH(fuelETHReceiverAddress, {
+      let tx = await env.eth.fuelMessagePortal.connect(ethereumETHSender).depositETH(fuelETHReceiverAddress, {
         value: parseEther(NUM_ETH),
       });
       let result = await tx.wait();

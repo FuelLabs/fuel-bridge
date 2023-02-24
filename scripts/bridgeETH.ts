@@ -4,7 +4,6 @@ import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import {
   delay,
   fuels_formatEther,
-  fuels_messageToCoin,
   fuels_parseEther,
   fuels_waitForMessage,
 } from '../scripts/utils';
@@ -44,13 +43,13 @@ const FUEL_GAS_PRICE = 1;
 
   // use the FuelMessagePortal to directly send ETH to the fuel account
   console.log(`Sending ${ETH_AMOUNT} ETH from Ethereum...`);
-  const eSendTx = await fuelMessagePortal.sendETH(fuelAccountAddress, {
+  const eSendTx = await fuelMessagePortal.depositETH(fuelAccountAddress, {
     value: parseEther(ETH_AMOUNT),
   });
   const eSendTxResult = await eSendTx.wait();
   if (eSendTxResult.status !== 1) {
     console.log(eSendTxResult);
-    throw new Error('failed to call sendETH');
+    throw new Error('failed to call depositETH');
   }
 
   // parse events from logs to get the message nonce
@@ -99,6 +98,7 @@ const FUEL_GAS_PRICE = 1;
   console.log('Building message proof...');
   const messageOutReceipt = <TransactionResultMessageOutReceipt>fWithdrawTxResult.receipts[0];
   const withdrawMessageProof = await env.fuel.provider.getMessageProof(fWithdrawTx.id, messageOutReceipt.messageID);
+  console.log("Waiting to be sure timelock is over...");
   await delay(20_000); // even though the timelock is 0, we still wait a bit in case the fuel clock is running fast
 
   // construct relay message proof data

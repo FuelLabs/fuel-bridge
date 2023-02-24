@@ -20,7 +20,7 @@
     "dotenv": "^16.0.3",
     "ethereum-waffle": "^4.0.2",
     "ethers": "^5.7.2",
-    "fuels": "^0.25.1",
+    "fuels": "^0.33.0",
     "mocha": "^10.0.0",
     "prettier": "^2.7.1",
     "ts-node": "^10.9.1"

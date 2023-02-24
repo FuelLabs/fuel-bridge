@@ -85,7 +85,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     // check that values for the test token and gateway contract match what
     // was compiled into the bridge-fungible-token binaries
-    expect(env.eth.l1ERC20Gateway.address).to.equal(expectedGatewayContractId);
+    expect(env.eth.fuelERC20Gateway.address).to.equal(expectedGatewayContractId);
     expect(eth_testToken.address).to.equal(expectedTokenContractId);
     expect(await eth_testToken.decimals()).to.equal(18);
 
@@ -121,13 +121,13 @@ describe('Bridging ERC20 tokens', async function () {
       fuelTokenReceiverBalance = await env.fuel.provider.getBalance(fuelTokenReceiver, fuel_testTokenId);
     });
 
-    it('Bridge ERC20 via L1ERC20Gateway', async () => {
-      // approve l1 side gateway to spend the tokens
-      await expect(eth_testToken.connect(ethereumTokenSender).approve(env.eth.l1ERC20Gateway.address, NUM_TOKENS)).to
+    it('Bridge ERC20 via FuelERC20Gateway', async () => {
+      // approve FuelERC20Gateway to spend the tokens
+      await expect(eth_testToken.connect(ethereumTokenSender).approve(env.eth.fuelERC20Gateway.address, NUM_TOKENS)).to
         .not.be.reverted;
 
-      // use the L1ERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      let tx = await env.eth.l1ERC20Gateway
+      // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
+      let tx = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
         .deposit(fuelTokenReceiverAddress, eth_testToken.address, fuel_testTokenId, NUM_TOKENS);
       let result = await tx.wait();
@@ -186,10 +186,10 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Bridge ERC20 via Fuel token contract', async () => {
       // withdraw tokens back to the base chain
-      fuel_testToken.wallet = fuelTokenSender;
+      fuel_testToken.account = fuelTokenSender;
       const paddedAddress = '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
       const scope = await fuel_testToken.functions
-        .withdraw_to(paddedAddress)
+        .withdraw(paddedAddress)
         .callParams({
           forward: { amount: NUM_TOKENS / DECIMAL_DIFF, assetId: fuel_testTokenId },
         })
