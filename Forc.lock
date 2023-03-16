@@ -1,20 +1,7 @@
 [[package]]
-name = 'contract_message_predicate'
-source = 'member'
-dependencies = ['std']
-
-[[package]]
 name = 'contract_message_receiver'
 source = 'member'
 dependencies = ['std']
-
-[[package]]
-name = 'contract_message_script'
-source = 'member'
-dependencies = [
-    'contract_message_receiver',
-    'std',
-]
 
 [[package]]
 name = 'contract_message_test'

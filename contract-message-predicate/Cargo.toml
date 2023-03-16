@@ -1,13 +1,20 @@
 [package]
-name = "contract-message-test"
+name = "contract-message-predicate"
 version = "0.1.0"
 authors = ["Fuel Labs <contact@fuel.sh>"]
 edition = "2021"
 license = "Apache-2.0"
 
 [dependencies]
+fuel-asm = "0.27.0"
+fuel-tx = "0.27.0"
+sha2 = "0.10.6"
+
+[dev-dependencies]
 fuel-core-interfaces = "0.13.2"
 fuels = { version = "0.36", features = ["fuel-core-lib"] }
+hex = "0.4"
+insta = "1.28"
 tokio = { version = "1.12", features = ["rt", "macros"] }
 
 [[test]]

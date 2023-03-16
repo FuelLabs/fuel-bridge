@@ -37,16 +37,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        project: [
-          'contract-message-predicate',
-          'contract-message-receiver',
-          'contract-message-script',
-          'contract-message-test'
-          ]
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -75,18 +65,15 @@ jobs:
         run: rustup component add rustfmt
 
       - name: Install Fuel toolchain
-        uses: FuelLabs/action-fuel-toolchain@v0.5.0
+        uses: FuelLabs/action-fuel-toolchain@v0.6.0
         with:
           toolchain: beta-3
 
       - name: Check Sway formatting
-        run: forc fmt --path ${{ matrix.project }} --check
-
-      - name: Build Sway
-        run: forc build --path ${{ matrix.project }}
+        run: forc fmt --check
 
       - name: Check Rust formatting
-        run: sh ${{ env.PATH_TO_SCRIPTS }}/fmt.sh ${{ matrix.project }}
+        run: cargo fmt --verbose --check
           
       - name: Run tests
-        run: sh ${{ env.PATH_TO_SCRIPTS }}/test.sh ${{ matrix.project }}
+        run: sh ${{ env.PATH_TO_SCRIPTS }}/test.sh
