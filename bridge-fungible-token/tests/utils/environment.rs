@@ -130,6 +130,7 @@ pub async fn setup_environment(
     coins: Vec<(Word, AssetId)>,
     messages: Vec<(Word, Vec<u8>)>,
     sender: Option<&str>,
+    configurables: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> (
     BridgeFungibleTokenContract,
     Input,
@@ -189,15 +190,27 @@ pub async fn setup_environment(
     // Add provider to wallet
     wallet.set_provider(provider.clone());
 
-    // Deploy the target contract used for testing processing messages
-    let test_contract_id = Contract::deploy(
-        TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-        &wallet,
-        TxParameters::default(),
-        StorageConfiguration::default(),
-    )
-    .await
-    .unwrap();
+    let test_contract_id = match configurables {
+        Some(config) => Contract::deploy_with_parameters(
+            TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
+            &wallet,
+            TxParameters::default(),
+            StorageConfiguration::default(),
+            config.into(),
+            Salt::default(),
+        )
+        .await
+        .unwrap(),
+        None => Contract::deploy(
+            TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
+            &wallet,
+            TxParameters::default(),
+            StorageConfiguration::default(),
+        )
+        .await
+        .unwrap(),
+    };
+
     let test_contract = BridgeFungibleTokenContract::new(test_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
@@ -273,7 +286,7 @@ pub async fn relay_message_to_contract(
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Script) -> Vec<Receipt> {
+pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransaction) -> Vec<Receipt> {
     // Get provider and client
     let provider = wallet.get_provider().unwrap();
 

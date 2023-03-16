@@ -44,7 +44,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -98,7 +98,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -154,7 +154,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -258,7 +258,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -362,7 +362,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -466,7 +466,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -532,7 +532,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -601,7 +601,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -670,7 +670,7 @@ mod success {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -821,7 +821,7 @@ mod revert {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -895,7 +895,14 @@ mod revert {
             message_inputs,
             _test_contract_id,
             _provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], Some(bad_sender)).await;
+        ) = env::setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            Some(bad_sender),
+            None,
+        )
+        .await;
 
         // Relay the test message to the test contract
         let _receipts = env::relay_message_to_contract(
@@ -932,7 +939,7 @@ mod revert {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
@@ -1006,7 +1013,7 @@ mod revert {
             message_inputs,
             test_contract_id,
             provider,
-        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None).await;
+        ) = env::setup_environment(&mut wallet, vec![coin], vec![message], None, None).await;
 
         // Relay the test message to the test contract
         let receipts = env::relay_message_to_contract(
