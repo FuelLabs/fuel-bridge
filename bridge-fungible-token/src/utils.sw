@@ -85,15 +85,19 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
 
 /// Adjust decimals(precision) on a withdrawal amount to match the originating token decimals
 /// or return an error if the conversion can't be achieved without overflow/underflow.
-pub fn adjust_withdrawal_decimals(val: u64) -> Result<b256, BridgeFungibleTokenError> {
+pub fn adjust_withdrawal_decimals(
+    val: u64,
+    decimals: u8,
+    bridged_token_decimals: u8,
+) -> Result<b256, BridgeFungibleTokenError> {
     let value = U256::from((0, 0, 0, val));
-    let adjusted = if BRIDGED_TOKEN_DECIMALS > DECIMALS {
-        match shift_decimals_left(value, BRIDGED_TOKEN_DECIMALS - DECIMALS) {
+    let adjusted = if bridged_token_decimals > decimals {
+        match shift_decimals_left(value, bridged_token_decimals - decimals) {
             Result::Err(e) => return Result::Err(e),
             Result::Ok(v) => v.into(),
         }
-    } else if BRIDGED_TOKEN_DECIMALS < DECIMALS {
-        match shift_decimals_right(value, DECIMALS - BRIDGED_TOKEN_DECIMALS) {
+    } else if bridged_token_decimals < decimals {
+        match shift_decimals_right(value, decimals - bridged_token_decimals) {
             Result::Err(e) => return Result::Err(e),
             Result::Ok(v) => v.into(),
         }
@@ -106,16 +110,20 @@ pub fn adjust_withdrawal_decimals(val: u64) -> Result<b256, BridgeFungibleTokenE
 
 /// Adjust decimals(precision) on a deposit amount to match this proxy tokens decimals
 /// or return an error if the conversion can't be achieved without overflow/underflow.
-pub fn adjust_deposit_decimals(val: b256) -> Result<u64, BridgeFungibleTokenError> {
+pub fn adjust_deposit_decimals(
+    val: b256,
+    decimals: u8,
+    bridged_token_decimals: u8,
+) -> Result<u64, BridgeFungibleTokenError> {
     let value = U256::from(decompose(val));
-    let adjusted = if BRIDGED_TOKEN_DECIMALS > DECIMALS {
-        let result = shift_decimals_right(value, BRIDGED_TOKEN_DECIMALS - DECIMALS);
+    let adjusted = if bridged_token_decimals > decimals {
+        let result = shift_decimals_right(value, bridged_token_decimals - decimals);
         match result {
             Result::Err(e) => return Result::Err(e),
             Result::Ok(v) => v,
         }
-    } else if BRIDGED_TOKEN_DECIMALS < DECIMALS {
-        let result = shift_decimals_left(value, DECIMALS - BRIDGED_TOKEN_DECIMALS);
+    } else if bridged_token_decimals < decimals {
+        let result = shift_decimals_left(value, decimals - bridged_token_decimals);
         match result {
             Result::Err(e) => return Result::Err(e),
             Result::Ok(v) => v,
@@ -158,11 +166,11 @@ pub fn parse_message_data(msg_idx: u8) -> MessageData {
 }
 
 /// Encode the data to be passed out of the contract when sending a message
-pub fn encode_data(to: b256, amount: b256) -> Bytes {
+pub fn encode_data(to: b256, amount: b256, bridged_token: b256) -> Bytes {
     // capacity is 4 + 32 + 32 + 32 = 100
     let mut data = Bytes::with_capacity(100);
     let padded_to_bytes = Bytes::from(to);
-    let padded_token_bytes = Bytes::from(BRIDGED_TOKEN);
+    let padded_token_bytes = Bytes::from(bridged_token);
     let amount_bytes = Bytes::from(amount);
 
     // first, we push the selector 1 byte at a time

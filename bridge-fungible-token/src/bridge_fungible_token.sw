@@ -41,15 +41,14 @@ storage {
     refund_amounts: StorageMap<(b256, b256), b256> = StorageMap {},
 }
 
-// Storage-dependant private functions
-#[storage(write)]
-fn register_refund(from: b256, asset: b256, amount: b256) {
-    storage.refund_amounts.insert((from, asset), amount);
-    log(RefundRegisteredEvent {
-        from,
-        asset,
-        amount,
-    });
+// Configurable Consts
+configurable {
+    DECIMALS: u8 = 9u8,
+    BRIDGED_TOKEN_DECIMALS: u8 = 18u8,
+    BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
+    BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
+    NAME: str[32] = "________________________MY_TOKEN",
+    SYMBOL: str[32] = "___________________________MYTKN",
 }
 
 // ABI Implementations
@@ -69,7 +68,7 @@ impl MessageReceiver for Contract {
             return;
         };
 
-        let res_amount = adjust_deposit_decimals(message_data.amount);
+        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS, BRIDGED_TOKEN_DECIMALS);
         match res_amount {
             Result::Err(e) => {
                 // register a refund if value can't be adjusted
@@ -96,7 +95,7 @@ impl BridgeFungibleToken for Contract {
         storage.refund_amounts.insert((originator, asset), ZERO_B256);
 
         // send a message to unlock this amount on the base layer gateway contract
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, BRIDGED_TOKEN), 0);
     }
 
     #[payable]
@@ -107,12 +106,12 @@ impl BridgeFungibleToken for Contract {
         require(origin_contract_id == contract_id(), BridgeFungibleTokenError::IncorrectAssetDeposited);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(amount).unwrap();
+        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
         burn(amount);
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
@@ -143,4 +142,15 @@ impl BridgeFungibleToken for Contract {
     fn bridged_token_gateway() -> b256 {
         BRIDGED_TOKEN_GATEWAY
     }
+}
+
+// Storage-dependant private functions
+#[storage(write)]
+fn register_refund(from: b256, asset: b256, amount: b256) {
+    storage.refund_amounts.insert((from, asset), amount);
+    log(RefundRegisteredEvent {
+        from,
+        asset,
+        amount,
+    });
 }
