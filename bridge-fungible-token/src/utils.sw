@@ -94,12 +94,12 @@ pub fn adjust_withdrawal_decimals(
     let adjusted = if bridged_token_decimals > decimals {
         match shift_decimals_left(value, bridged_token_decimals - decimals) {
             Result::Err(e) => return Result::Err(e),
-            Result::Ok(v) => v.into(),
+            Result::Ok(v) => (v.a, v.b, v.c, v.d), //v.into(),
         }
     } else if bridged_token_decimals < decimals {
         match shift_decimals_right(value, decimals - bridged_token_decimals) {
             Result::Err(e) => return Result::Err(e),
-            Result::Ok(v) => v.into(),
+            Result::Ok(v) => (v.a, v.b, v.c, v.d), //v.into(),
         }
     } else {
         (0, 0, 0, val)

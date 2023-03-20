@@ -292,11 +292,11 @@ mod success {
 
         // Now try to withdraw
         let withdrawal_amount = config.test_amount;
-        let custom_tx_params = TxParameters::new(None, Some(30_000_000), None);
+        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
         let call_params = CallParameters::new(
-            Some(env::fuel_side_equivalent_amount(withdrawal_amount, &config)),
-            Some(AssetId::new(*test_contract_id.hash())),
-            None,
+            env::fuel_side_equivalent_amount(withdrawal_amount, &config),
+            AssetId::new(*test_contract_id.hash()),
+            5000,
         );
 
         let call_response = test_contract
@@ -394,11 +394,11 @@ mod success {
         assert_eq!(balance, fuel_side_token_amount);
 
         // Now try to withdraw
-        let custom_tx_params = TxParameters::new(None, Some(30_000_000), None);
+        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
         let call_params = CallParameters::new(
-            Some(fuel_side_token_amount),
-            Some(AssetId::new(*test_contract_id.hash())),
-            None,
+            fuel_side_token_amount,
+            AssetId::new(*test_contract_id.hash()),
+            5000,
         );
 
         let call_response = test_contract
@@ -855,12 +855,9 @@ mod revert {
 
         // Now try to withdraw
         let withdrawal_amount = 999999999;
-        let custom_tx_params = TxParameters::new(None, Some(30_000_000), None);
-        let call_params = CallParameters::new(
-            Some(withdrawal_amount),
-            Some(AssetId::new(*test_contract_id.hash())),
-            None,
-        );
+        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
+        let call_params =
+            CallParameters::new(withdrawal_amount, AssetId::new(*test_contract_id.hash()), 0);
 
         // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
         test_contract

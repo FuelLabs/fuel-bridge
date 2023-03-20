@@ -8,8 +8,7 @@ use std::str::FromStr;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config, DEFAULT_COIN_AMOUNT};
 use fuels::tx::{
-    Address, AssetId, Bytes32, ConsensusParameters, Input, Output, Receipt, Script, TxPointer,
-    UtxoId, Word,
+    Address, AssetId, Bytes32, ConsensusParameters, Input, Output, Receipt, TxPointer, UtxoId, Word,
 };
 use fuels::{
     prelude::*,
@@ -160,22 +159,20 @@ pub async fn setup_environment(
     let predicate = ContractMessagePredicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
     let predicate_root = predicate.address();
 
-    let all_messages: Vec<Message> = messages
-        .iter()
-        .flat_map(|message| {
-            setup_single_message(
-                &message_sender.into(),
-                &predicate_root,
-                message.0,
-                message_nonce,
-                message.1.clone(),
-            )
-        })
-        .collect();
+    let mut all_messages: Vec<Message> = vec![];
+    for msg in messages {
+        all_messages.push(setup_single_message(
+            &message_sender.into(),
+            &predicate_root,
+            msg.0,
+            message_nonce,
+            msg.1.clone(),
+        ))
+    }
 
     // Create the client and provider
     let provider_config = Config::local_node();
-    let consensus_parameters_config = ConsensusParameters::DEFAULT.with_max_gas_per_tx(300_000_000);
+    let consensus_parameters_config = ConsensusParameters::DEFAULT.with_max_gas_per_tx(600_000_000);
 
     let (client, _) = setup_test_client(
         all_coins.clone(),
@@ -191,21 +188,17 @@ pub async fn setup_environment(
     wallet.set_provider(provider.clone());
 
     let test_contract_id = match configurables {
-        Some(config) => Contract::deploy_with_parameters(
+        Some(config) => Contract::deploy(
             TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
             &wallet,
-            TxParameters::default(),
-            StorageConfiguration::default(),
-            config.into(),
-            Salt::default(),
+            DeployConfiguration::default().set_configurables(config),
         )
         .await
         .unwrap(),
         None => Contract::deploy(
             TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
             &wallet,
-            TxParameters::default(),
-            StorageConfiguration::default(),
+            DeployConfiguration::default(),
         )
         .await
         .unwrap(),
@@ -298,12 +291,12 @@ pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransactio
 /// Prefixes the given bytes with the test contract ID
 pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
     // Compute the test contract ID
-    let storage_configuration = StorageConfiguration::default();
     let compiled_contract = Contract::load_contract(
         TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-        &storage_configuration.storage_path,
+        DeployConfiguration::default(),
     )
     .unwrap();
+
     let (test_contract_id, _) = Contract::compute_contract_id_and_state_root(&compiled_contract);
 
     // Turn contract id into array with the given data appended to it
@@ -329,8 +322,7 @@ pub async fn get_fungible_token_instance(
     let fungible_token_contract_id = Contract::deploy(
         TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
         &wallet,
-        TxParameters::default(),
-        StorageConfiguration::default(),
+        DeployConfiguration::default(),
     )
     .await
     .unwrap();

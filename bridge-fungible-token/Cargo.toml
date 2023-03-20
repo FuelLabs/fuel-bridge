@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [dependencies]
 fuel-core-interfaces = "0.15"
-fuels = { version = "0.37", features = ["fuel-core-lib"] }
+fuels = { version = "0.38", features = ["fuel-core-lib"] }
 primitive-types = "0.12.1"
 tokio = { version = "1.12", features = ["rt", "macros"] }
 
