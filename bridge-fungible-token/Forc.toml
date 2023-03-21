@@ -5,5 +5,6 @@ license = "Apache-2.0"
 name = "bridge_fungible_token"
 
 [dependencies]
-bridge_fungible_token_abi = { path = "../bridge-fungible-token-abi" }
+FRC20_abi = { path = "../FRC20-abi" }
 contract_message_receiver = { path = "../bridge-message-predicates/contract-message-receiver" }
+fungible_bridge_abi = { path = "../fungible-bridge-abi" }

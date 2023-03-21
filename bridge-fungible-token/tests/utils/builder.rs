@@ -6,7 +6,7 @@
 use fuels::signers::fuel_crypto::Hasher;
 
 use fuels::prelude::*;
-use fuels::tx::{AssetId, Bytes32, Input, Output, Script, Transaction};
+use fuels::tx::{AssetId, Bytes32, Input, Output, Transaction};
 
 const CONTRACT_MESSAGE_MIN_GAS: u64 = 30_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =

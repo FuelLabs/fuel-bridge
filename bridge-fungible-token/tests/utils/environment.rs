@@ -14,32 +14,32 @@ use fuels::{
     prelude::*,
     types::{message::Message, Bits256},
 };
-use primitive_types::U256;
+use primitive_types::U256 as Unsigned256;
 
 const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
     "../bridge-message-predicates/contract_message_predicate.bin";
 
 pub struct TestConfig {
-    pub adjustment_factor: U256,
+    pub adjustment_factor: Unsigned256,
     pub adjustment_is_div: bool,
-    pub min_amount: U256,
-    pub max_amount: U256,
-    pub test_amount: U256,
-    pub not_enough: U256,
-    pub overflow_1: U256,
-    pub overflow_2: U256,
-    pub overflow_3: U256,
+    pub min_amount: Unsigned256,
+    pub max_amount: Unsigned256,
+    pub test_amount: Unsigned256,
+    pub not_enough: Unsigned256,
+    pub overflow_1: Unsigned256,
+    pub overflow_2: Unsigned256,
+    pub overflow_3: Unsigned256,
 }
 
 pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
-    let bridged_token_decimals = U256::from(decimals.0);
-    let proxy_token_decimals = U256::from(decimals.1);
-    let one = U256::from(1);
+    let bridged_token_decimals = Unsigned256::from(decimals.0);
+    let proxy_token_decimals = Unsigned256::from(decimals.1);
+    let one = Unsigned256::from(1);
 
     let adjustment_factor = if bridged_token_decimals > proxy_token_decimals {
-        U256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
+        Unsigned256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
     } else if bridged_token_decimals < proxy_token_decimals {
-        U256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
+        Unsigned256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
     } else {
         one
     };
@@ -47,20 +47,20 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
     let adjustment_is_div = bridged_token_decimals < proxy_token_decimals;
 
     let min_amount = if bridged_token_decimals > proxy_token_decimals {
-        U256::from(1) * adjustment_factor
+        Unsigned256::from(1) * adjustment_factor
     } else {
         one
     };
 
     let max_amount = if bridged_token_decimals > proxy_token_decimals {
-        U256::from(u64::MAX) * adjustment_factor
+        Unsigned256::from(u64::MAX) * adjustment_factor
     } else if bridged_token_decimals < proxy_token_decimals {
-        U256::from(u64::MAX) / adjustment_factor
+        Unsigned256::from(u64::MAX) / adjustment_factor
     } else {
         one
     };
 
-    let test_amount = (min_amount + max_amount) / U256::from(2);
+    let test_amount = (min_amount + max_amount) / Unsigned256::from(2);
     let not_enough = min_amount - one;
     let overflow_1 = max_amount + one;
     let overflow_2 = max_amount + (one << 160);
@@ -79,7 +79,7 @@ pub fn generate_test_config(decimals: (u8, u8)) -> TestConfig {
     }
 }
 
-pub fn fuel_side_equivalent_amount(test_amount: U256, config: &TestConfig) -> u64 {
+pub fn fuel_side_equivalent_amount(test_amount: Unsigned256, config: &TestConfig) -> u64 {
     if config.adjustment_is_div {
         (test_amount * config.adjustment_factor).as_u64()
     } else {
@@ -333,7 +333,7 @@ pub async fn get_fungible_token_instance(
     (fungible_token_instance, fungible_token_contract_id.into())
 }
 
-pub fn encode_hex(val: U256) -> [u8; 32] {
+pub fn encode_hex(val: Unsigned256) -> [u8; 32] {
     let mut arr = [0u8; 32];
     val.to_big_endian(&mut arr);
     arr
@@ -343,7 +343,7 @@ pub async fn construct_msg_data(
     token: &str,
     from: &str,
     mut to: Vec<u8>,
-    amount: U256,
+    amount: Unsigned256,
 ) -> ((u64, Vec<u8>), (u64, AssetId)) {
     let mut message_data = Vec::with_capacity(5);
     message_data.append(&mut decode_hex(&token));
@@ -362,12 +362,12 @@ pub fn generate_variable_output() -> Vec<Output> {
     vec![Output::variable(Address::zeroed(), 0, AssetId::default())]
 }
 
-pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256) {
+pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, Unsigned256) {
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();
     let token = Bits256(token_array);
     let amount_array: [u8; 32] = data[68..100].try_into().unwrap();
-    let amount: U256 = U256::from_big_endian(&amount_array.to_vec());
+    let amount: Unsigned256 = Unsigned256::from_big_endian(&amount_array.to_vec());
     (selector.to_vec(), Bits256(to), token, amount)
 }

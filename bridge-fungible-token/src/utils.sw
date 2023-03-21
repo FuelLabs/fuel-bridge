@@ -238,10 +238,11 @@ fn bn_mult(bn: U256, factor: u64) -> (U256, u64) {
 
 // TODO: [std-lib] replace when added as a method to U128/U256
 fn bn_div(bn: U256, d: u32) -> (U256, u32) {
+    let bn_clone = bn;
     // bit mask to isolate the lower 32 bits of each word
     let mask: u64 = 0x00000000FFFFFFFF;
     let result = (U256::new(), 0u32);
-    asm(bn: __addr_of(bn), d: d, m: mask, r0, r1, r2, r3, v0, v1, sum_1, sum_2, q, result: __addr_of(result)) {
+    asm(bn: __addr_of(bn_clone), d: d, m: mask, r0, r1, r2, r3, v0, v1, sum_1, sum_2, q, result: __addr_of(result)) {
 		// The upper 64bits can just be divided normal
         lw   v0 bn i0;
         mod  r0 v0 d; // record the remainder

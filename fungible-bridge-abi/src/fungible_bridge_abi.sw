@@ -1,8 +1,8 @@
-library bridge_fungible_token_abi;
+library fungible_bridge_abi;
 
 use std::vm::evm::evm_address::EvmAddress;
 
-abi BridgeFungibleToken {
+abi FungibleBridge {
     /// Claim a refund for incorrectly bridged tokens if one has been registered.
     ///
     /// # Arguments
@@ -23,17 +23,9 @@ abi BridgeFungibleToken {
     /// * When no coins were sent with call
     /// * When the wrong asset was sent with the call
     /// * When the amount sent overflows/underflows during decimal conversion
+    #[storage(read, write)]
     #[payable]
     fn withdraw(to: b256);
-
-    /// Get the name of the proxy token
-    fn name() -> str[32];
-
-    /// Get the symbol of the proxy token
-    fn symbol() -> str[32];
-
-    /// Get the decimals of the proxy token
-    fn decimals() -> u8;
 
     /// Get the bridged token
     fn bridged_token() -> b256;

@@ -1,7 +1,7 @@
 [project]
 authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "bridge_fungible_token_abi.sw"
+entry = "FRC20_abi.sw"
 license = "Apache-2.0"
-name = "bridge_fungible_token_abi"
+name = "FRC20_abi"
 
 [dependencies]

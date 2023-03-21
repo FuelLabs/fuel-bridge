@@ -725,7 +725,10 @@ mod success {
         let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
 
         let call_response = contract.methods().name().call().await.unwrap();
-        assert_eq!(call_response.value, "________________________MY_TOKEN")
+        assert_eq!(
+            call_response.value,
+            "MY_TOKEN                                                        "
+        )
     }
 
     #[tokio::test]
@@ -735,7 +738,7 @@ mod success {
         let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
 
         let call_response = contract.methods().symbol().call().await.unwrap();
-        assert_eq!(call_response.value, "___________________________MYTKN")
+        assert_eq!(call_response.value, "MYTKN                           ")
     }
 
     #[tokio::test]

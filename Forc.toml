@@ -1,2 +1,2 @@
 [workspace]
-members = ["bridge-fungible-token", "bridge-fungible-token-abi"]
+members = ["bridge-fungible-token", "fungible-bridge-abi", "FRC20-abi"]
