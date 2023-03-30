@@ -1,9 +1,13 @@
 [package]
-name = "contract-message-predicate"
-version = "0.1.0"
-authors = ["Fuel Labs <contact@fuel.sh>"]
-edition = "2021"
-license = "Apache-2.0"
+name = "fuel-contract-message-predicate"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+rust-version = { workspace = true }
+description = "Script and predicate for relaying contract messages."
 
 [dependencies]
 fuel-asm = "0.27.0"
@@ -11,11 +15,11 @@ fuel-tx = "0.27.0"
 sha2 = "0.10.6"
 
 [dev-dependencies]
-fuel-core-interfaces = "0.13.2"
-fuels = { version = "0.36", features = ["fuel-core-lib"] }
-hex = "0.4"
+fuel-core-interfaces = "0.15.3"
+fuels = { version = "0.38.1", features = ["fuel-core-lib"] }
+hex = "0.4.3"
 insta = "1.28"
-tokio = { version = "1.12", features = ["rt", "macros"] }
+tokio = { version = "1.26", features = ["rt", "macros"] }
 
 [[test]]
 harness = true

@@ -130,14 +130,11 @@ mod fail {
     use crate::utils::builder;
     use crate::utils::environment as env;
     use fuels::prelude::Salt;
+    use fuels::prelude::ScriptTransaction;
+    use fuels::prelude::Transaction;
     use fuels::prelude::TxParameters;
     use fuels::test_helpers::DEFAULT_COIN_AMOUNT;
-    use fuels::tx::field::GasLimit;
-    use fuels::tx::field::GasPrice;
-    use fuels::tx::field::Inputs;
-    use fuels::tx::field::Maturity;
-    use fuels::tx::field::Outputs;
-    use fuels::tx::{Address, AssetId, Input, Transaction, TxPointer, UtxoId};
+    use fuels::tx::{Address, AssetId, Input, TxPointer, UtxoId};
 
     pub const RANDOM_WORD: u64 = 54321u64;
     pub const RANDOM_WORD2: u64 = 123456u64;
@@ -156,8 +153,8 @@ mod fail {
             env::setup_environment(vec![coin], vec![]).await;
 
         // Transfer coins to a coin with the predicate as an owner
-        let predicate_bytecode = contract_message_predicate::predicate_bytecode();
-        let predicate_root = Address::from(contract_message_predicate::predicate_root());
+        let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
+        let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
         let _receipt = wallet
             .transfer(
                 &predicate_root.into(),
@@ -285,16 +282,12 @@ mod fail {
         .await;
 
         // Modify the script bytecode
-        let mut modified_tx = Transaction::script(
-            tx.gas_price().clone(),
-            tx.gas_limit().clone(),
-            tx.maturity().clone(),
-            vec![0u8, 1u8, 2u8, 3u8],
-            vec![],
+        let mut modified_tx = ScriptTransaction::new(
             tx.inputs().clone(),
             tx.outputs().clone(),
-            vec![],
-        );
+            TxParameters::default(),
+        )
+        .with_script(vec![0u8, 1u8, 2u8, 3u8]);
 
         // Note: tx inputs[message, contract, coin], tx outputs[contract, change, variable]
         let _receipts = env::sign_and_call_tx(&wallet, &mut modified_tx).await;

@@ -2,9 +2,7 @@ use std::collections::HashMap;
 
 use fuel_core_interfaces::common::prelude::Word;
 use fuels::prelude::*;
-use fuels::tx::{Address, Bytes32, Input, Output, Script, Transaction};
-
-const CONTRACT_MESSAGE_GAS_LIMIT: u64 = 1_200_000;
+use fuels::tx::{Address, Bytes32, Input, Output};
 
 /// Build a message-to-contract transaction with the given input coins and outputs
 /// note: unspent gas is returned to the owner of the first given gas input
@@ -13,9 +11,9 @@ pub async fn build_contract_message_tx(
     inputs: &[Input],
     outputs: &[Output],
     params: TxParameters,
-) -> Script {
+) -> ScriptTransaction {
     // Get the script and predicate for contract messages
-    let script_bytecode = contract_message_predicate::script_bytecode();
+    let script_bytecode = fuel_contract_message_predicate::script_bytecode();
 
     // Start building list of inputs and outputs
     let mut tx_outputs: Vec<Output> = outputs.to_vec();
@@ -62,14 +60,5 @@ pub async fn build_contract_message_tx(
     });
 
     // Create the trnsaction
-    Transaction::script(
-        params.gas_price,
-        CONTRACT_MESSAGE_GAS_LIMIT,
-        params.maturity,
-        script_bytecode,
-        vec![],
-        tx_inputs,
-        tx_outputs,
-        vec![],
-    )
+    ScriptTransaction::new(tx_inputs, tx_outputs, params).with_script(script_bytecode)
 }

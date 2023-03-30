@@ -19,6 +19,6 @@ pub fn script_hash() -> [u8; 32] {
 // Gets the root of the message-to-contract predicate
 pub fn predicate_root() -> [u8; 32] {
     let predicate = predicate_asm::bytecode();
-    let root = Contract::root_from_code(&predicate);
+    let root = Contract::root_from_code(predicate);
     root.into()
 }

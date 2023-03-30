@@ -7,7 +7,7 @@ use std::str::FromStr;
 use fuels::prelude::*;
 use fuels::signers::fuel_crypto::SecretKey;
 use fuels::test_helpers::{setup_single_message, setup_test_client, Config};
-use fuels::tx::{Address, AssetId, Bytes32, Input, Receipt, Script, TxPointer, UtxoId, Word};
+use fuels::tx::{Address, AssetId, Bytes32, Input, Receipt, TxPointer, UtxoId, Word};
 use fuels::types::message::Message;
 
 abigen!(Contract(
@@ -51,18 +51,18 @@ pub async fn setup_environment(
     // Generate messages
     let message_nonce: Word = Word::default();
     let message_sender = Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap();
-    let predicate_bytecode = contract_message_predicate::predicate_bytecode();
-    let predicate_root = Address::from(contract_message_predicate::predicate_root());
+    let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
+    let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
     let all_messages: Vec<Message> = messages
         .iter()
         .flat_map(|message| {
-            setup_single_message(
+            vec![setup_single_message(
                 &message_sender.into(),
                 &predicate_root.into(),
                 message.0,
                 message_nonce,
                 message.1.clone(),
-            )
+            )]
         })
         .collect();
 
@@ -85,8 +85,7 @@ pub async fn setup_environment(
     let test_contract_id = Contract::deploy(
         TEST_RECEIVER_CONTRACT_BINARY,
         &wallet,
-        TxParameters::default(),
-        StorageConfiguration::default(),
+        DeployConfiguration::default(),
     )
     .await
     .unwrap();
@@ -160,7 +159,7 @@ pub async fn relay_message_to_contract(
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Script) -> Vec<Receipt> {
+pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransaction) -> Vec<Receipt> {
     // Get provider and client
     let provider = wallet.get_provider().unwrap();
 
@@ -172,12 +171,9 @@ pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut Script) -> Vec<R
 /// Prefixes the given bytes with the test contract ID
 pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
     // Compute the test contract ID
-    let storage_configuration = StorageConfiguration::default();
-    let compiled_contract = Contract::load_contract(
-        TEST_RECEIVER_CONTRACT_BINARY,
-        &storage_configuration.storage_path,
-    )
-    .unwrap();
+    let deploy_configuration = DeployConfiguration::default();
+    let compiled_contract =
+        Contract::load_contract(TEST_RECEIVER_CONTRACT_BINARY, deploy_configuration).unwrap();
     let (test_contract_id, _) = Contract::compute_contract_id_and_state_root(&compiled_contract);
 
     // Turn contract id into array with the given data appended to it
