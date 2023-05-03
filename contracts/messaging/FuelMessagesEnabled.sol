@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {IFuelMessagePortal} from "./IFuelMessagePortal.sol";
+import {FuelMessagePortal} from "../fuelchain/FuelMessagePortal.sol";
 
 /// @title FuelMessagesEnabled
 /// @notice Helper contract for contracts sending and receiving messages from Fuel
@@ -10,8 +10,8 @@ abstract contract FuelMessagesEnabled {
     // Storage //
     /////////////
 
-    /// @notice IFuelMessagePortal contract used to send and receive messages from Fuel
-    IFuelMessagePortal internal _fuelMessagePortal;
+    /// @notice FuelMessagePortal contract used to send and receive messages from Fuel
+    FuelMessagePortal internal _fuelMessagePortal;
 
     ////////////////////////
     // Function Modifiers //
@@ -35,7 +35,7 @@ abstract contract FuelMessagesEnabled {
     // Public Functions //
     //////////////////////
 
-    /// @notice Gets the currently set PoA key
+    /// @notice Gets the currently set message portal address
     /// @return fuelMessagePortal Fuel message portal address
     function fuelMessagePortal() public view returns (address) {
         return address(_fuelMessagePortal);

@@ -24,25 +24,25 @@ describe('Contract Upgradability', async () => {
         const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
         it('Should be able to upgrade contracts', async () => {
             const contracts = {
-                FuelChainConsensus: env.fuelChainConsensus.address,
+                FuelChainState: env.fuelChainState.address,
                 FuelMessagePortal: env.fuelMessagePortal.address,
                 FuelERC20Gateway: env.fuelERC20Gateway.address,
-                FuelChainConsensus_impl: '',
+                FuelChainState_impl: '',
                 FuelMessagePortal_impl: '',
                 FuelERC20Gateway_impl: '',
             };
             const upgradedContracts = await upgradeFuel(contracts);
 
-            expect(upgradedContracts.FuelChainConsensus).to.equal(env.fuelChainConsensus.address);
+            expect(upgradedContracts.FuelChainState).to.equal(env.fuelChainState.address);
             expect(upgradedContracts.FuelMessagePortal).to.equal(env.fuelMessagePortal.address);
             expect(upgradedContracts.FuelERC20Gateway).to.equal(env.fuelERC20Gateway.address);
         });
 
         it('Should not be able to call initializers', async () => {
-            await expect(env.fuelChainConsensus.initialize(env.signer)).to.be.revertedWith(
+            await expect(env.fuelChainState.initialize()).to.be.revertedWith(
                 'Initializable: contract is already initialized'
             );
-            await expect(env.fuelMessagePortal.initialize(env.fuelChainConsensus.address)).to.be.revertedWith(
+            await expect(env.fuelMessagePortal.initialize(env.fuelChainState.address)).to.be.revertedWith(
                 'Initializable: contract is already initialized'
             );
             await expect(env.fuelERC20Gateway.initialize(env.fuelMessagePortal.address)).to.be.revertedWith(
@@ -60,7 +60,7 @@ describe('Contract Upgradability', async () => {
         });
 
         it('Should not be able to upgrade contracts as non-admin', async () => {
-            await expect(env.fuelChainConsensus.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
+            await expect(env.fuelChainState.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(
                 `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
             );
             await expect(env.fuelMessagePortal.connect(env.signers[1]).upgradeTo(env.addresses[1])).to.be.revertedWith(

@@ -21,7 +21,6 @@ import {
 // You can then connect to localhost (ethers, metamask, etc.) and the Fuel system will be deployed there at the addresses given
 
 const QUICK_DEPLOY = !!process.env.QUICK_DEPLOY;
-const AUTHORITY_KEY = process.env.AUTHORITY_KEY;
 
 async function main() {
     // Check that the node is up
@@ -50,7 +49,7 @@ async function main() {
         let deployments: DeployedContractAddresses;
         try {
             console.log('Deploying contracts...'); // eslint-disable-line no-console
-            contracts = await deployFuel(AUTHORITY_KEY ? AUTHORITY_KEY : undefined);
+            contracts = await deployFuel();
             deployments = await getContractAddresses(contracts);
         } catch (e) {
             throw new Error(

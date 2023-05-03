@@ -2,8 +2,8 @@
 pragma solidity 0.8.9;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import {FuelMessagePortal} from "../fuelchain/FuelMessagePortal.sol";
 import {FuelMessagesEnabled} from "./FuelMessagesEnabled.sol";
-import {IFuelMessagePortal} from "./IFuelMessagePortal.sol";
 
 /// @title FuelMessagesEnabledUpgradeable
 /// @notice Helper contract for contracts sending and receiving messages from Fuel
@@ -14,12 +14,12 @@ abstract contract FuelMessagesEnabledUpgradeable is Initializable, FuelMessagesE
 
     /// @dev Initializes the contract
     // solhint-disable-next-line func-name-mixedcase
-    function __FuelMessagesEnabled_init(IFuelMessagePortal fuelMessagePortal) internal onlyInitializing {
+    function __FuelMessagesEnabled_init(FuelMessagePortal fuelMessagePortal) internal onlyInitializing {
         __FuelMessagesEnabled_init_unchained(fuelMessagePortal);
     }
 
     // solhint-disable-next-line func-name-mixedcase
-    function __FuelMessagesEnabled_init_unchained(IFuelMessagePortal fuelMessagePortal) internal onlyInitializing {
+    function __FuelMessagesEnabled_init_unchained(FuelMessagePortal fuelMessagePortal) internal onlyInitializing {
         _fuelMessagePortal = fuelMessagePortal;
     }
 

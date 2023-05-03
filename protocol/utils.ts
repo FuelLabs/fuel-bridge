@@ -37,3 +37,10 @@ export function padBytes(value: string): string {
     trimmedValue = '0'.repeat(64 - trimmedValue.length).concat(trimmedValue);
     return '0x'.concat(trimmedValue);
 }
+
+export function tai64Time(millis: number): string {
+    const zeroPointOffset = '4611686018427387914';
+    return BN.from(Math.floor(millis / 1000))
+        .add(zeroPointOffset)
+        .toHexString();
+}

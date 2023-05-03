@@ -36,8 +36,8 @@ async function main() {
 
     // Get confirmation for implementation contracts
     console.log(''); // eslint-disable-line no-console
-    const confirmFuelChainConsensusImpl = await confirmationPrompt(
-        `Are you sure you want to publish the verification of source code for the FuelChainConsensus implementation on "${networkName}" (Y/n)? `
+    const confirmFuelChainStateImpl = await confirmationPrompt(
+        `Are you sure you want to publish the verification of source code for the FuelChainState implementation on "${networkName}" (Y/n)? `
     );
     const confirmFuelMessagePortalImpl = await confirmationPrompt(
         `Are you sure you want to publish the verification of source code for the FuelMessagePortal implementation on "${networkName}" (Y/n)? `
@@ -49,7 +49,7 @@ async function main() {
     // Verify contract implementations
     await publishImplementationSourceVerification(
         deployments,
-        confirmFuelChainConsensusImpl,
+        confirmFuelChainStateImpl,
         confirmFuelMessagePortalImpl,
         confirmFuelERC20GatewayImpl
     );

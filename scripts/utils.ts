@@ -68,11 +68,11 @@ export async function confirmationPrompt(prompt: string): Promise<boolean> {
 
 // Publishes source code for verification of proxy contracts.
 export async function publishProxySourceVerification(deployments: DeployedContractAddresses) {
-    await verifyEtherscan('FuelChainConsensus proxy', deployments.FuelChainConsensus);
+    await verifyEtherscan('FuelChainState proxy', deployments.FuelChainState);
     await verifyEtherscan('FuelMessagePortal proxy', deployments.FuelMessagePortal);
     await verifyEtherscan('FuelERC20Gateway proxy', deployments.FuelERC20Gateway);
 
-    await verifySourcifyFromEtherscan('FuelChainConsensus proxy', deployments.FuelChainConsensus);
+    await verifySourcifyFromEtherscan('FuelChainState proxy', deployments.FuelChainState);
     await verifySourcifyFromEtherscan('FuelMessagePortal proxy', deployments.FuelMessagePortal);
     await verifySourcifyFromEtherscan('FuelERC20Gateway proxy', deployments.FuelERC20Gateway);
 }
@@ -80,13 +80,13 @@ export async function publishProxySourceVerification(deployments: DeployedContra
 // Publishes source code for verification of implementation contracts.
 export async function publishImplementationSourceVerification(
     deployments: DeployedContractAddresses,
-    publishFuelChainConsensus: boolean,
+    publishFuelChainState: boolean,
     publishFuelMessagePortal: boolean,
     publishFuelERC20Gateway: boolean
 ) {
-    if (publishFuelChainConsensus) {
-        await verifyEtherscan('FuelChainConsensus implementation', deployments.FuelChainConsensus_impl);
-        await verifySourcifyFromEtherscan('FuelChainConsensus implementation', deployments.FuelChainConsensus_impl);
+    if (publishFuelChainState) {
+        await verifyEtherscan('FuelChainState implementation', deployments.FuelChainState_impl);
+        await verifySourcifyFromEtherscan('FuelChainState implementation', deployments.FuelChainState_impl);
     }
 
     if (publishFuelMessagePortal) {

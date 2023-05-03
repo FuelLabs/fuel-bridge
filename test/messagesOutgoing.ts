@@ -34,7 +34,7 @@ describe('Outgoing Messages', async () => {
         await transaction.wait();
 
         // Verify contract getters
-        expect(await env.fuelMessagePortal.fuelChainConsensusContract()).to.equal(env.fuelChainConsensus.address);
+        expect(await env.fuelMessagePortal.fuelChainStateContract()).to.equal(env.fuelChainState.address);
         expect(await messageTester.fuelMessagePortal()).to.equal(env.fuelMessagePortal.address);
     });
 
@@ -147,18 +147,18 @@ describe('Outgoing Messages', async () => {
 
             // Check logs for message sent
             const logs = await provider.getLogs({ address: filterAddress });
-            const sentMessageEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
-            expect(sentMessageEvent.name).to.equal('SentMessage');
-            expect(sentMessageEvent.args.sender).to.equal(
+            const messageSentEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
+            expect(messageSentEvent.name).to.equal('MessageSent');
+            expect(messageSentEvent.args.sender).to.equal(
                 messageTester.address.split('0x').join('0x000000000000000000000000').toLowerCase()
             );
-            expect(sentMessageEvent.args.recipient).to.equal(recipient);
-            expect(sentMessageEvent.args.data).to.equal(data);
-            expect(sentMessageEvent.args.amount).to.equal(0);
+            expect(messageSentEvent.args.recipient).to.equal(recipient);
+            expect(messageSentEvent.args.data).to.equal(data);
+            expect(messageSentEvent.args.amount).to.equal(0);
 
             // Check that nonce is unique
-            expect(nonceList).to.not.include(sentMessageEvent.args.nonce);
-            nonceList.push(sentMessageEvent.args.nonce);
+            expect(nonceList).to.not.include(messageSentEvent.args.nonce);
+            nonceList.push(messageSentEvent.args.nonce);
         });
 
         it('Should be able to send message without data', async () => {
@@ -167,18 +167,18 @@ describe('Outgoing Messages', async () => {
 
             // Check logs for message sent
             const logs = await provider.getLogs({ address: filterAddress });
-            const sentMessageEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
-            expect(sentMessageEvent.name).to.equal('SentMessage');
-            expect(sentMessageEvent.args.sender).to.equal(
+            const messageSentEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
+            expect(messageSentEvent.name).to.equal('MessageSent');
+            expect(messageSentEvent.args.sender).to.equal(
                 messageTester.address.split('0x').join('0x000000000000000000000000').toLowerCase()
             );
-            expect(sentMessageEvent.args.recipient).to.equal(recipient);
-            expect(sentMessageEvent.args.data).to.equal('0x');
-            expect(sentMessageEvent.args.amount).to.equal(0);
+            expect(messageSentEvent.args.recipient).to.equal(recipient);
+            expect(messageSentEvent.args.data).to.equal('0x');
+            expect(messageSentEvent.args.amount).to.equal(0);
 
             // Check that nonce is unique
-            expect(nonceList).to.not.include(sentMessageEvent.args.nonce);
-            nonceList.push(sentMessageEvent.args.nonce);
+            expect(nonceList).to.not.include(messageSentEvent.args.nonce);
+            nonceList.push(messageSentEvent.args.nonce);
         });
 
         it('Should be able to send message with amount and data', async () => {
@@ -190,18 +190,18 @@ describe('Outgoing Messages', async () => {
 
             // Check logs for message sent
             const logs = await provider.getLogs({ address: filterAddress });
-            const sentMessageEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
-            expect(sentMessageEvent.name).to.equal('SentMessage');
-            expect(sentMessageEvent.args.sender).to.equal(
+            const messageSentEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
+            expect(messageSentEvent.name).to.equal('MessageSent');
+            expect(messageSentEvent.args.sender).to.equal(
                 messageTester.address.split('0x').join('0x000000000000000000000000').toLowerCase()
             );
-            expect(sentMessageEvent.args.recipient).to.equal(recipient);
-            expect(sentMessageEvent.args.data).to.equal(data);
-            expect(sentMessageEvent.args.amount).to.equal(ethers.utils.parseEther('0.1').div(baseAssetConversion));
+            expect(messageSentEvent.args.recipient).to.equal(recipient);
+            expect(messageSentEvent.args.data).to.equal(data);
+            expect(messageSentEvent.args.amount).to.equal(ethers.utils.parseEther('0.1').div(baseAssetConversion));
 
             // Check that nonce is unique
-            expect(nonceList).to.not.include(sentMessageEvent.args.nonce);
-            nonceList.push(sentMessageEvent.args.nonce);
+            expect(nonceList).to.not.include(messageSentEvent.args.nonce);
+            nonceList.push(messageSentEvent.args.nonce);
 
             // Check that portal balance increased
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.equal(
@@ -217,18 +217,18 @@ describe('Outgoing Messages', async () => {
 
             // Check logs for message sent
             const logs = await provider.getLogs({ address: filterAddress });
-            const sentMessageEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
-            expect(sentMessageEvent.name).to.equal('SentMessage');
-            expect(sentMessageEvent.args.sender).to.equal(
+            const messageSentEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
+            expect(messageSentEvent.name).to.equal('MessageSent');
+            expect(messageSentEvent.args.sender).to.equal(
                 messageTester.address.split('0x').join('0x000000000000000000000000').toLowerCase()
             );
-            expect(sentMessageEvent.args.recipient).to.equal(recipient);
-            expect(sentMessageEvent.args.data).to.equal('0x');
-            expect(sentMessageEvent.args.amount).to.equal(ethers.utils.parseEther('0.5').div(baseAssetConversion));
+            expect(messageSentEvent.args.recipient).to.equal(recipient);
+            expect(messageSentEvent.args.data).to.equal('0x');
+            expect(messageSentEvent.args.amount).to.equal(ethers.utils.parseEther('0.5').div(baseAssetConversion));
 
             // Check that nonce is unique
-            expect(nonceList).to.not.include(sentMessageEvent.args.nonce);
-            nonceList.push(sentMessageEvent.args.nonce);
+            expect(nonceList).to.not.include(messageSentEvent.args.nonce);
+            nonceList.push(messageSentEvent.args.nonce);
 
             // Check that portal balance increased
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.equal(
@@ -273,18 +273,18 @@ describe('Outgoing Messages', async () => {
 
             // Check logs for message sent
             const logs = await provider.getLogs({ address: filterAddress });
-            const sentMessageEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
-            expect(sentMessageEvent.name).to.equal('SentMessage');
-            expect(sentMessageEvent.args.sender).to.equal(
+            const messageSentEvent = env.fuelMessagePortal.interface.parseLog(logs[logs.length - 1]);
+            expect(messageSentEvent.name).to.equal('MessageSent');
+            expect(messageSentEvent.args.sender).to.equal(
                 env.addresses[0].split('0x').join('0x000000000000000000000000').toLowerCase()
             );
-            expect(sentMessageEvent.args.recipient).to.equal(recipient);
-            expect(sentMessageEvent.args.data).to.equal('0x');
-            expect(sentMessageEvent.args.amount).to.equal(ethers.utils.parseEther('1.234').div(baseAssetConversion));
+            expect(messageSentEvent.args.recipient).to.equal(recipient);
+            expect(messageSentEvent.args.data).to.equal('0x');
+            expect(messageSentEvent.args.amount).to.equal(ethers.utils.parseEther('1.234').div(baseAssetConversion));
 
             // Check that nonce is unique
-            expect(nonceList).to.not.include(sentMessageEvent.args.nonce);
-            nonceList.push(sentMessageEvent.args.nonce);
+            expect(nonceList).to.not.include(messageSentEvent.args.nonce);
+            nonceList.push(messageSentEvent.args.nonce);
         });
     });
 

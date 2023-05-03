@@ -7,10 +7,9 @@ import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import { MessageTester } from '../typechain/MessageTester.d';
 import { HarnessObject, setupFuel } from '../protocol/harness';
 import BlockHeader, { BlockHeaderLite, computeBlockId, generateBlockHeaderLite } from '../protocol/blockHeader';
-import { EMPTY } from '../protocol/constants';
-import { compactSign } from '../protocol/validators';
+import { EMPTY, ZERO } from '../protocol/constants';
 import Message, { computeMessageId } from '../protocol/message';
-import { randomBytes32 } from '../protocol/utils';
+import { randomBytes32, tai64Time } from '../protocol/utils';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -26,20 +25,30 @@ declare class TreeNode {
     index: number;
 }
 
+// Merkle proof class
+declare class MerkleProof {
+    key: number;
+    proof: string[];
+}
+
 // Create a simple block
-function createBlock(blockIds: string[], messageIds: string[]): BlockHeader {
-    const tai64Time = BN.from(Math.floor(new Date().getTime() / 1000)).add('4611686018427387914');
+function createBlock(
+    prevRoot: string,
+    blockHeight: number,
+    timestamp?: string,
+    outputMessagesCount?: string,
+    outputMessagesRoot?: string
+): BlockHeader {
     const header: BlockHeader = {
-        prevRoot: calcRoot(blockIds),
-        height: blockIds.length.toString(),
-        timestamp: tai64Time.toHexString(),
+        prevRoot: prevRoot ? prevRoot : ZERO,
+        height: blockHeight.toString(),
+        timestamp: timestamp ? timestamp : '0',
         daHeight: '0',
         txCount: '0',
-        outputMessagesCount: messageIds.length.toString(),
+        outputMessagesCount: outputMessagesCount ? outputMessagesCount : '0',
         txRoot: EMPTY,
-        outputMessagesRoot: calcRoot(messageIds),
+        outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
     };
-
     return header;
 }
 
@@ -59,11 +68,15 @@ describe('Incoming Messages', async () => {
     let fuelBaseAssetDecimals: number;
     let baseAssetConversion: number;
 
+    // Contract constants
+    const TIME_TO_FINALIZE = 10800;
+    const BLOCKS_PER_COMMIT_INTERVAL = 10800;
+
     // Message data
     const messageTestData1 = randomBytes32();
     const messageTestData2 = randomBytes32();
     const messageTestData3 = randomBytes32();
-    const messageIds: string[] = [];
+    let messageNodes: TreeNode[];
     let trustedSenderAddress: string;
 
     // Testing contracts
@@ -80,13 +93,32 @@ describe('Incoming Messages', async () => {
     let messageBadData: Message;
     let messageEOA: Message;
     let messageEOANoAmount: Message;
-    let messageReentrant1: Message;
-    let messageReentrant2: Message;
 
     // Arrays of committed block headers and their IDs
     const blockHeaders: BlockHeader[] = [];
     const blockIds: string[] = [];
-    const blockSignatures: string[] = [];
+    let endOfCommitIntervalHeader: BlockHeader;
+    let endOfCommitIntervalHeaderLite: BlockHeaderLite;
+    let unflinalizedBlock: BlockHeader;
+    let prevBlockNodes: TreeNode[];
+
+    // Helper function to setup test data
+    function generateProof(message: Message, prevBlockDistance = 1): [string, BlockHeader, MerkleProof, MerkleProof] {
+        const messageBlockIndex = BLOCKS_PER_COMMIT_INTERVAL - 1 - prevBlockDistance;
+        const messageBlockHeader = blockHeaders[messageBlockIndex];
+        const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockIndex]);
+        const blockInHistoryProof = {
+            key: messageBlockLeafIndexKey,
+            proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
+        };
+        const messageID = computeMessageId(message);
+        const messageLeafIndexKey = getLeafIndexKey(messageNodes, messageID);
+        const messageInBlockProof = {
+            key: messageLeafIndexKey,
+            proof: getProof(messageNodes, messageLeafIndexKey),
+        };
+        return [messageID, messageBlockHeader, blockInHistoryProof, messageInBlockProof];
+    }
 
     before(async () => {
         env = await setupFuel();
@@ -168,59 +200,9 @@ describe('Incoming Messages', async () => {
             randomBytes32(),
             '0x'
         );
-        // message reentrant
-        const reentrantTestMessageID = computeMessageId(message1);
-        const reentrantTestBlockHeader = createBlock([], [reentrantTestMessageID]);
-        const reentrantTestBlockId = computeBlockId(reentrantTestBlockHeader);
-        const reentrantTestPoaSignature = await compactSign(env.poaSigner, reentrantTestBlockId);
-        const reentrantTestMessageNodes = constructTree([reentrantTestMessageID]);
-        const reentrantTestLeafIndexKey = getLeafIndexKey(reentrantTestMessageNodes, reentrantTestMessageID);
-        const reentrantTestMessageInBlockProof = {
-            key: reentrantTestLeafIndexKey,
-            proof: getProof(reentrantTestMessageNodes, reentrantTestLeafIndexKey),
-        };
-        const reentrantTestData = env.fuelMessagePortal.interface.encodeFunctionData('relayMessageFromFuelBlock', [
-            message1,
-            reentrantTestBlockHeader,
-            reentrantTestMessageInBlockProof,
-            reentrantTestPoaSignature,
-        ]);
-        messageReentrant1 = new Message(
-            trustedSenderAddress,
-            fuelMessagePortalContractAddress,
-            BN.from(0),
-            randomBytes32(),
-            reentrantTestData
-        );
-        const reentrantTestPrevBlockNodes = constructTree([reentrantTestBlockId]);
-        const reentrantTestBlockHeader2 = createBlock([reentrantTestBlockId], []);
-        const reentrantTestBlockId2 = computeBlockId(reentrantTestBlockHeader2);
-        const reentrantTestPoaSignature2 = await compactSign(env.poaSigner, reentrantTestBlockId2);
-        const reentrantTestMessageBlockLeafIndexKey = getLeafIndexKey(
-            reentrantTestPrevBlockNodes,
-            reentrantTestBlockId
-        );
-        const reentrantTestBlockInHistoryProof = {
-            key: reentrantTestMessageBlockLeafIndexKey,
-            proof: getProof(reentrantTestPrevBlockNodes, reentrantTestMessageBlockLeafIndexKey),
-        };
-        const reentrantTestData2 = env.fuelMessagePortal.interface.encodeFunctionData('relayMessageFromPrevFuelBlock', [
-            message1,
-            generateBlockHeaderLite(reentrantTestBlockHeader2),
-            reentrantTestBlockHeader,
-            reentrantTestBlockInHistoryProof,
-            reentrantTestMessageInBlockProof,
-            reentrantTestPoaSignature2,
-        ]);
-        messageReentrant2 = new Message(
-            trustedSenderAddress,
-            fuelMessagePortalContractAddress,
-            BN.from(0),
-            randomBytes32(),
-            reentrantTestData2
-        );
 
         // compile all message IDs
+        const messageIds: string[] = [];
         messageIds.push(computeMessageId(message1));
         messageIds.push(computeMessageId(message2));
         messageIds.push(computeMessageId(messageWithAmount));
@@ -229,20 +211,46 @@ describe('Incoming Messages', async () => {
         messageIds.push(computeMessageId(messageBadData));
         messageIds.push(computeMessageId(messageEOA));
         messageIds.push(computeMessageId(messageEOANoAmount));
-        messageIds.push(computeMessageId(messageReentrant1));
-        messageIds.push(computeMessageId(messageReentrant2));
+        messageNodes = constructTree(messageIds);
 
         // create blocks
-        for (let i = 0; i < 500; i++) {
-            const blockHeader = createBlock(blockIds, messageIds);
+        const messageCount = messageIds.length.toString();
+        const messagesRoot = calcRoot(messageIds);
+        for (let i = 0; i < BLOCKS_PER_COMMIT_INTERVAL - 1; i++) {
+            const blockHeader = createBlock('', i, '', messageCount, messagesRoot);
             const blockId = computeBlockId(blockHeader);
-            const blockSignature = await compactSign(env.poaSigner, blockId);
 
             // append block header and Id to arrays
             blockHeaders.push(blockHeader);
             blockIds.push(blockId);
-            blockSignatures.push(blockSignature);
         }
+
+        // create end of commit interval block
+        const timestamp = tai64Time(new Date().getTime());
+        endOfCommitIntervalHeader = createBlock(
+            calcRoot(blockIds),
+            blockIds.length,
+            timestamp,
+            messageCount,
+            messagesRoot
+        );
+        endOfCommitIntervalHeaderLite = generateBlockHeaderLite(endOfCommitIntervalHeader);
+        prevBlockNodes = constructTree(blockIds);
+        blockIds.push(computeBlockId(endOfCommitIntervalHeader));
+
+        // finalize blocks in the state contract
+        await env.fuelChainState.commit(computeBlockId(endOfCommitIntervalHeader), 0);
+        ethers.provider.send('evm_increaseTime', [TIME_TO_FINALIZE]);
+
+        // create an unfinalized block
+        unflinalizedBlock = createBlock(
+            calcRoot(blockIds),
+            BLOCKS_PER_COMMIT_INTERVAL * 11 - 1,
+            timestamp,
+            messageCount,
+            messagesRoot
+        );
+        await env.fuelChainState.commit(computeBlockId(unflinalizedBlock), 10);
 
         // make sure the portal has eth to relay
         await env.fuelMessagePortal.depositETH(EMPTY, {
@@ -250,7 +258,7 @@ describe('Incoming Messages', async () => {
         });
 
         // Verify contract getters
-        expect(await env.fuelMessagePortal.fuelChainConsensusContract()).to.equal(env.fuelChainConsensus.address);
+        expect(await env.fuelMessagePortal.fuelChainStateContract()).to.equal(env.fuelChainState.address);
         expect(await messageTester.fuelMessagePortal()).to.equal(env.fuelMessagePortal.address);
     });
 
@@ -344,87 +352,14 @@ describe('Incoming Messages', async () => {
         });
     });
 
-    describe('Verify admin functions', async () => {
-        const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
-        let messageNodes: TreeNode[];
-        let blockHeader: BlockHeader;
-        let poaSignature: string;
+    describe('Relay both valid and invalid messages', async () => {
+        let provider: Provider;
         before(async () => {
-            messageNodes = constructTree(messageIds);
-            blockHeader = blockHeaders[0];
-            poaSignature = blockSignatures[0];
-        });
-
-        it('Should not be able to set timelock as non-admin', async () => {
-            expect(await env.fuelMessagePortal.incomingMessageTimelock()).to.be.equal(BN.from(0));
-
-            // Attempt set timelock
-            await expect(
-                env.fuelMessagePortal.connect(env.signers[1]).setIncomingMessageTimelock(10)
-            ).to.be.revertedWith(
-                `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
-            );
-            expect(await env.fuelMessagePortal.incomingMessageTimelock()).to.be.equal(BN.from(0));
-        });
-
-        it('Should be able to set the timelock as admin', async () => {
-            const newTimelockValue = 7 * 24 * 60 * 60 * 1000;
-            expect(await env.fuelMessagePortal.incomingMessageTimelock()).to.not.be.equal(BN.from(newTimelockValue));
-
-            // Set timelock
-            await expect(env.fuelMessagePortal.setIncomingMessageTimelock(newTimelockValue)).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageTimelock()).to.be.equal(BN.from(newTimelockValue));
-        });
-
-        it('Should not be able to relay valid message before timelock', async () => {
-            const messageID = computeMessageId(message1);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-            await expect(
-                env.fuelMessagePortal.relayMessageFromFuelBlock(
-                    message1,
-                    blockHeader,
-                    messageInBlockProof,
-                    poaSignature
-                )
-            ).to.be.revertedWith('Timelock not elapsed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-
-            // Remove timelock
-            await expect(env.fuelMessagePortal.setIncomingMessageTimelock(0)).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageTimelock()).to.be.equal(BN.from(0));
+            provider = env.fuelMessagePortal.provider;
         });
 
         it('Should not get a valid message sender outside of relaying', async () => {
             await expect(env.fuelMessagePortal.messageSender()).to.be.revertedWith('Current message sender not set');
-        });
-    });
-
-    describe('Relay both valid and invalid messages', async () => {
-        let provider: Provider;
-        let prevBlockNodes: TreeNode[];
-        let messageNodes: TreeNode[];
-        let blockHeader: BlockHeader;
-        let poaSignature: string;
-        let prevRootHeader: BlockHeaderLite;
-        let prevRootPoaSignature: string;
-        before(async () => {
-            provider = env.fuelMessagePortal.provider;
-            messageNodes = constructTree(messageIds);
-            blockHeader = blockHeaders[0];
-            poaSignature = blockSignatures[0];
-
-            const prevBlockNodesRootBlockNum = blockIds.length - 1;
-            prevRootHeader = generateBlockHeaderLite(blockHeaders[prevBlockNodesRootBlockNum]);
-            prevRootPoaSignature = blockSignatures[prevBlockNodesRootBlockNum];
-            const prevBlockIds = [];
-            for (let i = 0; i < blockIds.length - 1; i++) prevBlockIds.push(blockIds[i]);
-            prevBlockNodes = constructTree(prevBlockIds);
         });
 
         it('Should not be able to call messageable contract directly', async () => {
@@ -433,159 +368,65 @@ describe('Incoming Messages', async () => {
             );
         });
 
-        it('Should not be able to relay message with bad block', async () => {
-            const messageID = computeMessageId(message1);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-            await expect(
-                env.fuelMessagePortal.relayMessageFromFuelBlock(
-                    message1,
-                    blockHeader,
-                    messageInBlockProof,
-                    randomBytes32()
-                )
-            ).to.be.revertedWith('signature-invalid-length');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-        });
-
         it('Should not be able to relay message with bad root block', async () => {
-            const messageBlockNum = 258;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message1);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message1, 24);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message1,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    randomBytes32()
+                    generateBlockHeaderLite(createBlock('', BLOCKS_PER_COMMIT_INTERVAL * 20 - 1)),
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
-            ).to.be.revertedWith('signature-invalid-length');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            ).to.be.revertedWith('Unknown block');
+            await expect(
+                env.fuelMessagePortal.relayMessage(
+                    message1,
+                    generateBlockHeaderLite(unflinalizedBlock),
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
+                )
+            ).to.be.revertedWith('Unfinalized root block');
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should not be able to relay message with bad proof in root block', async () => {
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
             const messageTesterBalance = await provider.getBalance(messageTester.address);
-            const messageBlockNum = 67;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum + 1]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message1);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message1, 67);
+            blockInRoot.key = blockInRoot.key + 1;
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message1,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Invalid block in history proof');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(portalBalance);
             expect(await provider.getBalance(messageTester.address)).to.be.equal(messageTesterBalance);
-        });
-
-        it('Should not be able to relay reentrant messages', async () => {
-            const messageBlockNum = 145;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-
-            // re-enter via relayMessageFromFuelBlock
-            const messageID = computeMessageId(messageReentrant1);
-            const messageLeafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: messageLeafIndexKey,
-                proof: getProof(messageNodes, messageLeafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-            await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
-                    messageReentrant1,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
-                )
-            ).to.be.revertedWith('Message relay failed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-
-            // re-enter via relayMessageFromPrevFuelBlock
-            const messageID2 = computeMessageId(messageReentrant2);
-            const messageLeafIndexKey2 = getLeafIndexKey(messageNodes, messageID2);
-            const messageInBlockProof2 = {
-                key: messageLeafIndexKey2,
-                proof: getProof(messageNodes, messageLeafIndexKey2),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
-            await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
-                    messageReentrant2,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof2,
-                    prevRootPoaSignature
-                )
-            ).to.be.revertedWith('Message relay failed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
         });
 
         it('Should be able to relay valid message', async () => {
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
             const messageTesterBalance = await provider.getBalance(messageTester.address);
-            const messageBlockNum = 145;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message1);
-            const messageLeafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: messageLeafIndexKey,
-                proof: getProof(messageNodes, messageLeafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message1, 22);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message1,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             expect(await messageTester.data1()).to.be.equal(messageTestData1);
             expect(await messageTester.data2()).to.be.equal(messageTestData2);
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(portalBalance);
@@ -593,89 +434,53 @@ describe('Incoming Messages', async () => {
         });
 
         it('Should not be able to relay already relayed message', async () => {
-            const messageBlockNum = 68;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message1);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message1, 68);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message1,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Already relayed');
         });
 
         it('Should not be able to relay message with low gas', async () => {
-            const messageBlockNum = 11;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageWithAmount);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageWithAmount, 11);
             const options = {
                 gasLimit: 140000,
             };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageWithAmount,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature,
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock,
                     options
                 )
             ).to.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should be able to relay message with amount', async () => {
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
             const messageTesterBalance = await provider.getBalance(messageTester.address);
-            const messageBlockNum = 333;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageWithAmount);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageWithAmount, 33);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageWithAmount,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             expect(await messageTester.data1()).to.be.equal(messageTestData2);
             expect(await messageTester.data2()).to.be.equal(messageTestData3);
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(
@@ -687,113 +492,65 @@ describe('Incoming Messages', async () => {
         });
 
         it('Should not be able to relay message from untrusted sender', async () => {
-            const messageBlockNum = 471;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageBadSender);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageBadSender, 47);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageBadSender,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Message relay failed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should not be able to relay message to bad recipient', async () => {
-            const messageBlockNum = 296;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageBadRecipient);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageBadRecipient, 69);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageBadRecipient,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Message relay failed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should not be able to relay message with bad data', async () => {
-            const messageBlockNum = 321;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageBadData);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageBadData, 21);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageBadData,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Message relay failed');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should be able to relay message to EOA', async () => {
             const accountBalance = await provider.getBalance(env.addresses[2]);
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
-            const messageBlockNum = 19;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageEOA);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageEOA, 19);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageEOA,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             expect(await provider.getBalance(env.addresses[2])).to.be.equal(
                 accountBalance.add(messageEOA.amount.mul(baseAssetConversion))
             );
@@ -805,30 +562,18 @@ describe('Incoming Messages', async () => {
         it('Should be able to relay message to EOA with no amount', async () => {
             const accountBalance = await provider.getBalance(env.addresses[3]);
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
-            const messageBlockNum = 25;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(messageEOANoAmount);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(messageEOANoAmount, 25);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     messageEOANoAmount,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             expect(await provider.getBalance(env.addresses[3])).to.be.equal(accountBalance);
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(portalBalance);
         });
@@ -836,18 +581,7 @@ describe('Incoming Messages', async () => {
         it('Should not be able to relay valid message with different amount', async () => {
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
             const messageTesterBalance = await provider.getBalance(messageTester.address);
-            const messageBlockNum = 68;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message2);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message2, 68);
             const diffBlock = {
                 sender: message2.sender,
                 recipient: message2.recipient,
@@ -855,60 +589,112 @@ describe('Incoming Messages', async () => {
                 amount: message2.amount.add(ethers.utils.parseEther('1.0')),
                 data: message2.data,
             };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     diffBlock,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    prevRootPoaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Invalid message in block proof');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(portalBalance);
             expect(await provider.getBalance(messageTester.address)).to.be.equal(messageTesterBalance);
         });
 
         it('Should not be able to relay non-existent message', async () => {
+            const [, msgBlockHeader, blockInRoot] = generateProof(message2, 1);
             const portalBalance = await provider.getBalance(env.fuelMessagePortal.address);
             const messageTesterBalance = await provider.getBalance(messageTester.address);
-            const messageInBlockProof = {
+            const msgInBlock = {
                 key: 0,
                 proof: [],
             };
             await expect(
-                env.fuelMessagePortal.relayMessageFromFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message2,
-                    blockHeader,
-                    messageInBlockProof,
-                    poaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Invalid message in block proof');
             expect(await provider.getBalance(env.fuelMessagePortal.address)).to.be.equal(portalBalance);
             expect(await provider.getBalance(messageTester.address)).to.be.equal(messageTesterBalance);
+        });
+
+        it('Should not be able to relay reentrant messages', async () => {
+            // create a message that attempts to relay another message
+            const [, rTestMsgBlockHeader, rTestBlockInRoot, rTestMsgInBlock] = generateProof(message1, 5);
+            const reentrantTestData = env.fuelMessagePortal.interface.encodeFunctionData('relayMessage', [
+                message1,
+                endOfCommitIntervalHeaderLite,
+                rTestMsgBlockHeader,
+                rTestBlockInRoot,
+                rTestMsgInBlock,
+            ]);
+            const messageReentrant = new Message(
+                trustedSenderAddress,
+                fuelMessagePortalContractAddress,
+                BN.from(0),
+                randomBytes32(),
+                reentrantTestData
+            );
+            const messageReentrantId = computeMessageId(messageReentrant);
+            const messageReentrantMessages = [messageReentrantId];
+            const messageReentrantMessageNodes = constructTree(messageReentrantMessages);
+
+            // create block that contains this message
+            const tai64Time = BN.from(Math.floor(new Date().getTime() / 1000)).add('4611686018427387914');
+            const reentrantTestMessageBlock = createBlock(
+                '',
+                blockIds.length,
+                tai64Time.toHexString(),
+                '1',
+                calcRoot(messageReentrantMessages)
+            );
+            const reentrantTestMessageBlockId = computeBlockId(reentrantTestMessageBlock);
+            blockIds.push(reentrantTestMessageBlockId);
+
+            // commit and finalize a block that contains the block with the message
+            const reentrantTestRootBlock = createBlock(calcRoot(blockIds), blockIds.length, tai64Time.toHexString());
+            const reentrantTestPrevBlockNodes = constructTree(blockIds);
+            const reentrantTestRootBlockId = computeBlockId(reentrantTestRootBlock);
+            await env.fuelChainState.commit(reentrantTestRootBlockId, 1);
+            ethers.provider.send('evm_increaseTime', [TIME_TO_FINALIZE]);
+
+            // generate proof for relaying reentrant message
+            const messageBlockLeafIndexKey = getLeafIndexKey(reentrantTestPrevBlockNodes, reentrantTestMessageBlockId);
+            const blockInHistoryProof = {
+                key: messageBlockLeafIndexKey,
+                proof: getProof(reentrantTestPrevBlockNodes, messageBlockLeafIndexKey),
+            };
+            const messageLeafIndexKey = getLeafIndexKey(messageReentrantMessageNodes, messageReentrantId);
+            const messageInBlockProof = {
+                key: messageLeafIndexKey,
+                proof: getProof(messageReentrantMessageNodes, messageLeafIndexKey),
+            };
+
+            // re-enter via relayMessage
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageReentrantId)).to.be.equal(false);
+            await expect(
+                env.fuelMessagePortal.relayMessage(
+                    messageReentrant,
+                    generateBlockHeaderLite(reentrantTestRootBlock),
+                    reentrantTestMessageBlock,
+                    blockInHistoryProof,
+                    messageInBlockProof
+                )
+            ).to.be.revertedWith('Message relay failed');
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageReentrantId)).to.be.equal(false);
         });
     });
 
     describe('Verify pause and unpause', async () => {
         const defaultAdminRole = '0x0000000000000000000000000000000000000000000000000000000000000000';
         const pauserRole = ethers.utils.keccak256(ethers.utils.toUtf8Bytes('PAUSER_ROLE'));
-        let messageNodes: TreeNode[];
-        let prevBlockNodes: TreeNode[];
-        let blockHeader: BlockHeader;
-        let prevRootHeader: BlockHeaderLite;
-        let poaSignature: string;
-        before(async () => {
-            messageNodes = constructTree(messageIds);
-            blockHeader = blockHeaders[0];
-            poaSignature = blockSignatures[0];
-            const prevBlockNodesRootBlockNum = blockIds.length - 1;
-            prevRootHeader = generateBlockHeaderLite(blockHeaders[prevBlockNodesRootBlockNum]);
-            const prevBlockIds = [];
-            for (let i = 0; i < blockIds.length - 1; i++) prevBlockIds.push(blockIds[i]);
-            prevBlockNodes = constructTree(prevBlockIds);
-        });
 
         it('Should be able to grant pauser role', async () => {
             expect(await env.fuelMessagePortal.hasRole(pauserRole, env.addresses[2])).to.equal(false);
@@ -957,38 +743,18 @@ describe('Incoming Messages', async () => {
         });
 
         it('Should not be able to relay messages when paused', async () => {
-            const messageBlockNum = 258;
-            const messageBlockLeafIndexKey = getLeafIndexKey(prevBlockNodes, blockIds[messageBlockNum]);
-            const blockInHistoryProof = {
-                key: messageBlockLeafIndexKey,
-                proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),
-            };
-            const messageID = computeMessageId(message2);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message2, 51);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message2,
-                    blockHeader,
-                    messageInBlockProof,
-                    poaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.be.revertedWith('Pausable: paused');
-            await expect(
-                env.fuelMessagePortal.relayMessageFromPrevFuelBlock(
-                    message2,
-                    prevRootHeader,
-                    blockHeaders[messageBlockNum],
-                    blockInHistoryProof,
-                    messageInBlockProof,
-                    randomBytes32()
-                )
-            ).to.be.revertedWith('Pausable: paused');
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
         });
 
         it('Should be able to unpause as admin', async () => {
@@ -1000,22 +766,18 @@ describe('Incoming Messages', async () => {
         });
 
         it('Should be able to relay message when unpaused', async () => {
-            const messageID = computeMessageId(message2);
-            const leafIndexKey = getLeafIndexKey(messageNodes, messageID);
-            const messageInBlockProof = {
-                key: leafIndexKey,
-                proof: getProof(messageNodes, leafIndexKey),
-            };
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(false);
+            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(message2, 1);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(false);
             await expect(
-                env.fuelMessagePortal.relayMessageFromFuelBlock(
+                env.fuelMessagePortal.relayMessage(
                     message2,
-                    blockHeader,
-                    messageInBlockProof,
-                    poaSignature
+                    endOfCommitIntervalHeaderLite,
+                    msgBlockHeader,
+                    blockInRoot,
+                    msgInBlock
                 )
             ).to.not.be.reverted;
-            expect(await env.fuelMessagePortal.incomingMessageSuccessful(messageID)).to.be.equal(true);
+            expect(await env.fuelMessagePortal.incomingMessageSuccessful(msgID)).to.be.equal(true);
             expect(await messageTester.data1()).to.be.equal(messageTestData2);
             expect(await messageTester.data2()).to.be.equal(messageTestData1);
         });

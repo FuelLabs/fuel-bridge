@@ -2,7 +2,7 @@
 pragma solidity 0.8.9;
 
 import {FuelMessagesEnabled} from "../messaging/FuelMessagesEnabled.sol";
-import {IFuelMessagePortal} from "../messaging/IFuelMessagePortal.sol";
+import {FuelMessagePortal} from "../fuelchain/FuelMessagePortal.sol";
 
 /// @notice This contract allows for testing message receiving.
 contract MessageTester is FuelMessagesEnabled {
@@ -13,8 +13,8 @@ contract MessageTester is FuelMessagesEnabled {
     uint256 public data2;
 
     /// @notice Constructor.
-    /// @param fuelMessagePortal The IFuelMessagePortal contract
-    constructor(IFuelMessagePortal fuelMessagePortal) {
+    /// @param fuelMessagePortal The FuelMessagePortal contract
+    constructor(FuelMessagePortal fuelMessagePortal) {
         _fuelMessagePortal = fuelMessagePortal;
     }
 

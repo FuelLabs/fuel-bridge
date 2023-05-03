@@ -7,12 +7,11 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
-import {FuelChainConsensus} from "./FuelChainConsensus.sol";
+import {FuelChainState} from "./FuelChainState.sol";
 import {FuelBlockHeader, FuelBlockHeaderLib} from "./types/FuelBlockHeader.sol";
 import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "./types/FuelBlockHeaderLite.sol";
 import {SafeCall} from "../vendor/SafeCall.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
-import {IFuelMessagePortal} from "../messaging/IFuelMessagePortal.sol";
 
 /// @notice Structure for proving an element in a merkle tree
 struct MerkleProof {
@@ -29,10 +28,15 @@ struct Message {
     bytes data;
 }
 
+/// @notice Common predicates for Fuel inputs
+library CommonPredicates {
+    bytes32 public constant CONTRACT_MESSAGE_PREDICATE =
+        0x6767333817034bfdf74f68bfdb4130438e7ce65a9e4cbadba6b490a265f094dc;
+}
+
 /// @title FuelMessagePortal
 /// @notice The Fuel Message Portal contract sends messages to and from Fuel
 contract FuelMessagePortal is
-    IFuelMessagePortal,
     Initializable,
     PausableUpgradeable,
     AccessControlUpgradeable,
@@ -41,6 +45,22 @@ contract FuelMessagePortal is
 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
+
+    ////////////
+    // Events //
+    ////////////
+
+    /// @dev Emitted when a message is sent from Ethereum to Fuel
+    event MessageSent(
+        bytes32 indexed sender,
+        bytes32 indexed recipient,
+        uint256 indexed nonce,
+        uint64 amount,
+        bytes data
+    );
+
+    /// @dev Emitted when a message is successfully relayed to Ethereum from Fuel
+    event MessageRelayed(bytes32 indexed messageId, bytes32 indexed sender, bytes32 indexed recipient, uint64 amount);
 
     ///////////////
     // Constants //
@@ -66,14 +86,11 @@ contract FuelMessagePortal is
     /// @notice Current message sender for other contracts to reference
     bytes32 internal _incomingMessageSender;
 
-    /// @notice The Fuel chain consensus contract
-    FuelChainConsensus private _fuelChainConsensus;
-
-    /// @notice The waiting period for message root states (in milliseconds)
-    uint64 private _incomingMessageTimelock;
+    /// @notice The Fuel chain state contract
+    FuelChainState private _fuelChainState;
 
     /// @notice Nonce for the next message to be sent
-    uint64 private _outgoingMessageNonce;
+    uint256 private _outgoingMessageNonce;
 
     /// @notice Mapping of message hash to boolean success value
     mapping(bytes32 => bool) private _incomingMessageSuccessful;
@@ -89,8 +106,8 @@ contract FuelMessagePortal is
     }
 
     /// @notice Contract initializer to setup starting values
-    /// @param fuelChainConsensus Consensus contract
-    function initialize(FuelChainConsensus fuelChainConsensus) public initializer {
+    /// @param fuelChainState Chain state contract
+    function initialize(FuelChainState fuelChainState) public initializer {
         __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
@@ -100,15 +117,14 @@ contract FuelMessagePortal is
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
 
-        //consensus contract
-        _fuelChainConsensus = fuelChainConsensus;
+        //chain state contract
+        _fuelChainState = fuelChainState;
 
         //outgoing message data
         _outgoingMessageNonce = 0;
 
         //incoming message data
         _incomingMessageSender = NULL_MESSAGE_SENDER;
-        _incomingMessageTimelock = 0;
     }
 
     /////////////////////
@@ -125,12 +141,6 @@ contract FuelMessagePortal is
         _unpause();
     }
 
-    /// @notice Sets the waiting period for message root states
-    /// @param messageTimelock The waiting period for message root states (in milliseconds)
-    function setIncomingMessageTimelock(uint64 messageTimelock) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _incomingMessageTimelock = messageTimelock;
-    }
-
     //////////////////////
     // Public Functions //
     //////////////////////
@@ -141,10 +151,10 @@ contract FuelMessagePortal is
         return uint8(FUEL_BASE_ASSET_DECIMALS);
     }
 
-    /// @notice Gets the set Fuel chain consensus contract
-    /// @return fuel chain consensus contract
-    function fuelChainConsensusContract() public view returns (address) {
-        return address(_fuelChainConsensus);
+    /// @notice Gets the set Fuel chain state contract
+    /// @return fuel chain state contract
+    function fuelChainStateContract() public view returns (address) {
+        return address(_fuelChainState);
     }
 
     ///////////////////////////////////////
@@ -153,46 +163,22 @@ contract FuelMessagePortal is
 
     /// @notice Relays a message published on Fuel from a given block
     /// @param message The message to relay
-    /// @param blockHeader The block containing the message
-    /// @param messageInBlockProof Proof that message exists in block
-    /// @param poaSignature Authority signature proving block validity
-    /// @dev Made payable to reduce gas costs
-    function relayMessageFromFuelBlock(
-        Message calldata message,
-        FuelBlockHeader calldata blockHeader,
-        MerkleProof calldata messageInBlockProof,
-        bytes calldata poaSignature
-    ) external payable whenNotPaused {
-        //verify block header
-        require(
-            _fuelChainConsensus.verifyBlock(blockHeader.computeConsensusHeaderHash(), poaSignature),
-            "Invalid block"
-        );
-
-        //execute message
-        _executeMessageInHeader(message, blockHeader, messageInBlockProof);
-    }
-
-    /// @notice Relays a message published on Fuel from a given block
-    /// @param message The message to relay
     /// @param rootBlockHeader The root block for proving chain history
     /// @param blockHeader The block containing the message
     /// @param blockInHistoryProof Proof that the message block exists in the history of the root block
     /// @param messageInBlockProof Proof that message exists in block
-    /// @param poaSignature Authority signature proving block validity
     /// @dev Made payable to reduce gas costs
-    function relayMessageFromPrevFuelBlock(
+    function relayMessage(
         Message calldata message,
         FuelBlockHeaderLite calldata rootBlockHeader,
         FuelBlockHeader calldata blockHeader,
         MerkleProof calldata blockInHistoryProof,
-        MerkleProof calldata messageInBlockProof,
-        bytes calldata poaSignature
+        MerkleProof calldata messageInBlockProof
     ) external payable whenNotPaused {
         //verify root block header
         require(
-            _fuelChainConsensus.verifyBlock(rootBlockHeader.computeConsensusHeaderHash(), poaSignature),
-            "Invalid root block"
+            _fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height),
+            "Unfinalized root block"
         );
 
         //verify block in history
@@ -202,19 +188,28 @@ contract FuelMessagePortal is
                 abi.encodePacked(blockHeader.computeConsensusHeaderHash()),
                 blockInHistoryProof.proof,
                 blockInHistoryProof.key,
-                rootBlockHeader.height - 1
+                rootBlockHeader.height
             ),
             "Invalid block in history proof"
         );
 
-        //execute message
-        _executeMessageInHeader(message, blockHeader, messageInBlockProof);
-    }
+        //verify message in block
+        bytes32 messageId = CryptographyLib.hash(
+            abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
+        );
+        require(
+            verifyBinaryTree(
+                blockHeader.outputMessagesRoot,
+                abi.encodePacked(messageId),
+                messageInBlockProof.proof,
+                messageInBlockProof.key,
+                blockHeader.outputMessagesCount
+            ),
+            "Invalid message in block proof"
+        );
 
-    /// @notice Gets the currently set timelock for all incoming messages (in milliseconds)
-    /// @return incoming message timelock
-    function incomingMessageTimelock() public view returns (uint64) {
-        return _incomingMessageTimelock;
+        //execute message
+        _executeMessage(messageId, message);
     }
 
     /// @notice Gets if the given message ID has been relayed successfully
@@ -270,7 +265,7 @@ contract FuelMessagePortal is
             }
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            emit SentMessage(sender, recipient, _outgoingMessageNonce, uint64(amount), data);
+            emit MessageSent(sender, recipient, _outgoingMessageNonce, uint64(amount), data);
 
             // increment nonce for next message
             ++_outgoingMessageNonce;
@@ -278,37 +273,10 @@ contract FuelMessagePortal is
     }
 
     /// @notice Executes a message in the given header
+    /// @param messageId The id of message to execute
     /// @param message The message to execute
-    /// @param blockHeader The block containing the message
-    /// @param messageInBlockProof Proof that message exists in block
-    function _executeMessageInHeader(
-        Message calldata message,
-        FuelBlockHeader calldata blockHeader,
-        MerkleProof calldata messageInBlockProof
-    ) private nonReentrant {
-        //verify message validity
-        bytes32 messageId = CryptographyLib.hash(
-            abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
-        );
+    function _executeMessage(bytes32 messageId, Message calldata message) private nonReentrant {
         require(!_incomingMessageSuccessful[messageId], "Already relayed");
-        require(
-            (blockHeader.timestamp - 4611686018427387914) <=
-                // solhint-disable-next-line not-rely-on-time
-                (block.timestamp - _incomingMessageTimelock),
-            "Timelock not elapsed"
-        );
-
-        //verify message in block
-        require(
-            verifyBinaryTree(
-                blockHeader.outputMessagesRoot,
-                abi.encodePacked(messageId),
-                messageInBlockProof.proof,
-                messageInBlockProof.key,
-                blockHeader.outputMessagesCount
-            ),
-            "Invalid message in block proof"
-        );
 
         //set message sender for receiving contract to reference
         _incomingMessageSender = message.sender;
@@ -329,6 +297,9 @@ contract FuelMessagePortal is
 
         //keep track of successfully relayed messages
         _incomingMessageSuccessful[messageId] = true;
+
+        //emit event for successful message relay
+        emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
     }
 
     /// @notice Executes a message in the given header
