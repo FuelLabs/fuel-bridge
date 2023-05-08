@@ -1,4 +1,4 @@
-library events;
+library;
 
 use std::u256::U256;
 
@@ -9,7 +9,7 @@ pub struct RefundRegisteredEvent {
 }
 
 pub struct DepositEvent {
-    to: Address,
+    to: Identity,
     from: b256,
     amount: u64,
 }

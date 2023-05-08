@@ -1,8 +1,4 @@
-library utils;
-
-dep errors;
-dep events;
-dep data;
+library;
 
 use std::{
     bytes::Bytes,
@@ -11,13 +7,16 @@ use std::{
         disable_panic_on_overflow,
         enable_panic_on_overflow,
     },
-    inputs::input_message_data,
+    inputs::{
+        input_message_data,
+        input_message_data_length,
+    },
     math::*,
     u256::U256,
 };
 
-use errors::BridgeFungibleTokenError;
-use data::MessageData;
+use ::errors::BridgeFungibleTokenError;
+use ::data::MessageData;
 
 fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError> {
     let mut bn_clone = bn;
@@ -25,7 +24,7 @@ fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError
 
     // the zero case
     if (decimals_to_shift == 0) {
-        return Result::Ok(bn);
+        return Result::Ok(bn_clone);
     }
 
     // the too large case
@@ -44,6 +43,7 @@ fn shift_decimals_left(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenError
         decimals_to_shift = decimals_to_shift - 19;
         bn_clone = adjusted;
     }
+
     let (adjusted, overflow) = bn_mult(bn_clone, 10.pow(decimals_to_shift));
     if (overflow != 0) {
         return Result::Err(BridgeFungibleTokenError::OverflowError);
@@ -57,7 +57,7 @@ fn shift_decimals_right(bn: U256, d: u8) -> Result<U256, BridgeFungibleTokenErro
 
     // the zero case
     if (decimals_to_shift == 0u32) {
-        return Result::Ok(bn);
+        return Result::Ok(bn_clone);
     }
 
     // the too large case
@@ -94,12 +94,12 @@ pub fn adjust_withdrawal_decimals(
     let adjusted = if bridged_token_decimals > decimals {
         match shift_decimals_left(value, bridged_token_decimals - decimals) {
             Result::Err(e) => return Result::Err(e),
-            Result::Ok(v) => (v.a, v.b, v.c, v.d), //v.into(),
+            Result::Ok(v) => v.into(),
         }
     } else if bridged_token_decimals < decimals {
         match shift_decimals_right(value, decimals - bridged_token_decimals) {
             Result::Err(e) => return Result::Err(e),
-            Result::Ok(v) => (v.a, v.b, v.c, v.d), //v.into(),
+            Result::Ok(v) => v.into(),
         }
     } else {
         (0, 0, 0, val)
@@ -153,15 +153,40 @@ pub fn parse_message_data(msg_idx: u8) -> MessageData {
     let mut msg_data = MessageData {
         token: ZERO_B256,
         from: ZERO_B256,
-        to: Address::from(ZERO_B256),
+        to: Identity::Address(Address::from(ZERO_B256)),
         amount: ZERO_B256,
+        len: 160,
     };
 
     // Parse the message data
-    msg_data.token = input_message_data(msg_idx, 32).into();
-    msg_data.from = input_message_data(msg_idx, 32 + 32).into();
-    msg_data.to = Address::from(input_message_data(msg_idx, 32 + 32 + 32).into());
-    msg_data.amount = input_message_data(msg_idx, 32 + 32 + 32 + 32).into();
+    let token = input_message_data(msg_idx, 32);
+    let ptr = __addr_of(msg_data.token);
+    token.buf.ptr().copy_to::<b256>(ptr, 1);
+    // TODO: when https://github.com/FuelLabs/sway/issues/4450 is fixed, remove 3 lines above and uncomment line below. Same applies to msg_data.from, msg_data.amount & msg_data.to
+    // msg_data.token = input_message_data(msg_idx, 32).into();
+    let from = input_message_data(msg_idx, 32 + 32);
+    let ptr_2 = __addr_of(msg_data.from);
+    from.buf.ptr().copy_to::<b256>(ptr_2, 1);
+    // msg_data.from = input_message_data(msg_idx, 32 + 32).into();
+    let amount = input_message_data(msg_idx, 32 + 32 + 32 + 32);
+    let ptr_3 = __addr_of(msg_data.amount);
+    amount.buf.ptr().copy_to::<b256>(ptr_3, 1);
+    // msg_data.amount = input_message_data(msg_idx, 32 + 32 + 32 + 32).into();
+
+    // any data beyond 160 bytes means deposit is meant for a contract.
+    // if data is > 161 bytes, then we also need to call process_message on the destination contract.
+    msg_data.len = input_message_data_length(msg_idx);
+    let mut raw_id = ZERO_B256;
+    let to = input_message_data(msg_idx, 32 + 32 + 32);
+    let ptr_4 = __addr_of(raw_id);
+    to.buf.ptr().copy_to::<b256>(ptr_4, 1);
+
+    if msg_data.len > 160u16 {
+        msg_data.to = Identity::ContractId(ContractId::from(raw_id));
+    } else {
+        msg_data.to = Identity::Address(Address::from(raw_id));
+    }
+
     msg_data
 }
 
@@ -243,7 +268,7 @@ fn bn_div(bn: U256, d: u32) -> (U256, u32) {
     let mask: u64 = 0x00000000FFFFFFFF;
     let result = (U256::new(), 0u32);
     asm(bn: __addr_of(bn_clone), d: d, m: mask, r0, r1, r2, r3, v0, v1, sum_1, sum_2, q, result: __addr_of(result)) {
-		// The upper 64bits can just be divided normal
+        // The upper 64bits can just be divided normal
         lw   v0 bn i0;
         mod  r0 v0 d; // record the remainder
         div  q v0 d;

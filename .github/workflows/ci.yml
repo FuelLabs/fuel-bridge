@@ -43,7 +43,8 @@ jobs:
         project: [
           'bridge-fungible-token',
           'fungible-bridge-abi',
-          'FRC20-abi'
+          'FRC20-abi',
+          'test-deposit-recipient-contract'
           ]
 
     steps:
@@ -76,7 +77,7 @@ jobs:
       - name: Install Fuel toolchain
         uses: FuelLabs/action-fuel-toolchain@v0.6.0
         with:
-          toolchain: beta-3
+          toolchain: latest
 
       - name: Check Sway formatting
         run: forc fmt --path ${{ matrix.project }} --check

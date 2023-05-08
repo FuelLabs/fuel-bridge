@@ -8,3 +8,4 @@ name = "bridge_fungible_token"
 FRC20_abi = { path = "../FRC20-abi" }
 contract_message_receiver = { path = "../bridge-message-predicates/contract-message-receiver" }
 fungible_bridge_abi = { path = "../fungible-bridge-abi" }
+reentrancy = { git = "https://github.com/FuelLabs/sway-libs" }

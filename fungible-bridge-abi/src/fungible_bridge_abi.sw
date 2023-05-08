@@ -1,4 +1,4 @@
-library fungible_bridge_abi;
+library;
 
 use std::vm::evm::evm_address::EvmAddress;
 

@@ -1,10 +1,9 @@
-library data;
-
-use std::{address::Address, contract_id::ContractId};
+library;
 
 pub struct MessageData {
     token: b256,
     from: b256,
-    to: Address,
+    to: Identity,
     amount: b256,
+    len: u64,
 }
