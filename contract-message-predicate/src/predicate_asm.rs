@@ -60,7 +60,7 @@ pub fn bytecode() -> Vec<u8> {
         //check if the input is a message input
         op::gtf(REG_INPUT_TYPE, REG_INPUT_INDEX, GTF_INPUT_TYPE), //REG_INPUT_TYPE = the type of input for input[INPUT_INDEX]
         op::jnei(REG_INPUT_TYPE, REG_EXPECTED_INPUT_TYPE, JMP_SKIP_DATA_CHECK), //skips to SKIP_DATA_CHECK if REG_INPUT_TYPE does not equal REG_EXPECTED_INPUT_TYPE
-        //check it the input message has data
+        //check if the input message has data
         op::gtf(REG_INPUT_MSG_DATA_LEN, REG_INPUT_INDEX, GTF_MSG_DATA_LEN), //REG_INPUT_MSG_DATA_LEN = the data length of input[INPUT_INDEX]
         op::jnei(REG_INPUT_MSG_DATA_LEN, RegId::ZERO, JMP_PREDICATE_FAILURE), //jumps to PREDICATE_FAILURE if REG_INPUT_MSG_DATA_LEN does not equal 0
         //SKIP_DATA_CHECK:

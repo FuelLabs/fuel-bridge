@@ -1,7 +1,7 @@
 mod predicate_asm;
 mod script_asm;
 
-use fuel_tx::Contract;
+use fuel_tx::{ConsensusParameters, Input};
 use sha2::{Digest, Sha256};
 
 // Make the script and predicate bytecode public
@@ -17,8 +17,8 @@ pub fn script_hash() -> [u8; 32] {
 }
 
 // Gets the root of the message-to-contract predicate
-pub fn predicate_root() -> [u8; 32] {
+pub fn predicate_root(cparams: &ConsensusParameters) -> [u8; 32] {
     let predicate = predicate_asm::bytecode();
-    let root = Contract::root_from_code(predicate);
+    let root = Input::predicate_owner(predicate, cparams);
     root.into()
 }

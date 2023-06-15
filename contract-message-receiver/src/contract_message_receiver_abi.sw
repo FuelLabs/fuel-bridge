@@ -1,4 +1,4 @@
-library contract_message_receiver_abi;
+library;
 
 abi MessageReceiver {
     #[storage(read, write)]

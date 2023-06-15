@@ -1,0 +1,7 @@
+[toolchain]
+# TODO: replace with fuel-beta-4 when available
+channel = "latest-2023-05-31"
+
+[components]
+forc = "0.40.1"
+fuel-core = "0.18.1"

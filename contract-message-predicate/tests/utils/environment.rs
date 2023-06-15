@@ -1,14 +1,21 @@
 use crate::builder;
 
-use std::mem::size_of;
-use std::num::ParseIntError;
-use std::str::FromStr;
+use std::{mem::size_of, num::ParseIntError, str::FromStr, vec};
 
-use fuels::prelude::*;
-use fuels::signers::fuel_crypto::SecretKey;
-use fuels::test_helpers::{setup_single_message, setup_test_client, Config};
-use fuels::tx::{Address, AssetId, Bytes32, Input, Receipt, TxPointer, UtxoId, Word};
-use fuels::types::message::Message;
+use fuels::{
+    accounts::{fuel_crypto::SecretKey, wallet::WalletUnlocked, Signer},
+    prelude::{
+        abigen, setup_custom_assets_coins, Address, AssetConfig, AssetId, Contract,
+        LoadConfiguration, Provider, ScriptTransaction, TxParameters,
+    },
+    test_helpers::{setup_single_message, setup_test_client},
+    tx::{Bytes32, Receipt},
+    types::{
+        coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
+    },
+};
+
+use fuel_tx::{ConsensusParameters, TxPointer, UtxoId, Word};
 
 abigen!(Contract(
     name = "TestContract",
@@ -23,7 +30,13 @@ pub const TEST_RECEIVER_CONTRACT_BINARY: &str = "./out/debug/contract_message_te
 pub async fn setup_environment(
     coins: Vec<(Word, AssetId)>,
     messages: Vec<(Word, Vec<u8>)>,
-) -> (WalletUnlocked, TestContract, Input, Vec<Input>, Vec<Input>) {
+) -> (
+    WalletUnlocked,
+    TestContract<WalletUnlocked>,
+    Input,
+    Vec<Input>,
+    Vec<Input>,
+) {
     // Create secret for wallet
     const SIZE_SECRET_KEY: usize = size_of::<SecretKey>();
     const PADDING_BYTES: usize = SIZE_SECRET_KEY - size_of::<u64>();
@@ -49,74 +62,59 @@ pub async fn setup_environment(
     let all_coins = setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
 
     // Generate messages
-    let message_nonce: Word = Word::default();
     let message_sender = Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap();
     let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
-    let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
+    let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root(
+        &ConsensusParameters::default(),
+    ));
+
     let all_messages: Vec<Message> = messages
         .iter()
-        .flat_map(|message| {
+        .enumerate()
+        .flat_map(|(counter, message)| {
             vec![setup_single_message(
                 &message_sender.into(),
                 &predicate_root.into(),
                 message.0,
-                message_nonce,
+                (counter as u64).into(),
                 message.1.clone(),
             )]
         })
         .collect();
 
     // Create the client and provider
-    let provider_config = Config::local_node();
-    let (client, _) = setup_test_client(
-        all_coins.clone(),
-        all_messages.clone(),
-        Some(provider_config),
-        None,
-        None,
-    )
-    .await;
-    let provider = Provider::new(client);
+    let (client, _, consensus_params) =
+        setup_test_client(all_coins.clone(), all_messages.clone(), None, None).await;
+    let provider = Provider::new(client, consensus_params);
 
     // Add provider to wallet
-    wallet.set_provider(provider.clone());
+    wallet.set_provider(provider);
 
     // Deploy the target contract used for testing processing messages
-    let test_contract_id = Contract::deploy(
-        TEST_RECEIVER_CONTRACT_BINARY,
-        &wallet,
-        DeployConfiguration::default(),
-    )
-    .await
-    .unwrap();
+    let test_contract_id =
+        Contract::load_from(TEST_RECEIVER_CONTRACT_BINARY, LoadConfiguration::default())
+            .unwrap()
+            .deploy(&wallet, TxParameters::default())
+            .await
+            .unwrap();
+
     let test_contract = TestContract::new(test_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs: Vec<Input> = all_coins
         .into_iter()
-        .map(|coin| Input::CoinSigned {
-            utxo_id: UtxoId::from(coin.utxo_id.clone()),
-            owner: Address::from(coin.owner.clone()),
-            amount: coin.amount.clone().into(),
-            asset_id: AssetId::from(coin.asset_id.clone()),
-            tx_pointer: TxPointer::default(),
-            witness_index: 0,
-            maturity: 0,
-        })
+        .map(|coin| Input::resource_signed(CoinType::Coin(coin), 0))
         .collect();
 
     // Build inputs for provided messages
     let message_inputs: Vec<Input> = all_messages
-        .iter()
-        .map(|message| Input::MessagePredicate {
-            message_id: message.message_id(),
-            sender: Address::from(message.sender.clone()),
-            recipient: Address::from(message.recipient.clone()),
-            amount: message.amount,
-            nonce: message.nonce,
-            data: message.data.clone(),
-            predicate: predicate_bytecode.clone(),
-            predicate_data: vec![],
+        .into_iter()
+        .map(|message| {
+            Input::resource_predicate(
+                CoinType::Message(message),
+                predicate_bytecode.clone(),
+                UnresolvedBytes::default(),
+            )
         })
         .collect();
 
@@ -146,10 +144,10 @@ pub async fn relay_message_to_contract(
     gas_coin: Input,
 ) -> Vec<Receipt> {
     // Build transaction
-    let mut tx = builder::build_contract_message_tx(
+    let (mut tx, _, _) = builder::build_contract_message_tx(
         message,
         &vec![contract, gas_coin],
-        &vec![],
+        &[],
         TxParameters::default(),
     )
     .await;
@@ -161,25 +159,24 @@ pub async fn relay_message_to_contract(
 /// Relays a message-to-contract message
 pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransaction) -> Vec<Receipt> {
     // Get provider and client
-    let provider = wallet.get_provider().unwrap();
+    let provider = wallet.provider().unwrap();
 
     // Sign transaction and call
-    wallet.sign_transaction(tx).await.unwrap();
+    wallet.sign_transaction(tx).unwrap();
     provider.send_transaction(tx).await.unwrap()
 }
 
 /// Prefixes the given bytes with the test contract ID
-pub async fn prefix_contract_id(data: Vec<u8>) -> Vec<u8> {
+pub async fn prefix_contract_id(mut data: Vec<u8>) -> Vec<u8> {
     // Compute the test contract ID
-    let deploy_configuration = DeployConfiguration::default();
-    let compiled_contract =
-        Contract::load_contract(TEST_RECEIVER_CONTRACT_BINARY, deploy_configuration).unwrap();
-    let (test_contract_id, _) = Contract::compute_contract_id_and_state_root(&compiled_contract);
+    let test_contract_id =
+        Contract::load_from(TEST_RECEIVER_CONTRACT_BINARY, LoadConfiguration::default())
+            .unwrap()
+            .contract_id();
 
     // Turn contract id into array with the given data appended to it
-    let test_contract_id: [u8; 32] = test_contract_id.into();
     let mut test_contract_id = test_contract_id.to_vec();
-    test_contract_id.append(&mut data.clone());
+    test_contract_id.append(&mut data);
     test_contract_id
 }
 
@@ -192,7 +189,7 @@ pub fn decode_hex(s: &str) -> Vec<u8> {
     data.unwrap()
 }
 
-/// Contructs test message data
+/// Constructs test message data
 pub async fn message_data(word: u64, bytes: &str, address: &str) -> Vec<u8> {
     let mut message_data = word.to_be_bytes().to_vec();
     message_data.append(&mut decode_hex(bytes));
