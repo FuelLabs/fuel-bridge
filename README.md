@@ -32,14 +32,24 @@ To allocate more memory, go to Settings > Resources in the Docker UI and use the
 
 ## Basic config options
 
-A set of basic environment variables can be set before running. The defaults are defined as:
+A set of environment variables can be set before running.
+
+You can change this configs on the env files;
+- [Fuel Core env](./envs/fuel_core.env)
+- [L1 env](./envs/l1_chain.env)
+
+## Change HOST ports;
+
+With this set of env variables you can change in witch port L1 and FuelCore will be bind to the host env.
+
+This is the list of envs and the default values assigned to it;
 ```bash
 L1_CHAIN_HTTP_PORT=9545
 DEPLOYMENTS_PORT=8080
 FUEL_CORE_HTTP_PORT=4000
 ```
 
-For example:
+You can change this by exposing on local variables example;
 ```bash
 L1_CHAIN_HTTP_PORT=9545 docker-compose up
 ```
