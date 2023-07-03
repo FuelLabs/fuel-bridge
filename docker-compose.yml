@@ -5,12 +5,9 @@ services:
     image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
     platform: linux/amd64
     build:
-      context: ./
-      dockerfile: ./docker/l1-chain/Dockerfile
+      context: ./docker/l1-chain/
     env_file:
       - ./envs/l1_chain.env
-    environment:
-      POA_AUTHORITY_KEY: '0x48abc67B8Da0B4c9C544299cB24028F07cF2595A'
     ports:
       # expose the service to the host for integration testing
       - ${L1_CHAIN_HTTP_PORT:-8545}:9545
@@ -22,15 +19,12 @@ services:
     image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
     platform: linux/amd64
     build:
-      context: ./
-      dockerfile: ./docker/fuel-core/Dockerfile
+      context: ./docker/fuel-core/
     env_file:
       - ./envs/fuel_core.env
     environment:
       L1_CHAIN_HTTP: http://l1_chain:9545
       DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
-      CONSENSUS_KEY_SECRET: 'a449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298'
     ports:
       # expose the service to the host for integration testing
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
-      

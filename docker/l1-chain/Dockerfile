@@ -8,7 +8,7 @@ RUN apk --no-cache add git
 WORKDIR /l1chain
 
 # clone the contracts repo
-RUN git clone --depth 1 --branch v0.1.0-beta.3 https://github.com/FuelLabs/fuel-v2-contracts.git
+RUN git clone --depth 1 --branch master https://github.com/FuelLabs/fuel-v2-contracts.git
 WORKDIR /l1chain/fuel-v2-contracts
 
 # build the ethereum contracts and environment
@@ -17,9 +17,7 @@ RUN npm run build
 
 # remove build dependencies
 RUN npm prune --omit=dev
-COPY ./docker/l1-chain/hardhat.config.ts .
-
-
+COPY ./hardhat/hardhat.config.ts .
 
 # ====== Final Image ======
 FROM node:16-alpine
@@ -46,5 +44,5 @@ EXPOSE ${L1_PORT}
 EXPOSE ${SERVE_PORT}
 
 # copy over script and run
-COPY ./scripts/l1_chain.sh .
+COPY ./l1_chain.sh .
 CMD ["sh", "./l1_chain.sh"]

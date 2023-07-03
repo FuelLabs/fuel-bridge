@@ -1,6 +1,6 @@
 # Fuel Development Environment
 
-This docker-compose project runs a local Fuel development environment with both an L1 node and a Fuel node.
+This project runs a local Fuel development environment with both an L1 node and a Fuel node.
 
 ## Requirements
 

@@ -56,7 +56,6 @@ exec /root/fuel-core run \
     --db-type in-memory \
     --utxo-validation \
     --vm-backtrace \
-    --consensus-key $CONSENSUS_KEY_SECRET \
     --relayer $L1_CHAIN_HTTP \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
     --relayer-da-finalization 0 \
