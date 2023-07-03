@@ -3,6 +3,7 @@ version: '3.4'
 services:
   l1_chain:
     image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
+    platform: linux/amd64
     build:
       context: ./
       dockerfile: ./docker/l1-chain/Dockerfile
@@ -19,6 +20,7 @@ services:
     depends_on:
       - l1_chain
     image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
+    platform: linux/amd64
     build:
       context: ./
       dockerfile: ./docker/fuel-core/Dockerfile
