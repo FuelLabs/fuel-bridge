@@ -1367,7 +1367,7 @@ dependencies = [
 
 [[package]]
 name = "fuel-contract-message-predicate"
-version = "0.1.4"
+version = "0.2.0"
 dependencies = [
  "fuel-asm 0.31.2",
  "fuel-core-interfaces",
