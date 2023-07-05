@@ -49,7 +49,7 @@ A set of environment variables can be set before running.
 
 You can change this configs on the env files;
 - [Fuel Core env](./envs/fuel_core.env) Fuel Core configurations.
-- [L1 env](./envs/l1_chain.env) L1 configuartions.
+- [L1 env](./envs/l1_chain.env) L1 configurations.
 - [PORTS](./envs/ports.env): Exposed ports on host machine.
 
 ## License
