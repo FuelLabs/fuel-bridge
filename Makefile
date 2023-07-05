@@ -11,4 +11,5 @@ clean:
 	docker compose down --rmi local -v --remove-orphans
 
 logs:
-	docker compose logs -f -n 100
+	docker compose logs -f
+
