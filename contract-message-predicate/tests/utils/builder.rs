@@ -1,11 +1,10 @@
 use std::collections::HashMap;
 
-use fuel_tx::{ConsensusParameters, Output};
-
+use fuel_tx::{Address, AssetId, Output};
 use fuels::{
     accounts::fuel_crypto::fuel_types::Word,
-    prelude::{Address, AssetId, ScriptTransaction, TxParameters},
-    tx::Bytes32,
+    prelude::{ScriptTransaction, TxParameters},
+    tx::{Bytes32, ConsensusParameters},
     types::{
         coin_type::CoinType,
         input::Input,

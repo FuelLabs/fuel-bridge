@@ -1,10 +1,7 @@
-use fuel_asm::{op, RegId};
+use fuel_asm::{op, GTFArgs, RegId};
 use sha2::{Digest, Sha256};
 
 const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u8)";
-const GTF_MSG_DATA: u16 = 0x11D;
-const GTF_REG_MSG_AMOUNT: u16 = 0x117;
-
 const BYTES_PER_INSTR: u16 = 4;
 
 // Gets the bytecode for the message-to-contract script
@@ -27,7 +24,7 @@ pub fn bytecode() -> Vec<u8> {
     const REF_DATA_START_PTR: u16 = 11 * BYTES_PER_INSTR;
 
     /* The following assembly code is intended to do the following:
-     *  -Call the function `process_message` on the contract with ID that matches
+     *  - Call the function `process_message` on the contract with ID that matches
      *   the first 32 bytes in the message data field, while forwarding the exact
      *   amount of base asset specified in the `InputMessage` `amount` field
      *
@@ -40,8 +37,16 @@ pub fn bytecode() -> Vec<u8> {
         op::addi(REG_DATA_PTR, REG_MEMORY_START_PTR, 32), //REG_DATA_PTR = REG_MEMORY_START_PTR + 32bytes [memory start pointer + 32]
         op::addi(REG_DATA_FN_SEL_PTR, REG_DATA_PTR, 32 + 4), //REG_DATA_FN_SEL_PTR = REG_DATA_PTR + 32bytes + 4bytes [call data start pointer + 32 + 4]
         //prep call parameters
-        op::gtf(REG_MSG_AMOUNT, RegId::ZERO, GTF_REG_MSG_AMOUNT), //REG_MSG_AMOUNT = amount value of message from input[0]
-        op::gtf(REG_CONTRACT_ADDR_PTR, RegId::ZERO, GTF_MSG_DATA), //REG_CONTRACT_ADDR_PTR = memory location of the message data from input[0]
+        op::gtf(
+            REG_MSG_AMOUNT,
+            RegId::ZERO,
+            GTFArgs::InputMessageAmount.into(),
+        ), //REG_MSG_AMOUNT = amount value of message from input[0]
+        op::gtf(
+            REG_CONTRACT_ADDR_PTR,
+            RegId::ZERO,
+            GTFArgs::InputMessageData.into(),
+        ), //REG_CONTRACT_ADDR_PTR = memory location of the message data from input[0]
         op::addi(REG_FN_SELECTOR_PTR, RegId::IS, REF_DATA_START_PTR), //REG_FN_SELECTOR_PTR = function selector at end of program
         op::mcpi(REG_DATA_PTR, REG_CONTRACT_ADDR_PTR, 32), //32 bytes at REG_DATA_PTR = the 32 bytes at REG_CONTRACT_ADDR_PTR
         op::mcpi(REG_DATA_FN_SEL_PTR, REG_FN_SELECTOR_PTR, 4), //4 bytes at REG_DATA_FN_SEL_PTR = the 4 bytes at REG_FN_SELECTOR_PTR

@@ -1,10 +1,4 @@
-use fuel_asm::{op, RegId};
-
-const GTF_SCRIPT: u16 = 0x00B;
-const GTF_SCRIPT_LEN: u16 = 0x005;
-const GTF_SCRIPT_INPUTS_COUNT: u16 = 0x007;
-const GTF_INPUT_TYPE: u16 = 0x101;
-const GTF_MSG_DATA_LEN: u16 = 0x11A;
+use fuel_asm::{op, GTFArgs, RegId};
 
 const INPUT_MESSAGE_TYPE: u32 = 2;
 const BYTES_PER_INSTR: u16 = 4;
@@ -44,8 +38,8 @@ pub fn bytecode() -> Vec<u8> {
         op::move_(REG_HASH_PTR, RegId::SP), //REG_HASH_PTR = stack pointer
         op::cfei(32),                       //extends current call frame stack by 32 bytes
         //compute script hash
-        op::gtf(REG_SCRIPT_PTR, RegId::ZERO, GTF_SCRIPT), //REG_SCRIPT_PTR = script data address
-        op::gtf(REG_SCRIPT_LEN, RegId::ZERO, GTF_SCRIPT_LEN), //REG_SCRIPT_LEN = script data length
+        op::gtf(REG_SCRIPT_PTR, RegId::ZERO, GTFArgs::Script.into()), //REG_SCRIPT_PTR = script data address
+        op::gtf(REG_SCRIPT_LEN, RegId::ZERO, GTFArgs::ScriptLength.into()), //REG_SCRIPT_LEN = script data length
         op::s256(REG_HASH_PTR, REG_SCRIPT_PTR, REG_SCRIPT_LEN), //32bytes at SCRIPT_HASH_PTR = hash of the script
         //compare hash with expected
         op::addi(REG_EXPECTED_HASH_PTR, RegId::IS, REF_DATA_START_PTR), //REG_EXPECTED_HASH_PTR = address of reference data at end of program
@@ -53,15 +47,23 @@ pub fn bytecode() -> Vec<u8> {
         op::meq(REG_RESULT, REG_EXPECTED_HASH_PTR, REG_HASH_PTR, REG_VAL_32), //REG_RESULT = if the 32bytes at REG_HASH_PTR equals the 32bytes at REG_EXPECTED_HASH_PTR
         op::jnei(REG_RESULT, RegId::ONE, JMP_PREDICATE_FAILURE), //jumps to PREDICATE_FAILURE if REG_RESULT is not 1
         //confirm that no other messages with data are included
-        op::gtf(REG_INPUT_INDEX, RegId::ZERO, GTF_SCRIPT_INPUTS_COUNT), //REG_INPUT_INDEX = the number of inputs in the script
+        op::gtf(
+            REG_INPUT_INDEX,
+            RegId::ZERO,
+            GTFArgs::ScriptInputsCount.into(),
+        ), //REG_INPUT_INDEX = the number of inputs in the script
         op::movi(REG_EXPECTED_INPUT_TYPE, INPUT_MESSAGE_TYPE), //REG_EXPECTED_INPUT_TYPE = REG_INPUT_MESSAGE_TYPE
         //LOOP_START:
         op::subi(REG_INPUT_INDEX, REG_INPUT_INDEX, 1), //REG_INPUT_INDEX = REG_INPUT_INDEX - 1
         //check if the input is a message input
-        op::gtf(REG_INPUT_TYPE, REG_INPUT_INDEX, GTF_INPUT_TYPE), //REG_INPUT_TYPE = the type of input for input[INPUT_INDEX]
+        op::gtf(REG_INPUT_TYPE, REG_INPUT_INDEX, GTFArgs::InputType.into()), //REG_INPUT_TYPE = the type of input for input[INPUT_INDEX]
         op::jnei(REG_INPUT_TYPE, REG_EXPECTED_INPUT_TYPE, JMP_SKIP_DATA_CHECK), //skips to SKIP_DATA_CHECK if REG_INPUT_TYPE does not equal REG_EXPECTED_INPUT_TYPE
         //check if the input message has data
-        op::gtf(REG_INPUT_MSG_DATA_LEN, REG_INPUT_INDEX, GTF_MSG_DATA_LEN), //REG_INPUT_MSG_DATA_LEN = the data length of input[INPUT_INDEX]
+        op::gtf(
+            REG_INPUT_MSG_DATA_LEN,
+            REG_INPUT_INDEX,
+            GTFArgs::InputMessageDataLength.into(),
+        ), //REG_INPUT_MSG_DATA_LEN = the data length of input[INPUT_INDEX]
         op::jnei(REG_INPUT_MSG_DATA_LEN, RegId::ZERO, JMP_PREDICATE_FAILURE), //jumps to PREDICATE_FAILURE if REG_INPUT_MSG_DATA_LEN does not equal 0
         //SKIP_DATA_CHECK:
         op::jnei(REG_INPUT_INDEX, RegId::ONE, JMP_LOOP_START), //jumps back to LOOP_START if REG_INPUT_INDEX does not equal 1

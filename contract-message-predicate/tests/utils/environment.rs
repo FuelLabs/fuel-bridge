@@ -120,7 +120,7 @@ pub async fn setup_environment(
 
     // Build contract inputs
     let contract_input = Input::Contract {
-        utxo_id: UtxoId::new(Bytes32::zeroed(), 0u8),
+        utxo_id: UtxoId::new(Bytes32::from([0u8; 32]), 0),
         balance_root: Bytes32::zeroed(),
         state_root: Bytes32::zeroed(),
         tx_pointer: TxPointer::default(),

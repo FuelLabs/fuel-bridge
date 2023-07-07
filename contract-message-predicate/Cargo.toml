@@ -10,13 +10,12 @@ rust-version = { workspace = true }
 description = "Script and predicate for relaying contract messages."
 
 [dependencies]
-fuel-asm = "0.31.2"
-fuel-tx = "0.31.2"
+fuel-asm = "0.34.1"
+fuel-tx = "0.31.1"
 sha2 = "0.10.6"
 
 [dev-dependencies]
-fuel-core-interfaces = "0.15.3"
-fuels = { version = "0.43.0", features = ["fuel-core-lib"] }
+fuels = { version = "0.43.0" }
 hex = "0.4.3"
 insta = "1.28"
 tokio = { version = "1.27", features = ["rt", "macros"] }
