@@ -4,9 +4,9 @@ import axios from 'axios';
 import { ethers, Signer as EthSigner } from 'ethers';
 import { Provider as EthProvider } from '@ethersproject/providers';
 import { Wallet, Provider as FuelProvider, WalletUnlocked as FuelWallet } from 'fuels';
-import { fuels_parseEther, fuels_formatEther } from '../scripts/utils';
-import { FuelChainConsensus } from '../fuel-v2-contracts/FuelChainConsensus.d';
-import { FuelChainConsensus__factory } from '../fuel-v2-contracts/factories/FuelChainConsensus__factory';
+import { fuels_parseEther, fuels_formatEther } from './utils/parsers';
+import { FuelChainState } from '../fuel-v2-contracts/FuelChainState';
+import { FuelChainState__factory } from '../fuel-v2-contracts/factories/FuelChainState__factory';
 import { FuelMessagePortal } from '../fuel-v2-contracts/FuelMessagePortal.d';
 import { FuelMessagePortal__factory } from '../fuel-v2-contracts/factories/FuelMessagePortal__factory';
 import { FuelERC20Gateway } from '../fuel-v2-contracts/FuelERC20Gateway.d';
@@ -42,7 +42,8 @@ export interface SetupOptions {
 export interface TestEnvironment {
   eth: {
     provider: EthProvider;
-    fuelChainConsensus: FuelChainConsensus;
+    jsonRPC: string;
+    fuelChainState: FuelChainState;
     fuelMessagePortal: FuelMessagePortal;
     fuelERC20Gateway: FuelERC20Gateway;
     deployer: EthSigner;
@@ -129,21 +130,21 @@ export async function setupEnvironment(opts: SetupOptions): Promise<TestEnvironm
   }
 
   // Get contract addresses
-  let eth_fuelChainConsensusAddress: string = fuel_chain_consensus_addr;
+  let eth_fuelChainStateAddress: string = fuel_chain_consensus_addr;
   let eth_fuelMessagePortalAddress: string = fuel_message_portal_addr;
   let eth_fuelERC20GatewayAddress: string = fuel_erc20_gateway_addr;
-  if (!eth_fuelChainConsensusAddress || !eth_fuelMessagePortalAddress || !eth_fuelERC20GatewayAddress) {
+  if (!eth_fuelChainStateAddress || !eth_fuelMessagePortalAddress || !eth_fuelERC20GatewayAddress) {
     let deployerAddresses: any = null;
     try {
       deployerAddresses = (await axios.get(http_deployer + '/deployments.local.json')).data;
     } catch (e) {
       throw new Error('Failed to connect to the deployer at (' + http_deployer + "). Are you sure it's running?");
     }
-    if (!eth_fuelChainConsensusAddress) {
-      if (!deployerAddresses.FuelChainConsensus) {
-        throw new Error('Failed to get FuelChainConsensus address from deployer');
+    if (!eth_fuelChainStateAddress) {
+      if (!deployerAddresses.FuelChainState) {
+        throw new Error('Failed to get FuelChainState address from deployer');
       }
-      eth_fuelChainConsensusAddress = deployerAddresses.FuelChainConsensus;
+      eth_fuelChainStateAddress = deployerAddresses.FuelChainState;
     }
     if (!eth_fuelMessagePortalAddress) {
       if (!deployerAddresses.FuelMessagePortal) {
@@ -160,21 +161,25 @@ export async function setupEnvironment(opts: SetupOptions): Promise<TestEnvironm
   }
 
   // Connect existing contracts
-  let eth_fuelChainConsensus: FuelChainConsensus = FuelChainConsensus__factory.connect(
-    eth_fuelChainConsensusAddress,
+  let eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
+    eth_fuelChainStateAddress,
     eth_deployer
   );
   let eth_fuelMessagePortal: FuelMessagePortal = FuelMessagePortal__factory.connect(
     eth_fuelMessagePortalAddress,
     eth_deployer
   );
-  let eth_fuelERC20Gateway: FuelERC20Gateway = FuelERC20Gateway__factory.connect(eth_fuelERC20GatewayAddress, eth_deployer);
+  let eth_fuelERC20Gateway: FuelERC20Gateway = FuelERC20Gateway__factory.connect(
+    eth_fuelERC20GatewayAddress,
+    eth_deployer
+  );
 
   // Return the Fuel harness object
   return {
     eth: {
       provider: eth_provider,
-      fuelChainConsensus: eth_fuelChainConsensus,
+      jsonRPC: http_ethereum_client,
+      fuelChainState: eth_fuelChainState,
       fuelMessagePortal: eth_fuelMessagePortal,
       fuelERC20Gateway: eth_fuelERC20Gateway,
       deployer: eth_deployer,

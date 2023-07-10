@@ -15,7 +15,7 @@ Integration tests for the Fuel Messaging Bridge.
 Install dependencies:
 
 ```sh
-npm ci
+pnpm install
 ```
 
 ### Running Tests
@@ -25,7 +25,7 @@ Before running the integration tests, you need to spin up a full development sta
 Run tests:
 
 ```sh
-npm test
+pnpm test
 ```
 
 ### Example Scripts
@@ -33,8 +33,8 @@ npm test
 The test logic can also be run in script form. These scripts act as examples for how to bridge ETH and ERC-20 based assets to and from Fuel using the TS-SDK.
 
 ```sh
-npm run bridgeETH
-npm run bridgeERC20
+pnpm bridgeETH
+pnpm bridgeERC20
 ```
 
 ### Running on Goerli

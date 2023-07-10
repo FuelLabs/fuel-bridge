@@ -20,30 +20,46 @@ import { Listener, Provider } from "@ethersproject/providers";
 import { FunctionFragment, EventFragment, Result } from "@ethersproject/abi";
 import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 
-interface FuelChainConsensusInterface extends ethers.utils.Interface {
+interface FuelChainStateInterface extends ethers.utils.Interface {
   functions: {
+    "BLOCKS_PER_COMMIT_INTERVAL()": FunctionFragment;
+    "COMMITTER_ROLE()": FunctionFragment;
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
+    "NUM_COMMIT_SLOTS()": FunctionFragment;
     "PAUSER_ROLE()": FunctionFragment;
-    "authorityKey()": FunctionFragment;
+    "TIME_TO_FINALIZE()": FunctionFragment;
+    "blockHashAtCommit(uint256)": FunctionFragment;
+    "commit(bytes32,uint256)": FunctionFragment;
+    "finalized(bytes32,uint256)": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
     "grantRole(bytes32,address)": FunctionFragment;
     "hasRole(bytes32,address)": FunctionFragment;
-    "initialize(address)": FunctionFragment;
+    "initialize()": FunctionFragment;
     "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "proxiableUUID()": FunctionFragment;
     "renounceRole(bytes32,address)": FunctionFragment;
     "revokeRole(bytes32,address)": FunctionFragment;
-    "setAuthorityKey(address)": FunctionFragment;
     "supportsInterface(bytes4)": FunctionFragment;
     "unpause()": FunctionFragment;
     "upgradeTo(address)": FunctionFragment;
     "upgradeToAndCall(address,bytes)": FunctionFragment;
-    "verifyBlock(bytes32,bytes)": FunctionFragment;
   };
 
   encodeFunctionData(
+    functionFragment: "BLOCKS_PER_COMMIT_INTERVAL",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "COMMITTER_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "DEFAULT_ADMIN_ROLE",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "NUM_COMMIT_SLOTS",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -51,8 +67,20 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
-    functionFragment: "authorityKey",
+    functionFragment: "TIME_TO_FINALIZE",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "blockHashAtCommit",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "commit",
+    values: [BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "finalized",
+    values: [BytesLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "getRoleAdmin",
@@ -66,7 +94,10 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     functionFragment: "hasRole",
     values: [BytesLike, string]
   ): string;
-  encodeFunctionData(functionFragment: "initialize", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "initialize",
+    values?: undefined
+  ): string;
   encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
@@ -82,10 +113,6 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     values: [BytesLike, string]
   ): string;
   encodeFunctionData(
-    functionFragment: "setAuthorityKey",
-    values: [string]
-  ): string;
-  encodeFunctionData(
     functionFragment: "supportsInterface",
     values: [BytesLike]
   ): string;
@@ -95,13 +122,21 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     functionFragment: "upgradeToAndCall",
     values: [string, BytesLike]
   ): string;
-  encodeFunctionData(
-    functionFragment: "verifyBlock",
-    values: [BytesLike, BytesLike]
-  ): string;
 
   decodeFunctionResult(
+    functionFragment: "BLOCKS_PER_COMMIT_INTERVAL",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "COMMITTER_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "DEFAULT_ADMIN_ROLE",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "NUM_COMMIT_SLOTS",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -109,9 +144,15 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "authorityKey",
+    functionFragment: "TIME_TO_FINALIZE",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "blockHashAtCommit",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "commit", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "finalized", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "getRoleAdmin",
     data: BytesLike
@@ -131,10 +172,6 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "revokeRole", data: BytesLike): Result;
   decodeFunctionResult(
-    functionFragment: "setAuthorityKey",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "supportsInterface",
     data: BytesLike
   ): Result;
@@ -144,14 +181,11 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
     functionFragment: "upgradeToAndCall",
     data: BytesLike
   ): Result;
-  decodeFunctionResult(
-    functionFragment: "verifyBlock",
-    data: BytesLike
-  ): Result;
 
   events: {
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
+    "CommitSubmitted(uint256,bytes32)": EventFragment;
     "Initialized(uint8)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
@@ -163,6 +197,7 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
 
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "CommitSubmitted"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
@@ -172,7 +207,7 @@ interface FuelChainConsensusInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
 }
 
-export class FuelChainConsensus extends Contract {
+export class FuelChainState extends Contract {
   connect(signerOrProvider: Signer | Provider | string): this;
   attach(addressOrName: string): this;
   deployed(): Promise<this>;
@@ -213,20 +248,68 @@ export class FuelChainConsensus extends Contract {
     toBlock?: string | number | undefined
   ): Promise<Array<TypedEvent<EventArgsArray & EventArgsObject>>>;
 
-  interface: FuelChainConsensusInterface;
+  interface: FuelChainStateInterface;
 
   functions: {
+    BLOCKS_PER_COMMIT_INTERVAL(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "BLOCKS_PER_COMMIT_INTERVAL()"(
+      overrides?: CallOverrides
+    ): Promise<[BigNumber]>;
+
+    COMMITTER_ROLE(overrides?: CallOverrides): Promise<[string]>;
+
+    "COMMITTER_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
+
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
+
+    NUM_COMMIT_SLOTS(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    "NUM_COMMIT_SLOTS()"(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     PAUSER_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
 
-    authorityKey(overrides?: CallOverrides): Promise<[string]>;
+    TIME_TO_FINALIZE(overrides?: CallOverrides): Promise<[BigNumber]>;
 
-    "authorityKey()"(overrides?: CallOverrides): Promise<[string]>;
+    "TIME_TO_FINALIZE()"(overrides?: CallOverrides): Promise<[BigNumber]>;
+
+    blockHashAtCommit(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    "blockHashAtCommit(uint256)"(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[string]>;
+
+    commit(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "commit(bytes32,uint256)"(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    finalized(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
+
+    "finalized(bytes32,uint256)"(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<[boolean]>;
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<[string]>;
 
@@ -260,12 +343,10 @@ export class FuelChainConsensus extends Contract {
     ): Promise<[boolean]>;
 
     initialize(
-      key: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    "initialize(address)"(
-      key: string,
+    "initialize()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -309,16 +390,6 @@ export class FuelChainConsensus extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    setAuthorityKey(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
-    "setAuthorityKey(address)"(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -358,31 +429,65 @@ export class FuelChainConsensus extends Contract {
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
-
-    verifyBlock(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
-
-    "verifyBlock(bytes32,bytes)"(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<[boolean]>;
   };
+
+  BLOCKS_PER_COMMIT_INTERVAL(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "BLOCKS_PER_COMMIT_INTERVAL()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+  COMMITTER_ROLE(overrides?: CallOverrides): Promise<string>;
+
+  "COMMITTER_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
   DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
   "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
+  NUM_COMMIT_SLOTS(overrides?: CallOverrides): Promise<BigNumber>;
+
+  "NUM_COMMIT_SLOTS()"(overrides?: CallOverrides): Promise<BigNumber>;
+
   PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
   "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
-  authorityKey(overrides?: CallOverrides): Promise<string>;
+  TIME_TO_FINALIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-  "authorityKey()"(overrides?: CallOverrides): Promise<string>;
+  "TIME_TO_FINALIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+  blockHashAtCommit(
+    commitHeight: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  "blockHashAtCommit(uint256)"(
+    commitHeight: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<string>;
+
+  commit(
+    blockHash: BytesLike,
+    commitHeight: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "commit(bytes32,uint256)"(
+    blockHash: BytesLike,
+    commitHeight: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  finalized(
+    blockHash: BytesLike,
+    blockHeight: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
+
+  "finalized(bytes32,uint256)"(
+    blockHash: BytesLike,
+    blockHeight: BigNumberish,
+    overrides?: CallOverrides
+  ): Promise<boolean>;
 
   getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
@@ -416,12 +521,10 @@ export class FuelChainConsensus extends Contract {
   ): Promise<boolean>;
 
   initialize(
-    key: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  "initialize(address)"(
-    key: string,
+  "initialize()"(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -465,16 +568,6 @@ export class FuelChainConsensus extends Contract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  setAuthorityKey(
-    key: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  "setAuthorityKey(address)"(
-    key: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
   supportsInterface(
     interfaceId: BytesLike,
     overrides?: CallOverrides
@@ -515,30 +608,66 @@ export class FuelChainConsensus extends Contract {
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
-  verifyBlock(
-    blockHash: BytesLike,
-    signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
-  "verifyBlock(bytes32,bytes)"(
-    blockHash: BytesLike,
-    signature: BytesLike,
-    overrides?: CallOverrides
-  ): Promise<boolean>;
-
   callStatic: {
+    BLOCKS_PER_COMMIT_INTERVAL(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "BLOCKS_PER_COMMIT_INTERVAL()"(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    COMMITTER_ROLE(overrides?: CallOverrides): Promise<string>;
+
+    "COMMITTER_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<string>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
+
+    NUM_COMMIT_SLOTS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "NUM_COMMIT_SLOTS()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
-    authorityKey(overrides?: CallOverrides): Promise<string>;
+    TIME_TO_FINALIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "authorityKey()"(overrides?: CallOverrides): Promise<string>;
+    "TIME_TO_FINALIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    blockHashAtCommit(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    "blockHashAtCommit(uint256)"(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<string>;
+
+    commit(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "commit(bytes32,uint256)"(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    finalized(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
+
+    "finalized(bytes32,uint256)"(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<boolean>;
 
     getRoleAdmin(role: BytesLike, overrides?: CallOverrides): Promise<string>;
 
@@ -571,12 +700,9 @@ export class FuelChainConsensus extends Contract {
       overrides?: CallOverrides
     ): Promise<boolean>;
 
-    initialize(key: string, overrides?: CallOverrides): Promise<void>;
+    initialize(overrides?: CallOverrides): Promise<void>;
 
-    "initialize(address)"(
-      key: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
+    "initialize()"(overrides?: CallOverrides): Promise<void>;
 
     pause(overrides?: CallOverrides): Promise<void>;
 
@@ -611,13 +737,6 @@ export class FuelChainConsensus extends Contract {
     "revokeRole(bytes32,address)"(
       role: BytesLike,
       account: string,
-      overrides?: CallOverrides
-    ): Promise<void>;
-
-    setAuthorityKey(key: string, overrides?: CallOverrides): Promise<void>;
-
-    "setAuthorityKey(address)"(
-      key: string,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -656,18 +775,6 @@ export class FuelChainConsensus extends Contract {
       data: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
-
-    verifyBlock(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
-
-    "verifyBlock(bytes32,bytes)"(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<boolean>;
   };
 
   filters: {
@@ -682,6 +789,14 @@ export class FuelChainConsensus extends Contract {
     BeaconUpgraded(
       beacon: string | null
     ): TypedEventFilter<[string], { beacon: string }>;
+
+    CommitSubmitted(
+      commitHeight: BigNumberish | null,
+      blockHash: null
+    ): TypedEventFilter<
+      [BigNumber, string],
+      { commitHeight: BigNumber; blockHash: string }
+    >;
 
     Initialized(version: null): TypedEventFilter<[number], { version: number }>;
 
@@ -722,17 +837,65 @@ export class FuelChainConsensus extends Contract {
   };
 
   estimateGas: {
+    BLOCKS_PER_COMMIT_INTERVAL(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "BLOCKS_PER_COMMIT_INTERVAL()"(
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    COMMITTER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "COMMITTER_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    NUM_COMMIT_SLOTS(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "NUM_COMMIT_SLOTS()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     PAUSER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
 
-    authorityKey(overrides?: CallOverrides): Promise<BigNumber>;
+    TIME_TO_FINALIZE(overrides?: CallOverrides): Promise<BigNumber>;
 
-    "authorityKey()"(overrides?: CallOverrides): Promise<BigNumber>;
+    "TIME_TO_FINALIZE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    blockHashAtCommit(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "blockHashAtCommit(uint256)"(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    commit(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "commit(bytes32,uint256)"(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    finalized(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    "finalized(bytes32,uint256)"(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
 
     getRoleAdmin(
       role: BytesLike,
@@ -769,12 +932,10 @@ export class FuelChainConsensus extends Contract {
     ): Promise<BigNumber>;
 
     initialize(
-      key: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    "initialize(address)"(
-      key: string,
+    "initialize()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -818,16 +979,6 @@ export class FuelChainConsensus extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
-    setAuthorityKey(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    "setAuthorityKey(address)"(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -867,21 +1018,23 @@ export class FuelChainConsensus extends Contract {
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
-
-    verifyBlock(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    "verifyBlock(bytes32,bytes)"(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
   };
 
   populateTransaction: {
+    BLOCKS_PER_COMMIT_INTERVAL(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "BLOCKS_PER_COMMIT_INTERVAL()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    COMMITTER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "COMMITTER_ROLE()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     DEFAULT_ADMIN_ROLE(
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
@@ -890,13 +1043,55 @@ export class FuelChainConsensus extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    NUM_COMMIT_SLOTS(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+
+    "NUM_COMMIT_SLOTS()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     PAUSER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    authorityKey(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    TIME_TO_FINALIZE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
-    "authorityKey()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
+    "TIME_TO_FINALIZE()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    blockHashAtCommit(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "blockHashAtCommit(uint256)"(
+      commitHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    commit(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "commit(bytes32,uint256)"(
+      blockHash: BytesLike,
+      commitHeight: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    finalized(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "finalized(bytes32,uint256)"(
+      blockHash: BytesLike,
+      blockHeight: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
 
     getRoleAdmin(
       role: BytesLike,
@@ -933,12 +1128,10 @@ export class FuelChainConsensus extends Contract {
     ): Promise<PopulatedTransaction>;
 
     initialize(
-      key: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    "initialize(address)"(
-      key: string,
+    "initialize()"(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -982,16 +1175,6 @@ export class FuelChainConsensus extends Contract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
-    setAuthorityKey(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    "setAuthorityKey(address)"(
-      key: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
     supportsInterface(
       interfaceId: BytesLike,
       overrides?: CallOverrides
@@ -1030,18 +1213,6 @@ export class FuelChainConsensus extends Contract {
       newImplementation: string,
       data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    verifyBlock(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    "verifyBlock(bytes32,bytes)"(
-      blockHash: BytesLike,
-      signature: BytesLike,
-      overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
   };
 }

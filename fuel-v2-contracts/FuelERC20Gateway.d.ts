@@ -23,8 +23,10 @@ import { TypedEventFilter, TypedEvent, TypedListener } from "./commons";
 interface FuelERC20GatewayInterface extends ethers.utils.Interface {
   functions: {
     "DEFAULT_ADMIN_ROLE()": FunctionFragment;
+    "DEPOSIT_TO_CONTRACT()": FunctionFragment;
     "PAUSER_ROLE()": FunctionFragment;
     "deposit(bytes32,address,bytes32,uint256)": FunctionFragment;
+    "depositWithData(bytes32,address,bytes32,uint256,bytes)": FunctionFragment;
     "finalizeWithdrawal(address,address,uint256)": FunctionFragment;
     "fuelMessagePortal()": FunctionFragment;
     "getRoleAdmin(bytes32)": FunctionFragment;
@@ -48,12 +50,20 @@ interface FuelERC20GatewayInterface extends ethers.utils.Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "DEPOSIT_TO_CONTRACT",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "PAUSER_ROLE",
     values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "deposit",
     values: [BytesLike, string, BytesLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "depositWithData",
+    values: [BytesLike, string, BytesLike, BigNumberish, BytesLike]
   ): string;
   encodeFunctionData(
     functionFragment: "finalizeWithdrawal",
@@ -110,10 +120,18 @@ interface FuelERC20GatewayInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "DEPOSIT_TO_CONTRACT",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "PAUSER_ROLE",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "deposit", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "depositWithData",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(
     functionFragment: "finalizeWithdrawal",
     data: BytesLike
@@ -158,6 +176,7 @@ interface FuelERC20GatewayInterface extends ethers.utils.Interface {
   events: {
     "AdminChanged(address,address)": EventFragment;
     "BeaconUpgraded(address)": EventFragment;
+    "Deposit(bytes32,address,bytes32,uint256)": EventFragment;
     "Initialized(uint8)": EventFragment;
     "Paused(address)": EventFragment;
     "RoleAdminChanged(bytes32,bytes32,bytes32)": EventFragment;
@@ -165,10 +184,12 @@ interface FuelERC20GatewayInterface extends ethers.utils.Interface {
     "RoleRevoked(bytes32,address,address)": EventFragment;
     "Unpaused(address)": EventFragment;
     "Upgraded(address)": EventFragment;
+    "Withdrawal(bytes32,address,bytes32,uint256)": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "AdminChanged"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "BeaconUpgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Deposit"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Initialized"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "RoleAdminChanged"): EventFragment;
@@ -176,6 +197,7 @@ interface FuelERC20GatewayInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "RoleRevoked"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Unpaused"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Upgraded"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "Withdrawal"): EventFragment;
 }
 
 export class FuelERC20Gateway extends Contract {
@@ -226,6 +248,10 @@ export class FuelERC20Gateway extends Contract {
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
 
+    DEPOSIT_TO_CONTRACT(overrides?: CallOverrides): Promise<[string]>;
+
+    "DEPOSIT_TO_CONTRACT()"(overrides?: CallOverrides): Promise<[string]>;
+
     PAUSER_ROLE(overrides?: CallOverrides): Promise<[string]>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<[string]>;
@@ -243,6 +269,24 @@ export class FuelERC20Gateway extends Contract {
       tokenId: string,
       fuelTokenId: BytesLike,
       amount: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    depositWithData(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
+    "depositWithData(bytes32,address,bytes32,uint256,bytes)"(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -402,6 +446,10 @@ export class FuelERC20Gateway extends Contract {
 
   "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
+  DEPOSIT_TO_CONTRACT(overrides?: CallOverrides): Promise<string>;
+
+  "DEPOSIT_TO_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
+
   PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
   "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
@@ -419,6 +467,24 @@ export class FuelERC20Gateway extends Contract {
     tokenId: string,
     fuelTokenId: BytesLike,
     amount: BigNumberish,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  depositWithData(
+    to: BytesLike,
+    tokenId: string,
+    fuelTokenId: BytesLike,
+    amount: BigNumberish,
+    data: BytesLike,
+    overrides?: PayableOverrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
+  "depositWithData(bytes32,address,bytes32,uint256,bytes)"(
+    to: BytesLike,
+    tokenId: string,
+    fuelTokenId: BytesLike,
+    amount: BigNumberish,
+    data: BytesLike,
     overrides?: PayableOverrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -578,6 +644,10 @@ export class FuelERC20Gateway extends Contract {
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<string>;
 
+    DEPOSIT_TO_CONTRACT(overrides?: CallOverrides): Promise<string>;
+
+    "DEPOSIT_TO_CONTRACT()"(overrides?: CallOverrides): Promise<string>;
+
     PAUSER_ROLE(overrides?: CallOverrides): Promise<string>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<string>;
@@ -595,6 +665,24 @@ export class FuelERC20Gateway extends Contract {
       tokenId: string,
       fuelTokenId: BytesLike,
       amount: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    depositWithData(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
+    "depositWithData(bytes32,address,bytes32,uint256,bytes)"(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -755,6 +843,21 @@ export class FuelERC20Gateway extends Contract {
       beacon: string | null
     ): TypedEventFilter<[string], { beacon: string }>;
 
+    Deposit(
+      sender: BytesLike | null,
+      tokenId: string | null,
+      fuelTokenId: null,
+      amount: null
+    ): TypedEventFilter<
+      [string, string, string, BigNumber],
+      {
+        sender: string;
+        tokenId: string;
+        fuelTokenId: string;
+        amount: BigNumber;
+      }
+    >;
+
     Initialized(version: null): TypedEventFilter<[number], { version: number }>;
 
     Paused(account: null): TypedEventFilter<[string], { account: string }>;
@@ -791,12 +894,31 @@ export class FuelERC20Gateway extends Contract {
     Upgraded(
       implementation: string | null
     ): TypedEventFilter<[string], { implementation: string }>;
+
+    Withdrawal(
+      recipient: BytesLike | null,
+      tokenId: string | null,
+      fuelTokenId: null,
+      amount: null
+    ): TypedEventFilter<
+      [string, string, string, BigNumber],
+      {
+        recipient: string;
+        tokenId: string;
+        fuelTokenId: string;
+        amount: BigNumber;
+      }
+    >;
   };
 
   estimateGas: {
     DEFAULT_ADMIN_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
     "DEFAULT_ADMIN_ROLE()"(overrides?: CallOverrides): Promise<BigNumber>;
+
+    DEPOSIT_TO_CONTRACT(overrides?: CallOverrides): Promise<BigNumber>;
+
+    "DEPOSIT_TO_CONTRACT()"(overrides?: CallOverrides): Promise<BigNumber>;
 
     PAUSER_ROLE(overrides?: CallOverrides): Promise<BigNumber>;
 
@@ -815,6 +937,24 @@ export class FuelERC20Gateway extends Contract {
       tokenId: string,
       fuelTokenId: BytesLike,
       amount: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    depositWithData(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
+    "depositWithData(bytes32,address,bytes32,uint256,bytes)"(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -982,6 +1122,14 @@ export class FuelERC20Gateway extends Contract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    DEPOSIT_TO_CONTRACT(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    "DEPOSIT_TO_CONTRACT()"(
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
     PAUSER_ROLE(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "PAUSER_ROLE()"(overrides?: CallOverrides): Promise<PopulatedTransaction>;
@@ -999,6 +1147,24 @@ export class FuelERC20Gateway extends Contract {
       tokenId: string,
       fuelTokenId: BytesLike,
       amount: BigNumberish,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    depositWithData(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
+      overrides?: PayableOverrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    "depositWithData(bytes32,address,bytes32,uint256,bytes)"(
+      to: BytesLike,
+      tokenId: string,
+      fuelTokenId: BytesLike,
+      amount: BigNumberish,
+      data: BytesLike,
       overrides?: PayableOverrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
