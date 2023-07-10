@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  DASEL_VERSION: https://github.com/TomWright/dasel/releases/download/v1.24.3/dasel_linux_amd64
+  REGISTRY: ghcr.io
+  RUST_VERSION: 1.69.0
+  PATH_TO_SCRIPTS: ./.github/workflows/scripts
+
+jobs:
+  # Ensure cargo files are properly linted
+  lint-toml-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+      - name: Install Cargo.toml linter
+        uses: baptiste0928/cargo-install@v1
+        with:
+          crate: cargo-toml-lint
+          version: '0.1'
+      - name: Run Cargo.toml linter
+        run: git ls-files | grep Cargo.toml$ | xargs --verbose -n 1 cargo-toml-lint
+
+  # Ensure CI is using the same minimum toolchain specified in fuels Cargo.toml
+  verify-rust-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - run: |
+          curl -sSLf "$DASEL_VERSION" -L -o dasel && chmod +x dasel
+          mv ./dasel /usr/local/bin/dasel
+          MIN_VERSION=$(cat Cargo.toml | dasel -r toml 'workspace.package.rust-version')
+          RUST_VERSION="${{ env.RUST_VERSION }}"
+          echo "Comparing minimum supported toolchain ($MIN_VERSION) with ci toolchain (RUST_VERSION)"
+          test "$MIN_VERSION" == "$RUST_VERSION"
+
+  # Ensure workspace is buildable
+  build-verification:
+    needs:
+      - verify-rust-version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+          components: clippy,rustfmt
+
+      - name: Init cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Install a modern linker (mold)
+        uses: rui314/setup-mold@v1
+
+      - name: Force Rust to use mold globally for compilation
+        run: |
+          touch ~/.cargo/config.toml
+          echo "[target.x86_64-unknown-linux-gnu]" > ~/.cargo/config.toml
+          echo 'linker = "clang"' >> ~/.cargo/config.toml
+          echo 'rustflags = ["-C", "link-arg=-fuse-ld=/usr/local/bin/mold"]' >> ~/.cargo/config.toml
+
+      - name: Install Fuel toolchain
+        uses: FuelLabs/action-fuel-toolchain@v0.6.0
+        with:
+          toolchain: beta-3
+
+      - name: Check Sway formatting
+        run: forc fmt --check
+
+      - name: Build Sway
+        run: forc build
+
+      - name: Check Rust formatting
+        run: cargo fmt --verbose --check
+
+      - name: Check Rust linting
+        run: cargo clippy
+          
+      - name: Run tests
+        run: cargo test
+
+  # Ensure workspace is publishable
+  publish-crates-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Publish crate check
+        uses: katyo/publish-crates@v2
+        with:
+          dry-run: true
+          check-repo: false
+          ignore-unpublished-changes: true
+
+  # Publish crates on release
+  publish:
+    needs:
+      - build-verification
+      - publish-crates-check
+    # Only do this job if publishing a release
+    if: github.event_name == 'release' && github.event.action == 'published'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Verify tag version
+        run: |
+          curl -sSLf "$DASEL_VERSION" -L -o dasel && chmod +x dasel
+          mv ./dasel /usr/local/bin/dasel
+          ${{ env.PATH_TO_SCRIPTS }}/verify_tag.sh ${{ github.ref_name }} Cargo.toml
+      - name: Publish crate
+        uses: katyo/publish-crates@v2
+        with:
+          publish-delay: 30000
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}

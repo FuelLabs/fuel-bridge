@@ -1,0 +1,26 @@
+[package]
+name = "fuel-contract-message-predicate"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+rust-version = { workspace = true }
+description = "Script and predicate for relaying contract messages."
+
+[dependencies]
+fuel-asm = "0.34.1"
+fuel-tx = "0.31.1"
+sha2 = "0.10.6"
+
+[dev-dependencies]
+fuels = { version = "0.43.0" }
+hex = "0.4.3"
+insta = "1.28"
+tokio = { version = "1.27", features = ["rt", "macros"] }
+
+[[test]]
+harness = true
+name = "integration_tests"
+path = "tests/harness.rs"
