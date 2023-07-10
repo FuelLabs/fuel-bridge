@@ -1,0 +1,19 @@
+[package]
+name = "bridge-fungible-token-contract"
+version = "0.1.0"
+authors = ["Fuel Labs <contact@fuel.sh>"]
+edition = "2021"
+license = "Apache-2.0"
+
+[dependencies]
+fuel-core-types = { version = "0.18.3", default-features = false }
+fuels = { version = "0.43", features = ["fuel-core-lib"] }
+primitive-types = "0.12.1"
+sha3 = "0.10.1"
+tokio = { version = "1.12", features = ["rt", "macros"] }
+
+[[test]]
+harness = true
+name = "integration_tests"
+path = "tests/harness.rs"
+

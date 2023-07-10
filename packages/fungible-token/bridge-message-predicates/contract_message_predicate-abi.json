@@ -1,0 +1,32 @@
+{
+    "types": [
+      {
+        "typeId": 0,
+        "type": "bool",
+        "components": null,
+        "typeParameters": null
+      }
+    ],
+    "functions": [
+      {
+        "inputs": [],
+        "name": "main",
+        "output": {
+          "name": "",
+          "type": 0,
+          "typeArguments": null
+        },
+        "attributes": [
+          {
+            "name": "doc-comment",
+            "arguments": [
+              " Predicate verifying a message input is being spent according to the rules for a valid message data relay to contract"
+            ]
+          }
+        ]
+      }
+    ],
+    "loggedTypes": [],
+    "messagesTypes": [],
+    "configurables": []
+  }

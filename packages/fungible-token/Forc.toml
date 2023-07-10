@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "bridge-fungible-token",
+  "fungible-bridge-abi",
+  "FRC20-abi",
+  "test-deposit-recipient-contract",
+]
