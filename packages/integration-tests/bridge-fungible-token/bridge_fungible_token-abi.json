@@ -1,0 +1,542 @@
+{
+  "types": [
+    {
+      "typeId": 0,
+      "type": "()",
+      "components": [],
+      "typeParameters": null
+    },
+    {
+      "typeId": 1,
+      "type": "b256",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 2,
+      "type": "enum BridgeFungibleTokenError",
+      "components": [
+        {
+          "name": "UnauthorizedSender",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "IncorrectAssetDeposited",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "NoCoinsSent",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "NoRefundAvailable",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "OverflowError",
+          "type": 0,
+          "typeArguments": null
+        },
+        {
+          "name": "UnderflowError",
+          "type": 0,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 3,
+      "type": "enum Identity",
+      "components": [
+        {
+          "name": "Address",
+          "type": 7,
+          "typeArguments": null
+        },
+        {
+          "name": "ContractId",
+          "type": 8,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 4,
+      "type": "enum ReentrancyError",
+      "components": [
+        {
+          "name": "NonReentrant",
+          "type": 0,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 5,
+      "type": "str[32]",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 6,
+      "type": "str[64]",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 7,
+      "type": "struct Address",
+      "components": [
+        {
+          "name": "value",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 8,
+      "type": "struct ContractId",
+      "components": [
+        {
+          "name": "value",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 9,
+      "type": "struct DepositEvent",
+      "components": [
+        {
+          "name": "to",
+          "type": 3,
+          "typeArguments": null
+        },
+        {
+          "name": "from",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 13,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 10,
+      "type": "struct RefundRegisteredEvent",
+      "components": [
+        {
+          "name": "from",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "asset",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 11,
+      "type": "struct U256",
+      "components": [
+        {
+          "name": "a",
+          "type": 13,
+          "typeArguments": null
+        },
+        {
+          "name": "b",
+          "type": 13,
+          "typeArguments": null
+        },
+        {
+          "name": "c",
+          "type": 13,
+          "typeArguments": null
+        },
+        {
+          "name": "d",
+          "type": 13,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 12,
+      "type": "struct WithdrawalEvent",
+      "components": [
+        {
+          "name": "to",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "from",
+          "type": 3,
+          "typeArguments": null
+        },
+        {
+          "name": "amount",
+          "type": 13,
+          "typeArguments": null
+        }
+      ],
+      "typeParameters": null
+    },
+    {
+      "typeId": 13,
+      "type": "u64",
+      "components": null,
+      "typeParameters": null
+    },
+    {
+      "typeId": 14,
+      "type": "u8",
+      "components": null,
+      "typeParameters": null
+    }
+  ],
+  "functions": [
+    {
+      "inputs": [
+        {
+          "name": "msg_idx",
+          "type": 14,
+          "typeArguments": null
+        }
+      ],
+      "name": "process_message",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "payable",
+          "arguments": []
+        },
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
+    },
+    {
+      "inputs": [],
+      "name": "bridged_token",
+      "output": {
+        "name": "",
+        "type": 1,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [],
+      "name": "bridged_token_decimals",
+      "output": {
+        "name": "",
+        "type": 14,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [],
+      "name": "bridged_token_gateway",
+      "output": {
+        "name": "",
+        "type": 1,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [
+        {
+          "name": "originator",
+          "type": 1,
+          "typeArguments": null
+        },
+        {
+          "name": "asset",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "name": "claim_refund",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        }
+      ]
+    },
+    {
+      "inputs": [
+        {
+          "name": "to",
+          "type": 1,
+          "typeArguments": null
+        }
+      ],
+      "name": "withdraw",
+      "output": {
+        "name": "",
+        "type": 0,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read",
+            "write"
+          ]
+        },
+        {
+          "name": "payable",
+          "arguments": []
+        }
+      ]
+    },
+    {
+      "inputs": [],
+      "name": "decimals",
+      "output": {
+        "name": "",
+        "type": 14,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [],
+      "name": "name",
+      "output": {
+        "name": "",
+        "type": 6,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [],
+      "name": "symbol",
+      "output": {
+        "name": "",
+        "type": 5,
+        "typeArguments": null
+      },
+      "attributes": null
+    },
+    {
+      "inputs": [],
+      "name": "total_supply",
+      "output": {
+        "name": "",
+        "type": 11,
+        "typeArguments": null
+      },
+      "attributes": [
+        {
+          "name": "storage",
+          "arguments": [
+            "read"
+          ]
+        }
+      ]
+    }
+  ],
+  "loggedTypes": [
+    {
+      "logId": 0,
+      "loggedType": {
+        "name": "",
+        "type": 4,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 1,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 2,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 3,
+      "loggedType": {
+        "name": "",
+        "type": 10,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 4,
+      "loggedType": {
+        "name": "",
+        "type": 10,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 5,
+      "loggedType": {
+        "name": "",
+        "type": 9,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 6,
+      "loggedType": {
+        "name": "",
+        "type": 9,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 7,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 8,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 9,
+      "loggedType": {
+        "name": "",
+        "type": 2,
+        "typeArguments": []
+      }
+    },
+    {
+      "logId": 10,
+      "loggedType": {
+        "name": "",
+        "type": 13,
+        "typeArguments": null
+      }
+    },
+    {
+      "logId": 11,
+      "loggedType": {
+        "name": "",
+        "type": 12,
+        "typeArguments": []
+      }
+    }
+  ],
+  "messagesTypes": [],
+  "configurables": [
+    {
+      "name": "DECIMALS",
+      "configurableType": {
+        "name": "",
+        "type": 14,
+        "typeArguments": null
+      },
+      "offset": 24156
+    },
+    {
+      "name": "BRIDGED_TOKEN_DECIMALS",
+      "configurableType": {
+        "name": "",
+        "type": 14,
+        "typeArguments": null
+      },
+      "offset": 24148
+    },
+    {
+      "name": "BRIDGED_TOKEN_GATEWAY",
+      "configurableType": {
+        "name": "",
+        "type": 1,
+        "typeArguments": null
+      },
+      "offset": 24060
+    },
+    {
+      "name": "BRIDGED_TOKEN",
+      "configurableType": {
+        "name": "",
+        "type": 1,
+        "typeArguments": null
+      },
+      "offset": 24116
+    },
+    {
+      "name": "NAME",
+      "configurableType": {
+        "name": "",
+        "type": 6,
+        "typeArguments": null
+      },
+      "offset": 24380
+    },
+    {
+      "name": "SYMBOL",
+      "configurableType": {
+        "name": "",
+        "type": 5,
+        "typeArguments": null
+      },
+      "offset": 24444
+    }
+  ]
+}

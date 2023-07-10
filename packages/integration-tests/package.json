@@ -1,0 +1,33 @@
+{
+  "name": "fuel-bridge-integration-tests",
+  "version": "0.0.0",
+  "description": "The Fuel Messaging Bridge integration tests.",
+  "main": "test/index.js",
+  "private": false,
+  "license": "UNLICENSED",
+  "scripts": {
+    "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
+    "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
+    "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
+    "prettier:check": "prettier --check ./",
+    "prettier:format": "prettier --write ./"
+  },
+  "devDependencies": {
+    "@ethersproject/providers": "^5.7.2",
+    "@types/chai": "^4.3.1",
+    "@types/mocha": "^9.1.1",
+    "axios": "^0.27.2",
+    "chai": "^4.3.6",
+    "dotenv": "^16.0.3",
+    "ethereum-waffle": "^4.0.2",
+    "ethers": "^5.7.2",
+    "fuels": "0.0.0-next-20230707184416",
+    "mocha": "^10.0.0",
+    "prettier": "^2.7.1",
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0"
+  }
+}
