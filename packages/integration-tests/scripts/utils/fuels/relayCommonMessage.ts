@@ -13,34 +13,22 @@ import {
   TransactionResponse,
   Predicate,
   bn,
-  isCoin,
-  Coin,
-  InputCoin,
-  TransactionRequestInput,
   MAX_GAS_PER_TX,
 } from 'fuels';
-import { readFileSync } from 'fs';
-import { join } from 'path';
 import { debug } from '../logs';
 import { resourcesToInputs } from './transaction';
-
-const brigdePredicateBytecode = readFileSync(
-  join(__dirname, '../../../bridge-message-predicates/contract_message_predicate.bin')
-);
-const brigdeScriptBytecode = readFileSync(
-  join(__dirname, '../../../bridge-message-predicates/contract_message_script.bin')
-);
+import { contractMessagePredicate, contractMessageScript } from '@fuel-bridge/message-predicates';
 
 // Create a predicate for common messages
-const predicate = new Predicate(hexlify(brigdePredicateBytecode), 0);
+const predicate = new Predicate(contractMessagePredicate, 0);
 
 // Details for relaying common messages with certain predicate roots
 const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
   {
     name: 'Message To Contract v1.3',
     predicateRoot: predicate.address.toHexString(),
-    predicate: hexlify(brigdePredicateBytecode),
-    script: hexlify(brigdeScriptBytecode),
+    predicate: contractMessagePredicate,
+    script: contractMessageScript,
     buildTx: async (
       relayer: FuelWallet,
       message: Message,

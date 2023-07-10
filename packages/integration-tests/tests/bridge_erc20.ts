@@ -2,7 +2,7 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber, Signer } from 'ethers';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { Token } from '../fuel-v2-contracts/Token.d';
+import { Token } from '@fuel-bridge/portal-contracts';
 import { AbstractAddress, Address, BN, Contract, WalletUnlocked as FuelWallet, MessageProof } from 'fuels';
 import { relayCommonMessage } from '../scripts/utils/fuels/relayCommonMessage';
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';

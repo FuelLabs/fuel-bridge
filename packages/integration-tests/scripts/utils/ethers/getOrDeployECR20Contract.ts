@@ -1,6 +1,5 @@
 import { TestEnvironment } from '../../setup';
-import { Token } from '../../../fuel-v2-contracts/Token.d';
-import { Token__factory } from '../../../fuel-v2-contracts/factories/Token__factory';
+import { Token, Token__factory } from '@fuel-bridge/portal-contracts';
 import { ethers_parseToken } from '../parsers';
 import { debug } from '../logs';
 

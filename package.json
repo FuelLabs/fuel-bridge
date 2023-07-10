@@ -1,0 +1,21 @@
+{
+  "name": "fuel-bridge",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Fuel Bridge",
+  "scripts": {
+    "build": "turbo run build",
+    "test": "sh ./scripts/test.sh",
+    "node:build": "make -C ./docker build",
+    "node:up": "make -C ./docker up",
+    "node:stop": "make -C ./docker stop",
+    "node:clean": "make -C ./docker clean",
+    "node:logs": "make -C ./docker logs"
+  },
+  "keywords": [],
+  "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
+  "license": "APPACHE-2.0",
+  "dependencies": {
+    "turbo": "^1.10.7"
+  }
+}

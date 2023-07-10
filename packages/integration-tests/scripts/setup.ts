@@ -5,12 +5,14 @@ import { ethers, Signer as EthSigner } from 'ethers';
 import { Provider as EthProvider } from '@ethersproject/providers';
 import { Wallet, Provider as FuelProvider, WalletUnlocked as FuelWallet } from 'fuels';
 import { fuels_parseEther, fuels_formatEther } from './utils/parsers';
-import { FuelChainState } from '../fuel-v2-contracts/FuelChainState';
-import { FuelChainState__factory } from '../fuel-v2-contracts/factories/FuelChainState__factory';
-import { FuelMessagePortal } from '../fuel-v2-contracts/FuelMessagePortal.d';
-import { FuelMessagePortal__factory } from '../fuel-v2-contracts/factories/FuelMessagePortal__factory';
-import { FuelERC20Gateway } from '../fuel-v2-contracts/FuelERC20Gateway.d';
-import { FuelERC20Gateway__factory } from '../fuel-v2-contracts/factories/FuelERC20Gateway__factory';
+import {
+  FuelChainState,
+  FuelChainState__factory,
+  FuelMessagePortal,
+  FuelMessagePortal__factory,
+  FuelERC20Gateway,
+  FuelERC20Gateway__factory,
+} from '@fuel-bridge/portal-contracts';
 import * as dotenv from 'dotenv';
 dotenv.config();
 

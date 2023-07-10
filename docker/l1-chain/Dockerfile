@@ -3,21 +3,22 @@ FROM node:16-alpine AS BUILD_IMAGE
 
 # dependencies
 RUN apk --no-cache add git
+RUN npm i -g pnpm
 
 # set workdir
 WORKDIR /l1chain
 
 # clone the contracts repo
-RUN git clone --depth 1 --branch master https://github.com/FuelLabs/fuel-v2-contracts.git
+ADD ./packages/portal-contracts /l1chain/fuel-v2-contracts
 WORKDIR /l1chain/fuel-v2-contracts
 
 # build the ethereum contracts and environment
-RUN npm ci
-RUN npm run build
+RUN pnpm install
+RUN pnpm run build
 
 # remove build dependencies
-RUN npm prune --omit=dev
-COPY ./hardhat/hardhat.config.ts .
+# RUN pnpm prune --prod
+COPY ./docker/l1-chain/hardhat/hardhat.config.ts .
 
 # ====== Final Image ======
 FROM node:16-alpine
@@ -28,6 +29,7 @@ ARG SERVE_PORT=8081
 
 # dependencies
 RUN apk --no-cache add curl
+RUN npm i -g pnpm
 
 # set workdir
 WORKDIR /l1chain
@@ -44,5 +46,5 @@ EXPOSE ${L1_PORT}
 EXPOSE ${SERVE_PORT}
 
 # copy over script and run
-COPY ./l1_chain.sh .
-CMD ["sh", "./l1_chain.sh"]
+COPY ./docker/l1-chain/l1_chain.sh /l1chain/l1_chain.sh
+CMD ["sh", "/l1chain/l1_chain.sh"]

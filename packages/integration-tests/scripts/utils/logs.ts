@@ -2,7 +2,7 @@ import { formatEther } from 'ethers/lib/utils';
 import { ethers_formatToken, fuels_formatEther, fuels_formatToken } from './parsers';
 import { Signer } from 'ethers';
 import { WalletUnlocked } from 'fuels';
-import { Token } from '../../fuel-v2-contracts/Token';
+import { Token } from '@fuel-bridge/portal-contracts';
 
 export const LOG_CONFIG = {
   debug: process.env.DEBUG || true,

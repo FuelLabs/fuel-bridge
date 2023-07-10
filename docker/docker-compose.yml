@@ -5,7 +5,10 @@ services:
     image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
     platform: linux/amd64
     build:
-      context: ./docker/l1-chain/
+      dockerfile: ./docker/l1-chain/Dockerfile
+      # Use build context of the root directory
+      # to allow coping portal-contracts on Dockerfile
+      context: ../
     env_file:
       - ./envs/l1_chain.env
     ports:
@@ -19,7 +22,7 @@ services:
     image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
     platform: linux/amd64
     build:
-      context: ./docker/fuel-core/
+      context: ./fuel-core/
     env_file:
       - ./envs/fuel_core.env
     environment:
