@@ -7,8 +7,13 @@ use crate::env::{BridgeFungibleTokenContractConfigurables, RefundRegisteredEvent
 use std::str::FromStr;
 use utils::environment as env;
 
-use fuels::tx::{Address, AssetId, Receipt};
-use fuels::{prelude::*, types::Bits256};
+use fuels::{
+    accounts::ViewOnlyAccount,
+    prelude::{launch_provider_and_get_wallet, Address, AssetId, CallParameters, TxParameters},
+    programs::contract::SettableContract,
+    tx::Receipt,
+    types::Bits256,
+};
 
 pub const BRIDGED_TOKEN: &str =
     "0x00000000000000000000000000000000000000000000000000000000deadbeef";
@@ -80,10 +85,7 @@ mod success {
         // Verify the message value was received by the test contract
         assert_eq!(test_contract_base_asset_balance, 100);
         // Check that wallet now has bridged coins
-        assert_eq!(
-            balance,
-            env::fuel_side_equivalent_amount(config.test_amount, &config)
-        );
+        assert_eq!(balance, config.fuel_equivalent_amount(config.test_amount));
     }
 
     #[tokio::test]
@@ -145,10 +147,7 @@ mod success {
         assert_eq!(test_contract_base_asset_balance, 100);
 
         // Check that wallet now has bridged coins
-        assert_eq!(
-            balance,
-            env::fuel_side_equivalent_amount(config.max_amount, &config)
-        );
+        assert_eq!(balance, config.fuel_equivalent_amount(config.max_amount));
     }
 
     #[tokio::test]
@@ -200,7 +199,7 @@ mod success {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         // Verify the message value was received by the test contract
@@ -235,12 +234,11 @@ mod success {
                 Bits256::from_hex_str(FROM).unwrap(),
                 Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
             )
-            .append_message_outputs(1)
             .call()
             .await
             .unwrap();
-        // verify correct message was sent
 
+        // verify correct message was sent
         let message_receipt = call_response
             .receipts
             .iter()
@@ -328,16 +326,13 @@ mod success {
         assert_eq!(test_contract_base_asset_balance, 100);
 
         // Check that wallet now has bridged coins
-        assert_eq!(
-            balance,
-            env::fuel_side_equivalent_amount(config.max_amount, &config)
-        );
+        assert_eq!(balance, config.fuel_equivalent_amount(config.max_amount));
 
         // Now try to withdraw
         let withdrawal_amount = config.test_amount;
         let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
         let call_params = CallParameters::new(
-            env::fuel_side_equivalent_amount(withdrawal_amount, &config),
+            config.fuel_equivalent_amount(config.test_amount),
             AssetId::new(*test_contract_id.hash()),
             5000,
         );
@@ -348,7 +343,6 @@ mod success {
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")
-            .append_message_outputs(1)
             .call()
             .await
             .unwrap();
@@ -443,7 +437,7 @@ mod success {
         assert_eq!(test_contract_base_asset_balance, 100);
         // Check that wallet now has bridged coins
 
-        let fuel_side_token_amount = env::fuel_side_equivalent_amount(config.min_amount, &config);
+        let fuel_side_token_amount = config.fuel_equivalent_amount(config.min_amount);
 
         assert_eq!(balance, fuel_side_token_amount);
 
@@ -461,7 +455,6 @@ mod success {
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")
-            .append_message_outputs(1)
             .call()
             .await
             .unwrap();
@@ -546,7 +539,7 @@ mod success {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         // Verify the message value was received by the test contract
@@ -623,7 +616,7 @@ mod success {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         let test_contract_balance = provider
@@ -703,7 +696,7 @@ mod success {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         let test_contract_balance = provider
@@ -783,7 +776,7 @@ mod success {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         let test_contract_balance = provider
@@ -955,8 +948,7 @@ mod success {
 
         assert_eq!(
             deposit_contract_balance_after,
-            deposit_contract_balance_before
-                + env::fuel_side_equivalent_amount(config.max_amount, &config)
+            deposit_contract_balance_before + config.fuel_equivalent_amount(config.max_amount)
         );
     }
 
@@ -1024,8 +1016,7 @@ mod success {
 
         assert_eq!(
             deposit_contract_balance_after,
-            deposit_contract_balance_before
-                + env::fuel_side_equivalent_amount(config.max_amount, &config)
+            deposit_contract_balance_before + config.fuel_equivalent_amount(config.max_amount)
         );
     }
 }
@@ -1098,10 +1089,7 @@ mod revert {
         assert_eq!(test_contract_base_asset_balance, 100);
 
         // Check that wallet now has bridged coins
-        assert_eq!(
-            balance,
-            env::fuel_side_equivalent_amount(config.max_amount, &config)
-        );
+        assert_eq!(balance, config.fuel_equivalent_amount(config.max_amount));
 
         // Now try to withdraw
         let withdrawal_amount = 999999999;
@@ -1116,7 +1104,6 @@ mod revert {
             .tx_params(custom_tx_params)
             .call_params(call_params)
             .expect("Call param Error")
-            .append_message_outputs(1)
             .call()
             .await
             .unwrap();
@@ -1221,7 +1208,7 @@ mod revert {
         if BRIDGED_TOKEN_DECIMALS > PROXY_TOKEN_DECIMALS + 19 {
             let log_decoder = test_contract.log_decoder();
             let refund_registered_event = log_decoder
-                .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+                .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
                 .unwrap();
 
             // Verify the message value was received by the test contract
@@ -1305,7 +1292,7 @@ mod revert {
 
         let log_decoder = test_contract.log_decoder();
         let refund_registered_event = log_decoder
-            .get_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
         // Verify the message value was received by the test contract

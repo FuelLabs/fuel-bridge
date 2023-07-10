@@ -21,7 +21,7 @@ dependencies = ['std']
 
 [[package]]
 name = 'core'
-source = 'path+from-root-1AA1C8235B783A81'
+source = 'path+from-root-EC2069570D70DA98'
 
 [[package]]
 name = 'fungible_bridge_abi'
@@ -30,12 +30,12 @@ dependencies = ['std']
 
 [[package]]
 name = 'reentrancy'
-source = 'git+https://github.com/FuelLabs/sway-libs?default-branch#0444499cf24b383eda96ad24c93e3b8bc31ab1b9'
+source = 'git+https://github.com/FuelLabs/sway-libs?default-branch#14139407704840d45d7eba9b2fa040b1b430b3a9'
 dependencies = ['std']
 
 [[package]]
 name = 'std'
-source = 'git+https://github.com/fuellabs/sway?tag=v0.38.0#2d16d70ab9d5ab0de0255941048f811b6d07c6b1'
+source = 'git+https://github.com/fuellabs/sway?tag=v0.41.0#0d45b890c9eaa75b88093a9a4cbecbf5ca8c0731'
 dependencies = ['core']
 
 [[package]]

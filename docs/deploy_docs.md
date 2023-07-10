@@ -2,13 +2,6 @@
 
 Each token to be bridged needs to have a corresponding bridge fungible token contract defined on the Fuel chain. These contracts handle messaging with the base layer gateway contract and are responsible for minting and burning the Fuel side token proxies.
 
-## Dependencies
-
-| dep         | version                                                  |
-| ----------- | -------------------------------------------------------- |
-| Forc        | [v0.31.1](https://fuellabs.github.io/sway/v0.31.1/introduction/installation.html) |
-| Forc-Client | [v0.31.1](https://fuellabs.github.io/sway/v0.31.1/forc/plugins/forc_client/index.html) |
-
 ## Configure
 
 Configure the target base layer token by editing the `bridge-fungible-token/Forc.toml` file:

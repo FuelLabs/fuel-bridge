@@ -12,9 +12,6 @@ use reentrancy::reentrancy_guard;
 use errors::BridgeFungibleTokenError;
 use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use std::{
-    auth::{
-        msg_sender,
-    },
     call_frames::{
         contract_id,
         msg_asset_id,
@@ -42,13 +39,11 @@ use utils::{
     parse_message_data,
 };
 
-// Storage declarations
 storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
     tokens_minted: u64 = 0,
 }
 
-// Configurable Consts
 configurable {
     DECIMALS: u8 = 9u8,
     BRIDGED_TOKEN_DECIMALS: u8 = 18u8,
@@ -58,11 +53,10 @@ configurable {
     SYMBOL: str[32] = "MYTKN                           ",
 }
 
-// ABI Implementations
 // Implement the process_message function required to be a message receiver
 impl MessageReceiver for Contract {
-    #[storage(read, write)]
     #[payable]
+    #[storage(read, write)]
     fn process_message(msg_idx: u8) {
         // Protect against reentrancy attacks that could allow replaying messages
         reentrancy_guard();
@@ -82,7 +76,7 @@ impl MessageReceiver for Contract {
         let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS, BRIDGED_TOKEN_DECIMALS);
 
         match res_amount {
-            Result::Err(e) => {
+            Result::Err(_) => {
                 // register a refund if value can't be adjusted
                 register_refund(message_data.from, message_data.token, message_data.amount);
             },
@@ -138,8 +132,8 @@ impl FungibleBridge for Contract {
         send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, BRIDGED_TOKEN), 0);
     }
 
-    #[storage(read, write)]
     #[payable]
+    #[storage(read, write)]
     fn withdraw(to: b256) {
         let amount = msg_amount();
         let origin_contract_id = msg_asset_id();

@@ -23,8 +23,8 @@ abi FungibleBridge {
     /// * When no coins were sent with call
     /// * When the wrong asset was sent with the call
     /// * When the amount sent overflows/underflows during decimal conversion
-    #[storage(read, write)]
     #[payable]
+    #[storage(read, write)]
     fn withdraw(to: b256);
 
     /// Get the bridged token
