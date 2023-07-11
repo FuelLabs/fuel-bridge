@@ -6,6 +6,7 @@
       "outputs": ["dist/**", "typechain/**", "artifacts/**", "out/**"]
     },
     "test": {
+      "dependsOn": ["^build"],
       "cache": false
     }
   }
