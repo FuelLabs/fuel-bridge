@@ -2,6 +2,9 @@
 
 set -e
 
+echo "\n\Building packages..."
+pnpm run build
+
 echo "\n\nStarting docker..."
 pnpm run node:up
 
