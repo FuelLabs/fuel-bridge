@@ -41,9 +41,9 @@
 	},
 	"devDependencies": {
 		"@ethersproject/abi": "^5.7.0",
+		"@ethersproject/abstract-provider": "^5.7.0",
 		"@ethersproject/bytes": "^5.7.0",
 		"@ethersproject/providers": "^5.7.0",
-		"@ethersproject/abstract-provider": "^5.7.0",
 		"@fuel-ts/merkle": "^0.21.2",
 		"@nomiclabs/hardhat-waffle": "^2.0.3",
 		"@types/chai": "^4.3.4",
