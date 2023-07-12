@@ -2,7 +2,7 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
-    default: 0.17.0
+    default: 1.70.0
   forc-toolchain:
     default: latest
   forc-date:
