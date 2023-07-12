@@ -269,7 +269,11 @@ mod success {
 
     #[tokio::test]
     async fn claim_refund_of_wrong_token_deposit() {
-        // perform a failing deposit first to register a refund & verify it, then claim and verify output message is created as expected
+        // Send a message informing about a deposit with a a random token address, different from the bridged token
+        // Upon sending this message, the contract will register a refund for the deposit and random token
+        // - Verify that the contract state has correctly changed: new refund record inserted for the correct amount and the random token
+        // - Verify that the contract emits the correct logs
+        // - Verify that the the receipt of the transaction contains a message for the L1 Portal that allows to withdraw the above mentioned deposit
         let mut wallet = env::setup_wallet();
 
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;

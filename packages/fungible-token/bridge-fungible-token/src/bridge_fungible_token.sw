@@ -193,7 +193,8 @@ impl FRC20 for Contract {
 fn register_refund(from: b256, asset: b256, amount: b256) {
     let stored_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256);
 
-    // Should not ever overflow if the L1 token is good?
+    // Should not ever overflow if the L1 token contract has proper overflow protection mechanisms in place
+    // i.e. we should never get a deposit message that could overflow here if it cannot overflow in the EVM
     storage.refund_amounts.get(from).insert(asset, binary_add(stored_amount, amount));
     log(RefundRegisteredEvent {
         from,

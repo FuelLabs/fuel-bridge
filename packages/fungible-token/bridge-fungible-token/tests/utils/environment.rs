@@ -206,10 +206,10 @@ pub async fn setup_environment(
             &message_sender.into(),
             predicate_root,
             msg.0,
-            Nonce::from(message_nonce),
+            message_nonce,
             msg.1.clone(),
         ));
-        message_nonce[0] = message_nonce[0] + 1;
+        message_nonce[0] += 1;
     }
 
     let (provider, _) = setup_test_provider(
