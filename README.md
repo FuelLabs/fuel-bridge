@@ -1,4 +1,3 @@
-
 ## 📗 Table of contents
 
 - [Getting Started](./docs/GETTING_STARTED.md)

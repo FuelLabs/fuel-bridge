@@ -1,4 +1,11 @@
-import { Coin, InputType, Resource, TransactionRequestInput, ZeroBytes32, isCoin } from 'fuels';
+import {
+  Coin,
+  InputType,
+  Resource,
+  TransactionRequestInput,
+  ZeroBytes32,
+  isCoin,
+} from 'fuels';
 
 export function resourcesToInputs(resources: Array<Resource>) {
   const inputs: Array<TransactionRequestInput> = resources

@@ -2,10 +2,12 @@
 node_modules
 .env
 .turbo
+package.json
 
 # Hardhat files
 cache
 artifacts
+typechain
 
 # Cargo and Forc artifacts
 out
@@ -15,3 +17,6 @@ target
 
 # Genearal dist folders
 dist
+
+## Ignore lock files
+pnpm-lock.yaml

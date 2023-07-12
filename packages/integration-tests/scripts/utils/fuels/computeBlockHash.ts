@@ -5,7 +5,12 @@ import { CommitBlockHeader } from '../../types';
 export function computeBlockHash(blockHeader: CommitBlockHeader): string {
   const serialized = solidityPack(
     ['bytes32', 'uint32', 'uint64', 'bytes32'],
-    [blockHeader.prevRoot, blockHeader.height, blockHeader.timestamp, blockHeader.applicationHash]
+    [
+      blockHeader.prevRoot,
+      blockHeader.height,
+      blockHeader.timestamp,
+      blockHeader.applicationHash,
+    ]
   );
   return sha256(serialized);
 }

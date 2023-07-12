@@ -5,11 +5,11 @@
   "private": true,
   "license": "APACHE-2.0",
   "scripts": {
+    "format": "prettier --write ./",
+    "check": "prettier --check ./",
     "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
-    "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
-    "prettier:check": "prettier --check ./",
-    "prettier:format": "prettier --write ./"
+    "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
@@ -24,8 +24,8 @@
     "ethers": "^5.7.2",
     "fuels": "0.0.0-next-20230707184416",
     "mocha": "^10.0.0",
-    "prettier": "^2.7.1",
     "ts-node": "^10.9.1",
+    "typescript": "^5.1.6",
     "@fuel-bridge/portal-contracts": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/fungible-token": "workspace:*"

@@ -1,5 +1,10 @@
 import { arrayify, MessageProof } from 'fuels';
-import { Message, MessageBlockHeader, CommitBlockHeader, Proof } from '../../types';
+import {
+  Message,
+  MessageBlockHeader,
+  CommitBlockHeader,
+  Proof,
+} from '../../types';
 
 export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
   // construct data objects for relaying message on L1

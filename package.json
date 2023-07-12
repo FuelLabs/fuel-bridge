@@ -4,18 +4,26 @@
   "private": true,
   "description": "Fuel Bridge",
   "scripts": {
+    "format": "turbo run format",
+    "check": "turbo run check",
     "build": "turbo run build",
     "test": "sh ./scripts/test.sh",
     "node:build": "make -C ./docker build",
     "node:up": "make -C ./docker up",
     "node:stop": "make -C ./docker stop",
     "node:clean": "make -C ./docker clean",
-    "node:logs": "make -C ./docker logs"
+    "node:logs": "make -C ./docker logs",
+    "prettier:check": "prettier --check .",
+    "prettier:format": "prettier --write ."
   },
   "keywords": [],
   "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
   "license": "APPACHE-2.0",
   "dependencies": {
+    "@fuels/prettier-config": "^0.0.2",
+    "@fuels/ts-config": "^0.0.2",
+    "prettier": "^2.7.1",
+    "prettier-plugin-solidity": "^v1.0.0-rc.1",
     "turbo": "^1.10.7"
   },
   "pnpm": {

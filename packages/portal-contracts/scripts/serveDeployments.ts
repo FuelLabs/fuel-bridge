@@ -16,5 +16,5 @@ const app: Express = express();
 app.use('/', express.static('deployments'));
 
 app.listen(port, () => {
-    console.log(`Server is running at https://localhost:${port}`); // eslint-disable-line no-console
+  console.log(`Server is running at https://localhost:${port}`); // eslint-disable-line no-console
 });

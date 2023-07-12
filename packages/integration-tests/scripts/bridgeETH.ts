@@ -57,7 +57,9 @@ const ETH_AMOUNT = '0.1';
     FUEL_MESSAGE_TIMEOUT_MS
   );
   if (depositMessage == null)
-    throw new Error(`message took longer than ${FUEL_MESSAGE_TIMEOUT_MS}ms to arrive on Fuel`);
+    throw new Error(
+      `message took longer than ${FUEL_MESSAGE_TIMEOUT_MS}ms to arrive on Fuel`
+    );
   console.log('');
 
   // the sent ETH is now spendable on Fuel

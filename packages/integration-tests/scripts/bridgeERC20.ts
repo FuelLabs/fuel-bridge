@@ -7,7 +7,10 @@ import { logETHBalances, logTokenBalances } from './utils/logs';
 import { waitNextBlock } from './utils/fuels/waitNextBlock';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
 import { commitBlock, mockFinalization } from './utils/ethers/commitBlock';
-import { getOrDeployECR20Contract, mintECR20 } from './utils/ethers/getOrDeployECR20Contract';
+import {
+  getOrDeployECR20Contract,
+  mintECR20,
+} from './utils/ethers/getOrDeployECR20Contract';
 import { getOrDeployFuelTokenContract } from './utils/fuels/getOrDeployFuelTokenContract';
 import { validateFundgibleContracts } from './utils/validations';
 import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
@@ -38,7 +41,11 @@ const TOKEN_AMOUNT = '10';
   const ethTestToken = await getOrDeployECR20Contract(env);
 
   // load Fuel side fungible token contract
-  const fuelTestToken = await getOrDeployFuelTokenContract(env, ethTestToken, FUEL_TX_PARAMS);
+  const fuelTestToken = await getOrDeployFuelTokenContract(
+    env,
+    ethTestToken,
+    FUEL_TX_PARAMS
+  );
   const fuelTestTokenId = fuelTestToken.id.toHexString();
 
   // mint tokens as starting balances
@@ -54,7 +61,10 @@ const TOKEN_AMOUNT = '10';
 
   // approve fuel erc20 gateway to spend the tokens
   console.log('Approving Tokens for gateway...');
-  const eApproveTx = await ethTestToken.approve(gatewayContract.address, ethers_parseToken(TOKEN_AMOUNT, 18));
+  const eApproveTx = await ethTestToken.approve(
+    gatewayContract.address,
+    ethers_parseToken(TOKEN_AMOUNT, 18)
+  );
   const eApproveTxResult = await eApproveTx.wait();
   if (eApproveTxResult.status !== 1) {
     console.log(eApproveTxResult);
@@ -89,11 +99,17 @@ const TOKEN_AMOUNT = '10';
     FUEL_MESSAGE_TIMEOUT_MS
   );
   if (depositMessage == null)
-    throw new Error(`message took longer than ${FUEL_MESSAGE_TIMEOUT_MS}ms to arrive on Fuel`);
+    throw new Error(
+      `message took longer than ${FUEL_MESSAGE_TIMEOUT_MS}ms to arrive on Fuel`
+    );
 
   // relay the message to the target contract
   console.log('Relaying message on Fuel...');
-  const fMessageRelayTx = await relayCommonMessage(fuelAcct, depositMessage, FUEL_TX_PARAMS);
+  const fMessageRelayTx = await relayCommonMessage(
+    fuelAcct,
+    depositMessage,
+    FUEL_TX_PARAMS
+  );
   const fMessageRelayTxResult = await fMessageRelayTx.waitForResult();
 
   if (fMessageRelayTxResult.status.type !== 'success') {
@@ -121,7 +137,10 @@ const TOKEN_AMOUNT = '10';
   const scope = fuelTestToken.functions
     .withdraw(paddedAddress)
     .callParams({
-      forward: { amount: fuels_parseToken(TOKEN_AMOUNT, 9), assetId: fuelTestTokenId },
+      forward: {
+        amount: fuels_parseToken(TOKEN_AMOUNT, 9),
+        assetId: fuelTestTokenId,
+      },
     })
     .txParams(FUEL_TX_PARAMS);
   const fWithdrawTx = await scope.call();
