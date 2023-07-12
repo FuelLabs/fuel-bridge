@@ -17,5 +17,10 @@
   "license": "APPACHE-2.0",
   "dependencies": {
     "turbo": "^1.10.7"
+  },
+  "pnpm": {
+    "overrides": {
+      "@openzeppelin/upgrades-core": "1.20.5"
+    }
   }
 }
