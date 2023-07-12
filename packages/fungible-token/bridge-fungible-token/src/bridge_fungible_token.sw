@@ -33,11 +33,11 @@ use std::{
 use utils::{
     adjust_deposit_decimals,
     adjust_withdrawal_decimals,
+    binary_add,
     compose,
     decompose,
     encode_data,
     parse_message_data,
-    binary_add,
 };
 
 storage {
@@ -201,4 +201,3 @@ fn register_refund(from: b256, asset: b256, amount: b256) {
         amount,
     });
 }
-
