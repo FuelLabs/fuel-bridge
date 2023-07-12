@@ -5,12 +5,11 @@
 This project includes both frontend and contracts. To begin, install dependencies:
 
 - [Node.js v18.14.1 or latest stable](https://nodejs.org/en/). We recommend using [nvm](https://github.com/nvm-sh/nvm) to install.
-- [PNPM v7.18.2 or latest stable](https://pnpm.io/installation/)
+- [PNPM v8.6.6 or latest stable](https://pnpm.io/installation/)
 - [Docker v20.0.21 or latest stable](https://docs.docker.com/get-docker/)
 - [Docker Compose v2.15.1 or latest stable](https://docs.docker.com/get-docker/)
-- [Rust v1.68.2 or latest `stable`](https://www.rust-lang.org/tools/install)
-- [Forc v0.37.1 with latest toolchain with forc index version v0.8.0](https://install.fuel.network/latest)
-- [WebAssembly](https://github.com/fuellabs/fuel-indexer#webassembly)
+- [Rust v1.70.0 or latest `stable`](https://www.rust-lang.org/tools/install)
+- [Forc v0.40.1 with latest toolchain](https://install.fuel.network/latest)
 
 ## Running Project Locally
 
