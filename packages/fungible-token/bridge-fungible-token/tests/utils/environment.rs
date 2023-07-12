@@ -8,7 +8,13 @@ use fuel_core_types::{
 };
 use fuels::{
     accounts::{
-        fuel_crypto::SecretKey, predicate::Predicate, wallet::WalletUnlocked, Signer,
+        fuel_crypto::{
+            SecretKey,
+            fuel_types::Nonce
+        }, 
+        predicate::Predicate, 
+        wallet::WalletUnlocked, 
+        Signer,
         ViewOnlyAccount,
     },
     prelude::{
@@ -184,8 +190,8 @@ pub async fn setup_environment(
         .collect();
     let all_coins = setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
 
-    // Generate messages
-    let message_nonce = Word::default();
+    // Generate message    
+    let mut message_nonce = Nonce::zeroed();
     let message_sender = match sender {
         Some(v) => Address::from_str(v).unwrap(),
         None => Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap(),
@@ -200,9 +206,10 @@ pub async fn setup_environment(
             &message_sender.into(),
             predicate_root,
             msg.0,
-            message_nonce.into(),
+            Nonce::from(message_nonce),
             msg.1.clone(),
-        ))
+        ));
+        message_nonce[0] = message_nonce[0] + 1;
     }
 
     let (provider, _) = setup_test_provider(
