@@ -308,3 +308,16 @@ fn bn_div(bn: U256, d: u32) -> (U256, u32) {
         result: (U256, u32)
     }
 }
+
+pub fn binary_add(a: b256, b: b256) -> b256 {
+    let mut carry = a & b;
+    let mut result = a ^ b;
+
+    while carry > ZERO_B256 {
+        let shiftedcarry = carry << 1;
+        carry = result & shiftedcarry;
+        result = result ^ shiftedcarry;
+    }
+
+    result
+}
