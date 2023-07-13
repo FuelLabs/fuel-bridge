@@ -269,7 +269,7 @@ mod success {
 
     #[tokio::test]
     async fn claim_refund_of_wrong_token_deposit() {
-        // Send a message informing about a deposit with a a random token address, different from the bridged token
+        // Send a message informing about a deposit with a random token address, different from the bridged token
         // Upon sending this message, the contract will register a refund for the deposit and random token
         // - Verify that the contract state has correctly changed: new refund record inserted for the correct amount and the random token
         // - Verify that the contract emits the correct logs
