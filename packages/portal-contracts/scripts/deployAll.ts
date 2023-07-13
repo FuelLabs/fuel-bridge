@@ -1,13 +1,18 @@
 import { ethers } from 'hardhat';
-import { DeployedContractAddresses, DeployedContracts, deployFuel, getContractAddresses } from '../protocol/harness';
 import {
-    isNetworkVerifiable,
-    publishProxySourceVerification,
-    publishImplementationSourceVerification,
-    getNetworkName,
-    saveDeploymentsFile,
-    confirmationPrompt,
-    waitForConfirmations,
+  DeployedContractAddresses,
+  DeployedContracts,
+  deployFuel,
+  getContractAddresses,
+} from '../protocol/harness';
+import {
+  isNetworkVerifiable,
+  publishProxySourceVerification,
+  publishImplementationSourceVerification,
+  getNetworkName,
+  saveDeploymentsFile,
+  confirmationPrompt,
+  waitForConfirmations,
 } from './utils';
 
 // Script to deploy the Fuel v2 system
@@ -23,68 +28,73 @@ import {
 const QUICK_DEPLOY = !!process.env.QUICK_DEPLOY;
 
 async function main() {
-    // Check that the node is up
+  // Check that the node is up
+  try {
+    await ethers.provider.getBlockNumber();
+  } catch (e) {
+    throw new Error(
+      `Failed to connect to RPC "${ethers.provider.connection.url}". Make sure your environment variables and configuration are correct.`
+    );
+  }
+
+  // Get the current connected network
+  const networkName = await getNetworkName();
+
+  // Get confirmation
+  let confirm = true;
+  if (!QUICK_DEPLOY) {
+    console.log(''); // eslint-disable-line no-console
+    confirm = await confirmationPrompt(
+      `Are you sure you want to deploy ALL proxy and implementation contracts on "${networkName}" (Y/n)? `
+    );
+  }
+  if (confirm) {
+    // Setup Fuel
+    let contracts: DeployedContracts;
+    let deployments: DeployedContractAddresses;
     try {
-        await ethers.provider.getBlockNumber();
+      console.log('Deploying contracts...'); // eslint-disable-line no-console
+      contracts = await deployFuel();
+      deployments = await getContractAddresses(contracts);
     } catch (e) {
-        throw new Error(
-            `Failed to connect to RPC "${ethers.provider.connection.url}". Make sure your environment variables and configuration are correct.`
+      throw new Error(
+        `Failed to deploy contracts. Make sure all configuration is correct and the proper permissions are in place.`
+      );
+    }
+    const deployedBlock = await ethers.provider.getBlockNumber();
+
+    // Emit the addresses of the deployed contracts
+    console.log('Successfully deployed contracts!\n'); // eslint-disable-line no-console
+    Object.entries(deployments).forEach(([key, value]) => {
+      console.log(`${key}: ${value}`); // eslint-disable-line no-console
+    });
+
+    // Write deployments to file
+    await saveDeploymentsFile(deployments);
+
+    // Confirm source verification/publishing
+    if (!QUICK_DEPLOY && (await isNetworkVerifiable())) {
+      console.log(''); // eslint-disable-line no-console
+      const confirmVerification = await confirmationPrompt(
+        `Do you want to publish contract source code for verification (Y/n)? `
+      );
+      if (confirmVerification) {
+        await waitForConfirmations(deployedBlock, 5);
+        await publishProxySourceVerification(deployments);
+        await publishImplementationSourceVerification(
+          deployments,
+          true,
+          true,
+          true
         );
+      }
     }
-
-    // Get the current connected network
-    const networkName = await getNetworkName();
-
-    // Get confirmation
-    let confirm = true;
-    if (!QUICK_DEPLOY) {
-        console.log(''); // eslint-disable-line no-console
-        confirm = await confirmationPrompt(
-            `Are you sure you want to deploy ALL proxy and implementation contracts on "${networkName}" (Y/n)? `
-        );
-    }
-    if (confirm) {
-        // Setup Fuel
-        let contracts: DeployedContracts;
-        let deployments: DeployedContractAddresses;
-        try {
-            console.log('Deploying contracts...'); // eslint-disable-line no-console
-            contracts = await deployFuel();
-            deployments = await getContractAddresses(contracts);
-        } catch (e) {
-            throw new Error(
-                `Failed to deploy contracts. Make sure all configuration is correct and the proper permissions are in place.`
-            );
-        }
-        const deployedBlock = await ethers.provider.getBlockNumber();
-
-        // Emit the addresses of the deployed contracts
-        console.log('Successfully deployed contracts!\n'); // eslint-disable-line no-console
-        Object.entries(deployments).forEach(([key, value]) => {
-            console.log(`${key}: ${value}`); // eslint-disable-line no-console
-        });
-
-        // Write deployments to file
-        await saveDeploymentsFile(deployments);
-
-        // Confirm source verification/publishing
-        if (!QUICK_DEPLOY && (await isNetworkVerifiable())) {
-            console.log(''); // eslint-disable-line no-console
-            const confirmVerification = await confirmationPrompt(
-                `Do you want to publish contract source code for verification (Y/n)? `
-            );
-            if (confirmVerification) {
-                await waitForConfirmations(deployedBlock, 5);
-                await publishProxySourceVerification(deployments);
-                await publishImplementationSourceVerification(deployments, true, true, true);
-            }
-        }
-    }
+  }
 }
 
 main()
-    .then(() => process.exit(0))
-    .catch((error) => {
-        console.error(error); // eslint-disable-line no-console
-        process.exit(1);
-    });
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error(error); // eslint-disable-line no-console
+    process.exit(1);
+  });

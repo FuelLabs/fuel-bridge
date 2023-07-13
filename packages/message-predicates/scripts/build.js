@@ -11,11 +11,14 @@ const contractMessagePredicate = readFileSync(CONTRACT_PATH);
 const contractMessageScript = readFileSync(SCRIPT_PATH);
 // Create export
 function createExport(name, value) {
-    return `export const ${name} = "${value}";`;
+  return `export const ${name} = "${value}";`;
 }
 // Write file
 mkdirSync(DIST_FOLDER, { recursive: true });
-writeFileSync(DIST_FILE, [
-    createExport("contractMessagePredicate", hexlify(contractMessagePredicate)),
-    createExport("contractMessageScript", hexlify(contractMessageScript)),
-].join('\n'));
+writeFileSync(
+  DIST_FILE,
+  [
+    createExport('contractMessagePredicate', hexlify(contractMessagePredicate)),
+    createExport('contractMessageScript', hexlify(contractMessageScript)),
+  ].join('\n')
+);

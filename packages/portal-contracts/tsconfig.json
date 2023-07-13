@@ -8,6 +8,5 @@
 		"resolveJsonModule": true
 	},
 	"include": ["./scripts", "./protocol", "./test", "./typechain"],
-	"exclude": ["node_modules"],
 	"files": ["./hardhat.config.ts"]
 }

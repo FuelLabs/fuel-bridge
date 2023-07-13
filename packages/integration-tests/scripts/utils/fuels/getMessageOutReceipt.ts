@@ -1,4 +1,8 @@
-import { Receipt, ReceiptType, TransactionResultMessageOutReceipt } from 'fuels';
+import {
+  Receipt,
+  ReceiptType,
+  TransactionResultMessageOutReceipt,
+} from 'fuels';
 
 export function getMessageOutReceipt(receipts: Array<Receipt>) {
   const messageOutReceipt = receipts.find(

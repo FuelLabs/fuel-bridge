@@ -1,11 +1,10 @@
 {
-	"extends": ["solhint:recommended"],
-	"plugins": [],
-	"rules": {
-		"compiler-version": ["error", "^0.8.9"],
-		"var-name-mixedcase": null,
-		"no-inline-assembly": null,
-		"avoid-tx-origin": null,
-		"func-visibility": ["error", { "ignoreConstructors": true }]
-	}
+  "extends": ["solhint:recommended"],
+  "rules": {
+    "compiler-version": ["error", "^0.8.9"],
+    "var-name-mixedcase": null,
+    "no-inline-assembly": null,
+    "avoid-tx-origin": null,
+    "func-visibility": ["error", { "ignoreConstructors": true }]
+  }
 }

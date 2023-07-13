@@ -6,11 +6,17 @@ import { computeBlockHash } from '../fuels/computeBlockHash';
 import { BLOCKS_PER_COMMIT_INTERVAL, TIME_TO_FINALIZE } from '../constants';
 import { bn } from 'fuels';
 
-export async function commitBlock(env: TestEnvironment, commitBlockHeader: CommitBlockHeader) {
+export async function commitBlock(
+  env: TestEnvironment,
+  commitBlockHeader: CommitBlockHeader
+) {
   // wait for block header finalization
   const committerRole = keccak256(toUtf8Bytes('COMMITTER_ROLE'));
   const deployerAddress = await env.eth.deployer.getAddress();
-  const isDeployerComitter = await env.eth.fuelChainState.hasRole(committerRole, deployerAddress);
+  const isDeployerComitter = await env.eth.fuelChainState.hasRole(
+    committerRole,
+    deployerAddress
+  );
 
   if (!isDeployerComitter) {
     // will need to wait for more blocks to be built and then a block to be comitted to the consensus contract
@@ -23,7 +29,9 @@ export async function commitBlock(env: TestEnvironment, commitBlockHeader: Commi
   // commit the given block
   const commitBlockTx = await fuelChainState.commit(
     computeBlockHash(commitBlockHeader),
-    Math.floor(bn(commitBlockHeader.height).toNumber() / BLOCKS_PER_COMMIT_INTERVAL)
+    Math.floor(
+      bn(commitBlockHeader.height).toNumber() / BLOCKS_PER_COMMIT_INTERVAL
+    )
   );
   const commitBlockTxResult = await commitBlockTx.wait();
   if (commitBlockTxResult.status !== 1) {

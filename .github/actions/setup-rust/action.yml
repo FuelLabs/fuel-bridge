@@ -1,0 +1,27 @@
+name: 'Rust & Forc Setup'
+
+inputs:
+  rust-version:
+    default: 1.70.0
+  forc-toolchain:
+    default: latest
+  forc-date:
+    default: 2023-07-05
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Install Rust toolchain
+      uses: dtolnay/rust-toolchain@master
+      with:
+        toolchain: ${{ inputs.rust-version }}
+        components: clippy, rustfmt
+
+    - name: Init cache
+      uses: Swatinem/rust-cache@v2
+
+    - name: Install Fuel toolchain
+      uses: FuelLabs/action-fuel-toolchain@v0.6.0
+      with:
+        toolchain: ${{ inputs.forc-toolchain }}
+        date: ${{ inputs.forc-date }}

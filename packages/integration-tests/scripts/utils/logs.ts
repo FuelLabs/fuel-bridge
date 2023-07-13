@@ -1,5 +1,9 @@
 import { formatEther } from 'ethers/lib/utils';
-import { ethers_formatToken, fuels_formatEther, fuels_formatToken } from './parsers';
+import {
+  ethers_formatToken,
+  fuels_formatEther,
+  fuels_formatToken,
+} from './parsers';
 import { Signer } from 'ethers';
 import { WalletUnlocked } from 'fuels';
 import { Token } from '@fuel-bridge/portal-contracts';
@@ -8,12 +12,23 @@ export const LOG_CONFIG = {
   debug: process.env.DEBUG || true,
 };
 
-export async function logETHBalances(ethereumAccount: Signer, fuelAccount: WalletUnlocked) {
+export async function logETHBalances(
+  ethereumAccount: Signer,
+  fuelAccount: WalletUnlocked
+) {
   const etherAccountAddress = await ethereumAccount.getAddress();
   const fuelAccountAddress = await fuelAccount.address.toHexString();
   console.log('Account balances:');
-  console.log(`  Ethereum - ${formatEther(await ethereumAccount.getBalance())} ETH (${etherAccountAddress})`);
-  console.log(`  Fuel - ${fuels_formatEther(await fuelAccount.getBalance())} ETH (${fuelAccountAddress})`);
+  console.log(
+    `  Ethereum - ${formatEther(
+      await ethereumAccount.getBalance()
+    )} ETH (${etherAccountAddress})`
+  );
+  console.log(
+    `  Fuel - ${fuels_formatEther(
+      await fuelAccount.getBalance()
+    )} ETH (${fuelAccountAddress})`
+  );
   console.log('');
 }
 
@@ -32,7 +47,9 @@ export async function logTokenBalances(
     )} Tokens (${etherAccountAddress})`
   );
   console.log(
-    `  Fuel - ${fuels_formatToken(await fuelAccount.getBalance(fuelTestTokenId))} Tokens (${fuelAccountAddress})`
+    `  Fuel - ${fuels_formatToken(
+      await fuelAccount.getBalance(fuelTestTokenId)
+    )} Tokens (${fuelAccountAddress})`
   );
   console.log('');
 }

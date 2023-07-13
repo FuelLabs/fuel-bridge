@@ -33,13 +33,19 @@ export function fuels_formatToken(value: BN, decimals: number = 9): string {
 }
 
 // Parse any string value using the given decimal amount
-export function ethers_parseToken(value: string, decimals: number = 18): BigNumber {
+export function ethers_parseToken(
+  value: string,
+  decimals: number = 18
+): BigNumber {
   let val = ethers.utils.parseEther(value);
   return val.div(10 ** (ETHEREUM_ETH_DECIMALS - decimals));
 }
 
 // Format any value to a string using the given decimal amount
-export function ethers_formatToken(value: BigNumber, decimals: number = 18): string {
+export function ethers_formatToken(
+  value: BigNumber,
+  decimals: number = 18
+): string {
   value = value.mul(10 ** (ETHEREUM_ETH_DECIMALS - decimals));
   return ethers.utils.formatEther(value);
 }

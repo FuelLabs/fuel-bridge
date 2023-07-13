@@ -3,13 +3,20 @@ import { TestEnvironment } from '../../setup';
 import { Token } from '@fuel-bridge/portal-contracts';
 import { Contract } from 'fuels';
 
-import { fungibleTokenBinary, fungibleTokenABI } from '@fuel-bridge/fungible-token';
+import {
+  fungibleTokenBinary,
+  fungibleTokenABI,
+} from '@fuel-bridge/fungible-token';
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
-export async function getOrDeployFuelTokenContract(env: TestEnvironment, ethTestToken: Token, fuelTxParams: TxParams) {
+export async function getOrDeployFuelTokenContract(
+  env: TestEnvironment,
+  ethTestToken: Token,
+  fuelTxParams: TxParams
+) {
   const tokenGetWay = env.eth.fuelERC20Gateway.address.replace('0x', '');
   const tokenAddress = ethTestToken.address.replace('0x', '');
   const fuelAcct = env.fuel.signers[1];
@@ -17,7 +24,11 @@ export async function getOrDeployFuelTokenContract(env: TestEnvironment, ethTest
   let fuelTestToken: Contract = null;
   if (FUEL_FUNGIBLE_TOKEN_ADDRESS) {
     try {
-      fuelTestToken = new Contract(FUEL_FUNGIBLE_TOKEN_ADDRESS, fungibleTokenABI, fuelAcct);
+      fuelTestToken = new Contract(
+        FUEL_FUNGIBLE_TOKEN_ADDRESS,
+        fungibleTokenABI,
+        fuelAcct
+      );
       await fuelTestToken.functions.name().dryRun();
     } catch (e) {
       fuelTestToken = null;
@@ -31,18 +42,24 @@ export async function getOrDeployFuelTokenContract(env: TestEnvironment, ethTest
     let bytecodeHex = fungibleTokenBinary;
     debug('Replace ECR20 contract id');
     debug('Deploy contract on Fuel');
-    const factory = new ContractFactory(bytecodeHex, fungibleTokenABI, env.fuel.deployer);
+    const factory = new ContractFactory(
+      bytecodeHex,
+      fungibleTokenABI,
+      env.fuel.deployer
+    );
 
     // Set the token gateway and token address in the contract
     factory.setConfigurableConstants({
       BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGetWay),
-      BRIDGED_TOKEN: eth_address_to_b256(tokenAddress)
+      BRIDGED_TOKEN: eth_address_to_b256(tokenAddress),
     });
 
-    const { contractId, transactionRequest } = factory.createTransactionRequest({
-      ...fuelTxParams,
-      storageSlots: [],
-    });
+    const { contractId, transactionRequest } = factory.createTransactionRequest(
+      {
+        ...fuelTxParams,
+        storageSlots: [],
+      }
+    );
     // This for avoiding transaction for failing because of insufficient funds
     // The current fund method only accounts for a static gas fee that is not
     // enough for deploying a contract
@@ -54,8 +71,14 @@ export async function getOrDeployFuelTokenContract(env: TestEnvironment, ethTest
     const response = await fuelAcct.sendTransaction(transactionRequest);
     await response.wait();
     // create contract instance
-    fuelTestToken = new Contract(contractId, factory.interface, factory.account);
-    debug(`Fuel fungible token contract created at ${fuelTestToken.id.toHexString()}.`);
+    fuelTestToken = new Contract(
+      contractId,
+      factory.interface,
+      factory.account
+    );
+    debug(
+      `Fuel fungible token contract created at ${fuelTestToken.id.toHexString()}.`
+    );
   }
   fuelTestToken.account = fuelAcct;
   const fuelTestTokenId = fuelTestToken.id.toHexString();
