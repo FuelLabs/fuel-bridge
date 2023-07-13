@@ -43,14 +43,10 @@ pub async fn build_contract_message_tx(
     if !gas_coins.is_empty() {
         match gas_coins[0].clone() {
             Input::CoinSigned(coin) => {
-                tx_outputs.push(Output::change(coin.owner.into(), 0, AssetId::default()));
+                tx_outputs.push(Output::change(coin.owner, 0, AssetId::default()));
             }
             Input::CoinPredicate(predicate) => {
-                tx_outputs.push(Output::change(
-                    predicate.owner.into(),
-                    0,
-                    AssetId::default(),
-                ));
+                tx_outputs.push(Output::change(predicate.owner, 0, AssetId::default()));
             }
             _ => {
                 // do nothing
