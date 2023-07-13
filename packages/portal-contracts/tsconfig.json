@@ -1,9 +1,12 @@
 {
-  "extends": "../../tsconfig.json",
-  "compilerOptions": {
-    "module": "commonjs",
-    "outDir": "dist"
-  },
-  "include": ["./scripts", "./protocol", "./test", "./typechain"],
-  "files": ["./hardhat.config.ts"]
+	"compilerOptions": {
+		"target": "es5",
+		"module": "commonjs",
+		"strict": true,
+		"esModuleInterop": true,
+		"outDir": "dist",
+		"resolveJsonModule": true
+	},
+	"include": ["./scripts", "./protocol", "./test", "./typechain"],
+	"files": ["./hardhat.config.ts"]
 }
