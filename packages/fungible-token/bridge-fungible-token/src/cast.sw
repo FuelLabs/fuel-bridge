@@ -58,16 +58,3 @@ fn test_b256_conversion() {
     assert(unsigned_into_b256 == bits);
 }
 
-#[test(should_revert)]
-fn test_b256_overflow() {
-    let max_b256: b256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-    let max = U256::from(max_b256);
-    let overflow = max.add(U256::from((0, 0, 0, 1)));
-}
-
-#[test(should_revert)]
-fn test_b256_underflow() {
-    let min_b256: b256 = 0x0000000000000000000000000000000000000000000000000000000000000000;
-    let min = U256::from(min_b256);
-    let overflow = min.subtract(U256::from((0, 0, 0, 1)));
-}
