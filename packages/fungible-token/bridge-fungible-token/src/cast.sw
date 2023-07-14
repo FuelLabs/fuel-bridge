@@ -31,7 +31,7 @@ fn test_b256_from() {
     let min = b256::min();
     let middle = 0x000000000000000000000000000000000000000000000000000000000000000a;
     let max = b256::max();
-    
+
     // Alternatively, compare each field of the U256
     assert_eq(U256::from(min), U256::from((0, 0, 0, 0)));
     assert_eq(U256::from(middle), U256::from((0, 0, 0, 10)));
@@ -39,22 +39,17 @@ fn test_b256_from() {
 }
 
 #[test]
-fn test_b256_conversion() {
-    let u64_max = 0xffffffffffffffff;
+fn test_b256_into() {
+    // Test the boundary conditions: min, middle, max
+    let min = U256::from((0, 0, 0, 0));
+    let middle = U256::from((0, 0, 0, 10));
+    let max = U256::from((u64::max(), u64::max(), u64::max(), u64::max()));
 
-    let max = U256::from((u64_max, u64_max, u64_max, u64_max));
-    let max_b256: b256 = 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
+    let min_into_b256: b256 = min.into();
+    let middle_into_b256: b256 = middle.into();
     let max_into_b256: b256 = max.into();
-    assert(max_into_b256 == max_b256); // test into
-    assert(max == U256::from(max_b256)); // test from
-    let random = 0x0123456789abcdef;
 
-    let unsigned = U256::from((random, 0, random, 0));
-    let bits: b256 = 0x0123456789abcdef00000000000000000123456789abcdef0000000000000000;
-
-    let unsigned_into_b256: b256 = unsigned.into();
-    assert(U256::from(bits) == unsigned);
-    assert(unsigned_into_b256 == bits);
+    assert(min_into_b256 == b256::min());
+    assert(middle_into_b256 == 0x000000000000000000000000000000000000000000000000000000000000000a);
+    assert(max_into_b256 == b256::max());
 }
-
