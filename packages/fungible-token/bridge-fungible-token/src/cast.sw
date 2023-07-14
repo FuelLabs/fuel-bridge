@@ -12,7 +12,7 @@ impl From<b256> for U256 {
     }
 
     fn into(self) -> b256 {
-        let result: b256 = ZERO_B256;
+        let result = b256::min();
 
         asm(output: result, r1: self.a, r2: self.b, r3: self.c, r4: self.d) {
             sw   output r1 i0; // store the word in r1 in output + 0 words
