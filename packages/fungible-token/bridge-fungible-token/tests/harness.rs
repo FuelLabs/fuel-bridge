@@ -14,6 +14,7 @@ use fuels::{
     tx::Receipt,
     types::Bits256,
 };
+use primitive_types::U256 as Unsigned256;
 
 pub const BRIDGED_TOKEN: &str =
     "0x00000000000000000000000000000000000000000000000000000000deadbeef";
@@ -262,6 +263,141 @@ mod success {
         assert_eq!(selector, env::decode_hex("0x53ef1461").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        // Compare the value output in the message with the original value sent
+        assert_eq!(amount, config.overflow_2);
+    }
+
+    #[tokio::test]
+    async fn claim_refund_of_wrong_token_deposit() {
+        // Send a message informing about a deposit with a random token address, different from the bridged token
+        // Upon sending this message, the contract will register a refund for the deposit and random token
+        // - Verify that the contract state has correctly changed: new refund record inserted for the correct amount and the random token
+        // - Verify that the contract emits the correct logs
+        // - Verify that the the receipt of the transaction contains a message for the L1 Portal that allows to withdraw the above mentioned deposit
+        let mut wallet = env::setup_wallet();
+
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let config = env::generate_test_config((BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS));
+        let wrong_token_value: &str =
+            "0x1111110000000000000000000000000000000000000000000000000000111111";
+
+        let (message, coin, deposit_contract) = env::construct_msg_data(
+            wrong_token_value,
+            FROM,
+            *wallet.address().hash(),
+            config.overflow_2,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        // Set up the environment
+        let (
+            test_contract,
+            contract_inputs,
+            coin_inputs,
+            message_inputs,
+            test_contract_id,
+            provider,
+        ) = env::setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the test contract
+        let receipts = env::relay_message_to_contract(
+            &wallet,
+            message_inputs[0].clone(),
+            contract_inputs,
+            &coin_inputs[..],
+            &env::generate_variable_output(),
+        )
+        .await;
+
+        let log_decoder = test_contract.log_decoder();
+        let refund_registered_event = log_decoder
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        // Verify the message value was received by the test contract
+        let test_contract_balance = provider
+            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
+            .await
+            .unwrap();
+        let balance = wallet
+            .get_asset_balance(&AssetId::new(*test_contract_id.hash()))
+            .await
+            .unwrap();
+
+        assert_eq!(test_contract_balance, 100);
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.overflow_2))
+        );
+        assert_eq!(
+            refund_registered_event[0].asset,
+            Bits256::from_hex_str(wrong_token_value).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
+
+        // verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+
+        // verify that trying to claim funds from
+        // the correct token fails
+        let error_response = test_contract
+            .methods()
+            .claim_refund(
+                Bits256::from_hex_str(FROM).unwrap(),
+                Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
+            )
+            .call()
+            .await;
+        assert!(error_response.is_err());
+
+        let call_response = test_contract
+            .methods()
+            .claim_refund(
+                Bits256::from_hex_str(FROM).unwrap(),
+                Bits256::from_hex_str(wrong_token_value).unwrap(),
+            )
+            .call()
+            .await
+            .unwrap();
+
+        // verify correct message was sent
+        let message_receipt = call_response
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
+
+        assert_eq!(
+            *test_contract_id.hash(),
+            **message_receipt.sender().unwrap()
+        );
+        assert_eq!(
+            &Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap(),
+            message_receipt.recipient().unwrap()
+        );
+        assert_eq!(message_receipt.amount().unwrap(), 0);
+        assert_eq!(message_receipt.len().unwrap(), 104);
+
+        // message data
+        let (selector, to, token, amount) =
+            env::parse_output_message_data(message_receipt.data().unwrap());
+        assert_eq!(selector, env::decode_hex("0x53ef1461").to_vec());
+        assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
+        assert_eq!(token, Bits256::from_hex_str(wrong_token_value).unwrap());
         // Compare the value output in the message with the original value sent
         assert_eq!(amount, config.overflow_2);
     }
@@ -1325,5 +1461,130 @@ mod revert {
 
         // verify that no tokens were minted for message.data.to
         assert_eq!(balance, 0);
+    }
+
+    #[tokio::test]
+    async fn deposit_with_wrong_token_twice_registers_two_refunds() {
+        let mut wallet = env::setup_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let wrong_token_value: &str =
+            "0x1111110000000000000000000000000000000000000000000000000000111111";
+
+        let config = env::generate_test_config((BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS));
+
+        let (message, coin, deposit_contract) = env::construct_msg_data(
+            wrong_token_value,
+            FROM,
+            *Address::from_str(TO).unwrap(),
+            config.min_amount,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let one = Unsigned256::from(1);
+
+        let (message2, _, _) = env::construct_msg_data(
+            wrong_token_value,
+            FROM,
+            *Address::from_str(TO).unwrap(),
+            config.min_amount + one,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        // Set up the environment
+        let (
+            test_contract,
+            contract_inputs,
+            coin_inputs,
+            message_inputs,
+            test_contract_id,
+            provider,
+        ) = env::setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message, message2],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the test contract
+        let receipts = env::relay_message_to_contract(
+            &wallet,
+            message_inputs[0].clone(),
+            contract_inputs.clone(),
+            &coin_inputs[..],
+            &env::generate_variable_output(),
+        )
+        .await;
+
+        // Relay the test message to the test contract
+        let receipts_second = env::relay_message_to_contract(
+            &wallet,
+            message_inputs[1].clone(),
+            contract_inputs.clone(),
+            &coin_inputs[..],
+            &env::generate_variable_output(),
+        )
+        .await;
+
+        let log_decoder = test_contract.log_decoder();
+        let refund_registered_event = log_decoder
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        // Verify the message value was received by the test contract
+        let test_contract_balance = provider
+            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
+            .await
+            .unwrap();
+
+        let balance = wallet
+            .get_asset_balance(&AssetId::new(*test_contract_id.hash()))
+            .await
+            .unwrap();
+
+        // Verify the message value was received by the test contract
+        assert_eq!(test_contract_balance, 200);
+
+        // check that the RefundRegisteredEvent receipt is populated correctly
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.min_amount))
+        );
+        assert_eq!(
+            refund_registered_event[0].asset,
+            Bits256::from_hex_str(wrong_token_value).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
+
+        // verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+
+        // check that the RefundRegisteredEvent receipt is populated correctly
+        let second_refund_registered_event = log_decoder
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts_second)
+            .unwrap();
+        assert_eq!(
+            second_refund_registered_event[0].amount,
+            Bits256(env::encode_hex(config.min_amount + one))
+        );
+        assert_eq!(
+            second_refund_registered_event[0].asset,
+            Bits256::from_hex_str(wrong_token_value).unwrap()
+        );
+        assert_eq!(
+            second_refund_registered_event[0].from,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
     }
 }
