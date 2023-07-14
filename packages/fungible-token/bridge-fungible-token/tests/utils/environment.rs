@@ -8,14 +8,10 @@ use fuel_core_types::{
 };
 use fuels::{
     accounts::{
-        fuel_crypto::{
-            SecretKey,
-            fuel_types::Nonce
-        }, 
-        predicate::Predicate, 
-        wallet::WalletUnlocked, 
-        Signer,
-        ViewOnlyAccount,
+        fuel_crypto::{fuel_types::Nonce, SecretKey},
+        predicate::Predicate,
+        wallet::WalletUnlocked,
+        Signer, ViewOnlyAccount,
     },
     prelude::{
         abigen, setup_custom_assets_coins, setup_test_provider, Address, AssetConfig, AssetId,
@@ -190,7 +186,7 @@ pub async fn setup_environment(
         .collect();
     let all_coins = setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
 
-    // Generate message    
+    // Generate message
     let mut message_nonce = Nonce::zeroed();
     let message_sender = match sender {
         Some(v) => Address::from_str(v).unwrap(),

@@ -355,13 +355,13 @@ mod success {
         // verify that trying to claim funds from
         // the correct token fails
         let error_response = test_contract
-        .methods()
-        .claim_refund(
-            Bits256::from_hex_str(FROM).unwrap(),
-            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
-        )
-        .call()
-        .await;
+            .methods()
+            .claim_refund(
+                Bits256::from_hex_str(FROM).unwrap(),
+                Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
+            )
+            .call()
+            .await;
         assert!(error_response.is_err());
 
         let call_response = test_contract
@@ -1485,7 +1485,7 @@ mod revert {
 
         let one = Unsigned256::from(1);
 
-        let (message2,_,_) = env::construct_msg_data(
+        let (message2, _, _) = env::construct_msg_data(
             wrong_token_value,
             FROM,
             *Address::from_str(TO).unwrap(),
@@ -1552,7 +1552,6 @@ mod revert {
 
         // Verify the message value was received by the test contract
         assert_eq!(test_contract_balance, 200);
-
 
         // check that the RefundRegisteredEvent receipt is populated correctly
         assert_eq!(
