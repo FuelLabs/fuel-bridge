@@ -1,9 +1,4 @@
 [[package]]
-name = 'FRC20_abi'
-source = 'member'
-dependencies = ['std']
-
-[[package]]
 name = 'bridge_fungible_token'
 source = 'member'
 dependencies = [
@@ -20,11 +15,6 @@ dependencies = ['std']
 [[package]]
 name = 'core'
 source = 'path+from-root-9BFE6D5D0CBDF740'
-
-[[package]]
-name = 'fungible_bridge_abi'
-source = 'member'
-dependencies = ['std']
 
 [[package]]
 name = 'reentrancy'

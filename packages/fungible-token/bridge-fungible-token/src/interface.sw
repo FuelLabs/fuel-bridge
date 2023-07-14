@@ -24,8 +24,8 @@ abi FungibleBridge {
     ///
     /// # Arguments
     ///
-    /// * `originator` - the address entitled to a refund
-    /// * `asset` - the token to be refunded back to the originator
+    /// * `originator`: [b256] - the address entitled to a refund
+    /// * `asset`: [b256] - the token to be refunded back to the originator
     #[storage(read, write)]
     fn claim_refund(originator: b256, asset: b256);
 
@@ -33,7 +33,7 @@ abi FungibleBridge {
     ///
     /// # Arguments
     ///
-    /// * `to` - the address which is the destination of the transfer
+    /// * `to`: [b256] - the address which is the destination of the transfer
     ///
     /// # Reverts
     ///

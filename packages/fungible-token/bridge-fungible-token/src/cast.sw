@@ -1,5 +1,7 @@
 library;
 
+// TODO: https://github.com/FuelLabs/sway/issues/4800
+
 use std::u256::U256;
 use std::constants::ZERO_B256;
 
