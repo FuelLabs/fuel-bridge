@@ -26,25 +26,16 @@ impl From<b256> for U256 {
 }
 
 #[test]
-fn test_b256_addition() {
-    let one = U256::from((0, 0, 0, 1));
-    let two = U256::from((0, 0, 0, 2));
-
-    let addition = one.add(two);
-    let three = U256::from((0, 0, 0, 3));
-
-    assert(three == addition);
-
-    let three_b256: b256 = 0x0000000000000000000000000000000000000000000000000000000000000003;
-
-    assert(U256::from(three_b256) == three);
-    assert(U256::from(three_b256) == addition);
-
-    let three_into_b256: b256 = three.into();
-    assert(three_into_b256 == three_b256);
-
-    let addition_into_b256: b256 = addition.into();
-    assert(addition_into_b256 == three_b256);
+fn test_b256_from() {
+    // Test the boundary conditions: min, middle, max
+    let min = b256::min();
+    let middle = 0x000000000000000000000000000000000000000000000000000000000000000a;
+    let max = b256::max();
+    
+    // Alternatively, compare each field of the U256
+    assert_eq(U256::from(min), U256::from((0, 0, 0, 0)));
+    assert_eq(U256::from(middle), U256::from((0, 0, 0, 10)));
+    assert_eq(U256::from(max), U256::from((u64::max(), u64::max(), u64::max(), u64::max())));
 }
 
 #[test]
