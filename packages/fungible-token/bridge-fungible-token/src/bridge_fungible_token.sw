@@ -4,6 +4,7 @@ mod data;
 mod errors;
 mod events;
 mod utils;
+mod cast;
 
 use fungible_bridge_abi::FungibleBridge;
 use FRC20_abi::FRC20;
@@ -40,27 +41,7 @@ use utils::{
     parse_message_data,
 };
 
-impl From<b256> for U256 {
-    fn from(value: b256) -> U256 {
-        let (word1, word2, word3, word4) = asm(r1: value) { r1: (u64, u64, u64, u64) };
-        let result = U256::from((word1, word2, word3, word4));
-
-        result
-    }
-
-    fn into(self) -> b256 {
-        let result: b256 = ZERO_B256;
-
-        asm(output: result, r1: self.a, r2: self.b, r3: self.c, r4: self.d) {
-            sw   output r1 i0; // store the word in r4 in output + 0 words
-            sw   output r2 i1; // store the word in r5 in output + 1 word
-            sw   output r3 i2; // store the word in r5 in output + 1 word
-            sw   output r4 i3; // store the word in r5 in output + 1 word
-        }
-
-        result
-    }
-}
+use cast::*;
 
 storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
