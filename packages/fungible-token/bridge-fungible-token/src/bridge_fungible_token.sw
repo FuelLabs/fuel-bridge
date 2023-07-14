@@ -34,7 +34,6 @@ use std::{
 use utils::{
     adjust_deposit_decimals,
     adjust_withdrawal_decimals,
-    binary_add,
     compose,
     decompose,
     encode_data,
