@@ -4,7 +4,7 @@ use std::u256::U256;
 use std::constants::ZERO_B256;
 
 impl From<b256> for U256 {
-    fn from(value: b256) -> U256 {
+    fn from(value: b256) -> Self {
         let (word1, word2, word3, word4) = asm(r1: value) { r1: (u64, u64, u64, u64) };
         let result = U256::from((word1, word2, word3, word4));
 
