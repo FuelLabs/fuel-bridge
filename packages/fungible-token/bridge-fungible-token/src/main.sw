@@ -3,11 +3,11 @@ contract;
 mod data;
 mod errors;
 mod events;
+mod interface;
 mod utils;
 mod cast;
 
-use fungible_bridge_abi::FungibleBridge;
-use FRC20_abi::FRC20;
+use interface::{FRC20, FungibleBridge};
 use contract_message_receiver::MessageReceiver;
 use reentrancy::reentrancy_guard;
 use errors::BridgeFungibleTokenError;

@@ -7,9 +7,7 @@ dependencies = ['std']
 name = 'bridge_fungible_token'
 source = 'member'
 dependencies = [
-    'FRC20_abi',
     'contract_message_receiver',
-    'fungible_bridge_abi',
     'reentrancy',
     'std',
 ]

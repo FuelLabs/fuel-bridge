@@ -1,7 +1,0 @@
-[project]
-authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "fungible_bridge_abi.sw"
-license = "Apache-2.0"
-name = "fungible_bridge_abi"
-
-[dependencies]
