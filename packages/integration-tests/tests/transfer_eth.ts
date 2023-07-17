@@ -18,9 +18,9 @@ import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceip
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import {
-  commitBlock,
   mockFinalization,
 } from '../scripts/utils/ethers/commitBlock';
+import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -172,7 +172,7 @@ describe('Transferring ETH', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // commit block to L1
-      await commitBlock(env, relayMessageParams.rootBlockHeader);
+      await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
       await mockFinalization(env);
 

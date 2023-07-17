@@ -25,7 +25,9 @@ echo "Connected to l1 chain."
 
 # deploy contracts
 echo "Deploying contracts to L1."
-LOCALHOST_HTTP=$L1_CHAIN_HTTP AUTHORITY_KEY=$POA_AUTHORITY_KEY pnpm run node-deploy
+export LOCALHOST_HTTP=$L1_CHAIN_HTTP
+export AUTHORITY_KEY=$POA_AUTHORITY_KEY
+pnpm run node-deploy
 
 # serve contract deployment data
 echo "Starting deployment data server."

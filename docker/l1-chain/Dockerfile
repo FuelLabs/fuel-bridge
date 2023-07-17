@@ -10,10 +10,15 @@ WORKDIR /l1chain
 
 # clone the contracts repo
 ADD ./packages/portal-contracts /l1chain/fuel-v2-contracts
+# copy over the fuel chain replace consts values
+ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
 WORKDIR /l1chain/fuel-v2-contracts
 
 # build the ethereum contracts and environment
 RUN pnpm install
+# replace the fuel chain consts values and change contract code
+RUN pnpm ts-node scripts/replaceFuelChainConsts.ts
+# run contract compile with the new consts
 RUN pnpm run build
 
 # remove build dependencies
