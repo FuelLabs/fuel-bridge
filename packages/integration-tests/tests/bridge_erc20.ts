@@ -20,11 +20,9 @@ import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeploy
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { fuel_to_eth_address } from '../scripts/utils/parsers';
-import {
-  commitBlock,
-  mockFinalization,
-} from '../scripts/utils/ethers/commitBlock';
+import { mockFinalization } from '../scripts/utils/ethers/commitBlock';
 import { LOG_CONFIG } from '../scripts/utils/logs';
+import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
 
 LOG_CONFIG.debug = false;
 
@@ -240,7 +238,7 @@ describe('Bridging ERC20 tokens', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // commit block to L1
-      await commitBlock(env, relayMessageParams.rootBlockHeader);
+      await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
       await mockFinalization(env);
 
