@@ -4,6 +4,7 @@ mod data;
 mod errors;
 mod events;
 mod utils;
+mod cast;
 
 use fungible_bridge_abi::FungibleBridge;
 use FRC20_abi::FRC20;
@@ -38,6 +39,8 @@ use utils::{
     encode_data,
     parse_message_data,
 };
+
+use cast::*;
 
 storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
@@ -129,7 +132,7 @@ impl FungibleBridge for Contract {
         storage.refund_amounts.get(originator).insert(asset, ZERO_B256);
 
         // send a message to unlock this amount on the base layer gateway contract
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, BRIDGED_TOKEN), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, asset), 0);
     }
 
     #[payable]
@@ -190,7 +193,11 @@ impl FRC20 for Contract {
 // Storage-dependant private functions
 #[storage(write)]
 fn register_refund(from: b256, asset: b256, amount: b256) {
-    storage.refund_amounts.get(from).insert(asset, amount);
+    let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
+    let new_amount = U256::from(amount).add(previous_amount); // U256 has overflow checks built in;
+    let new_amount_b256 = <U256 as From<b256>>::into(new_amount);
+
+    storage.refund_amounts.get(from).insert(asset, new_amount_b256);
     log(RefundRegisteredEvent {
         from,
         asset,
