@@ -17,10 +17,7 @@ import { waitNextBlock } from '../scripts/utils/fuels/waitNextBlock';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import {
-  mockFinalization,
-} from '../scripts/utils/ethers/commitBlock';
-import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockCommit, waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockCommit';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -144,7 +141,7 @@ describe('Transferring ETH', async function () {
       expect(fWithdrawTxResult.status.type).to.equal('success');
 
       // Build a new block to commit the message
-      const lastBlockId = await waitNextBlock(env);
+      const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
 
       // get message proof
       const messageOutReceipt = getMessageOutReceipt(
@@ -174,7 +171,7 @@ describe('Transferring ETH', async function () {
       // commit block to L1
       await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
-      await mockFinalization(env);
+      await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
       // relay message
       await expect(

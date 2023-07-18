@@ -20,11 +20,8 @@ import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeploy
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { fuel_to_eth_address } from '../scripts/utils/parsers';
-import {
-  mockFinalization,
-} from '../scripts/utils/ethers/commitBlock';
 import { LOG_CONFIG } from '../scripts/utils/logs';
-import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockCommit, waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockCommit';
 
 LOG_CONFIG.debug = false;
 
@@ -40,7 +37,7 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let fuel_testToken: Contract;
-  let fuel_testTokenId: string;
+  let fuel_testTokenId: string; 
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -216,7 +213,7 @@ describe('Bridging ERC20 tokens', async function () {
       expect(fWithdrawTxResult.status.type).to.equal('success');
 
       // get message proof
-      const nextBlockId = await waitNextBlock(env);
+      const nextBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
       const messageOutReceipt = getMessageOutReceipt(
         fWithdrawTxResult.receipts
       );
@@ -242,7 +239,7 @@ describe('Bridging ERC20 tokens', async function () {
       // commit block to L1
       await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
-      await mockFinalization(env);
+      await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
       // relay message
       await expect(

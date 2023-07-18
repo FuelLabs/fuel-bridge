@@ -36,7 +36,7 @@ services:
     depends_on:
       - fuel_core
     image: fueldev/block-committer:${DOCKER_TAG_FUEL_CORE:-latest}
-    platform: linux/arm64
+    platform: linux/amd64
     build:
       context: ./block-committer/
     env_file:

@@ -7,7 +7,7 @@ ARG FUEL_GRAPHQL_ENDPOINT=""
 WORKDIR /generator
 
 # copy fiels to workdir
-ADD ./tx-generator /generator
+ADD ./generator /generator
 
 # build the ethereum contracts and environment
 RUN npm install
