@@ -33,7 +33,7 @@ pnpm install
 
 In this step, we are going to;
 
-- launch a local `fuel no` and a `ethereum node`;
+- launch a local `fuel node` and a local `ethereum node`;
 
 ```sh
 pnpm node:up
@@ -55,11 +55,11 @@ pnpm node:clean
 
 This section has a brief description of each directory. More details can be found inside each package, by clicking on the links.
 
-- [packages/fungible-token](../packages/fungible-token/) The contract that bridge ECR20 tokens into Fuel using the message brigde;
+- [packages/fungible-token](../packages/fungible-token/) The contract that bridges ECR20 tokens into Fuel using the message bridge;
 - [packages/message-predicates](../packages/message-predicates/) The predicates that receive the data from the base layer into Fuel;
 - [packages/portal-contracts](../packages/portal-contracts/) The Fuel Solidity contracts architecture for state and message bridging;
 - [packages/integration-tests](../packages/integration-tests/) Integration tests for the Fuel Messaging Bridge;
-- [docker](../docker/) Docker configuartion with L1 and Fuel Core working together.
+- [docker](../docker/) Docker configuration with L1 and Fuel Core working together.
 
 ## 🧰 Useful Scripts
 
@@ -71,7 +71,7 @@ pnpm <command name>
 
 | Script       | Description                                                                            |
 | ------------ | -------------------------------------------------------------------------------------- |
-| `build`      | Run all build commands generting the artifacts needed to run tests or deploy packages. |
+| `build`      | Run all build commands generating the artifacts needed to run tests or deploy packages.|
 | `test`       | Run all the tests from all the packages                                                |
 | `node:up`    | Run the local network with `fuel-core` and the `ethereum node`.                        |
 | `node:clean` | Stop and remove all development containers that are running locally.                   |
@@ -81,7 +81,7 @@ pnpm <command name>
 
 ## Run Tests
 
-The command bellow run a script that start the nodes, wait for the them to be available and than execute the tests.
+The command bellow runs a script that starts the nodes, waits for the them to be available and then executes the tests.
 
 ```sh
 pnpm test
