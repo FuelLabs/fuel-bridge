@@ -36,7 +36,7 @@ describe('Contract Upgradability', async () => {
         FuelMessagePortal_impl: '',
         FuelERC20Gateway_impl: '',
       };
-      const upgradedContracts = await upgradeFuel(contracts);
+      const upgradedContracts = await upgradeFuel(contracts, env.deployer);
 
       expect(upgradedContracts.FuelChainState).to.equal(
         env.fuelChainState.address
