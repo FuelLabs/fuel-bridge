@@ -22,7 +22,8 @@ describe('Outgoing Messages', async () => {
 
     // Deploy contracts for message testing
     const messageTesterContractFactory = await ethers.getContractFactory(
-      'MessageTester'
+      'MessageTester',
+      env.deployer
     );
     messageTester = (await messageTesterContractFactory.deploy(
       env.fuelMessagePortal.address

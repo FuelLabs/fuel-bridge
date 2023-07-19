@@ -25,17 +25,17 @@ const def_http_eth: string = 'http://127.0.0.1:8545';
 const def_http_deployer: string = 'http://127.0.0.1:8080';
 const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
 const def_pk_eth_deployer: string =
-  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-const def_pk_eth_signer1: string =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
-const def_pk_eth_signer2: string =
+const def_pk_eth_signer1: string =
   '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a';
+const def_pk_eth_signer2: string =
+  '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6';
 const def_pk_fuel_deployer: string =
-  '0xa449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298';
+  '0xba9e8401405cd4327119548bccf0cd8b195c3fb716c848d9571c60bb230c6978';
 const def_pk_fuel_signer1: string =
-  '0x6fbaf19e3e42af0becc628e954557a8616d702b0c7ce9f2dd2580a16bebe357a';
+  '0xa349d39f614a3085b7f7f8cef63fd5189136924fc1238e6d25ccdaa43a901cd0';
 const def_pk_fuel_signer2: string =
-  '0xd4de6ad33dae7d7987711360b8ff9298f1838c9542c6efafa0e8c74b11e5623d';
+  '0x139f2cd8db62a9d64c3ed4cdc804f1fb53be98d750cd1432a308b34a42d8dcc7';
 
 // Setup options
 export interface SetupOptions {

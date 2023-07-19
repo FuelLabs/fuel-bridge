@@ -16,7 +16,8 @@ describe('Contract Upgradability', async () => {
 
     // Deploy contracts for abstract upgradeable contract testing.
     const upgradeableTesterContractFactory = await ethers.getContractFactory(
-      'UpgradeableTester'
+      'UpgradeableTester',
+      env.deployer
     );
     upgradeableTester =
       (await upgradeableTesterContractFactory.deploy()) as UpgradeableTester;

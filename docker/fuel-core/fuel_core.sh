@@ -59,4 +59,5 @@ exec /root/fuel-core run \
     --relayer $L1_CHAIN_HTTP \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
     --relayer-da-finalization 0 \
+    --poa-interval-period 30s \
     --chain ./chainConfig.json
