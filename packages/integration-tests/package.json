@@ -9,7 +9,8 @@
     "check": "prettier --check ./",
     "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
-    "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts"
+    "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
+    "transfer": "pnpm ts-node scripts/transfer.ts"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",

@@ -17,10 +17,8 @@ import { waitNextBlock } from '../scripts/utils/fuels/waitNextBlock';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import {
-  commitBlock,
-  mockFinalization,
-} from '../scripts/utils/ethers/commitBlock';
+import { mockFinalization } from '../scripts/utils/ethers/commitBlock';
+import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -117,7 +115,6 @@ describe('Transferring ETH', async function () {
   describe('Send ETH from Fuel', async () => {
     const NUM_ETH = '0.1';
     let fuelETHSender: FuelWallet;
-    let fuelETHSenderAddress: string;
     let fuelETHSenderBalance: BN;
     let ethereumETHReceiver: Signer;
     let ethereumETHReceiverAddress: string;
@@ -126,7 +123,6 @@ describe('Transferring ETH', async function () {
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
-      fuelETHSenderAddress = fuelETHSender.address.toHexString();
       fuelETHSenderBalance = await fuelETHSender.getBalance(NativeAssetId);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
@@ -172,7 +168,7 @@ describe('Transferring ETH', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // commit block to L1
-      await commitBlock(env, relayMessageParams.rootBlockHeader);
+      await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
       await mockFinalization(env);
 

@@ -31,3 +31,20 @@ services:
     ports:
       # expose the service to the host for integration testing
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
+
+  fuel_block_commiter:
+    depends_on:
+      - fuel_core
+    image: fueldev/block-committer:${DOCKER_TAG_FUEL_CORE:-latest}
+    platform: linux/amd64
+    build:
+      context: ./block-committer/
+    env_file:
+      - ./envs/block_committer.env
+    environment:
+      ETHEREUM_RPC: ws://l1_chain:9545/
+      FUEL_GRAPHQL_ENDPOINT: http://fuel_core:4001
+      DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
+    ports:
+      # expose the service to the host for integration testing
+      - ${COMMITTER_HTTP_PORT:-8888}:8888

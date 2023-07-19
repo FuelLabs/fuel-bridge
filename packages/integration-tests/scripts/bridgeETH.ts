@@ -2,13 +2,14 @@ import { parseEther } from 'ethers/lib/utils';
 import { Address, BN } from 'fuels';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
-import { commitBlock, mockFinalization } from './utils/ethers/commitBlock';
+import { mockFinalization } from './utils/ethers/commitBlock';
 import { waitNextBlock } from './utils/fuels/waitNextBlock';
 import { logETHBalances } from './utils/logs';
 import { waitForMessage } from './utils/fuels/waitForMessage';
 import { fuels_parseEther } from './utils/parsers';
 import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
+import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 
 const ETH_AMOUNT = '0.1';
 
@@ -106,7 +107,7 @@ const ETH_AMOUNT = '0.1';
   const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
   // commit block to L1
-  await commitBlock(env, relayMessageParams.rootBlockHeader);
+  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
   // wait for block finalization
   await mockFinalization(env);
 
