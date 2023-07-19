@@ -18,7 +18,7 @@
   },
   "keywords": [],
   "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
-  "license": "APPACHE-2.0",
+  "license": "APACHE-2.0",
   "dependencies": {
     "@fuels/prettier-config": "^0.0.2",
     "@fuels/ts-config": "^0.0.2",
