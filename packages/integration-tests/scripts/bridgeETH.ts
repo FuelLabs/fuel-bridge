@@ -8,7 +8,8 @@ import { waitForMessage } from './utils/fuels/waitForMessage';
 import { fuels_parseEther } from './utils/parsers';
 import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
-import { waitForBlockCommit, waitForBlockFinalization } from './utils/ethers/waitForBlockCommit';
+import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
 
 const ETH_AMOUNT = '0.1';
 

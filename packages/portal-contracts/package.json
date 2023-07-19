@@ -13,6 +13,7 @@
     "check": "pnpm solhint \"contracts/**/*.sol\"",
     "node": "pnpm hardhat node --network hardhat",
     "node-deploy": "QUICK_DEPLOY=true pnpm hardhat run --network localhost scripts/deployAll.ts",
+    "start-mining": "pnpm hardhat run --network localhost scripts/startAutoMining.ts",
     "script-deploy": "pnpm hardhat run --network custom scripts/deployAll.ts",
     "script-deploy-impl": "pnpm hardhat run --network custom scripts/deployImplementation.ts",
     "script-upgrade": "pnpm hardhat run --network custom scripts/upgradeAll.ts",

@@ -21,7 +21,8 @@ import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { fuel_to_eth_address } from '../scripts/utils/parsers';
 import { LOG_CONFIG } from '../scripts/utils/logs';
-import { waitForBlockCommit, waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
 
 LOG_CONFIG.debug = false;
 
@@ -29,7 +30,8 @@ chai.use(solidity);
 const { expect } = chai;
 
 describe('Bridging ERC20 tokens', async function () {
-  const DEFAULT_TIMEOUT_MS: number = 20_000;
+  // Timeout 6 minutes
+  const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
   const DECIMAL_DIFF = 1_000_000_000;
 

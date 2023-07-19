@@ -16,7 +16,8 @@ describe('Contract Upgradability', async () => {
 
     // Deploy contracts for abstract upgradeable contract testing.
     const upgradeableTesterContractFactory = await ethers.getContractFactory(
-      'UpgradeableTester'
+      'UpgradeableTester',
+      env.deployer
     );
     upgradeableTester =
       (await upgradeableTesterContractFactory.deploy()) as UpgradeableTester;
@@ -35,7 +36,7 @@ describe('Contract Upgradability', async () => {
         FuelMessagePortal_impl: '',
         FuelERC20Gateway_impl: '',
       };
-      const upgradedContracts = await upgradeFuel(contracts);
+      const upgradedContracts = await upgradeFuel(contracts, env.deployer);
 
       expect(upgradedContracts.FuelChainState).to.equal(
         env.fuelChainState.address

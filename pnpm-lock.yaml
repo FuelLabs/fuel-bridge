@@ -36,19 +36,6 @@ importers:
         specifier: ^2.9.6
         version: 2.12.4(typescript@5.1.6)
 
-  docker/tx-generator/generator:
-    dependencies:
-      ethers:
-        specifier: ^5.7.2
-        version: 5.7.2
-      fuels:
-        specifier: 0.0.0-next-20230707184416
-        version: 0.0.0-next-20230707184416
-    devDependencies:
-      ts-node:
-        specifier: ^10.9.1
-        version: 10.9.1(@types/node@18.16.19)(typescript@5.1.6)
-
   packages/fungible-token:
     dependencies:
       fuels:

@@ -25,11 +25,11 @@ const def_http_eth: string = 'http://127.0.0.1:8545';
 const def_http_deployer: string = 'http://127.0.0.1:8080';
 const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
 const def_pk_eth_deployer: string =
-  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80';
-const def_pk_eth_signer1: string =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
-const def_pk_eth_signer2: string =
+const def_pk_eth_signer1: string =
   '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a';
+const def_pk_eth_signer2: string =
+  '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6';
 const def_pk_fuel_deployer: string =
   '0xba9e8401405cd4327119548bccf0cd8b195c3fb716c848d9571c60bb230c6978';
 const def_pk_fuel_signer1: string =

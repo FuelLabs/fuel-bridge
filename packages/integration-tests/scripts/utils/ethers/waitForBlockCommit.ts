@@ -3,13 +3,9 @@ import { CommitBlockHeader } from '../../types';
 import { ZeroBytes32, bn } from 'fuels';
 import { debug } from '../logs';
 import { delay } from '../delay';
-import { computeBlockHash } from '../fuels/computeBlockHash';
-import { ethers } from 'ethers';
 
-// 1 second
-const COMMIT_TIMOUT_RETRY = 5000;
-// Two minutes
-const FINALIZE_TIMOUT_RETRY = 1 * 1000 * 60;
+// 5 seconds
+const RETRY_DELAY = 5 * 1000;
 
 export async function waitForBlockCommit(
   env: TestEnvironment,
@@ -28,40 +24,13 @@ export async function waitForBlockCommit(
   // If not commited, wait for TIMOUT_RETRY seconds and try again
   if (!isCommited) {
     debug(
-      `Block is not commited on L1. Auto-retry in ${COMMIT_TIMOUT_RETRY / 1000}s...`
+      `Block is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`
     );
-    await delay(COMMIT_TIMOUT_RETRY);
+    await delay(RETRY_DELAY);
     return waitForBlockCommit(env, commitBlockHeader);
   }
 
   // Return if is finalized
   debug('Block is commited on L1');
   return isCommited;
-}
-
-export async function waitForBlockFinalization(
-  env: TestEnvironment,
-  commitBlockHeader: CommitBlockHeader
-) {
-  // connect to FuelChainState contract as the permissioned block comitter
-  const fuelChainState = env.eth.fuelChainState.connect(env.eth.provider);
-
-  try {
-    const isFinalized = await fuelChainState.finalized(
-      computeBlockHash(commitBlockHeader),
-      bn(commitBlockHeader.height).toNumber()
-    );
-    if (!isFinalized) {
-      throw new Error('Block is not finalized yet');
-    }
-    // Return if is finalized
-    debug('Block is finalized on L1');
-    return isFinalized;
-  } catch {
-    debug(
-      `Block is not finalized yet. Auto-retry in ${FINALIZE_TIMOUT_RETRY / 1000}s...`
-    );
-    await delay(FINALIZE_TIMOUT_RETRY);
-    return waitForBlockFinalization(env, commitBlockHeader);
-  }
 }

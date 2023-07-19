@@ -14,7 +14,8 @@ import { getOrDeployFuelTokenContract } from './utils/fuels/getOrDeployFuelToken
 import { validateFundgibleContracts } from './utils/validations';
 import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
-import { waitForBlockCommit, waitForBlockFinalization } from './utils/ethers/waitForBlockCommit';
+import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
 
 const TOKEN_AMOUNT = '10';
 

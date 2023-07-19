@@ -14,6 +14,7 @@ import {
   confirmationPrompt,
   waitForConfirmations,
 } from './utils';
+import { Signer } from 'ethers';
 
 // Script to deploy the Fuel v2 system
 
@@ -28,6 +29,13 @@ import {
 const QUICK_DEPLOY = !!process.env.QUICK_DEPLOY;
 
 async function main() {
+  let deployer: Signer | undefined = undefined;
+
+  if (process.env.DEPLOYER_KEY) {
+    console.log('Deployer key found!');
+    deployer = new ethers.Wallet(process.env.DEPLOYER_KEY, ethers.provider);
+  }
+
   // Check that the node is up
   try {
     await ethers.provider.getBlockNumber();
@@ -54,7 +62,7 @@ async function main() {
     let deployments: DeployedContractAddresses;
     try {
       console.log('Deploying contracts...'); // eslint-disable-line no-console
-      contracts = await deployFuel();
+      contracts = await deployFuel(deployer);
       deployments = await getContractAddresses(contracts);
     } catch (e) {
       throw new Error(

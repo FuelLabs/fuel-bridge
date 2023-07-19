@@ -48,4 +48,3 @@ services:
     ports:
       # expose the service to the host for integration testing
       - ${COMMITTER_HTTP_PORT:-8888}:8888
-
