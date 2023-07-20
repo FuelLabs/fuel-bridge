@@ -1,6 +1,6 @@
 # 💚 Contributing
 
-Thanks for your interest in contributing! This document outlines the process for installing dependencies and setting up for development, as well as some conventions on contributing for the project.
+Thanks for your interest in contributing! This document outlines the process for installing dependencies and setting up for development, as well as some conventions on contributing to the project.
 
 If you run into any difficulties getting started, you can always ask questions on our [Discord](https://discord.gg/xfpK4Pe).
 
