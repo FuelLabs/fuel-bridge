@@ -20,9 +20,9 @@ import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeploy
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { fuel_to_eth_address } from '../scripts/utils/parsers';
-import { mockFinalization } from '../scripts/utils/ethers/commitBlock';
 import { LOG_CONFIG } from '../scripts/utils/logs';
 import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
 
 LOG_CONFIG.debug = false;
 
@@ -30,7 +30,8 @@ chai.use(solidity);
 const { expect } = chai;
 
 describe('Bridging ERC20 tokens', async function () {
-  const DEFAULT_TIMEOUT_MS: number = 20_000;
+  // Timeout 6 minutes
+  const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
   const DECIMAL_DIFF = 1_000_000_000;
 
@@ -214,7 +215,7 @@ describe('Bridging ERC20 tokens', async function () {
       expect(fWithdrawTxResult.status.type).to.equal('success');
 
       // get message proof
-      const nextBlockId = await waitNextBlock(env);
+      const nextBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
       const messageOutReceipt = getMessageOutReceipt(
         fWithdrawTxResult.receipts
       );
@@ -240,7 +241,7 @@ describe('Bridging ERC20 tokens', async function () {
       // commit block to L1
       await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
-      await mockFinalization(env);
+      await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
       // relay message
       await expect(

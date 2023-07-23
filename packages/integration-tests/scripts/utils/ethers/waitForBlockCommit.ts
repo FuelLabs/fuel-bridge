@@ -1,11 +1,11 @@
 import { TestEnvironment } from '../../setup';
 import { CommitBlockHeader } from '../../types';
-import { ZeroBytes32 } from 'fuels';
+import { ZeroBytes32, bn } from 'fuels';
 import { debug } from '../logs';
 import { delay } from '../delay';
 
 // 5 seconds
-const COMMIT_TIMOUT_RETRY = 5 * 1000;
+const RETRY_DELAY = 5 * 1000;
 
 export async function waitForBlockCommit(
   env: TestEnvironment,
@@ -23,12 +23,8 @@ export async function waitForBlockCommit(
 
   // If not commited, wait for TIMOUT_RETRY seconds and try again
   if (!isCommited) {
-    debug(
-      `Block is not commited on L1. Auto-retry in ${
-        COMMIT_TIMOUT_RETRY / 1000
-      }s...`
-    );
-    await delay(COMMIT_TIMOUT_RETRY);
+    debug(`Block is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`);
+    await delay(RETRY_DELAY);
     return waitForBlockCommit(env, commitBlockHeader);
   }
 
