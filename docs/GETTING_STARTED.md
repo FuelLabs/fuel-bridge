@@ -81,7 +81,7 @@ pnpm <command name>
 
 ## Run Tests
 
-The command bellow runs a script that starts the nodes, waits for the them to be available and then executes the tests.
+The command below runs a script that starts the nodes, waits for them to be available and then executes the tests.
 
 ```sh
 pnpm test
