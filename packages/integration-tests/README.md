@@ -43,4 +43,4 @@ The scripts can easily be run on other network setups like Goerli by modifying e
 
 ## License
 
-The primary license for this repo is `UNLICENSED`, see [`LICENSE`](../../LICENSE).
+The primary license for this repo is `Apache 2.0`, see [`LICENSE`](../../LICENSE).

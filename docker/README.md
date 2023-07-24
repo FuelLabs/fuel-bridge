@@ -58,4 +58,4 @@ You can change this configs on the env files;
 
 ## License
 
-This repo is licensed under the `Apache-2.0` license. See [`LICENSE`](./LICENSE) for more information.
+This repo is licensed under the `Apache-2.0` license. See [`LICENSE`](../LICENSE) for more information.
