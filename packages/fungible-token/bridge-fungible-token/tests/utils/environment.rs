@@ -21,6 +21,7 @@ use fuels::{
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{message::Message, Bits256},
 };
+use fuels::prelude::Transaction;
 use primitive_types::U256 as Unsigned256;
 use sha3::{Digest, Keccak256};
 
@@ -342,6 +343,7 @@ pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransactio
 
     // Sign transaction and call
     wallet.sign_transaction(tx).unwrap();
+    tx.estimate_predicates(&provider.consensus_parameters).unwrap();
     provider.send_transaction(tx).await.unwrap()
 }
 
