@@ -25,7 +25,7 @@ use primitive_types::U256 as Unsigned256;
 use sha3::{Digest, Keccak256};
 
 const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
-    "../bridge-message-predicates/contract_message_predicate.bin";
+    "../../message-predicates/contract_message_predicate.bin";
 const MESSAGE_SENDER_ADDRESS: &str =
     "0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe";
 const TEST_BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
@@ -40,11 +40,11 @@ abigen!(
     ),
     Predicate(
         name = "ContractMessagePredicate",
-        abi = "./bridge-message-predicates/contract_message_predicate-abi.json"
+        abi = "../message-predicates/contract_message_predicate-abi.json"
     ),
     Script(
         name = "ContractMessageScript",
-        abi = "./bridge-message-predicates/contract_message_script-abi.json",
+        abi = "../message-predicates/contract_message_script-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",

@@ -8,7 +8,7 @@ use fuels::prelude::*;
 
 const CONTRACT_MESSAGE_MIN_GAS: u64 = 10_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
-    "../bridge-message-predicates/contract_message_script.bin";
+    "../../message-predicates/contract_message_script.bin";
 
 /// Build a message-to-contract transaction with the given input coins and outputs
 /// note: unspent gas is returned to the owner of the first given gas input
