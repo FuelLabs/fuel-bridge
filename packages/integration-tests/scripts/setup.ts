@@ -106,6 +106,7 @@ export async function setupEnvironment(
   try {
     await fuel_provider.getBlockNumber();
   } catch (e) {
+    console.error(e);
     throw new Error(
       'Failed to connect to the Fuel client at (' +
         http_fuel_client +

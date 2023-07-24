@@ -19,6 +19,6 @@ pub fn script_hash() -> [u8; 32] {
 // Gets the root of the message-to-contract predicate
 pub fn predicate_root(cparams: &ConsensusParameters) -> [u8; 32] {
     let predicate = predicate_asm::bytecode();
-    let root = Input::predicate_owner(predicate, cparams);
+    let root = Input::predicate_owner(predicate, &cparams.chain_id);
     root.into()
 }

@@ -12,10 +12,11 @@ use fuels::{
     tx::{Bytes32, Receipt},
     types::{
         coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
+        TxPointer, UtxoId,
     },
 };
 
-use fuel_tx::{ConsensusParameters, TxPointer, UtxoId, Word};
+use fuel_tx::{ConsensusParameters, Word};
 
 abigen!(Contract(
     name = "TestContract",
@@ -120,7 +121,7 @@ pub async fn setup_environment(
 
     // Build contract inputs
     let contract_input = Input::Contract {
-        utxo_id: UtxoId::new(Bytes32::from([0u8; 32]), 0),
+        utxo_id: UtxoId::default(),
         balance_root: Bytes32::zeroed(),
         state_root: Bytes32::zeroed(),
         tx_pointer: TxPointer::default(),
