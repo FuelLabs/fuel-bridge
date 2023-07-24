@@ -17,16 +17,15 @@ import { waitNextBlock } from '../scripts/utils/fuels/waitNextBlock';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import {
-  commitBlock,
-  mockFinalization,
-} from '../scripts/utils/ethers/commitBlock';
+import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
 
 chai.use(solidity);
 const { expect } = chai;
 
 describe('Transferring ETH', async function () {
-  const DEFAULT_TIMEOUT_MS: number = 20_000;
+  // Timeout 6 minutes
+  const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
 
   let env: TestEnvironment;
@@ -88,9 +87,6 @@ describe('Transferring ETH', async function () {
     });
 
     it('Wait for ETH to arrive on Fuel', async function () {
-      // override the default test timeout from 2000ms
-      this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
-
       // wait for message to appear in fuel client
       expect(
         await waitForMessage(
@@ -144,7 +140,7 @@ describe('Transferring ETH', async function () {
       expect(fWithdrawTxResult.status.type).to.equal('success');
 
       // Build a new block to commit the message
-      const lastBlockId = await waitNextBlock(env);
+      const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
 
       // get message proof
       const messageOutReceipt = getMessageOutReceipt(
@@ -172,9 +168,9 @@ describe('Transferring ETH', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // commit block to L1
-      await commitBlock(env, relayMessageParams.rootBlockHeader);
+      await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
       // wait for block finalization
-      await mockFinalization(env);
+      await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
       // relay message
       await expect(

@@ -25,7 +25,15 @@ echo "Connected to l1 chain."
 
 # deploy contracts
 echo "Deploying contracts to L1."
-LOCALHOST_HTTP=$L1_CHAIN_HTTP AUTHORITY_KEY=$POA_AUTHORITY_KEY pnpm run node-deploy
+export LOCALHOST_HTTP=$L1_CHAIN_HTTP
+export DEPLOYER_KEY=$DEPLOYER_KEY
+pnpm run node-deploy
+
+# Start auto mining
+# We use a separate process to start auto mining because
+# the deployment of contracts can fail if the chain is
+# mining at the same time.
+pnpm run start-mining
 
 # serve contract deployment data
 echo "Starting deployment data server."

@@ -1,11 +1,25 @@
 import { TestEnvironment } from '../../setup';
+import { delay } from '../delay';
+import { debug } from '../logs';
 
-export async function waitNextBlock(env: TestEnvironment): Promise<string> {
-  const fuelAccount = env.fuel.signers[0];
-  // Build a new block to commit the message
-  // TODO: we need to wait for the next block in another way when deploying to sepolia
-  const resp = await fuelAccount.transfer(fuelAccount.address, 1);
-  const result2 = await resp.waitForResult();
+// 5 seconds
+const RETRY_DELAY = 5 * 1000;
 
-  return result2.blockId;
+export async function waitNextBlock(
+  env: TestEnvironment,
+  blockId: string
+): Promise<string> {
+  const fuelProvider = env.fuel.provider;
+
+  debug('Checking if a new block is available...', blockId);
+  const chain = await fuelProvider.getChain();
+  const currentBlock = await fuelProvider.getBlock(blockId);
+
+  if (chain.latestBlock.height.lte(currentBlock.height)) {
+    debug(`Waiting for ${RETRY_DELAY}ms and check again`);
+    await delay(RETRY_DELAY);
+    return waitNextBlock(env, blockId);
+  }
+
+  return chain.latestBlock.id;
 }

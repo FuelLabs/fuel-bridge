@@ -6,7 +6,6 @@ import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
 import { logETHBalances, logTokenBalances } from './utils/logs';
 import { waitNextBlock } from './utils/fuels/waitNextBlock';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
-import { commitBlock, mockFinalization } from './utils/ethers/commitBlock';
 import {
   getOrDeployECR20Contract,
   mintECR20,
@@ -15,6 +14,8 @@ import { getOrDeployFuelTokenContract } from './utils/fuels/getOrDeployFuelToken
 import { validateFundgibleContracts } from './utils/validations';
 import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
+import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
+import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
 
 const TOKEN_AMOUNT = '10';
 
@@ -152,7 +153,7 @@ const TOKEN_AMOUNT = '10';
 
   // wait for next block to be created
   console.log('Waiting for next block to be created...');
-  const lastBlockId = await waitNextBlock(env);
+  const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
 
   // get message proof for relaying on Ethereum
   console.log('Building message proof...');
@@ -166,9 +167,9 @@ const TOKEN_AMOUNT = '10';
   const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
   // commit block to L1
-  await commitBlock(env, relayMessageParams.rootBlockHeader);
+  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
   // wait for block finalization
-  await mockFinalization(env);
+  await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
