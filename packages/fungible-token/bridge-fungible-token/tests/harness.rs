@@ -1,7 +1,6 @@
-mod utils {
-    pub mod builder;
-    pub mod environment;
-}
+mod functions;
+mod utils;
+
 use crate::env::{BridgeFungibleTokenContractConfigurables, RefundRegisteredEvent};
 
 use std::str::FromStr;
@@ -943,81 +942,6 @@ mod success {
 
         // verify that no tokens were minted for message.data.to
         assert_eq!(balance, 0);
-    }
-
-    #[tokio::test]
-    async fn can_get_name() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-
-        let call_response = contract.methods().name().call().await.unwrap();
-        assert_eq!(
-            call_response.value,
-            "MY_TOKEN                                                        "
-        )
-    }
-
-    #[tokio::test]
-    async fn can_get_symbol() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-
-        let call_response = contract.methods().symbol().call().await.unwrap();
-        assert_eq!(call_response.value, "MYTKN                           ")
-    }
-
-    #[tokio::test]
-    async fn can_get_decimals() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-
-        let call_response = contract.methods().decimals().call().await.unwrap();
-        assert_eq!(call_response.value, PROXY_TOKEN_DECIMALS)
-    }
-
-    #[tokio::test]
-    async fn can_get_bridged_token() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-        let bridged_token = Address::from_str(BRIDGED_TOKEN).unwrap();
-
-        let call_response = contract.methods().bridged_token().call().await.unwrap();
-        assert_eq!(call_response.value, Bits256(*bridged_token))
-    }
-
-    #[tokio::test]
-    async fn can_get_bridged_token_decimals() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-
-        let call_response = contract
-            .methods()
-            .bridged_token_decimals()
-            .call()
-            .await
-            .unwrap();
-        assert_eq!(call_response.value, BRIDGED_TOKEN_DECIMALS)
-    }
-
-    #[tokio::test]
-    async fn can_get_bridged_token_gateway() {
-        let wallet = launch_provider_and_get_wallet().await;
-        // Set up the environment
-        let (contract, _id) = env::get_fungible_token_instance(wallet.clone()).await;
-        let token_gateway = Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap();
-
-        let call_response = contract
-            .methods()
-            .bridged_token_gateway()
-            .call()
-            .await
-            .unwrap();
-        assert_eq!(call_response.value, Bits256(*token_gateway))
     }
 
     #[tokio::test]
