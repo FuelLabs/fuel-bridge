@@ -1,4 +1,6 @@
-FROM ghcr.io/fuellabs/fuel-block-committer
+# Use version sha-fa87fea to get previous version
+# compatible with fuel-core v0.18.3
+FROM ghcr.io/fuellabs/fuel-block-committer:sha-fa87fea
 
 ARG ETHEREUM_WALLET_KEY=""
 ARG COMMIT_INTERVAL=1
