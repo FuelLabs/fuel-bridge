@@ -9,6 +9,7 @@
     "test": "cargo test"
   },
   "dependencies": {
-    "fuels": "0.47.0"
+    "fuels": "0.47.0",
+    "@fuel-bridge/message-predicates": "workspace:*"
   }
 }
