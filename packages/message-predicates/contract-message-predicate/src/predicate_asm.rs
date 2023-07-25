@@ -23,7 +23,7 @@ pub fn bytecode() -> Vec<u8> {
     const JMP_PREDICATE_FAILURE: u16 = 18;
 
     //referenced data start pointer
-    const REF_DATA_START_PTR: u16 = 19 * BYTES_PER_INSTR;
+    const REF_DATA_START_PTR: u16 = 19 * BYTES_PER_INSTR; // 76
 
     /* The following assembly code is intended to do the following:
      *  -Verify that the script bytecode hash for the transaction matches that of

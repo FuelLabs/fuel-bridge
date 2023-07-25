@@ -14,6 +14,9 @@ import {
   Predicate,
   bn,
   MAX_GAS_PER_TX,
+  Provider,
+  CoinTransactionRequestInput,
+  TransactionCoder,
 } from 'fuels';
 import { debug } from '../logs';
 import { resourcesToInputs } from './transaction';
@@ -21,9 +24,12 @@ import {
   contractMessagePredicate,
   contractMessageScript,
 } from '@fuel-bridge/message-predicates';
+import { def_http_fuel } from '../../setup';
 
 // Create a predicate for common messages
-const predicate = new Predicate(contractMessagePredicate, 0);
+const predicate = new Predicate(contractMessagePredicate, 0, null, new Provider(def_http_fuel));
+
+console.log(predicate.address.toHexString());
 
 // Details for relaying common messages with certain predicate roots
 const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
@@ -42,7 +48,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       >
     ): Promise<ScriptTransactionRequest> => {
       const script = arrayify(details.script);
-      const predicate = arrayify(details.predicate);
+      const predicateBytecode = arrayify(details.predicate);
       // get resources to fund the transaction
       const resources = await relayer.getResourcesToSpend([
         {
@@ -70,10 +76,10 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         amount: message.amount,
         sender: message.sender.toHexString(),
         recipient: message.recipient.toHexString(),
-        witnessIndex: 0,
+        witnessIndex: null,
         data: message.data,
         nonce: message.nonce,
-        predicate: predicate,
+        predicate: predicateBytecode,
       });
       transaction.inputs.push({
         type: InputType.Contract,
@@ -81,6 +87,8 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         contractId: contractId,
       });
       transaction.inputs.push(...coins);
+      transaction.inputs.sort((a, b) => a.type - b.type);
+
       transaction.outputs.push({
         type: OutputType.Contract,
         inputIndex: 1,
@@ -93,6 +101,8 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       transaction.outputs.push({
         type: OutputType.Variable,
       });
+      transaction.outputs.sort((a, b) => a.type - b.type);
+
       transaction.witnesses.push('0x');
 
       debug(
@@ -153,5 +163,28 @@ export async function relayCommonMessage(
     messageRelayDetails,
     txParams
   );
-  return relayer.sendTransaction(transaction);
+
+  const encodedTransaction = transaction.toTransactionBytes();
+  const response = await relayer.provider.operations.estimatePredicates({
+    encodedTransaction: hexlify(encodedTransaction),
+  });
+  const [decodedTransaction] = new TransactionCoder().decode(
+    arrayify(response.estimatePredicates.rawPayload),
+    0
+  );
+
+  if (decodedTransaction.inputs) {
+    decodedTransaction.inputs.forEach((input, index) => {
+      if ('predicate' in input && input.predicateGasUsed.gt(0)) {
+        (<CoinTransactionRequestInput>transaction.inputs[index]).predicateGasUsed =
+          input.predicateGasUsed;
+      }
+    });
+  }
+
+  const tx = await relayer.populateTransactionWitnessesSignature(transaction);
+
+  console.log(JSON.stringify(tx, null, 2));
+
+  return relayer.sendTransaction(tx);
 }
