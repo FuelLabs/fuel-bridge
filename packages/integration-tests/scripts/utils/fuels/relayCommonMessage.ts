@@ -14,9 +14,10 @@ import {
   Predicate,
   bn,
   MAX_GAS_PER_TX,
-  Provider,
   CoinTransactionRequestInput,
   TransactionCoder,
+  hashTransaction,
+  transactionRequestify,
 } from 'fuels';
 import { debug } from '../logs';
 import { resourcesToInputs } from './transaction';
@@ -24,12 +25,9 @@ import {
   contractMessagePredicate,
   contractMessageScript,
 } from '@fuel-bridge/message-predicates';
-import { def_http_fuel } from '../../setup';
 
 // Create a predicate for common messages
-const predicate = new Predicate(contractMessagePredicate, 0, null, new Provider(def_http_fuel));
-
-console.log(predicate.address.toHexString());
+const predicate = new Predicate(contractMessagePredicate, 0);
 
 // Details for relaying common messages with certain predicate roots
 const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
@@ -76,7 +74,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         amount: message.amount,
         sender: message.sender.toHexString(),
         recipient: message.recipient.toHexString(),
-        witnessIndex: null,
+        witnessIndex: 0,
         data: message.data,
         nonce: message.nonce,
         predicate: predicateBytecode,
@@ -87,7 +85,6 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         contractId: contractId,
       });
       transaction.inputs.push(...coins);
-      transaction.inputs.sort((a, b) => a.type - b.type);
 
       transaction.outputs.push({
         type: OutputType.Contract,
@@ -101,7 +98,6 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       transaction.outputs.push({
         type: OutputType.Variable,
       });
-      transaction.outputs.sort((a, b) => a.type - b.type);
 
       transaction.witnesses.push('0x');
 
@@ -164,6 +160,8 @@ export async function relayCommonMessage(
     txParams
   );
 
+  // TODO: remove this once the estimatePredicate is fixed on the TS-SDK
+  // https://github.com/FuelLabs/fuels-ts/issues/1129
   const encodedTransaction = transaction.toTransactionBytes();
   const response = await relayer.provider.operations.estimatePredicates({
     encodedTransaction: hexlify(encodedTransaction),
@@ -172,19 +170,37 @@ export async function relayCommonMessage(
     arrayify(response.estimatePredicates.rawPayload),
     0
   );
-
   if (decodedTransaction.inputs) {
     decodedTransaction.inputs.forEach((input, index) => {
       if ('predicate' in input && input.predicateGasUsed.gt(0)) {
-        (<CoinTransactionRequestInput>transaction.inputs[index]).predicateGasUsed =
-          input.predicateGasUsed;
+        (<CoinTransactionRequestInput>(
+          transaction.inputs[index]
+        )).predicateGasUsed = input.predicateGasUsed;
       }
     });
   }
 
-  const tx = await relayer.populateTransactionWitnessesSignature(transaction);
+  // TODO: remove this once the hashTransaction is fixed on the TS-SDK
+  // https://github.com/FuelLabs/fuels-ts/issues/1128
+  const txToSign = transactionRequestify(
+    JSON.parse(JSON.stringify(transaction))
+  );
+  txToSign.inputs.map((i) => {
+    if ('predicateGasUsed' in i) {
+      i.predicateGasUsed = bn();
+      return i;
+    }
+    return i;
+  });
+  const hash = hashTransaction(txToSign, 0);
+  const signature = await relayer.signer().sign(hash);
+  transaction.updateWitnessByOwner(relayer.address, signature);
+  const {
+    submit: { id: transactionId },
+  } = await relayer.provider.operations.submit({
+    encodedTransaction: hexlify(transaction.toTransactionBytes()),
+  });
+  return new TransactionResponse(transactionId, relayer.provider);
 
-  console.log(JSON.stringify(tx, null, 2));
-
-  return relayer.sendTransaction(tx);
+  // return relayer.sendTransaction(transaction);
 }
