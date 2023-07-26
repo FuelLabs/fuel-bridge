@@ -27,7 +27,7 @@ use sha3::{Digest, Keccak256};
 
 use crate::utils::constants::{
     BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY,
-    DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_SENDER_ADDRESS,
+    DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
 };
 
 abigen!(
@@ -42,16 +42,34 @@ abigen!(
     ),
 );
 
-pub struct TestConfig {
-    pub adjustment_factor: Unsigned256,
-    pub adjustment_is_div: bool,
-    pub min_amount: Unsigned256,
-    pub max_amount: Unsigned256,
-    pub test_amount: Unsigned256,
-    pub not_enough: Unsigned256,
-    pub overflow_1: Unsigned256,
-    pub overflow_2: Unsigned256,
-    pub overflow_3: Unsigned256,
+pub(crate) struct TestConfig {
+    pub(crate) adjustment: Adjustment,
+    pub(crate) amount: TxAmount,
+    pub(crate) overflow: Overflow,
+}
+
+pub(crate) struct Adjustment {
+    pub(crate) factor: Unsigned256,
+    pub(crate) is_div: bool,
+}
+
+pub(crate) struct TxAmount {
+    pub(crate) min: Unsigned256,
+    pub(crate) max: Unsigned256,
+    pub(crate) test: Unsigned256,
+    pub(crate) not_enough: Unsigned256,
+}
+
+pub(crate) struct Overflow {
+    pub(crate) one: Unsigned256,
+    pub(crate) two: Unsigned256,
+    pub(crate) three: Unsigned256,
+}
+
+pub(crate) struct UTXOInputs {
+    pub(crate) contract: Vec<Input>,
+    pub(crate) coin: Vec<Input>,
+    pub(crate) message: Vec<Input>,
 }
 
 impl TestConfig {
@@ -103,23 +121,29 @@ impl TestConfig {
         let overflow_3 = max_amount + (one << 224);
 
         Self {
-            adjustment_factor,
-            adjustment_is_div,
-            min_amount,
-            test_amount,
-            max_amount,
-            not_enough,
-            overflow_1,
-            overflow_2,
-            overflow_3,
+            adjustment: Adjustment {
+                factor: adjustment_factor,
+                is_div: adjustment_is_div,
+            },
+            amount: TxAmount {
+                min: min_amount,
+                max: max_amount,
+                test: test_amount,
+                not_enough,
+            },
+            overflow: Overflow {
+                overflow_one: overflow_1,
+                overflow_two: overflow_2,
+                overflow_three: overflow_3,
+            },
         }
     }
 
     pub fn fuel_equivalent_amount(&self, amount: Unsigned256) -> u64 {
-        if self.adjustment_is_div {
-            (amount * self.adjustment_factor).as_u64()
+        if self.adjustment.is_div {
+            (amount * self.adjustment.factor).as_u64()
         } else {
-            (amount / self.adjustment_factor).as_u64()
+            (amount / self.adjustment.factor).as_u64()
         }
     }
 }
@@ -149,9 +173,7 @@ pub async fn setup_environment(
     configurables: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> (
     BridgeFungibleTokenContract<WalletUnlocked>,
-    Vec<Input>,
-    Vec<Input>,
-    Vec<Input>,
+    UTXOInputs,
     Provider,
 ) {
     // Generate coins for wallet
@@ -282,9 +304,11 @@ pub async fn setup_environment(
 
     (
         test_contract,
-        contract_inputs,
-        coin_inputs,
-        message_inputs,
+        UTXOInputs {
+            contract: contract_inputs,
+            coin: coin_inputs,
+            messages: message_inputs,
+        },
         provider,
     )
 }
@@ -429,7 +453,7 @@ pub async fn create_msg_data(
     };
 
     let message_data = prefix_contract_id(message_data, config).await;
-    let message = (100, message_data);
+    let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
 
     (message, coin, deposit_recipient)
