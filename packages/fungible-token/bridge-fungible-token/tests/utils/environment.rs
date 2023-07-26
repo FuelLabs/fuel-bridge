@@ -258,7 +258,7 @@ pub async fn setup_environment(
                     message.recipient.into(),
                     message.amount,
                     message.nonce,
-                    85u64,
+                    0,
                     predicate.code().to_vec(),
                     vec![],
                 )
@@ -268,7 +268,7 @@ pub async fn setup_environment(
                     message.recipient.into(),
                     message.amount,
                     message.nonce,
-                    85u64,
+                    0,
                     message.data,
                     predicate.code().to_vec(),
                     vec![],
