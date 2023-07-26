@@ -43,7 +43,7 @@ services:
       - ./envs/block_committer.env
     environment:
       ETHEREUM_RPC: ws://l1_chain:9545/
-      FUEL_GRAPHQL_ENDPOINT: http://l1_chain:4001
+      FUEL_GRAPHQL_ENDPOINT: http://fuel_core:4001
       DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
     ports:
       # expose the service to the host for integration testing
