@@ -9,6 +9,6 @@
     "build": "forc build && cargo run && node ./scripts/build.js"
   },
   "devDependencies": {
-    "fuels": "0.47.0"
+    "fuels": "0.49.0"
   }
 }

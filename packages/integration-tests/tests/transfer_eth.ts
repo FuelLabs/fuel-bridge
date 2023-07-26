@@ -7,7 +7,7 @@ import {
   Address,
   BN,
   WalletUnlocked as FuelWallet,
-  NativeAssetId,
+  BaseAssetId,
   MessageProof,
 } from 'fuels';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
@@ -54,7 +54,7 @@ describe('Transferring ETH', async function () {
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
       fuelETHReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        NativeAssetId
+        BaseAssetId
       );
     });
 
@@ -100,7 +100,7 @@ describe('Transferring ETH', async function () {
       // check that the recipient balance has increased by the expected amount
       let newReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        NativeAssetId
+        BaseAssetId
       );
       expect(
         newReceiverBalance.eq(
@@ -123,7 +123,7 @@ describe('Transferring ETH', async function () {
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
       fuelETHSenderAddress = fuelETHSender.address.toHexString();
-      fuelETHSenderBalance = await fuelETHSender.getBalance(NativeAssetId);
+      fuelETHSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
       ethereumETHReceiverBalance = await ethereumETHReceiver.getBalance();
@@ -153,7 +153,7 @@ describe('Transferring ETH', async function () {
       );
 
       // check that the sender balance has decreased by the expected amount
-      let newSenderBalance = await fuelETHSender.getBalance(NativeAssetId);
+      let newSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
 
       // Get just the first 3 digits of the balance to compare to the expected balance
       // this is required because the payment of gas fees is not deterministic
