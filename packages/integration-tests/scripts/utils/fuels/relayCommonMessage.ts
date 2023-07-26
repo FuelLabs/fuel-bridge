@@ -14,6 +14,10 @@ import {
   Predicate,
   bn,
   MAX_GAS_PER_TX,
+  CoinTransactionRequestInput,
+  TransactionCoder,
+  hashTransaction,
+  transactionRequestify,
 } from 'fuels';
 import { debug } from '../logs';
 import { resourcesToInputs } from './transaction';
@@ -42,7 +46,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       >
     ): Promise<ScriptTransactionRequest> => {
       const script = arrayify(details.script);
-      const predicate = arrayify(details.predicate);
+      const predicateBytecode = arrayify(details.predicate);
       // get resources to fund the transaction
       const resources = await relayer.getResourcesToSpend([
         {
@@ -73,7 +77,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         witnessIndex: 0,
         data: message.data,
         nonce: message.nonce,
-        predicate: predicate,
+        predicate: predicateBytecode,
       });
       transaction.inputs.push({
         type: InputType.Contract,
@@ -81,6 +85,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         contractId: contractId,
       });
       transaction.inputs.push(...coins);
+
       transaction.outputs.push({
         type: OutputType.Contract,
         inputIndex: 1,
@@ -93,6 +98,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       transaction.outputs.push({
         type: OutputType.Variable,
       });
+
       transaction.witnesses.push('0x');
 
       debug(
@@ -153,5 +159,48 @@ export async function relayCommonMessage(
     messageRelayDetails,
     txParams
   );
-  return relayer.sendTransaction(transaction);
+
+  // TODO: remove this once the estimatePredicate is fixed on the TS-SDK
+  // https://github.com/FuelLabs/fuels-ts/issues/1129
+  const encodedTransaction = transaction.toTransactionBytes();
+  const response = await relayer.provider.operations.estimatePredicates({
+    encodedTransaction: hexlify(encodedTransaction),
+  });
+  const [decodedTransaction] = new TransactionCoder().decode(
+    arrayify(response.estimatePredicates.rawPayload),
+    0
+  );
+  if (decodedTransaction.inputs) {
+    decodedTransaction.inputs.forEach((input, index) => {
+      if ('predicate' in input && input.predicateGasUsed.gt(0)) {
+        (<CoinTransactionRequestInput>(
+          transaction.inputs[index]
+        )).predicateGasUsed = input.predicateGasUsed;
+      }
+    });
+  }
+
+  // TODO: remove this once the hashTransaction is fixed on the TS-SDK
+  // https://github.com/FuelLabs/fuels-ts/issues/1128
+  const txToSign = transactionRequestify(
+    JSON.parse(JSON.stringify(transaction))
+  );
+  txToSign.inputs.map((i) => {
+    if ('predicateGasUsed' in i) {
+      i.predicateGasUsed = bn();
+      return i;
+    }
+    return i;
+  });
+  const hash = hashTransaction(txToSign, 0);
+  const signature = await relayer.signer().sign(hash);
+  transaction.updateWitnessByOwner(relayer.address, signature);
+  const {
+    submit: { id: transactionId },
+  } = await relayer.provider.operations.submit({
+    encodedTransaction: hexlify(transaction.toTransactionBytes()),
+  });
+  return new TransactionResponse(transactionId, relayer.provider);
+
+  // return relayer.sendTransaction(transaction);
 }

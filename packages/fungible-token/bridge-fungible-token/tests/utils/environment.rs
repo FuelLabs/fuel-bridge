@@ -6,6 +6,7 @@ use fuel_core_types::{
     fuel_tx::{Bytes32, Input, Output, Receipt, TxPointer, UtxoId},
     fuel_types::Word,
 };
+use fuels::prelude::Transaction;
 use fuels::{
     accounts::{
         fuel_crypto::{fuel_types::Nonce, SecretKey},
@@ -257,6 +258,7 @@ pub async fn setup_environment(
                     message.recipient.into(),
                     message.amount,
                     message.nonce,
+                    0,
                     predicate.code().to_vec(),
                     vec![],
                 )
@@ -266,6 +268,7 @@ pub async fn setup_environment(
                     message.recipient.into(),
                     message.amount,
                     message.nonce,
+                    0,
                     message.data,
                     predicate.code().to_vec(),
                     vec![],
@@ -332,6 +335,8 @@ pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransactio
 
     // Sign transaction and call
     wallet.sign_transaction(tx).unwrap();
+    tx.estimate_predicates(&provider.consensus_parameters)
+        .unwrap();
     provider.send_transaction(tx).await.unwrap()
 }
 

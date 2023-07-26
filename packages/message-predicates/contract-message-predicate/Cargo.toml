@@ -11,11 +11,11 @@ description = "Script and predicate for relaying contract messages."
 
 [dependencies]
 fuel-asm = "0.34.1"
-fuel-tx = "0.31.1"
+fuel-tx = "0.34.0"
 sha2 = "0.10.6"
 
 [dev-dependencies]
-fuels = { version = "0.43.0" }
+fuels = { version = "0.44.0" }
 hex = "0.4.3"
 insta = "1.28"
 tokio = { version = "1.27", features = ["rt", "macros"] }
