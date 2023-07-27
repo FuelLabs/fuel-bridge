@@ -1,4 +1,4 @@
-use crate::env::{BridgeFungibleTokenContract, U256};
+use crate::utils::environment::{BridgeFungibleTokenContract, U256};
 use fuels::accounts::wallet::WalletUnlocked;
 
 pub(crate) async fn total_supply(contract: &BridgeFungibleTokenContract<WalletUnlocked>) -> U256 {

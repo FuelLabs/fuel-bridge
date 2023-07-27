@@ -11,7 +11,7 @@ mod success {
     async fn check_total_supply() {
         // TODO: finish test
         let contract = create_token().await;
-        let response = total_supply(&contract).await;
+        let _response = total_supply(&contract).await;
     }
 
     #[tokio::test]

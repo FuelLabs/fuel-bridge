@@ -42,34 +42,34 @@ abigen!(
     ),
 );
 
-pub(crate) struct TestConfig {
-    pub(crate) adjustment: Adjustment,
-    pub(crate) amount: TxAmount,
-    pub(crate) overflow: Overflow,
+pub struct TestConfig {
+    pub adjustment: Adjustment,
+    pub amount: TxAmount,
+    pub overflow: Overflow,
 }
 
-pub(crate) struct Adjustment {
-    pub(crate) factor: Unsigned256,
-    pub(crate) is_div: bool,
+pub struct Adjustment {
+    pub factor: Unsigned256,
+    pub is_div: bool,
 }
 
-pub(crate) struct TxAmount {
-    pub(crate) min: Unsigned256,
-    pub(crate) max: Unsigned256,
-    pub(crate) test: Unsigned256,
-    pub(crate) not_enough: Unsigned256,
+pub struct TxAmount {
+    pub min: Unsigned256,
+    pub max: Unsigned256,
+    pub test: Unsigned256,
+    pub not_enough: Unsigned256,
 }
 
-pub(crate) struct Overflow {
-    pub(crate) one: Unsigned256,
-    pub(crate) two: Unsigned256,
-    pub(crate) three: Unsigned256,
+pub struct Overflow {
+    pub one: Unsigned256,
+    pub two: Unsigned256,
+    pub three: Unsigned256,
 }
 
-pub(crate) struct UTXOInputs {
-    pub(crate) contract: Vec<Input>,
-    pub(crate) coin: Vec<Input>,
-    pub(crate) message: Vec<Input>,
+pub struct UTXOInputs {
+    pub contract: Vec<Input>,
+    pub coin: Vec<Input>,
+    pub message: Vec<Input>,
 }
 
 impl TestConfig {
@@ -132,9 +132,9 @@ impl TestConfig {
                 not_enough,
             },
             overflow: Overflow {
-                overflow_one: overflow_1,
-                overflow_two: overflow_2,
-                overflow_three: overflow_3,
+                one: overflow_1,
+                two: overflow_2,
+                three: overflow_3,
             },
         }
     }
@@ -307,7 +307,7 @@ pub async fn setup_environment(
         UTXOInputs {
             contract: contract_inputs,
             coin: coin_inputs,
-            messages: message_inputs,
+            message: message_inputs,
         },
         provider,
     )

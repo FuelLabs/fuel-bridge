@@ -1,4 +1,4 @@
-use crate::env::BridgeFungibleTokenContract;
+use crate::utils::environment::BridgeFungibleTokenContract;
 use fuels::accounts::wallet::WalletUnlocked;
 use fuels::programs::call_response::FuelCallResponse;
 use fuels::types::Bits256;

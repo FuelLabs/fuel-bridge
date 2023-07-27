@@ -17,4 +17,4 @@ pub(crate) const FROM: &str = "0x00000000000000000000000088888888888888888888888
 pub(crate) const BRIDGED_TOKEN_DECIMALS: u8 = 18;
 pub(crate) const PROXY_TOKEN_DECIMALS: u8 = 9;
 
-pub(crate) const MESSAGE_AMOUNT: u8 = 100;
+pub(crate) const MESSAGE_AMOUNT: u64 = 100;
