@@ -28,8 +28,6 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
   };
   const messageProof = withdrawMessageProof.messageProof;
   const messageProofSet = messageProof.proofSet;
-  // TODO: update this when fuel-core remove the first proof from the set
-  messageProofSet.shift();
   // Create the message proof object
   const messageInBlockProof: Proof = {
     key: messageProof.proofIndex.toString(),
@@ -46,8 +44,6 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
   };
   const blockProof = withdrawMessageProof.blockProof;
   let proofSet = blockProof.proofSet;
-  // TODO: update this when fuel-core remove the first proof from the set
-  proofSet.shift();
   // Create the block proof object
   const blockInHistoryProof: Proof = {
     key: blockProof.proofIndex.toString(),
