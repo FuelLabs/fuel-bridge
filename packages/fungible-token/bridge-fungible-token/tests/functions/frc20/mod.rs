@@ -2,16 +2,19 @@ mod success {
 
     use crate::utils::{
         constants::PROXY_TOKEN_DECIMALS,
-        environment::create_token,
         interface::frc20::{decimals, name, symbol, total_supply},
+        setup::create_token,
     };
 
     #[ignore]
     #[tokio::test]
     async fn check_total_supply() {
-        // TODO: finish test
+        // Lacking SDK support on version 0.43
         let contract = create_token().await;
         let _response = total_supply(&contract).await;
+
+        // use crate::utils::setup::U256;
+        // assert_eq!(response, U256::new());
     }
 
     #[tokio::test]

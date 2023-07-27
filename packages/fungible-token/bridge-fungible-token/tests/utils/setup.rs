@@ -1,12 +1,14 @@
-use crate::utils::builder;
-
-use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
-
+use crate::utils::{
+    builder,
+    constants::{
+        BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY,
+        DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
+    },
+};
 use fuel_core_types::{
     fuel_tx::{Bytes32, Input, Output, Receipt, TxPointer, UtxoId},
     fuel_types::Word,
 };
-use fuels::prelude::launch_provider_and_get_wallet;
 use fuels::{
     accounts::{
         fuel_crypto::{fuel_types::Nonce, SecretKey},
@@ -15,20 +17,16 @@ use fuels::{
         Signer, ViewOnlyAccount,
     },
     prelude::{
-        abigen, setup_custom_assets_coins, setup_test_provider, Address, AssetConfig, AssetId,
-        Bech32ContractId, Config, Contract, ContractId, LoadConfiguration, Provider,
-        ScriptTransaction, TxParameters,
+        abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
+        Address, AssetConfig, AssetId, Bech32ContractId, Config, Contract, ContractId,
+        LoadConfiguration, Provider, ScriptTransaction, TxParameters,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{message::Message, Bits256},
 };
 use primitive_types::U256 as Unsigned256;
 use sha3::{Digest, Keccak256};
-
-use crate::utils::constants::{
-    BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY,
-    DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
-};
+use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 abigen!(
     Contract(
@@ -42,7 +40,8 @@ abigen!(
     ),
 );
 
-pub struct TestConfig {
+/// Used for setting up tests with various message values
+pub struct BridgingConfig {
     pub adjustment: Adjustment,
     pub amount: TxAmount,
     pub overflow: Overflow,
@@ -72,7 +71,7 @@ pub struct UTXOInputs {
     pub message: Vec<Input>,
 }
 
-impl TestConfig {
+impl BridgingConfig {
     pub fn new(bridge_decimals: u8, proxy_decimals: u8) -> Self {
         let bridged_token_decimals = Unsigned256::from(bridge_decimals);
         let proxy_token_decimals = Unsigned256::from(proxy_decimals);
@@ -148,14 +147,12 @@ impl TestConfig {
     }
 }
 
-pub fn create_wallet() -> WalletUnlocked {
-    // Create secret for wallet
+pub(crate) fn create_wallet() -> WalletUnlocked {
     const SIZE_SECRET_KEY: usize = size_of::<SecretKey>();
     const PADDING_BYTES: usize = SIZE_SECRET_KEY - size_of::<u64>();
     let mut secret_key: [u8; SIZE_SECRET_KEY] = [0; SIZE_SECRET_KEY];
     secret_key[PADDING_BYTES..].copy_from_slice(&(8320147306839812359u64).to_be_bytes());
 
-    // Generate wallet
     let wallet = WalletUnlocked::new_from_private_key(
         SecretKey::try_from(secret_key.as_slice()).unwrap(),
         None,
@@ -164,7 +161,7 @@ pub fn create_wallet() -> WalletUnlocked {
 }
 
 /// Sets up a test fuel environment with a funded wallet
-pub async fn setup_environment(
+pub(crate) async fn setup_environment(
     wallet: &mut WalletUnlocked,
     coins: Vec<(Word, AssetId)>,
     messages: Vec<(Word, Vec<u8>)>,
@@ -197,7 +194,7 @@ pub async fn setup_environment(
     let predicate = Predicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
     let predicate_root = predicate.address();
 
-    let mut all_messages: Vec<Message> = vec![];
+    let mut all_messages: Vec<Message> = Vec::with_capacity(messages.len());
     for msg in messages {
         all_messages.push(setup_single_message(
             &message_sender.into(),
@@ -209,6 +206,7 @@ pub async fn setup_environment(
         message_nonce[0] += 1;
     }
 
+    // Create a provider with the coins and messages
     let (provider, _) = setup_test_provider(
         all_coins.clone(),
         all_messages.clone(),
@@ -219,26 +217,20 @@ pub async fn setup_environment(
 
     wallet.set_provider(provider.clone());
 
-    let test_contract_id = match configurables {
-        Some(config) => Contract::load_from(
-            BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-            LoadConfiguration::default().set_configurables(config),
-        )
-        .unwrap()
-        .deploy(&wallet.clone(), TxParameters::default())
-        .await
-        .unwrap(),
-        None => Contract::load_from(
-            BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-            LoadConfiguration::default(),
-        )
-        .unwrap()
-        .deploy(&wallet.clone(), TxParameters::default())
-        .await
-        .unwrap(),
+    // Set up the bridge contract instance
+    let load_configuration = match configurables {
+        Some(config) => LoadConfiguration::default().set_configurables(config),
+        None => LoadConfiguration::default(),
     };
 
-    let test_contract = BridgeFungibleTokenContract::new(test_contract_id.clone(), wallet.clone());
+    let test_contract_id =
+        Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, load_configuration)
+            .unwrap()
+            .deploy(&wallet.clone(), TxParameters::default())
+            .await
+            .unwrap();
+
+    let bridge = BridgeFungibleTokenContract::new(test_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs = all_coins
@@ -289,7 +281,7 @@ pub async fn setup_environment(
         Bytes32::zeroed(),
         Bytes32::zeroed(),
         TxPointer::default(),
-        test_contract_id.clone().into(),
+        test_contract_id.into(),
     )];
 
     if let Some(id) = deposit_contract {
@@ -303,7 +295,7 @@ pub async fn setup_environment(
     }
 
     (
-        test_contract,
+        bridge,
         UTXOInputs {
             contract: contract_inputs,
             coin: coin_inputs,
@@ -314,7 +306,7 @@ pub async fn setup_environment(
 }
 
 /// Relays a message-to-contract message
-pub async fn relay_message_to_contract(
+pub(crate) async fn relay_message_to_contract(
     wallet: &WalletUnlocked,
     message: Input,
     contracts: Vec<Input>,
@@ -324,7 +316,7 @@ pub async fn relay_message_to_contract(
         message,
         contracts,
         gas_coins,
-        &vec![Output::variable(Address::zeroed(), 0, AssetId::default())],
+        &[Output::variable(Address::zeroed(), 0, AssetId::default())],
         TxParameters::default(),
     )
     .await;
@@ -333,14 +325,17 @@ pub async fn relay_message_to_contract(
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransaction) -> Vec<Receipt> {
+pub(crate) async fn sign_and_call_tx(
+    wallet: &WalletUnlocked,
+    tx: &mut ScriptTransaction,
+) -> Vec<Receipt> {
     let provider = wallet.provider().unwrap();
 
     wallet.sign_transaction(tx).unwrap();
     provider.send_transaction(tx).await.unwrap()
 }
 
-pub async fn precalculate_deposit_id() -> ContractId {
+pub(crate) async fn precalculate_deposit_id() -> ContractId {
     let compiled = Contract::load_from(
         DEPOSIT_RECIPIENT_CONTRACT_BINARY,
         LoadConfiguration::default(),
@@ -351,7 +346,7 @@ pub async fn precalculate_deposit_id() -> ContractId {
 }
 
 /// Prefixes the given bytes with the test contract ID
-pub async fn prefix_contract_id(
+pub(crate) async fn prefix_contract_id(
     mut data: Vec<u8>,
     config: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> Vec<u8> {
@@ -378,7 +373,7 @@ pub async fn prefix_contract_id(
     test_contract_id
 }
 
-pub async fn create_token() -> BridgeFungibleTokenContract<WalletUnlocked> {
+pub(crate) async fn create_token() -> BridgeFungibleTokenContract<WalletUnlocked> {
     let wallet = launch_provider_and_get_wallet().await;
 
     let id = Contract::load_from(
@@ -390,10 +385,10 @@ pub async fn create_token() -> BridgeFungibleTokenContract<WalletUnlocked> {
     .await
     .unwrap();
 
-    BridgeFungibleTokenContract::new(id.clone(), wallet)
+    BridgeFungibleTokenContract::new(id, wallet)
 }
 
-pub async fn create_recipient_contract(
+pub(crate) async fn create_recipient_contract(
     wallet: WalletUnlocked,
 ) -> DepositRecipientContract<WalletUnlocked> {
     let id = Contract::load_from(
@@ -405,11 +400,11 @@ pub async fn create_recipient_contract(
     .await
     .unwrap();
 
-    DepositRecipientContract::new(id.clone(), wallet)
+    DepositRecipientContract::new(id, wallet)
 }
 
 /// Quickly converts the given hex string into a u8 vector
-pub fn decode_hex(s: &str) -> Vec<u8> {
+pub(crate) fn decode_hex(s: &str) -> Vec<u8> {
     let data: StdResult<Vec<u8>, ParseIntError> = (2..s.len())
         .step_by(2)
         .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
@@ -417,13 +412,13 @@ pub fn decode_hex(s: &str) -> Vec<u8> {
     data.unwrap()
 }
 
-pub fn encode_hex(val: Unsigned256) -> [u8; 32] {
+pub(crate) fn encode_hex(val: Unsigned256) -> [u8; 32] {
     let mut arr = [0u8; 32];
     val.to_big_endian(&mut arr);
     arr
 }
 
-pub async fn create_msg_data(
+pub(crate) async fn create_msg_data(
     token: &str,
     from: &str,
     to: [u8; 32],
@@ -459,7 +454,7 @@ pub async fn create_msg_data(
     (message, coin, deposit_recipient)
 }
 
-pub fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, Unsigned256) {
+pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, Unsigned256) {
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();

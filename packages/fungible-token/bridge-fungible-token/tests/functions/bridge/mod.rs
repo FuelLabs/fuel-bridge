@@ -1,33 +1,28 @@
-use crate::utils::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, FROM, MESSAGE_AMOUNT, PROXY_TOKEN_DECIMALS,
+use crate::utils::{
+    constants::{
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, FROM, MESSAGE_AMOUNT, PROXY_TOKEN_DECIMALS,
+    },
+    interface::bridge::withdraw,
+    setup::{
+        contract_balance, create_msg_data, create_token, create_wallet, decode_hex, encode_hex,
+        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
+        BridgeFungibleTokenContractConfigurables, BridgingConfig,
+    },
 };
-use crate::utils::environment::BridgeFungibleTokenContractConfigurables;
-use crate::utils::environment::{contract_balance, wallet_balance, TestConfig};
-use crate::utils::environment::{
-    create_msg_data, create_token, create_wallet, decode_hex, encode_hex,
-    parse_output_message_data, relay_message_to_contract, setup_environment,
-};
-use crate::utils::interface::bridge::withdraw;
-
-use fuels::accounts::ViewOnlyAccount;
-use fuels::prelude::AssetId;
-use fuels::prelude::CallParameters;
-use fuels::prelude::TxParameters;
-use fuels::types::Bits256;
+use fuels::{accounts::ViewOnlyAccount, prelude::AssetId, types::Bits256};
 
 mod success {
 
     use super::*;
 
-    // TODO: clean up imports
-    use crate::utils::constants::BRIDGED_TOKEN_GATEWAY;
-    use crate::utils::environment::RefundRegisteredEvent;
-    use crate::utils::interface::bridge::{
-        bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund,
+    use crate::utils::{
+        constants::BRIDGED_TOKEN_GATEWAY,
+        interface::bridge::{
+            bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund,
+        },
+        setup::RefundRegisteredEvent,
     };
-    use fuels::prelude::Address;
-    use fuels::programs::contract::SettableContract;
-    use fuels::tx::Receipt;
+    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt};
     use std::str::FromStr;
 
     #[tokio::test]
@@ -36,7 +31,7 @@ mod success {
         // then claim and verify output message is created as expected
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = TestConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
@@ -74,8 +69,8 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, &bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &bridge.contract_id()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -143,7 +138,7 @@ mod success {
         // - Verify that the the receipt of the transaction contains a message for the L1 Portal that allows to withdraw the above mentioned deposit
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = TestConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
@@ -183,8 +178,8 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, &bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &bridge.contract_id()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -259,7 +254,7 @@ mod success {
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = TestConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
@@ -292,8 +287,8 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(provider, &bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &bridge.contract_id()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -302,23 +297,11 @@ mod success {
         assert_eq!(balance, config.fuel_equivalent_amount(config.amount.max));
 
         // Now try to withdraw
-        let withdrawal_amount = config.amount.test;
-        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
-        let call_params = CallParameters::new(
-            config.fuel_equivalent_amount(withdrawal_amount),
-            AssetId::new(*bridge.contract_id().hash()),
-            5000,
-        );
+        let withdrawal_amount = config.fuel_equivalent_amount(config.amount.test);
+        let gas = 5000;
+        let to = Bits256(*wallet.address().hash());
 
-        let call_response = bridge
-            .methods()
-            .withdraw(Bits256(*wallet.address().hash()))
-            .tx_params(custom_tx_params)
-            .call_params(call_params)
-            .expect("Call param Error")
-            .call()
-            .await
-            .unwrap();
+        let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
 
         let message_receipt = call_response
             .receipts
@@ -344,7 +327,7 @@ mod success {
         assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
-        assert_eq!(amount, withdrawal_amount);
+        assert_eq!(amount, config.amount.test);
     }
 
     #[tokio::test]
@@ -356,7 +339,7 @@ mod success {
 
         // first make a deposit
         let mut wallet = create_wallet();
-        let config = TestConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -390,8 +373,8 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(provider, &bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &bridge.contract_id()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -402,22 +385,11 @@ mod success {
         assert_eq!(balance, fuel_side_token_amount);
 
         // Now try to withdraw
-        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
-        let call_params = CallParameters::new(
-            fuel_side_token_amount,
-            AssetId::new(*bridge.contract_id().hash()),
-            5000,
-        );
+        let withdrawal_amount = fuel_side_token_amount;
+        let gas = 5000;
+        let to = Bits256(*wallet.address().hash());
 
-        let call_response = bridge
-            .methods()
-            .withdraw(Bits256(*wallet.address().hash()))
-            .tx_params(custom_tx_params)
-            .call_params(call_params)
-            .expect("Call param Error")
-            .call()
-            .await
-            .unwrap();
+        let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
 
         let message_receipt = call_response
             .receipts
@@ -495,11 +467,12 @@ mod revert {
         if BRIDGED_TOKEN_DECIMALS >= PROXY_TOKEN_DECIMALS {
             panic!("Revert(0)");
         }
-        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
-        let config = TestConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
             FROM,
@@ -531,8 +504,8 @@ mod revert {
         .await;
 
         let asset_balance =
-            contract_balance(provider, &bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &bridge.contract_id()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -542,22 +515,10 @@ mod revert {
 
         // Now try to withdraw
         let withdrawal_amount = 999999999;
-        let custom_tx_params = TxParameters::new(0, 30_000_000, 0);
-        let call_params = CallParameters::new(
-            withdrawal_amount,
-            AssetId::new(*bridge.contract_id().hash()),
-            0,
-        );
+        let gas = 0;
+        let to = Bits256(*wallet.address().hash());
 
         // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
-        bridge
-            .methods()
-            .withdraw(Bits256(*wallet.address().hash()))
-            .tx_params(custom_tx_params)
-            .call_params(call_params)
-            .expect("Call param Error")
-            .call()
-            .await
-            .unwrap();
+        withdraw(&bridge, to, withdrawal_amount, gas).await;
     }
 }

@@ -1,7 +1,10 @@
-use crate::utils::environment::BridgeFungibleTokenContract;
-use fuels::accounts::wallet::WalletUnlocked;
-use fuels::programs::call_response::FuelCallResponse;
-use fuels::types::Bits256;
+use crate::utils::setup::BridgeFungibleTokenContract;
+use fuels::{
+    accounts::wallet::WalletUnlocked,
+    prelude::{AssetId, CallParameters, TxParameters},
+    programs::call_response::FuelCallResponse,
+    types::Bits256,
+};
 
 pub(crate) async fn claim_refund(
     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
@@ -19,8 +22,22 @@ pub(crate) async fn claim_refund(
 pub(crate) async fn withdraw(
     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
     to: Bits256,
+    amount: u64,
+    gas: u64,
 ) -> FuelCallResponse<()> {
-    contract.methods().withdraw(to).call().await.unwrap()
+    let tx_params = TxParameters::new(0, 30_000_000, 0);
+    let call_params =
+        CallParameters::new(amount, AssetId::new(*contract.contract_id().hash()), gas);
+
+    contract
+        .methods()
+        .withdraw(to)
+        .tx_params(tx_params)
+        .call_params(call_params)
+        .expect("Call param Error")
+        .call()
+        .await
+        .unwrap()
 }
 
 pub(crate) async fn bridged_token(
