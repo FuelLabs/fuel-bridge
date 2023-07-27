@@ -42,7 +42,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       >
     ): Promise<ScriptTransactionRequest> => {
       const script = arrayify(details.script);
-      const predicate = arrayify(details.predicate);
+      const predicateBytecode = arrayify(details.predicate);
       // get resources to fund the transaction
       const resources = await relayer.getResourcesToSpend([
         {
@@ -73,7 +73,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         witnessIndex: 0,
         data: message.data,
         nonce: message.nonce,
-        predicate: predicate,
+        predicate: predicateBytecode,
       });
       transaction.inputs.push({
         type: InputType.Contract,
@@ -81,6 +81,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
         contractId: contractId,
       });
       transaction.inputs.push(...coins);
+
       transaction.outputs.push({
         type: OutputType.Contract,
         inputIndex: 1,
@@ -93,6 +94,7 @@ const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
       transaction.outputs.push({
         type: OutputType.Variable,
       });
+
       transaction.witnesses.push('0x');
 
       debug(
@@ -153,5 +155,6 @@ export async function relayCommonMessage(
     messageRelayDetails,
     txParams
   );
+
   return relayer.sendTransaction(transaction);
 }

@@ -1,5 +1,5 @@
 pub(crate) const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
-    "../../message-predicates/contract_message_predicate.bin";
+    "../node_modules/@fuel-bridge/message-predicates/out/contract_message_predicate.bin";
 pub(crate) const MESSAGE_SENDER_ADDRESS: &str =
     "0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe";
 pub(crate) const BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
