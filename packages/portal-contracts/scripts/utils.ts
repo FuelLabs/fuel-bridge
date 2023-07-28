@@ -59,6 +59,7 @@ export async function getNetworkName(): Promise<string> {
     if (network.chainId == 1) return 'mainnet';
     if (network.chainId == 5) return 'goerli';
     if (network.chainId == 31337) return 'local';
+    if (network.chainId == 11155111) return 'sepolia';
     return 'unknown';
   } catch (e) {
     throw new Error(
