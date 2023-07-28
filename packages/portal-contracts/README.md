@@ -49,7 +49,7 @@ npm test
 You can find the addresses of the currently deployed contracts in the deployment files:
 
 - Mainnet - TBD
-- Goerli - [deployments.goerli.json](./deployments/deployments.goerli.json)
+- Sepolia - [deployments.sepolia.json](./deployments/deployments.sepolia.json)
 
 \*Note: the contracts may have source code different from the current master branch head. Refer to the code verification on Etherscan or Sourcify for a look at their verified source code.
 
@@ -92,7 +92,7 @@ Deploys new implementation contracts. This is most useful in preparation for pro
 npm run script-verify-source
 ```
 
-Verifies the contract source code on Etherscan and Sourcify. This is only possible on recognized public networks (goerli, mainnet) and requires a deployment file either added manually under the `deployments` directory or auto generated after the deploy/upgrade scripts. This is useful to run in case there was an issue verifying the source during the deploy or updgrade scripts.
+Verifies the contract source code on Etherscan and Sourcify. This is only possible on recognized public networks (spolia, mainnet) and requires a deployment file either added manually under the `deployments` directory or auto generated after the deploy/upgrade scripts. This is useful to run in case there was an issue verifying the source during the deploy or updgrade scripts.
 
 ### Verify Address
 
