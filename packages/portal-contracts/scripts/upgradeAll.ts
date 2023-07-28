@@ -15,7 +15,7 @@ import {
 // For localhost testing:
 //    - Spin up a node (http://127.0.0.1:8545/ by default):
 //        `npx hardhat node`
-//    - Run the deploy script or create valid deployments.<local/goerli/mainnet>.json file
+//    - Run the deploy script or create valid deployments.<local/spolia/mainnet>.json file
 //        `npx hardhat run --network localhost scripts/deploy.ts`
 //    - Run this script, pointing to localhost:
 //        `npx hardhat run --network localhost scripts/upgrade.ts`
