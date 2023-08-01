@@ -1,14 +1,31 @@
 library;
 
-use std::vm::evm::evm_address::EvmAddress;
+use std::{u256::U256, vm::evm::evm_address::EvmAddress};
+
+abi FRC20 {
+    /// Get the total supply of the token.
+    #[storage(read)]
+    fn total_supply() -> U256;
+
+    /// Get the name of the token
+    /// Example (with trailing padding): "MY_TOKEN                                                        "
+    fn name() -> str[64];
+
+    /// Get the symbol of the token
+    /// Example (with trailing padding): "TKN                             "
+    fn symbol() -> str[32];
+
+    /// Get the decimals of the token
+    fn decimals() -> u8;
+}
 
 abi FungibleBridge {
     /// Claim a refund for incorrectly bridged tokens if one has been registered.
     ///
     /// # Arguments
     ///
-    /// * `originator` - the address entitled to a refund
-    /// * `asset` - the token to be refunded back to the originator
+    /// * `originator`: [b256] - the address entitled to a refund
+    /// * `asset`: [b256] - the token to be refunded back to the originator
     #[storage(read, write)]
     fn claim_refund(originator: b256, asset: b256);
 
@@ -16,7 +33,7 @@ abi FungibleBridge {
     ///
     /// # Arguments
     ///
-    /// * `to` - the address which is the destination of the transfer
+    /// * `to`: [b256] - the address which is the destination of the transfer
     ///
     /// # Reverts
     ///

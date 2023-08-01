@@ -5,4 +5,4 @@ license = "Apache-2.0"
 name = "test_deposit_recipient_contract"
 
 [dependencies]
-contract_message_receiver = { path = "../bridge-message-predicates/contract-message-receiver" }
+contract_message_receiver = { path = "../../message-predicates/contract-message-receiver" }

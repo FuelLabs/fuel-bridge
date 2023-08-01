@@ -1,17 +1,19 @@
 contract;
 
-mod data;
+mod cast;
+mod data_structures;
 mod errors;
 mod events;
+mod interface;
 mod utils;
-mod cast;
 
-use fungible_bridge_abi::FungibleBridge;
-use FRC20_abi::FRC20;
+use cast::*;
 use contract_message_receiver::MessageReceiver;
-use reentrancy::reentrancy_guard;
 use errors::BridgeFungibleTokenError;
+use data_structures::MessageData;
 use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
+use interface::{FRC20, FungibleBridge};
+use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
         contract_id,
@@ -19,10 +21,7 @@ use std::{
     },
     constants::ZERO_B256,
     context::msg_amount,
-    inputs::{
-        input_message_data_length,
-        input_message_sender,
-    },
+    inputs::input_message_sender,
     message::send_message,
     token::{
         burn,
@@ -31,21 +30,7 @@ use std::{
     },
     u256::U256,
 };
-use utils::{
-    adjust_deposit_decimals,
-    adjust_withdrawal_decimals,
-    compose,
-    decompose,
-    encode_data,
-    parse_message_data,
-};
-
-use cast::*;
-
-storage {
-    refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
-    tokens_minted: u64 = 0,
-}
+use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
 
 configurable {
     DECIMALS: u8 = 9u8,
@@ -54,6 +39,11 @@ configurable {
     BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
     NAME: str[64] = "MY_TOKEN                                                        ",
     SYMBOL: str[32] = "MYTKN                           ",
+}
+
+storage {
+    refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
+    tokens_minted: u64 = 0,
 }
 
 // Implement the process_message function required to be a message receiver
@@ -67,7 +57,7 @@ impl MessageReceiver for Contract {
         let input_sender = input_message_sender(msg_idx);
         require(input_sender.value == BRIDGED_TOKEN_GATEWAY, BridgeFungibleTokenError::UnauthorizedSender);
 
-        let message_data = parse_message_data(msg_idx);
+        let message_data = MessageData::parse(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
         // register a refund if tokens don't match

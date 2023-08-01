@@ -10,16 +10,21 @@ The Fuel Solidity smart contract architecture.
 
 ## Table of contents
 
-- [Build From Source](#build-from-source)
-- [Deployed Contract Addresses](#deployed-contract-addresses)
-- [Scripts](#scripts)
-  - [Deploy All](#deploy-all)
-  - [Upgrade All](#upgrade-all)
-  - [Deploy Implementations](#deploy-implementations)
-  - [Verify Source](#verify-source)
-  - [Verify Address](#verify-address)
-- [Contributing](#contributing)
-- [License](#license)
+- [Fuel Solidity Contracts](#fuel-solidity-contracts)
+  - [Table of contents](#table-of-contents)
+  - [Build From Source](#build-from-source)
+    - [Dependencies](#dependencies)
+    - [Building](#building)
+  - [Deployed Contract Addresses](#deployed-contract-addresses)
+  - [Scripts](#scripts)
+    - [Deploy All](#deploy-all)
+    - [Upgrade All](#upgrade-all)
+    - [Deploy Implementations](#deploy-implementations)
+    - [Verify Source](#verify-source)
+    - [Verify Address](#verify-address)
+  - [Contributing](#contributing)
+  - [License](#license)
+    - [Exceptions](#exceptions)
 
 ## Build From Source
 
@@ -115,7 +120,7 @@ npm run lint
 
 ## License
 
-The primary license for this repo is `UNLICENSED`, see [`LICENSE`](./LICENSE).
+The primary license for this repo is `Apache 2.0`, see [`LICENSE`](../../LICENSE).
 
 ### Exceptions
 

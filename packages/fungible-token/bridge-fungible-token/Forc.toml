@@ -1,11 +1,9 @@
 [project]
 authors = ["Fuel Labs <contact@fuel.sh>"]
-entry = "bridge_fungible_token.sw"
+entry = "main.sw"
 license = "Apache-2.0"
 name = "bridge_fungible_token"
 
 [dependencies]
-FRC20_abi = { path = "../FRC20-abi" }
-contract_message_receiver = { path = "../bridge-message-predicates/contract-message-receiver" }
-fungible_bridge_abi = { path = "../fungible-bridge-abi" }
-reentrancy = { git = "https://github.com/FuelLabs/sway-libs" }
+contract_message_receiver = { path = "../../message-predicates/contract-message-receiver" }
+reentrancy = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.12.0" }
