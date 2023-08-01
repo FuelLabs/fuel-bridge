@@ -59,6 +59,7 @@ export async function getNetworkName(): Promise<string> {
     if (network.chainId == 1) return 'mainnet';
     if (network.chainId == 5) return 'goerli';
     if (network.chainId == 31337) return 'local';
+    if (network.chainId == 11155111) return 'sepolia';
     return 'unknown';
   } catch (e) {
     throw new Error(
@@ -150,7 +151,7 @@ export async function publishImplementationSourceVerification(
 // Gets if the currently connected network is verifiable.
 export async function isNetworkVerifiable(): Promise<boolean> {
   const networkName = await getNetworkName();
-  return networkName === 'mainnet' || networkName === 'goerli';
+  return networkName === 'mainnet' || networkName === 'sepolia';
 }
 
 // Waits for the given number of confirmations.

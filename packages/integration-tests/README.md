@@ -37,9 +37,9 @@ pnpm bridgeETH
 pnpm bridgeERC20
 ```
 
-### Running on Goerli
+### Running on Sepolia
 
-The scripts can easily be run on other network setups like Goerli by modifying environment variables. Refer to the example [environment file](./.env.example) for creating your own .env file configured for your target. You will need to provide URLs for both Fuel and Ethereum providers as well as private keys for executing transactions on the networks. You will also need to provide the bridge contract addresses and ERC-20/fungible token contract addresses if you wish to test bridging ERC-20 tokens.
+The scripts can easily be run on other network setups like Sepolia by modifying environment variables. Refer to the example [environment file](./.env.example) for creating your own .env file configured for your target. You will need to provide URLs for both Fuel and Ethereum providers as well as private keys for executing transactions on the networks. You will also need to provide the bridge contract addresses and ERC-20/fungible token contract addresses if you wish to test bridging ERC-20 tokens.
 
 ## License
 
