@@ -88,7 +88,15 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
         _unpause();
     }
 
+    // TODO: it might be reasonable to put a require here to disallow overwriting
+    // In the future we will want this to be challenge-able, and rewriting the slot
+    // could open for foul play
     /// @notice Commits a block header.
+    /// @dev Committing to the same commitHeight twice would have the effect of delaying
+    /// finality, as the timestamp of the committed slot is taken from the ETH block
+    /// timestamp. TODO: it might be reasonable to put a require here to disallow overwriting
+    /// In the future we will want this to be challenge-able, and rewriting the slot
+    /// could open for foul play during IVG
     /// @param blockHash The hash of a block
     /// @param commitHeight The height of the commit
     function commit(bytes32 blockHash, uint256 commitHeight) external whenNotPaused onlyRole(COMMITTER_ROLE) {
@@ -109,6 +117,7 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     /// @param blockHeight The height of the block to check
     /// @return true if the block is finalized
     function finalized(bytes32 blockHash, uint256 blockHeight) external view whenNotPaused returns (bool) {
+        // TODO This division could be done offchain, or at least also could be assembly'ed to avoid non-zero division check
         uint256 commitHeight = blockHeight / BLOCKS_PER_COMMIT_INTERVAL;
         Commit storage commitSlot = _commitSlots[commitHeight % NUM_COMMIT_SLOTS];
         require(commitSlot.blockHash == blockHash, "Unknown block");
