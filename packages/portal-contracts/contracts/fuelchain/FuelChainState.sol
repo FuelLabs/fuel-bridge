@@ -88,9 +88,6 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
         _unpause();
     }
 
-    // TODO: it might be reasonable to put a require here to disallow overwriting
-    // In the future we will want this to be challenge-able, and rewriting the slot
-    // could open for foul play
     /// @notice Commits a block header.
     /// @dev Committing to the same commitHeight twice would have the effect of delaying
     /// finality, as the timestamp of the committed slot is taken from the ETH block
