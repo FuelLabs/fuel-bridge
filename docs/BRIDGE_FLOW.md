@@ -45,9 +45,25 @@ The deposit process is straightforward: the user will send a transaction to depo
 
 ![L1 Deposit](l1_deposit.png)
 
-You can check the actual implementation of the message processing in ![FuelChainState.sol](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol) and ![bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw):
-
+You can follow the actual implementation of the message processing flow via:
+- [FuelERC20Gateway.sol](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `deposit` function:
 ```js
+function deposit(bytes32 to, address tokenId, bytes32 fuelTokenId, uint256 amount) external payable whenNotPaused {
+    bytes memory messageData = abi.encodePacked(
+        fuelTokenId,
+        bytes32(uint256(uint160(tokenId))),
+        bytes32(uint256(uint160(msg.sender))), //from
+        to,
+        bytes32(amount)
+    );
+    _deposit(tokenId, fuelTokenId, amount, messageData);
+}
+```
+
+- [FuelMessagePortal.sol](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `sendMessage` function:
+```js
+// From FuelMessagePortal.sol
+
 ///////////////////////////////////////
 // Outgoing Message Public Functions //
 ///////////////////////////////////////
@@ -95,7 +111,10 @@ function _sendOutgoingMessage(bytes32 recipient, bytes memory data) private {
 }
 ```
 
+- [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `process_message` function:
 ```rs
+// From bridge_fungible_token.sw
+
 // Implement the process_message function required to be a message receiver
 impl MessageReceiver for Contract {
     #[payable]
@@ -165,4 +184,121 @@ impl MessageReceiver for Contract {
 
 ### L2 (Fuel) Withdrawal
 
+The withdrawal message can be more convoluted, bear with us. The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw), which will burn the tokens and generate a message to be relayed from the L2 to the L1, with recipient to the [L1 Bridge Contract](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol). 
+
+Once the transaction has been included in the Fuel blockchain, the user will need to await two events:
+- First, the Fuel blockchain will need to close an epoch. The epoch will be committed to the L1 blockchain in the [Chain State contract](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol).
+- Then, once the epoch has been committed, it is needed to wait for its finalization.
+
+After finality has been reached for the epoch that includes the block where the withdrawal transaction was signaled, the user can request the proofs of inclusion of the transaction and message in the block epoch that was comitted to the L1. The user will send a transaction call to the [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function that will check the attached proofs and the finalization status of the epoch that the message belongs to, then proceed to unpack the payload of said message, that should contain an execution instruction to call `finalizeWithdrawal` in  the [L1 Bridge Contract](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol), releasing the L1 locked tokens.
+
 ![L2 Withdrawal](l2_withdrawal.png)
+
+You can follow the implementation of this flow via:
+- [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `withdraw` function:
+```rs
+fn withdraw(to: b256) {
+    let amount = msg_amount();
+    let origin_contract_id = msg_asset_id();
+    require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
+    require(origin_contract_id == contract_id(), BridgeFungibleTokenError::IncorrectAssetDeposited);
+
+    // attempt to adjust amount into base layer decimals and burn the sent tokens
+    let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
+    storage.tokens_minted.write(storage.tokens_minted.read() - amount);
+    burn(amount);
+
+    // send a message to unlock this amount on the base layer gateway contract
+    let sender = msg_sender().unwrap();
+    send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN), 0);
+    log(WithdrawalEvent {
+        to: to,
+        from: sender,
+        amount: amount,
+    });
+}
+```
+- [FuelChainState.sol](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol) 's `commit` and `finalized` functions:
+```js
+function commit(bytes32 blockHash, uint256 commitHeight) external whenNotPaused onlyRole(COMMITTER_ROLE) {
+    uint256 slot = commitHeight % NUM_COMMIT_SLOTS;
+    Commit storage commitSlot = _commitSlots[slot];
+    commitSlot.blockHash = blockHash;
+    commitSlot.timestamp = uint32(block.timestamp);
+
+    emit CommitSubmitted(commitHeight, blockHash);
+}
+
+function finalized(bytes32 blockHash, uint256 blockHeight) external view whenNotPaused returns (bool) {
+    // TODO This division could be done offchain, or at least also could be assembly'ed to avoid non-zero division check
+    uint256 commitHeight = blockHeight / BLOCKS_PER_COMMIT_INTERVAL;
+    Commit storage commitSlot = _commitSlots[commitHeight % NUM_COMMIT_SLOTS];
+    require(commitSlot.blockHash == blockHash, "Unknown block");
+
+    return block.timestamp >= uint256(commitSlot.timestamp) + TIME_TO_FINALIZE;
+}
+```
+- [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function:
+```js
+function relayMessage(
+    Message calldata message,
+    FuelBlockHeaderLite calldata rootBlockHeader,
+    FuelBlockHeader calldata blockHeader,
+    MerkleProof calldata blockInHistoryProof,
+    MerkleProof calldata messageInBlockProof
+) external payable whenNotPaused {
+    //verify root block header
+    require(
+        _fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height),
+        "Unfinalized root block"
+    );
+
+    //verify block in history
+    require(
+        verifyBinaryTree(
+            rootBlockHeader.prevRoot,
+            abi.encodePacked(blockHeader.computeConsensusHeaderHash()),
+            blockInHistoryProof.proof,
+            blockInHistoryProof.key,
+            rootBlockHeader.height
+        ),
+        "Invalid block in history proof"
+    );
+
+    //verify message in block
+    bytes32 messageId = CryptographyLib.hash(
+        abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
+    );
+    require(
+        verifyBinaryTree(
+            blockHeader.outputMessagesRoot,
+            abi.encodePacked(messageId),
+            messageInBlockProof.proof,
+            messageInBlockProof.key,
+            blockHeader.outputMessagesCount
+        ),
+        "Invalid message in block proof"
+    );
+
+    //execute message
+    _executeMessage(messageId, message);
+}
+```
+- [FuelERC20Gateway.sol](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `finalizeWithdrawal`:
+```js
+function finalizeWithdrawal(
+    address to,
+    address tokenId,
+    uint256 amount
+) external payable whenNotPaused onlyFromPortal {
+    require(amount > 0, "Cannot withdraw zero");
+    bytes32 fuelTokenId = messageSender();
+
+    //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
+    _deposits[tokenId][fuelTokenId] = _deposits[tokenId][fuelTokenId] - amount;
+    IERC20Upgradeable(tokenId).safeTransfer(to, amount);
+
+    //emit event for successful token withdraw
+    emit Withdrawal(bytes32(uint256(uint160(to))), tokenId, fuelTokenId, amount);
+}
+```
