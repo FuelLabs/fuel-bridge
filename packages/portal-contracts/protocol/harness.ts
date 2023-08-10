@@ -8,12 +8,12 @@ import { FuelERC20Gateway } from '../typechain/FuelERC20Gateway.d';
 import { Token } from '../typechain/Token.d';
 
 // All deployable contracts.
-export interface DeployedContracts {
+export type FuelDeployedContracts = {
   fuelMessagePortal: FuelMessagePortal;
   fuelChainState: FuelChainState;
   fuelERC20Gateway: FuelERC20Gateway;
 }
-export interface DeployedContractAddresses {
+export type FuelDeployedContractAddresses = {
   FuelMessagePortal: string;
   FuelChainState: string;
   FuelERC20Gateway: string;
@@ -21,10 +21,16 @@ export interface DeployedContractAddresses {
   FuelChainState_impl: string;
   FuelERC20Gateway_impl: string;
 }
+export type DeployedContracts = {
+  erc20: Token;
+} & FuelDeployedContracts;
+export type DeployedContractAddresses = {
+  ERC20: string;
+} & FuelDeployedContractAddresses;
 
 // The harness object.
 export interface HarnessObject {
-  contractAddresses: DeployedContractAddresses;
+  contractAddresses: FuelDeployedContractAddresses;
   fuelMessagePortal: FuelMessagePortal;
   fuelChainState: FuelChainState;
   fuelERC20Gateway: FuelERC20Gateway;
@@ -42,6 +48,7 @@ export function getBlankAddresses(): DeployedContractAddresses {
     FuelChainState: '',
     FuelMessagePortal: '',
     FuelERC20Gateway: '',
+    ERC20: '',
     FuelChainState_impl: '',
     FuelMessagePortal_impl: '',
     FuelERC20Gateway_impl: '',
@@ -56,6 +63,7 @@ export async function getContractAddresses(
     FuelChainState: contracts.fuelChainState.address,
     FuelMessagePortal: contracts.fuelMessagePortal.address,
     FuelERC20Gateway: contracts.fuelERC20Gateway.address,
+    ERC20: contracts.erc20.address,
     FuelChainState_impl: await upgrades.erc1967.getImplementationAddress(
       contracts.fuelChainState.address
     ),
@@ -93,7 +101,7 @@ export async function setupFuel(): Promise<HarnessObject> {
 
   // Return the Fuel harness object
   return {
-    contractAddresses: await getContractAddresses(contracts),
+    contractAddresses: await getContractAddresses({ ...contracts, erc20: token }),
     fuelChainState: contracts.fuelChainState,
     fuelMessagePortal: contracts.fuelMessagePortal,
     fuelERC20Gateway: contracts.fuelERC20Gateway,
@@ -107,7 +115,7 @@ export async function setupFuel(): Promise<HarnessObject> {
 }
 
 // The full contract deployment for Fuel.
-export async function deployFuel(deployer?: Signer): Promise<DeployedContracts> {
+export async function deployFuel(deployer?: Signer): Promise<FuelDeployedContracts> {
   // Deploy fuel chain state contract
   const FuelChainState = await ethers.getContractFactory('FuelChainState', deployer);
   const fuelChainState = (await upgrades.deployProxy(FuelChainState, [], {
@@ -150,9 +158,9 @@ export async function deployFuel(deployer?: Signer): Promise<DeployedContracts> 
 
 // The full contract deployment for Fuel.
 export async function upgradeFuel(
-  contracts: DeployedContractAddresses,
+  contracts: FuelDeployedContractAddresses,
   signer?: Signer
-): Promise<DeployedContractAddresses> {
+): Promise<FuelDeployedContractAddresses> {
   // Upgrade fuel chain state contract
   const FuelChainState = await ethers.getContractFactory(
     'FuelChainState',

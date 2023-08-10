@@ -3,7 +3,7 @@ import { promises as fs } from 'fs';
 import fetch from 'node-fetch';
 import readline from 'readline';
 import {
-  DeployedContractAddresses,
+  FuelDeployedContractAddresses,
   getBlankAddresses,
 } from '../protocol/harness';
 
@@ -14,7 +14,7 @@ const DEPLOYMENTS_FILE = './deployments/deployments.*.json';
 // Loads the deployment addresses for the currently connected network.
 export async function loadDeploymentsFile(
   saveTemplateOnNotFound = true
-): Promise<DeployedContractAddresses> {
+): Promise<FuelDeployedContractAddresses> {
   let fileString: string;
   const networkName = await getNetworkName();
   const filename = DEPLOYMENTS_FILE.replace('*', networkName);
@@ -44,7 +44,7 @@ export async function loadDeploymentsFile(
 
 // Saves the deployed addresses.
 export async function saveDeploymentsFile(
-  deployments: DeployedContractAddresses
+  deployments: FuelDeployedContractAddresses
 ) {
   const networkName = await getNetworkName();
   const filename = DEPLOYMENTS_FILE.replace('*', networkName);
@@ -84,7 +84,7 @@ export async function confirmationPrompt(prompt: string): Promise<boolean> {
 
 // Publishes source code for verification of proxy contracts.
 export async function publishProxySourceVerification(
-  deployments: DeployedContractAddresses
+  deployments: FuelDeployedContractAddresses
 ) {
   await verifyEtherscan('FuelChainState proxy', deployments.FuelChainState);
   await verifyEtherscan(
@@ -109,7 +109,7 @@ export async function publishProxySourceVerification(
 
 // Publishes source code for verification of implementation contracts.
 export async function publishImplementationSourceVerification(
-  deployments: DeployedContractAddresses,
+  deployments: FuelDeployedContractAddresses,
   publishFuelChainState: boolean,
   publishFuelMessagePortal: boolean,
   publishFuelERC20Gateway: boolean

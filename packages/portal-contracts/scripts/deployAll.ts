@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import {
-  DeployedContractAddresses,
-  DeployedContracts,
+  FuelDeployedContractAddresses,
+  FuelDeployedContracts,
   deployFuel,
   getContractAddresses,
 } from '../protocol/harness';
@@ -15,6 +15,7 @@ import {
   waitForConfirmations,
 } from './utils';
 import { Signer } from 'ethers';
+import { Token } from '../typechain/Token.d';
 
 // Script to deploy the Fuel v2 system
 
@@ -58,12 +59,23 @@ async function main() {
   }
   if (confirm) {
     // Setup Fuel
-    let contracts: DeployedContracts;
-    let deployments: DeployedContractAddresses;
+    let contracts: FuelDeployedContracts;
+    let deployments: FuelDeployedContractAddresses;
     try {
       console.log('Deploying contracts...'); // eslint-disable-line no-console
       contracts = await deployFuel(deployer);
-      deployments = await getContractAddresses(contracts);
+      // Deploy a token for gateway testing
+      const tokenFactory = await ethers.getContractFactory('Token', deployer);
+      const erc20: Token = (await tokenFactory.deploy()) as Token;
+      await erc20.deployed();
+
+      const signers = (await ethers.getSigners()).slice(1);
+      // Mint some dummy token for deposit testing
+      const initialTokenAmount = ethers.utils.parseEther('1000000');
+      for (let i = 0; i < signers.length; i += 1) {
+        await erc20.mint(await signers[i].getAddress(), initialTokenAmount);
+      }
+      deployments = await getContractAddresses({ ...contracts, erc20 });
     } catch (e) {
       throw new Error(
         `Failed to deploy contracts. Make sure all configuration is correct and the proper permissions are in place.`
