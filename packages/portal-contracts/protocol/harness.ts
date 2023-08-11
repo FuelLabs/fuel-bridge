@@ -22,10 +22,10 @@ export type FuelDeployedContractAddresses = {
   FuelERC20Gateway_impl: string;
 }
 export type DeployedContracts = {
-  erc20: Token;
+  erc20?: Token;
 } & FuelDeployedContracts;
 export type DeployedContractAddresses = {
-  ERC20: string;
+  ERC20?: string;
 } & FuelDeployedContractAddresses;
 
 // The harness object.

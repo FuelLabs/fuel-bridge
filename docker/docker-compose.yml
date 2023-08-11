@@ -9,20 +9,27 @@ services:
       # Use build context of the root directory
       # to allow coping portal-contracts on Dockerfile
       context: ../
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/deployments.local.json"]
+      interval: 20s
+      timeout: 10s
+      retries: 10
     env_file:
       - ./envs/l1_chain.env
     ports:
       # expose the service to the host for integration testing
       - ${L1_CHAIN_HTTP_PORT:-8545}:9545
-      - ${DEPLOYMENTS_PORT:-8080}:8081
+      - ${ETH_DEPLOYMENTS_PORT:-8080}:8081
 
   fuel_core:
     depends_on:
-      - l1_chain
+      l1_chain:
+        condition: service_healthy
     image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
     platform: linux/amd64
     build:
-      context: ./fuel-core/
+      dockerfile: ./docker/fuel-core/Dockerfile
+      context: ../
     env_file:
       - ./envs/fuel_core.env
     environment:
@@ -31,6 +38,7 @@ services:
     ports:
       # expose the service to the host for integration testing
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
+      - ${FUEL_DEPLOYMENTS_PORT:-8081}:8081
 
   fuel_block_commiter:
     depends_on:

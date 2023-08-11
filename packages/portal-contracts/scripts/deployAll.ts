@@ -1,7 +1,7 @@
 import { ethers } from 'hardhat';
 import {
   FuelDeployedContractAddresses,
-  FuelDeployedContracts,
+  DeployedContracts,
   deployFuel,
   getContractAddresses,
 } from '../protocol/harness';
@@ -15,7 +15,8 @@ import {
   waitForConfirmations,
 } from './utils';
 import { Signer } from 'ethers';
-import { Token } from '../typechain/Token.d';
+import { deployERC20 } from './deployErc20';
+import { Token } from '../typechain';
 
 // Script to deploy the Fuel v2 system
 
@@ -28,6 +29,7 @@ import { Token } from '../typechain/Token.d';
 // You can then connect to localhost (ethers, metamask, etc.) and the Fuel system will be deployed there at the addresses given
 
 const QUICK_DEPLOY = !!process.env.QUICK_DEPLOY;
+const DEPLOY_ERC20 = !!process.env.DEPLOY_ERC20;
 
 async function main() {
   let deployer: Signer | undefined = undefined;
@@ -59,22 +61,17 @@ async function main() {
   }
   if (confirm) {
     // Setup Fuel
-    let contracts: FuelDeployedContracts;
+    let contracts: DeployedContracts;
+    let erc20: Token | undefined = undefined;
     let deployments: FuelDeployedContractAddresses;
     try {
       console.log('Deploying contracts...'); // eslint-disable-line no-console
       contracts = await deployFuel(deployer);
-      // Deploy a token for gateway testing
-      const tokenFactory = await ethers.getContractFactory('Token', deployer);
-      const erc20: Token = (await tokenFactory.deploy()) as Token;
-      await erc20.deployed();
 
-      const signers = (await ethers.getSigners()).slice(1);
-      // Mint some dummy token for deposit testing
-      const initialTokenAmount = ethers.utils.parseEther('1000000');
-      for (let i = 0; i < signers.length; i += 1) {
-        await erc20.mint(await signers[i].getAddress(), initialTokenAmount);
+      if (DEPLOY_ERC20) {
+        erc20 = await deployERC20(deployer);
       }
+
       deployments = await getContractAddresses({ ...contracts, erc20 });
     } catch (e) {
       throw new Error(
