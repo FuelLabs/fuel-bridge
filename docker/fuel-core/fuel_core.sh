@@ -50,7 +50,7 @@ echo "L1_CHAIN_HTTP: $L1_CHAIN_HTTP"
 # start the Fuel client
 #--db-path ${FUEL_DB_PATH}
 echo "Starting fuel node."
-sh ./post_deploy.sh & exec /root/fuel-core run \
+sh ./post_fuel_core.sh & exec /root/fuel-core run \
     --ip $FUEL_IP \
     --port $FUEL_PORT \
     --db-type in-memory \

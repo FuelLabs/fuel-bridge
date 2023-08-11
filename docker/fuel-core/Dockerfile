@@ -32,5 +32,5 @@ EXPOSE ${SERVE_PORT}
 
 # copy over script and run
 COPY ./docker/fuel-core/fuel_core.sh .
-COPY ./docker/fuel-core/post_deploy.sh .
+COPY ./docker/fuel-core/post_fuel_core.sh .
 CMD ["sh", "./fuel_core.sh"]
