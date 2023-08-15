@@ -480,9 +480,9 @@ pub(crate) async fn contract_balance(
         .unwrap()
 }
 
-pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, contract_id: &Bech32ContractId) -> u64 {
+pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) -> u64 {
     wallet
-        .get_asset_balance(&AssetId::new(*contract_id.hash()))
+        .get_asset_balance(&asset_id)
         .await
         .unwrap()
 }
@@ -494,4 +494,8 @@ where
     let mut hasher = Keccak256::new();
     hasher.update(data);
     <[u8; Bytes32::LEN]>::from(hasher.finalize()).into()
+}
+
+pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
+    contract_id.asset_id(&Bits256::zeroed())
 }

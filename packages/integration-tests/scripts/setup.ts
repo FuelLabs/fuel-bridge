@@ -23,7 +23,7 @@ dotenv.config();
 // Default config values
 const def_http_eth: string = 'http://127.0.0.1:8545';
 const def_http_deployer: string = 'http://127.0.0.1:8080';
-const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
+const def_http_fuel: string = 'http://192.168.1.240:4000/graphql';
 const def_pk_eth_deployer: string =
   '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
 const def_pk_eth_signer1: string =

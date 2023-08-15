@@ -1,4 +1,4 @@
-FROM ghcr.io/fuellabs/fuel-block-committer
+FROM ghcr.io/fuellabs/fuel-block-committer:sha-f76f96f
 
 ARG ETHEREUM_WALLET_KEY=""
 ARG COMMIT_INTERVAL=1

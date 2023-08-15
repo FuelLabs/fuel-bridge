@@ -15,6 +15,7 @@ use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;
 use std::{
+    hash::sha256,
     call_frames::{
         contract_id,
         msg_asset_id,
@@ -50,7 +51,7 @@ storage {
 impl MessageReceiver for Contract {
     #[payable]
     #[storage(read, write)]
-    fn process_message(msg_idx: u8) {
+    fn process_message(msg_idx: u64) {
         // Protect against reentrancy attacks that could allow replaying messages
         reentrancy_guard();
 
@@ -74,8 +75,10 @@ impl MessageReceiver for Contract {
                 register_refund(message_data.from, message_data.token, message_data.amount);
             },
             Result::Ok(amount) => {
+                let subId: SubId = ZERO_B256;
+                let tokenId = sha256((contract_id(), subId));
                 // mint tokens & update storage
-                mint(amount);
+                mint(subId, amount);
                 match storage.tokens_minted.try_read() {
                     Option::Some(value) => storage.tokens_minted.write(value + amount),
                     Option::None => storage.tokens_minted.write(amount),
@@ -86,17 +89,17 @@ impl MessageReceiver for Contract {
                 // If msg_data.len is > 161 bytes, we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
                 match message_data.len {
                     160 => {
-                        transfer(amount, contract_id(), message_data.to);
+                        transfer(message_data.to, tokenId, amount);
                     },
                     161 => {
-                        transfer(amount, contract_id(), message_data.to);
+                        transfer(message_data.to, tokenId, amount);
                     },
                     _ => {
                         if let Identity::ContractId(id) = message_data.to {
                             let dest_contract = abi(MessageReceiver, id.into());
                             dest_contract.process_message {
                                 coins: amount,
-                                asset_id: contract_id().value,
+                                asset_id: tokenId,
                             }(msg_idx);
                         };
                     },
@@ -129,14 +132,17 @@ impl FungibleBridge for Contract {
     #[storage(read, write)]
     fn withdraw(to: b256) {
         let amount = msg_amount();
-        let origin_contract_id = msg_asset_id();
+        let asset_id = msg_asset_id();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        require(origin_contract_id == contract_id(), BridgeFungibleTokenError::IncorrectAssetDeposited);
+        // TODO: We should store all the asset ids minted
+        // and check that the asset_id is on the list of minted assets
+        let origin_contract_id = sha256((contract_id(), ZERO_B256));
+        require(asset_id == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
         storage.tokens_minted.write(storage.tokens_minted.read() - amount);
-        burn(amount);
+        burn(ZERO_B256, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();

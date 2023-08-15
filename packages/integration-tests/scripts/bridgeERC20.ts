@@ -1,5 +1,5 @@
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { Address, BN } from 'fuels';
+import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
 import { ethers_parseToken, fuels_parseToken } from './utils/parsers';
 import { waitForMessage } from './utils/fuels/waitForMessage';
 import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
@@ -113,8 +113,8 @@ const TOKEN_AMOUNT = '10';
   );
   const fMessageRelayTxResult = await fMessageRelayTx.waitForResult();
 
-  if (fMessageRelayTxResult.status.type !== 'success') {
-    console.log(fMessageRelayTxResult.status.reason);
+  if (fMessageRelayTxResult.status !== SimplifiedTransactionStatusNameEnum.success) {
+    console.log(fMessageRelayTxResult.status);
     console.log(fMessageRelayTxResult);
     console.log(fMessageRelayTxResult.transaction.inputs);
     console.log(fMessageRelayTxResult.transaction.outputs);
@@ -146,7 +146,7 @@ const TOKEN_AMOUNT = '10';
     .txParams(FUEL_TX_PARAMS);
   const fWithdrawTx = await scope.call();
   const fWithdrawTxResult = fWithdrawTx.transactionResult;
-  if (fWithdrawTxResult.status.type !== 'success') {
+  if (fWithdrawTxResult.status !== SimplifiedTransactionStatusNameEnum.success) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw tokens to ethereum');
   }

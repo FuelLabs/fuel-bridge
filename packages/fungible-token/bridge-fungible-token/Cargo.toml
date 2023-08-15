@@ -6,8 +6,8 @@ edition = "2021"
 license = "Apache-2.0"
 
 [dependencies]
-fuel-core-types = { version = "0.19.1", default-features = false }
-fuels = { version = "0.44", features = ["fuel-core-lib"] }
+fuel-core-types = { version = "0.20.4", default-features = false }
+fuels = { version = "0.45.1", features = ["fuel-core-lib"] }
 primitive-types = "0.12.1"
 sha3 = "0.10.1"
 tokio = { version = "1.12", features = ["rt", "macros"] }
@@ -16,4 +16,3 @@ tokio = { version = "1.12", features = ["rt", "macros"] }
 harness = true
 name = "integration_tests"
 path = "tests/harness.rs"
-

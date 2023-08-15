@@ -40,7 +40,7 @@ fn into_u64(b: Bytes) -> u64 {
 impl MessageReceiver for Contract {
     #[storage(read, write)]
     #[payable]
-    fn process_message(msg_idx: u8) {
+    fn process_message(msg_idx: u64) {
         storage.counter.write(0); // Temporary fix for: https://github.com/FuelLabs/sway/issues/4634
         storage.counter.write(storage.counter.read() + 1);
 
