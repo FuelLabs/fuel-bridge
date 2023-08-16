@@ -15,13 +15,13 @@ use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;
 use std::{
-    hash::sha256,
     call_frames::{
         contract_id,
         msg_asset_id,
     },
     constants::ZERO_B256,
     context::msg_amount,
+    hash::sha256,
     inputs::input_message_sender,
     message::send_message,
     token::{

@@ -1,5 +1,10 @@
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
+import {
+  Address,
+  BN,
+  SimplifiedTransactionStatusNameEnum,
+  ZeroBytes32,
+} from 'fuels';
 import { ethers_parseToken, fuels_parseToken } from './utils/parsers';
 import { waitForMessage } from './utils/fuels/waitForMessage';
 import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
@@ -16,6 +21,8 @@ import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
 import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
+import { arrayify, concat, sha256 } from 'ethers/lib/utils';
+import { getTokenId } from './utils/fuels/getTokenId';
 
 const TOKEN_AMOUNT = '10';
 
@@ -47,7 +54,7 @@ const TOKEN_AMOUNT = '10';
     ethTestToken,
     FUEL_TX_PARAMS
   );
-  const fuelTestTokenId = fuelTestToken.id.toHexString();
+  const fuelTestTokenId = getTokenId(fuelTestToken);
 
   // mint tokens as starting balances
   await mintECR20(env, ethTestToken, ethAcctAddr, TOKEN_AMOUNT);
@@ -77,7 +84,7 @@ const TOKEN_AMOUNT = '10';
   const eDepositTx = await gatewayContract.deposit(
     fuelAcctAddr,
     ethTestToken.address,
-    fuelTestTokenId,
+    fuelTestToken.id.toHexString(),
     ethers_parseToken(TOKEN_AMOUNT, 18)
   );
   const eDepositTxResult = await eDepositTx.wait();
@@ -113,7 +120,9 @@ const TOKEN_AMOUNT = '10';
   );
   const fMessageRelayTxResult = await fMessageRelayTx.waitForResult();
 
-  if (fMessageRelayTxResult.status !== SimplifiedTransactionStatusNameEnum.success) {
+  if (
+    fMessageRelayTxResult.status !== SimplifiedTransactionStatusNameEnum.success
+  ) {
     console.log(fMessageRelayTxResult.status);
     console.log(fMessageRelayTxResult);
     console.log(fMessageRelayTxResult.transaction.inputs);
@@ -146,7 +155,9 @@ const TOKEN_AMOUNT = '10';
     .txParams(FUEL_TX_PARAMS);
   const fWithdrawTx = await scope.call();
   const fWithdrawTxResult = fWithdrawTx.transactionResult;
-  if (fWithdrawTxResult.status !== SimplifiedTransactionStatusNameEnum.success) {
+  if (
+    fWithdrawTxResult.status !== SimplifiedTransactionStatusNameEnum.success
+  ) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw tokens to ethereum');
   }

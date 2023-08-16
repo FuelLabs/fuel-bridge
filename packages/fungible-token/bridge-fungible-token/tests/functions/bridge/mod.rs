@@ -15,6 +15,7 @@ mod success {
 
     use super::*;
 
+    use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
         interface::bridge::{
@@ -24,7 +25,6 @@ mod success {
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt};
     use std::str::FromStr;
-    use crate::utils::setup::get_asset_id;
 
     #[tokio::test]
     async fn claims_refund() {
@@ -458,8 +458,8 @@ mod success {
 }
 
 mod revert {
-    use crate::utils::setup::get_asset_id;
     use super::*;
+    use crate::utils::setup::get_asset_id;
 
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]

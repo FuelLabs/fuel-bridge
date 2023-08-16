@@ -137,7 +137,7 @@ describe('Transferring ETH', async function () {
         FUEL_TX_PARAMS
       );
       const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status.type).to.equal('success');
+      expect(fWithdrawTxResult.status).to.equal('success');
 
       // Build a new block to commit the message
       const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);

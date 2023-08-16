@@ -14,8 +14,6 @@ import {
   Predicate,
   bn,
   MAX_GAS_PER_TX,
-  JsonAbi,
-  Provider,
 } from 'fuels';
 import { debug } from '../logs';
 import { resourcesToInputs } from './transaction';
@@ -23,15 +21,9 @@ import {
   contractMessagePredicate,
   contractMessageScript,
 } from '@fuel-bridge/message-predicates';
-import { sha256 } from 'ethers/lib/utils';
 
 // Create a predicate for common messages
-const predicate = new Predicate(contractMessagePredicate, 0, undefined, new Provider('http://192.168.1.240:4000/graphql'));
-console.log(arrayify(contractMessageScript).length);
-// 0x664e627bfc0db0bfa8f182efc913b552681143e328b555d9697c40ad0eb527ad
-// 0x664e627bfc0db0bfa8f182efc913b552681143e328b555d9697c40ad0eb527ad
-
-console.log(predicate.address.toHexString());
+const predicate = new Predicate(contractMessagePredicate, 0);
 
 // Details for relaying common messages with certain predicate roots
 const COMMON_RELAYABLE_MESSAGES: CommonMessageDetails[] = [
