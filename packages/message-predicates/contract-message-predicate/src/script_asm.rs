@@ -1,7 +1,7 @@
 use fuel_asm::{op, GTFArgs, RegId};
 use sha2::{Digest, Sha256};
 
-const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u8)";
+const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u64)";
 const BYTES_PER_INSTR: u16 = 4;
 
 // Gets the bytecode for the message-to-contract script
