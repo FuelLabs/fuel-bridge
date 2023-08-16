@@ -481,7 +481,7 @@ pub(crate) async fn contract_balance(
 }
 
 pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) -> u64 {
-    wallet.get_asset_balance(&asset_id).await.unwrap()
+    wallet.get_asset_balance(asset_id).await.unwrap()
 }
 
 fn keccak_hash<B>(data: B) -> Bytes32

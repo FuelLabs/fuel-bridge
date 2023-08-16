@@ -10,7 +10,6 @@ use std::str::FromStr;
 
 mod success {
     use super::*;
-    use fuel_core_types::fuel_tx::Receipt;
 
     use crate::utils::setup::get_asset_id;
     use crate::utils::{
@@ -40,7 +39,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (_bridge, utxo_inputs, _provider) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
