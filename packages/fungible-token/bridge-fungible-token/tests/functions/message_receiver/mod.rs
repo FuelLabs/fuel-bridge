@@ -39,7 +39,7 @@ mod success {
         )
         .await;
 
-        let (_bridge, utxo_inputs, _provider) = setup_environment(
+        let (bridge, utxo_inputs, provider) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -58,15 +58,15 @@ mod success {
         )
         .await;
 
-        // let asset_balance =
-        //     contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        // let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
-        // // Verify the message value was received by the bridge
-        // assert_eq!(asset_balance, MESSAGE_AMOUNT);
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
-        // // Check that wallet now has bridged coins
-        // assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
     }
 
     #[tokio::test]
