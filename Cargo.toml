@@ -1,0 +1,17 @@
+[workspace]
+resolver = "2"
+members = [
+    "packages/message-predicates/contract-message-predicate",
+    "packages/fungible-token/bridge-fungible-token"
+]
+
+[workspace.package]
+authors = ["Fuel Labs <contact@fuel.sh>"]
+categories = ["cryptography::cryptocurrencies"]
+edition = "2021"
+homepage = "https://fuel.network/"
+keywords = ["blockchain", "cryptocurrencies"]
+license = "Apache-2.0"
+repository = "https://github.com/FuelLabs/fuel-bridge"
+version = "0.3.0"
+rust-version = "1.71.1"
