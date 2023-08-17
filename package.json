@@ -6,7 +6,7 @@
   "scripts": {
     "format": "turbo run format",
     "check": "turbo run check",
-    "build": "turbo run build",
+    "build": "forc build && cargo run && turbo run build",
     "test": "sh ./scripts/test.sh",
     "node:build": "make -C ./docker build",
     "node:up": "make -C ./docker up",
