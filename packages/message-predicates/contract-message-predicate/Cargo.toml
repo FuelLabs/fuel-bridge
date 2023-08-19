@@ -20,6 +20,11 @@ hex = "0.4.3"
 insta = "1.28"
 tokio = { version = "1.27", features = ["rt", "macros"] }
 
+[build-dependencies]
+fuel-asm = "0.36.0"
+fuel-tx = "0.35.3"
+sha2 = "0.10.6"
+
 [[test]]
 harness = true
 name = "integration_tests"

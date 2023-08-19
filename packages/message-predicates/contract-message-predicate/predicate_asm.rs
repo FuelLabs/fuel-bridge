@@ -80,16 +80,3 @@ pub fn bytecode() -> Vec<u8> {
     predicate.append(&mut crate::script_hash().to_vec());
     predicate
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Ensure the predicate bytecode doesn't change
-    #[test]
-    fn snapshot_predicate_bytecode() {
-        let bytecode = bytecode();
-        let serialized = hex::encode(&bytecode);
-        insta::assert_snapshot!(serialized);
-    }
-}
