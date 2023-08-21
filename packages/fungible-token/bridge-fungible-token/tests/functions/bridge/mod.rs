@@ -1,6 +1,6 @@
 use crate::utils::{
     constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, FROM, MESSAGE_AMOUNT, PROXY_TOKEN_DECIMALS,
+        BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGED_TOKEN_DECIMALS, FROM, MESSAGE_AMOUNT, PROXY_TOKEN_DECIMALS,
     },
     interface::bridge::withdraw,
     setup::{
@@ -36,6 +36,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
@@ -116,13 +117,13 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 100);
+        assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        let (selector, to, token, amount) =
+        let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
-        assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
+        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
 
@@ -145,6 +146,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
@@ -227,7 +229,7 @@ mod success {
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
 
-        let (selector, to, token_bits, amount) =
+        let (selector, to, token_bits, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
         assert_eq!(
@@ -239,10 +241,10 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 100);
+        assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
+        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token_bits, Bits256::from_hex_str(incorrect_token).unwrap());
 
@@ -259,6 +261,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.max,
@@ -310,7 +313,7 @@ mod success {
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
 
-        let (selector, to, token, amount) =
+        let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
         assert_eq!(
@@ -322,10 +325,10 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 100);
+        assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
+        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
         assert_eq!(amount, config.amount.test);
@@ -345,6 +348,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.min,
@@ -398,7 +402,7 @@ mod success {
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
 
-        let (selector, to, token, msg_data_amount) =
+        let (selector, to, token, msg_data_amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
         assert_eq!(
@@ -410,10 +414,10 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 100);
+        assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
+        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
 
@@ -476,6 +480,7 @@ mod revert {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.max,

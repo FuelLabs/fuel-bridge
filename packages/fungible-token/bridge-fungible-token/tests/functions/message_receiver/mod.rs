@@ -1,5 +1,5 @@
 use crate::utils::{
-    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, FROM, PROXY_TOKEN_DECIMALS, TO},
+    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGED_TOKEN_DECIMALS, FROM, PROXY_TOKEN_DECIMALS, TO},
     setup::{
         create_msg_data, create_wallet, relay_message_to_contract, setup_environment,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
@@ -30,6 +30,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.test,
@@ -77,6 +78,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.max,
@@ -125,6 +127,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.test,
@@ -179,6 +182,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.max,
@@ -233,6 +237,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.test,
@@ -287,6 +292,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.max,
@@ -348,6 +354,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.not_enough,
@@ -414,6 +421,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.one,
@@ -480,6 +488,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
@@ -546,6 +555,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.three,
@@ -615,6 +625,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.test,
@@ -686,6 +697,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,
@@ -754,6 +766,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,
@@ -767,6 +780,7 @@ mod success {
 
         let (message2, _, _) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min + one,
@@ -865,6 +879,7 @@ mod revert {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,

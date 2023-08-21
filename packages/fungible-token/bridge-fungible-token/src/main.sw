@@ -10,7 +10,7 @@ mod utils;
 use cast::*;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
-use data_structures::MessageData;
+use data_structures::{MessageData, ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN};
 use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;
@@ -62,8 +62,8 @@ impl MessageReceiver for Contract {
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
         // register a refund if tokens don't match
-        if (message_data.token != BRIDGED_TOKEN) {
-            register_refund(message_data.from, message_data.token, message_data.amount);
+        if (message_data.token_address != BRIDGED_TOKEN) {
+            register_refund(message_data.from, message_data.token_address, message_data.amount);
             return;
         };
 
@@ -72,7 +72,7 @@ impl MessageReceiver for Contract {
         match res_amount {
             Result::Err(_) => {
                 // register a refund if value can't be adjusted
-                register_refund(message_data.from, message_data.token, message_data.amount);
+                register_refund(message_data.from, message_data.token_address, message_data.amount);
             },
             Result::Ok(amount) => {
                 let subId: SubId = ZERO_B256;
@@ -88,10 +88,10 @@ impl MessageReceiver for Contract {
                 // when depositing to a contract, msg_data.len is 161 bytes.
                 // If msg_data.len is > 161 bytes, we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
                 match message_data.len {
-                    160 => {
+                    ADDRESS_DEPOSIT_DATA_LEN => {
                         transfer(message_data.to, tokenId, amount);
                     },
-                    161 => {
+                    CONTRACT_DEPOSIT_WITHOUT_DATA_LEN => {
                         transfer(message_data.to, tokenId, amount);
                     },
                     _ => {
@@ -125,7 +125,7 @@ impl FungibleBridge for Contract {
         storage.refund_amounts.get(originator).insert(asset, ZERO_B256);
 
         // send a message to unlock this amount on the base layer gateway contract
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, asset), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, asset, ZERO_B256), 0);
     }
 
     #[payable]
@@ -146,7 +146,7 @@ impl FungibleBridge for Contract {
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, ZERO_B256), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
@@ -190,10 +190,9 @@ impl FRC20 for Contract {
 #[storage(write)]
 fn register_refund(from: b256, asset: b256, amount: b256) {
     let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
-    let new_amount = U256::from(amount).add(previous_amount); // U256 has overflow checks built in;
-    let new_amount_b256 = <U256 as From<b256>>::into(new_amount);
+    let new_amount: b256 = U256::from(amount).add(previous_amount).into(); // U256 has overflow checks built in;
 
-    storage.refund_amounts.get(from).insert(asset, new_amount_b256);
+    storage.refund_amounts.get(from).insert(asset, new_amount);
     log(RefundRegisteredEvent {
         from,
         asset,

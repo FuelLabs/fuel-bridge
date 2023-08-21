@@ -7,6 +7,7 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {FuelBridgeBase} from "./FuelBridgeBase.sol";
 import {FuelMessagePortal, CommonPredicates} from "../../fuelchain/FuelMessagePortal.sol";
 import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
 
@@ -15,6 +16,7 @@ import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.
 /// @dev This contract can be used as a template for future gateways to Fuel
 contract FuelERC20Gateway is
     Initializable,
+    FuelBridgeBase,
     FuelMessagesEnabledUpgradeable,
     PausableUpgradeable,
     AccessControlUpgradeable,
@@ -27,10 +29,10 @@ contract FuelERC20Gateway is
     ////////////
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenId, bytes32 fuelTokenId, uint256 amount);
+    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
-    event Withdrawal(bytes32 indexed recipient, address indexed tokenId, bytes32 fuelTokenId, uint256 amount);
+    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
 
     ///////////////
     // Constants //
@@ -92,86 +94,97 @@ contract FuelERC20Gateway is
 
     /// @notice Gets the amount of tokens deposited to a corresponding token on Fuel
     /// @param tokenAddress ERC-20 token address
-    /// @param fuelTokenId ID of the corresponding token on Fuel
+    /// @param fuelContractId ID of the corresponding token on Fuel
     /// @return amount of tokens deposited
-    function tokensDeposited(address tokenAddress, bytes32 fuelTokenId) public view returns (uint256) {
-        return _deposits[tokenAddress][fuelTokenId];
+    function tokensDeposited(address tokenAddress, bytes32 fuelContractId) public view returns (uint256) {
+        return _deposits[tokenAddress][fuelContractId];
     }
 
     /// @notice Deposits the given tokens to an account on Fuel
     /// @param to Fuel account to deposit tokens to
-    /// @param tokenId ID of the token being transferred to Fuel
-    /// @param fuelTokenId ID of the token on Fuel that represent the deposited tokens
+    /// @param tokenAddress Address of the token being transferred to Fuel
+    /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
-    function deposit(bytes32 to, address tokenId, bytes32 fuelTokenId, uint256 amount) external payable whenNotPaused {
+    function deposit(
+        bytes32 to,
+        address tokenAddress,
+        bytes32 fuelContractId,
+        uint256 amount
+    ) external payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
-            fuelTokenId,
-            bytes32(uint256(uint160(tokenId))),
-            bytes32(uint256(uint160(msg.sender))), //from
-            to,
-            bytes32(amount)
+            fuelContractId,
+            bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
+            bytes32(0), // OFFSET_TOKEN_ID = 64
+            bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
+            to, // OFFSET_TO = 128
+            amount // OFFSET_AMOUNT = 160
         );
-        _deposit(tokenId, fuelTokenId, amount, messageData);
+        _deposit(tokenAddress, fuelContractId, amount, messageData);
     }
 
     /// @notice Deposits the given tokens to a contract on Fuel with optional data
     /// @param to Fuel account or contract to deposit tokens to
-    /// @param tokenId ID of the token being transferred to Fuel
-    /// @param fuelTokenId ID of the token on Fuel that represent the deposited tokens
+    /// @param tokenAddress Address of the token being transferred to Fuel
+    /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param data Optional data to send with the deposit
     /// @dev Made payable to reduce gas costs
     function depositWithData(
         bytes32 to,
-        address tokenId,
-        bytes32 fuelTokenId,
+        address tokenAddress,
+        bytes32 fuelContractId,
         uint256 amount,
-        bytes memory data
+        bytes calldata data
     ) external payable whenNotPaused {
         if (data.length == 0) {
             bytes memory messageData = abi.encodePacked(
-                fuelTokenId,
-                bytes32(uint256(uint160(tokenId))),
-                bytes32(uint256(uint160(msg.sender))), //from
-                to,
-                bytes32(amount),
-                DEPOSIT_TO_CONTRACT
+                fuelContractId,
+                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
+                bytes32(0), // OFFSET_TOKEN_ID = 64
+                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
+                to, // OFFSET_TO = 128
+                amount, // OFFSET_AMOUNT = 160
+                DEPOSIT_TO_CONTRACT // OFFSET_ROLE = 161
             );
-            _deposit(tokenId, fuelTokenId, amount, messageData);
+            _deposit(tokenAddress, fuelContractId, amount, messageData);
         } else {
             bytes memory messageData = abi.encodePacked(
-                fuelTokenId,
-                bytes32(uint256(uint160(tokenId))),
-                bytes32(uint256(uint160(msg.sender))), //from
-                to,
-                bytes32(amount),
-                DEPOSIT_TO_CONTRACT,
+                fuelContractId,
+                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
+                bytes32(0), // OFFSET_TOKEN_ID = 64
+                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
+                to, // OFFSET_TO = 128
+                amount, // OFFSET_AMOUNT = 160
+                DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
                 data
             );
-            _deposit(tokenId, fuelTokenId, amount, messageData);
+            _deposit(tokenAddress, fuelContractId, amount, messageData);
         }
     }
 
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
     /// @param to Account to send withdrawn tokens to
-    /// @param tokenId ID of the token being withdrawn from Fuel
+    /// @param tokenAddress Address of the token being withdrawn from Fuel
     /// @param amount Amount of tokens to withdraw
+    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC20, it must be 0
     /// @dev Made payable to reduce gas costs
     function finalizeWithdrawal(
         address to,
-        address tokenId,
-        uint256 amount
-    ) external payable whenNotPaused onlyFromPortal {
+        address tokenAddress,
+        uint256 amount,
+        bytes32 tokenId
+    ) external payable override whenNotPaused onlyFromPortal {
         require(amount > 0, "Cannot withdraw zero");
-        bytes32 fuelTokenId = messageSender();
+        require(tokenId == 0, "Fungible tokens cannot have a tokenId");
+        bytes32 fuelContractId = messageSender();
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        _deposits[tokenId][fuelTokenId] = _deposits[tokenId][fuelTokenId] - amount;
-        IERC20Upgradeable(tokenId).safeTransfer(to, amount);
+        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] - amount;
+        IERC20Upgradeable(tokenAddress).safeTransfer(to, amount);
 
         //emit event for successful token withdraw
-        emit Withdrawal(bytes32(uint256(uint160(to))), tokenId, fuelTokenId, amount);
+        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, amount);
     }
 
     /// @notice Allows the admin to rescue ETH sent to this contract by accident
@@ -186,22 +199,22 @@ contract FuelERC20Gateway is
     ////////////////////////
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
-    /// @param tokenId ID of the token being transferred to Fuel
-    /// @param fuelTokenId ID of the token on Fuel that represent the deposited tokens
+    /// @param tokenAddress Address of the token being transferred to Fuel
+    /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenId, bytes32 fuelTokenId, uint256 amount, bytes memory messageData) private {
+    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) private {
         require(amount > 0, "Cannot deposit zero");
 
         //transfer tokens to this contract and update deposit balance
-        IERC20Upgradeable(tokenId).safeTransferFrom(msg.sender, address(this), amount);
-        _deposits[tokenId][fuelTokenId] = _deposits[tokenId][fuelTokenId] + amount;
+        IERC20Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
+        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] + amount;
 
         //send message to gateway on Fuel to finalize the deposit
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, messageData);
 
         //emit event for successful token deposit
-        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenId, fuelTokenId, amount);
+        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, fuelContractId, amount);
     }
 
     /// @notice Executes a message in the given header

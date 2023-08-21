@@ -7,32 +7,45 @@ pub struct MessageData {
     from: b256,
     len: u16,
     to: Identity,
-    token: b256,
+    token_address: b256,
+    token_id: b256,
 }
 
+const OFFSET_TOKEN_ADDRESS = 32;
+const OFFSET_TOKEN_ID = 64;
+const OFFSET_FROM = 96;
+const OFFSET_TO = 128;
+const OFFSET_AMOUNT = 160;
+
+pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
+pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
+
 impl MessageData {
+
     /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
     ///
     /// any data beyond 160 bytes means deposit is meant for a contract.
     /// if data is > 161 bytes, then we also need to call process_message on the destination contract.
     pub fn parse(msg_idx: u64) -> Self {
-        let token: b256 = input_message_data(msg_idx, 32).into();
+        let token_address: b256 = input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into();
         let len = input_message_data_length(msg_idx);
 
         let mut msg_data = Self {
             amount: ZERO_B256,
             from: ZERO_B256,
             len,
-            token,
+            token_address,
             to: Identity::Address(Address::from(ZERO_B256)),
+            token_id: ZERO_B256,
         };
 
         // TODO: Bug, have to mutate this struct for these values or tests fail
-        msg_data.amount = input_message_data(msg_idx, 32 + 32 + 32 + 32).into();
-        msg_data.from = input_message_data(msg_idx, 32 + 32).into();
-        let to: b256 = input_message_data(msg_idx, 32 + 32 + 32).into();
+        msg_data.amount = input_message_data(msg_idx, OFFSET_AMOUNT).into();
+        msg_data.from = input_message_data(msg_idx, OFFSET_FROM).into();
+        msg_data.token_id = input_message_data(msg_idx, OFFSET_TOKEN_ID).into();
+        let to: b256 = input_message_data(msg_idx, OFFSET_TO).into();
 
-        if msg_data.len > 160u16 {
+        if msg_data.len > ADDRESS_DEPOSIT_DATA_LEN {
             msg_data.to = Identity::ContractId(ContractId::from(to));
         } else {
             msg_data.to = Identity::Address(Address::from(to));
