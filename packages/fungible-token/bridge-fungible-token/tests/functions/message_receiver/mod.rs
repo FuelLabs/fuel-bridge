@@ -1,5 +1,7 @@
 use crate::utils::{
-    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGED_TOKEN_DECIMALS, FROM, PROXY_TOKEN_DECIMALS, TO},
+    constants::{
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS, TO,
+    },
     setup::{
         create_msg_data, create_wallet, relay_message_to_contract, setup_environment,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,

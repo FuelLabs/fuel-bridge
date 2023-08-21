@@ -12,6 +12,6 @@ abstract contract FuelBridgeBase {
         address to,
         address tokenAddress,
         uint256 amount,
-        bytes32 tokenId
+        uint256 tokenId
     ) external payable virtual;
 }

@@ -440,8 +440,6 @@ pub(crate) async fn create_msg_data(
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
 
-    
-
     let mut deposit_recipient: Option<ContractId> = None;
 
     if deposit_to_contract {
@@ -463,7 +461,9 @@ pub(crate) async fn create_msg_data(
     (message, coin, deposit_recipient)
 }
 
-pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, Unsigned256, Bits256) {
+pub(crate) fn parse_output_message_data(
+    data: &[u8],
+) -> (Vec<u8>, Bits256, Bits256, Unsigned256, Bits256) {
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();
@@ -471,7 +471,13 @@ pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits2
     let amount_array: [u8; 32] = data[68..100].try_into().unwrap();
     let amount: Unsigned256 = Unsigned256::from_big_endian(amount_array.as_ref());
     let token_id: [u8; 32] = data[100..132].try_into().unwrap();
-    (selector.to_vec(), Bits256(to), token, amount, Bits256(token_id))
+    (
+        selector.to_vec(),
+        Bits256(to),
+        token,
+        amount,
+        Bits256(token_id),
+    )
 }
 
 pub(crate) async fn contract_balance(

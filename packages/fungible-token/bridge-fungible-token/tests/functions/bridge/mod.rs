@@ -1,6 +1,7 @@
 use crate::utils::{
     constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGED_TOKEN_DECIMALS, FROM, MESSAGE_AMOUNT, PROXY_TOKEN_DECIMALS,
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, MESSAGE_AMOUNT,
+        PROXY_TOKEN_DECIMALS,
     },
     interface::bridge::withdraw,
     setup::{
@@ -123,9 +124,10 @@ mod success {
         let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
-        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
 
         // Compare the value output in the message with the original value sent
         assert_eq!(amount, config.overflow.two);
@@ -244,7 +246,7 @@ mod success {
         assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token_bits, Bits256::from_hex_str(incorrect_token).unwrap());
 
@@ -328,9 +330,10 @@ mod success {
         assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
         assert_eq!(amount, config.amount.test);
     }
 
@@ -417,9 +420,10 @@ mod success {
         assert_eq!(message_receipt.len().unwrap(), 132);
 
         // message data
-        assert_eq!(selector, decode_hex("0xaa5057d4").to_vec());
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
 
         // now verify that the initial amount == the final amount
         assert_eq!(msg_data_amount, config.amount.min);

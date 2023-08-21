@@ -21,7 +21,6 @@ pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
 pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
 
 impl MessageData {
-
     /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
     ///
     /// any data beyond 160 bytes means deposit is meant for a contract.

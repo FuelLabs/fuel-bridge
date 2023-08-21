@@ -10,7 +10,7 @@ mod utils;
 use cast::*;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
-use data_structures::{MessageData, ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN};
+use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;

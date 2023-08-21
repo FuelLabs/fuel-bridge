@@ -5,16 +5,15 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
+import {IERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import {FuelBridgeBase} from "./FuelBridgeBase.sol";
 import {FuelMessagePortal, CommonPredicates} from "../../fuelchain/FuelMessagePortal.sol";
 import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
 
-/// @title FuelERC20Gateway
-/// @notice The L1 side of the general ERC20 gateway with Fuel
+/// @title FuelERC721Gateway
+/// @notice The L1 side of the general ERC721 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
-contract FuelERC20Gateway is
+contract FuelERC721Gateway is
     Initializable,
     FuelBridgeBase,
     FuelMessagesEnabledUpgradeable,
@@ -22,8 +21,6 @@ contract FuelERC20Gateway is
     AccessControlUpgradeable,
     UUPSUpgradeable
 {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
     ////////////
     // Events //
     ////////////
@@ -48,7 +45,7 @@ contract FuelERC20Gateway is
     // Storage //
     /////////////
 
-    /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
+    /// @notice Maps ERC721 tokens to Fuel tokens to balance of the ERC721 tokens deposited
     mapping(address => mapping(bytes32 => uint256)) private _deposits;
 
     /////////////////////////////
@@ -78,12 +75,12 @@ contract FuelERC20Gateway is
     // Admin Functions //
     /////////////////////
 
-    /// @notice Pause ERC20 transfers
+    /// @notice Pause ERC721 transfers
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
-    /// @notice Unpause ERC20 transfers
+    /// @notice Unpause ERC721 transfers
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
@@ -115,7 +112,7 @@ contract FuelERC20Gateway is
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-            bytes32(0), // OFFSET_TOKEN_ID = 64
+            uint256(0), // OFFSET_TOKEN_ID = 64
             bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
             to, // OFFSET_TO = 128
             amount // OFFSET_AMOUNT = 160
@@ -141,7 +138,7 @@ contract FuelERC20Gateway is
             bytes memory messageData = abi.encodePacked(
                 fuelContractId,
                 bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                bytes32(0), // OFFSET_TOKEN_ID = 64
+                uint256(0), // OFFSET_TOKEN_ID = 64
                 bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
                 to, // OFFSET_TO = 128
                 amount, // OFFSET_AMOUNT = 160
@@ -152,7 +149,7 @@ contract FuelERC20Gateway is
             bytes memory messageData = abi.encodePacked(
                 fuelContractId,
                 bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                bytes32(0), // OFFSET_TOKEN_ID = 64
+                uint256(0), // OFFSET_TOKEN_ID = 64
                 bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
                 to, // OFFSET_TO = 128
                 amount, // OFFSET_AMOUNT = 160
@@ -167,7 +164,7 @@ contract FuelERC20Gateway is
     /// @param to Account to send withdrawn tokens to
     /// @param tokenAddress Address of the token being withdrawn from Fuel
     /// @param amount Amount of tokens to withdraw
-    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC20, it must be 0
+    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC721, it must be 0
     /// @dev Made payable to reduce gas costs
     function finalizeWithdrawal(
         address to,
@@ -181,17 +178,10 @@ contract FuelERC20Gateway is
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] - amount;
-        IERC20Upgradeable(tokenAddress).safeTransfer(to, amount);
+        IERC721Upgradeable(tokenAddress).transferFrom(address(this), to, tokenId);
 
         //emit event for successful token withdraw
         emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, amount);
-    }
-
-    /// @notice Allows the admin to rescue ETH sent to this contract by accident
-    /// @dev Made payable to reduce gas costs
-    function rescueETH() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
-        require(success);
     }
 
     ////////////////////////
@@ -207,7 +197,7 @@ contract FuelERC20Gateway is
         require(amount > 0, "Cannot deposit zero");
 
         //transfer tokens to this contract and update deposit balance
-        IERC20Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
+        IERC721Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
         _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] + amount;
 
         //send message to gateway on Fuel to finalize the deposit
