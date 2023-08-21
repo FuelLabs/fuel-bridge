@@ -249,6 +249,7 @@ mod success {
         assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(token_bits, Bits256::from_hex_str(incorrect_token).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
 
         // Compare the value output in the message with the original value sent
         assert_eq!(amount, config.overflow.two);

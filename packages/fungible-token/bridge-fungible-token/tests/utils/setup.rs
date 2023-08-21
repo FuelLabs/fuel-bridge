@@ -423,6 +423,7 @@ pub(crate) fn encode_hex(val: Unsigned256) -> [u8; 32] {
     arr
 }
 
+#[allow(clippy::too_many_arguments)]
 pub(crate) async fn create_msg_data(
     token: &str,
     token_id: &str,
