@@ -19,7 +19,6 @@ pub struct MessageData {
     token_id: b256,
 }
 
-
 impl MessageData {
     /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
     ///
