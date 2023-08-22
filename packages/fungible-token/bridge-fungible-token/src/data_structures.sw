@@ -2,6 +2,14 @@ library;
 
 use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_length}};
 
+const OFFSET_TOKEN_ADDRESS = 32;
+const OFFSET_TOKEN_ID = 64;
+const OFFSET_FROM = 96;
+const OFFSET_TO = 128;
+const OFFSET_AMOUNT = 160;
+pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
+pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
+
 pub struct MessageData {
     amount: b256,
     from: b256,
@@ -11,14 +19,6 @@ pub struct MessageData {
     token_id: b256,
 }
 
-const OFFSET_TOKEN_ADDRESS = 32;
-const OFFSET_TOKEN_ID = 64;
-const OFFSET_FROM = 96;
-const OFFSET_TO = 128;
-const OFFSET_AMOUNT = 160;
-
-pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
-pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
 
 impl MessageData {
     /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
