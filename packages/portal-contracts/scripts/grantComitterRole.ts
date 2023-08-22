@@ -15,7 +15,7 @@ const main = async () => {
     }
 
     if(!FUEL_CHAIN_STATE_ADDRESS || !isAddress(FUEL_CHAIN_STATE_ADDRESS)) {
-        throw new Error(`Invalid env var GRANT_ROLE_TARGET ${FUEL_CHAIN_STATE_ADDRESS}`);
+        throw new Error(`Invalid env var FUEL_CHAIN_STATE_ADDRESS ${FUEL_CHAIN_STATE_ADDRESS}`);
     } 
 
     if(!COMITTER_ADDRESS || !isAddress(COMITTER_ADDRESS)) {
