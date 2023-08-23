@@ -1,4 +1,4 @@
-# Bridge Flow
+# Architecture
 
 This document aims to provide a high-level overview of Fuel's token bridge and its current operation.
 
@@ -24,7 +24,7 @@ Before delving into the details, let's understand a few key concepts that will b
 - Deposit: User action by which some L1 tokens are locked in the L1 bridge smart contracts, minting the same amount in the L2 chain.
 - Withdrawal: User action by which some L2 tokens are burnt in the L2 bridge smart contracts, releasing the burnt amount in the L1 chain.
 
-## Description
+## Bridge flow
 
 Fuel 's bridge system is built on a message protocol that allows to send (and receive) messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanism involved for each direction is different. It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed. 
 
@@ -89,3 +89,9 @@ You can follow the implementation of this flow via:
 - [FuelChainState.sol](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol) 's `commit` and `finalized` functions
 - [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function
 - [FuelERC20Gateway.sol](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `finalizeWithdrawal`
+
+## Decimals adjustment
+
+Easing the operation and participation of light clients in the network without compromising on security is a key principle in Fuel. In that sense, Fuel strives to minimize the size of the information that is exchanged between peers through the protocol. One of the design decisions furthering that goal is the use of 64 bits (`u64`) to code the balances that are bridged from L1 to L2. The most popular token standard, `ERC20`, codes the amounts with `256 bits`. If the amount transferred from L1 to L2 surpasses the capacity of Fuel to mint the L2 counterpart, a `refund` message will be generated, that will allow the user to retrieve the originally depositted amount in L1.
+
+Additionally, it is a de-facto practice in the space to use 18 decimals to represent the token, whereas in Fuel, 9 decimals are used to represent amounts under the unit. This means that there is a potential loss of precision when it comes to translating L1 amounts to L2 amounts, as the user could lose some dust amounts between bridging operations. Ideally, this limitation could be worked around as long as the deposits initiated in L1 do not specify amounts under 9 decimals (i.e. 1.0000000010 does not lose amounts, 1.0000000011 would lose 0.0000000001). DApps that enable bridge operations should observe this limitation and truncate the amounts to avoid loss of precision.
