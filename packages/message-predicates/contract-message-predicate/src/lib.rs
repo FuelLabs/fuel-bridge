@@ -1,6 +1,6 @@
 use fuel_tx::{ConsensusParameters, Input};
 
-pub const SCRIPT_HASH: &'static [u8] = include_bytes!(concat!(
+pub const SCRIPT_HASH: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
     "/out/contract_message_script_hash.bin"
 ));

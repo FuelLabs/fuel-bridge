@@ -2,7 +2,7 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
-    default: 1.71.1
+    default: 1.72.0
   forc-components:
     default: 'forc@0.44.1, fuel-core@0.20.4'
 
