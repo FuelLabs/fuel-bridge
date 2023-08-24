@@ -1,9 +1,21 @@
 use fuel_tx::{ConsensusParameters, Input};
 
-pub const SCRIPT_HASH: &'static [u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/out/contract_message_script_hash.bin"));
-pub const SCRIPT_ASM: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/out/contract_message_script.bin"));
-pub const PREDICATE_BYTECODE: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/out/contract_message_predicate.bin"));
-pub const DEFAULT_PREDICATE_ROOT: &[u8] = include_bytes!(concat!(env!("CARGO_MANIFEST_DIR"), "/out/contract_message_predicate_default_root.bin"));
+pub const SCRIPT_HASH: &'static [u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/out/contract_message_script_hash.bin"
+));
+pub const SCRIPT_ASM: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/out/contract_message_script.bin"
+));
+pub const PREDICATE_BYTECODE: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/out/contract_message_predicate.bin"
+));
+pub const DEFAULT_PREDICATE_ROOT: &[u8] = include_bytes!(concat!(
+    env!("CARGO_MANIFEST_DIR"),
+    "/out/contract_message_predicate_default_root.bin"
+));
 
 // Gets the bytecode for the message-to-contract script
 pub fn script_bytecode() -> Vec<u8> {
@@ -17,7 +29,9 @@ pub fn predicate_bytecode() -> Vec<u8> {
 
 // Gets the hash of the message-to-contract script
 pub fn script_hash() -> [u8; 32] {
-    SCRIPT_HASH.try_into().expect("Should be checked at compile time")
+    SCRIPT_HASH
+        .try_into()
+        .expect("Should be checked at compile time")
 }
 
 // Gets the root of the message-to-contract predicate
@@ -45,5 +59,4 @@ mod tests {
         let serialized = hex::encode(&bytecode);
         insta::assert_snapshot!(serialized);
     }
-
 }

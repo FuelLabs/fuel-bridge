@@ -1,8 +1,8 @@
+use fuel_tx::{ConsensusParameters, Input};
+use sha2::{Digest, Sha256};
 use std::env;
 use std::fs;
 use std::path::Path;
-use fuel_tx::{ConsensusParameters, Input};
-use sha2::{Digest, Sha256};
 
 const SCRIPT_BUILD_PATH: &str = "contract_message_script.bin";
 const SCRIPT_HASH_PATH: &str = "contract_message_script_hash.bin";
@@ -10,8 +10,8 @@ const PREDICATE_BUILD_PATH: &str = "contract_message_predicate.bin";
 // The precomputed predicate root for chain_id=0
 const DEFAULT_PREDICATE_ROOT_PATH: &str = "contract_message_predicate_default_root.bin";
 
-mod script_asm;
 mod predicate_asm;
+mod script_asm;
 
 pub fn script_hash() -> [u8; 32] {
     let script = script_asm::bytecode();
@@ -38,8 +38,7 @@ fn main() {
 
     //output to console and build files
     let script_hash = script_hash();
-    let predicate_root =
-        predicate_root(&ConsensusParameters::default());
+    let predicate_root = predicate_root(&ConsensusParameters::default());
 
     fs::create_dir_all(out_dir.clone())
         .unwrap_or_else(|_| panic!("Failed to create output directory [{out_dir:?}]."));
