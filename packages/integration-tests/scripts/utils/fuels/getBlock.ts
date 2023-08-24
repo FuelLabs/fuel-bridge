@@ -20,21 +20,21 @@ const query = `
 `;
 
 export interface Block {
-  id: string
-  header: Header
+  id: string;
+  header: Header;
 }
 
 export interface Header {
-  prevRoot: string
-  transactionsCount: string
-  applicationHash: string
-  transactionsRoot: string
-  height: string
-  daHeight: string
-  messageReceiptRoot: string
-  messageReceiptCount: string
-  time: string
-  id: string
+  prevRoot: string;
+  transactionsCount: string;
+  applicationHash: string;
+  transactionsRoot: string;
+  height: string;
+  daHeight: string;
+  messageReceiptRoot: string;
+  messageReceiptCount: string;
+  time: string;
+  id: string;
 }
 
 export function getBlock(providerUrl: string, blockId: string): Promise<Block> {
@@ -50,6 +50,6 @@ export function getBlock(providerUrl: string, blockId: string): Promise<Block> {
       },
     }),
   })
-  .then((res) => res.json())
-  .then((res) => res.data.block);
+    .then((res) => res.json())
+    .then((res) => res.data.block);
 }

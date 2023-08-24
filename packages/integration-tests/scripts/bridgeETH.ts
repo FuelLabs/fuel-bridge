@@ -2,7 +2,6 @@ import { parseEther } from 'ethers/lib/utils';
 import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
-import { waitNextBlock } from './utils/fuels/waitNextBlock';
 import { logETHBalances } from './utils/logs';
 import { waitForMessage } from './utils/fuels/waitForMessage';
 import { fuels_parseEther } from './utils/parsers';
@@ -89,45 +88,36 @@ const ETH_AMOUNT = '0.1';
     throw new Error('failed to withdraw ETH back to base layer');
   }
 
-  // wait for next block to be created
-  console.log('Waiting for next block to be created...');
-  const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
-
   // get message proof for relaying on Ethereum
   console.log('Building message proof...');
   const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
 
-  // TODO: use the getMessageProof function from fuel-ts instead once it's updated with
-  // the new message proof data
-  // const withdrawMessageProof = await env.fuel.provider.getMessageProof(
-  //   fWithdrawTx.id, messageOutReceipt.messageId, lastBlockId
-  // );
-  const withdrawMessageProof = await fuelAccount.provider.getMessageProof(
-    fWithdrawTx.id,
-    messageOutReceipt.messageId,
-    lastBlockId
+  console.log('Waiting for block to be commited...');
+  const withdrawBlock = await getBlock(
+    env.fuel.provider.url,
+    fWithdrawTxResult.blockId
   );
-  const blockHeight = withdrawMessageProof.commitBlockHeader.height;
-  console.log(blockHeight);
+  const commitHashAtL1 = await waitForBlockCommit(
+    env,
+    withdrawBlock.header.height
+  );
 
-  const commitHashAtL1 = await waitForBlockCommit(env, blockHeight.toString());
-  const blockRoot = await getBlock(env.fuel.provider.url, commitHashAtL1);
+  console.log('Get message proof on Fuel...');
+  const withdrawMessageProof = await fuelAccount.provider.getMessageProof(
+    fWithdrawTxResult.id,
+    messageOutReceipt.messageId,
+    commitHashAtL1
+  );
 
   // wait for block finalization
-  await waitForBlockFinalization(env, commitHashAtL1, blockRoot.header.height);
+  await waitForBlockFinalization(env, withdrawMessageProof);
   const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
   const eRelayMessageTx = await fuelMessagePortal.relayMessage(
     relayMessageParams.message,
-    // relayMessageParams.rootBlockHeader, // with this the error is "Unknown block"
-    {
-      prevRoot: blockRoot.header.prevRoot,
-      height: blockRoot.header.height.toString(),
-      timestamp: blockRoot.header.time,
-      applicationHash: blockRoot.header.applicationHash,
-    }, // with this the error is "Invalid block in history proof"
+    relayMessageParams.rootBlockHeader,
     relayMessageParams.blockHeader,
     relayMessageParams.blockInHistoryProof,
     relayMessageParams.messageInBlockProof
