@@ -1,12 +1,17 @@
-import { arrayify, MessageProof } from 'fuels';
+import { arrayify, bn, MessageProof } from 'fuels';
 import {
   Message,
   MessageBlockHeader,
   CommitBlockHeader,
   Proof,
 } from '../../types';
+import { TestEnvironment } from '../../setup';
+import { getBlock } from '../fuels/getBlock';
 
-export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
+export async function createRelayMessageParams(env: TestEnvironment, withdrawMessageProof: MessageProof, blockHashCommited: string) {
+  const blockCommited = await getBlock({ blockHash: blockHashCommited, providerUrl: env.fuel.provider.url });
+  const prevBlockCommited = await getBlock({ height: bn(blockCommited.header.height).sub(1).toString(), providerUrl: env.fuel.provider.url });
+
   // construct data objects for relaying message on L1
   const message: Message = {
     sender: withdrawMessageProof.sender.toHexString(),
@@ -15,7 +20,8 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     nonce: withdrawMessageProof.nonce,
     data: withdrawMessageProof.data,
   };
-  const header = withdrawMessageProof.messageBlockHeader;
+  const header = prevBlockCommited.header;
+  // const header = withdrawMessageProof.messageBlockHeader;
   const blockHeader: MessageBlockHeader = {
     prevRoot: header.prevRoot,
     height: header.height.toString(),
@@ -26,6 +32,7 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     outputMessagesRoot: header.messageReceiptRoot,
     outputMessagesCount: header.messageReceiptCount.toString(),
   };
+  console.log(`blockHeader`, blockHeader);
   const messageProof = withdrawMessageProof.messageProof;
   // Create the message proof object
   const messageInBlockProof: Proof = {
@@ -34,7 +41,8 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
   };
 
   // construct data objects for relaying message on L1 (cont)
-  const rootHeader = withdrawMessageProof.commitBlockHeader;
+  const rootHeader = blockCommited.header;
+  // const rootHeader = withdrawMessageProof.commitBlockHeader;
   const rootBlockHeader: CommitBlockHeader = {
     prevRoot: rootHeader.prevRoot,
     height: rootHeader.height.toString(),

@@ -106,13 +106,17 @@ const ETH_AMOUNT = '0.1';
     messageOutReceipt.messageId,
     lastBlockId
   );
-  const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
+  const commitBlockHeight = withdrawMessageProof.commitBlockHeader.height.toString(); 
   // commit block to L1
-  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
-  // wait for block finalization
-  await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
+  const blockHashCommited = await waitForBlockCommit(env, commitBlockHeight);
+  console.log(`blockHashCommited`, blockHashCommited);
 
+  // wait for block finalization
+  await waitForBlockFinalization(env, blockHashCommited, commitBlockHeight);
+
+  const relayMessageParams = await createRelayMessageParams(env, withdrawMessageProof, blockHashCommited);
+  
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
   const eRelayMessageTx = await fuelMessagePortal.relayMessage(

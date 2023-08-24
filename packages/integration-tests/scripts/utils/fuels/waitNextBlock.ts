@@ -21,5 +21,8 @@ export async function waitNextBlock(
     return waitNextBlock(env, blockId);
   }
 
-  return chain.latestBlock.id;
+  // get the next block, instead of latest one
+  const nextBlock = await fuelProvider.getBlock(currentBlock.height.add(1).toNumber());
+
+  return nextBlock.id;
 }
