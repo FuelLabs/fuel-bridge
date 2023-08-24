@@ -10,6 +10,7 @@ import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
 import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
+import { getBlock } from './utils/fuels/getBlock';
 
 const ETH_AMOUNT = '0.1';
 
@@ -106,18 +107,27 @@ const ETH_AMOUNT = '0.1';
     messageOutReceipt.messageId,
     lastBlockId
   );
-  const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
+  const blockHeight = withdrawMessageProof.commitBlockHeader.height;
+  console.log(blockHeight);
 
-  // commit block to L1
-  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
+  const commitHashAtL1 = await waitForBlockCommit(env, blockHeight.toString());
+  const blockRoot = await getBlock(env.fuel.provider.url, commitHashAtL1);
+
   // wait for block finalization
-  await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
+  await waitForBlockFinalization(env, commitHashAtL1, blockRoot.header.height);
+  const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
   const eRelayMessageTx = await fuelMessagePortal.relayMessage(
     relayMessageParams.message,
-    relayMessageParams.rootBlockHeader,
+    // relayMessageParams.rootBlockHeader, // with this the error is "Unknown block"
+    {
+      prevRoot: blockRoot.header.prevRoot,
+      height: blockRoot.header.height.toString(),
+      timestamp: blockRoot.header.time,
+      applicationHash: blockRoot.header.applicationHash,
+    }, // with this the error is "Invalid block in history proof"
     relayMessageParams.blockHeader,
     relayMessageParams.blockInHistoryProof,
     relayMessageParams.messageInBlockProof

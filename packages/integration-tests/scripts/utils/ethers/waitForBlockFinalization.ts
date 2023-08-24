@@ -1,12 +1,13 @@
 import { TestEnvironment } from '../../setup';
 import { CommitBlockHeader } from '../../types';
-import { bn } from 'fuels';
+import { BytesLike, arrayify, bn } from 'fuels';
 import { debug } from '../logs';
 import { computeBlockHash } from '../fuels/computeBlockHash';
 
 export async function waitForBlockFinalization(
   env: TestEnvironment,
-  commitBlockHeader: CommitBlockHeader
+  blockHash: BytesLike,
+  height: string,
 ) {
   // connect to FuelChainState contract as the permissioned block comitter
   const fuelChainState = env.eth.fuelChainState.connect(env.eth.provider);
@@ -16,8 +17,8 @@ export async function waitForBlockFinalization(
     function onBlock() {
       fuelChainState
         .finalized(
-          computeBlockHash(commitBlockHeader),
-          bn(commitBlockHeader.height).toNumber()
+          arrayify(blockHash),
+          bn(height).toNumber()
         )
         .then((isFinalized) => {
           if (isFinalized) {

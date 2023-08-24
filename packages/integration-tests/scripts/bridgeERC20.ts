@@ -23,6 +23,7 @@ import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
 import { arrayify, concat, sha256 } from 'ethers/lib/utils';
 import { getTokenId } from './utils/fuels/getTokenId';
+import { getBlock } from './utils/fuels/getBlock';
 
 const TOKEN_AMOUNT = '10';
 
@@ -177,16 +178,18 @@ const TOKEN_AMOUNT = '10';
   );
   const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
-  // commit block to L1
-  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
-  // wait for block finalization
-  await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
+  const commitHashAtL1 = await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
+  const blockRoot = await getBlock(env.fuel.provider.url, commitHashAtL1);
 
+  // wait for block finalization
+  await waitForBlockFinalization(env, blockRoot.header);
+
+  // blockRoot -> blockHashCommited
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
   const eRelayMessageTx = await fuelMessagePortal.relayMessage(
     relayMessageParams.message,
-    relayMessageParams.rootBlockHeader,
+    relayMessageParams.rootBlockHeader, // <<-- blockRoot
     relayMessageParams.blockHeader,
     relayMessageParams.blockInHistoryProof,
     relayMessageParams.messageInBlockProof
