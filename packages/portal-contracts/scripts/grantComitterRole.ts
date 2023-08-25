@@ -7,7 +7,7 @@ const main = async () => {
     const {DEPLOYER_KEY, FUEL_CHAIN_STATE_ADDRESS, COMITTER_ADDRESS, RPC_URL} = process.env;
 
     if(!DEPLOYER_KEY) {
-        throw new Error('No DEPLOYER_KER env var');
+        throw new Error('No DEPLOYER_KEY env var');
     }
     
     if(!RPC_URL) {
