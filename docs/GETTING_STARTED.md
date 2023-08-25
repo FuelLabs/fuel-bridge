@@ -69,13 +69,13 @@ To make life easier we added as many useful scripts as possible to our [package.
 pnpm <command name>
 ```
 
-| Script       | Description                                                                            |
-| ------------ | -------------------------------------------------------------------------------------- |
-| `build`      | Run all build commands generating the artifacts needed to run tests or deploy packages.|
-| `test`       | Run all the tests from all the packages                                                |
-| `node:up`    | Run the local network with `fuel-core` and the `ethereum node`.                        |
-| `node:clean` | Stop and remove all development containers that are running locally.                   |
-| `node:stop`  | Stop all containers without removing data                                              |
+| Script       | Description                                                                             |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `build`      | Run all build commands generating the artifacts needed to run tests or deploy packages. |
+| `test`       | Run all the tests from all the packages                                                 |
+| `node:up`    | Run the local network with `fuel-core` and the `ethereum node`.                         |
+| `node:clean` | Stop and remove all development containers that are running locally.                    |
+| `node:stop`  | Stop all containers without removing data                                               |
 
 > Other scripts can be found in [package.json](../package.json).
 
