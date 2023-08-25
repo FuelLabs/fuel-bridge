@@ -14,19 +14,14 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
     await fuelChainState.BLOCKS_PER_COMMIT_INTERVAL()
   ).toString();
 
-  // In case the height of the message is exactly a multiple of the BLOCKS_PER_COMMIT_INTERVAL
-  // we need to wait for the next block to be commited as only the next block includes the message
-  // Ex.: 300/100
-  const waitHeight = bn(height).mod(blocksPerCommitInterval).isZero()
-    ? bn(height).add(1)
-    : bn(height);
+  // Add + 1 to the block height to wait the next block
+  // that enable to proof the message
+  const nextBlockHeight = bn(height).add(1);
   // To get the block slot where the block is going to be commited
   // We need to divide the desired block by the BLOCKS_PER_COMMIT_INTERVAL
   // and round up. Ex.: 225/100 sould be on the slot 3
-  const commitHeightResult = bn(waitHeight).divmod(blocksPerCommitInterval);
-  const commitHeight = commitHeightResult.mod.isZero()
-    ? commitHeightResult.div
-    : commitHeightResult.div.add(1);
+  const { mod, div } = bn(nextBlockHeight).divmod(blocksPerCommitInterval);
+  const commitHeight = mod.isZero() ? div : div.add(1);
 
   // check if the block is commited on L1 every second
   const commitHashAtL1 = await fuelChainState.blockHashAtCommit(
