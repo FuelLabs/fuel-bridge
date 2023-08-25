@@ -1,15 +1,9 @@
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import {
-  Address,
-  BN,
-  SimplifiedTransactionStatusNameEnum,
-  ZeroBytes32,
-} from 'fuels';
+import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
 import { ethers_parseToken, fuels_parseToken } from './utils/parsers';
 import { waitForMessage } from './utils/fuels/waitForMessage';
 import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
 import { logETHBalances, logTokenBalances } from './utils/logs';
-import { waitNextBlock } from './utils/fuels/waitNextBlock';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
 import {
   getOrDeployECR20Contract,
@@ -21,8 +15,8 @@ import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
 import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
 import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
-import { arrayify, concat, sha256 } from 'ethers/lib/utils';
 import { getTokenId } from './utils/fuels/getTokenId';
+import { getBlock } from './utils/fuels/getBlock';
 
 const TOKEN_AMOUNT = '10';
 
@@ -162,25 +156,33 @@ const TOKEN_AMOUNT = '10';
     throw new Error('failed to withdraw tokens to ethereum');
   }
 
-  // wait for next block to be created
-  console.log('Waiting for next block to be created...');
-  const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
-
   // get message proof for relaying on Ethereum
   console.log('Building message proof...');
   const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
 
-  const withdrawMessageProof = await fuelAcct.provider.getMessageProof(
-    fWithdrawTx.transactionId,
-    messageOutReceipt.messageId,
-    lastBlockId
+  console.log('Waiting for block to be commited...');
+  const withdrawBlock = await getBlock(
+    env.fuel.provider.url,
+    fWithdrawTxResult.blockId
   );
-  const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
+  const commitHashAtL1 = await waitForBlockCommit(
+    env,
+    withdrawBlock.header.height
+  );
 
-  // commit block to L1
-  await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
+  console.log('Get message proof on Fuel...');
+  const withdrawMessageProof = await fuelAcct.provider.getMessageProof(
+    fWithdrawTxResult.id,
+    messageOutReceipt.messageId,
+    commitHashAtL1
+  );
+
+  console.log(commitHashAtL1);
+  console.dir(withdrawMessageProof, { depth: null });
+
   // wait for block finalization
-  await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
+  await waitForBlockFinalization(env, withdrawMessageProof);
+  const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
   // relay message on Ethereum
   console.log('Relaying message on Ethereum...\n');
@@ -193,10 +195,8 @@ const TOKEN_AMOUNT = '10';
   );
   const eRelayMessageTxResult = await eRelayMessageTx.wait();
   if (eRelayMessageTxResult.status !== 1) {
-    console.log(eRelayMessageTxResult);
     throw new Error('failed to call relayMessageFromFuelBlock');
   }
-  console.log('');
 
   // the sent Tokens are now spendable on Fuel
   console.log('Tokens were bridged to Ethereum successfully!!');
