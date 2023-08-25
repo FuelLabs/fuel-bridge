@@ -1,5 +1,5 @@
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, SimplifiedTransactionStatusNameEnum, bn } from 'fuels';
+import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
 import { logETHBalances } from './utils/logs';
