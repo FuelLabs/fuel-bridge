@@ -5,7 +5,7 @@ use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_
 pub struct MessageData {
     amount: b256,
     from: b256,
-    len: u64,
+    len: u16,
     to: Identity,
     token: b256,
 }
@@ -15,7 +15,7 @@ impl MessageData {
     ///
     /// any data beyond 160 bytes means deposit is meant for a contract.
     /// if data is > 161 bytes, then we also need to call process_message on the destination contract.
-    pub fn parse(msg_idx: u8) -> Self {
+    pub fn parse(msg_idx: u64) -> Self {
         let token: b256 = input_message_data(msg_idx, 32).into();
         let len = input_message_data_length(msg_idx);
 

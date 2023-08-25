@@ -7,6 +7,7 @@ node_modules
 
 # Misc
 .idea
+.DS_Store
 
 # Hardhat files
 cache
