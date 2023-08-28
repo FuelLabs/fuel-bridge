@@ -1,8 +1,6 @@
 use fuel_tx::{ConsensusParameters, Input};
 use sha2::{Digest, Sha256};
-use std::env;
-use std::fs;
-use std::path::Path;
+use std::{env, fs, path::Path};
 
 const SCRIPT_BUILD_PATH: &str = "contract_message_script.bin";
 const SCRIPT_HASH_PATH: &str = "contract_message_script_hash.bin";
@@ -29,32 +27,35 @@ pub fn predicate_root(cparams: &ConsensusParameters) -> [u8; 32] {
 
 fn main() {
     let out_dir = env::var_os("CARGO_MANIFEST_DIR").unwrap();
-    // let out_dir = env::var_os("OUT_DIR").unwrap();
     let out_dir = Path::new(&out_dir).join("out");
-    dbg!(&out_dir);
-    //get predicate and script bytecode
+    // get predicate and script bytecode
     let script = script_asm::bytecode();
     let predicate = predicate_asm::bytecode();
 
-    //output to console and build files
+    // output to console and build files
     let script_hash = script_hash();
     let predicate_root = predicate_root(&ConsensusParameters::default());
 
+    let script_build_path = out_dir.join(SCRIPT_BUILD_PATH);
+    let script_hash_path = out_dir.join(SCRIPT_HASH_PATH);
+    let predicate_build_path = out_dir.join(PREDICATE_BUILD_PATH);
+    let default_predicate_root_path = out_dir.join(DEFAULT_PREDICATE_ROOT_PATH);
+
     fs::create_dir_all(out_dir.clone())
         .unwrap_or_else(|_| panic!("Failed to create output directory [{out_dir:?}]."));
-    let script_build_path = out_dir.join(SCRIPT_BUILD_PATH);
+
     fs::write(script_build_path.clone(), script).unwrap_or_else(|_| {
         panic!("Failed to write to script binary file output [{script_build_path:?}].")
     });
-    let predicate_build_path = out_dir.join(PREDICATE_BUILD_PATH);
+
     fs::write(predicate_build_path.clone(), predicate).unwrap_or_else(|_| {
         panic!("Failed to write to predicate binary file output [{predicate_build_path:?}].")
     });
-    let script_hash_path = out_dir.join(SCRIPT_HASH_PATH);
+
     fs::write(script_hash_path.clone(), script_hash).unwrap_or_else(|_| {
         panic!("Failed to write to script hash file output [{script_hash_path:?}].")
     });
-    let default_predicate_root_path = out_dir.join(DEFAULT_PREDICATE_ROOT_PATH);
+
     fs::write(default_predicate_root_path.clone(), predicate_root).unwrap_or_else(|_| {
         panic!("Failed to write to predicate root file output [{default_predicate_root_path:?}].")
     });
