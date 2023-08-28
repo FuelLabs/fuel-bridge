@@ -23,7 +23,6 @@ pub async fn build_contract_message_tx(
     let current_dir = std::env::current_dir()
         .unwrap()
         .join(CONTRACT_MESSAGE_SCRIPT_BINARY);
-    eprintln!("{}", current_dir.to_str().unwrap());
     let script_bytecode = std::fs::read(CONTRACT_MESSAGE_SCRIPT_BINARY).unwrap();
     let number_of_contracts = contracts.len();
     let mut tx_inputs: Vec<Input> = Vec::with_capacity(1 + number_of_contracts + gas_coins.len());
