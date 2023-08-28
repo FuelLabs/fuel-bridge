@@ -10,11 +10,14 @@ rust-version = { workspace = true }
 publish = false
 
 [dependencies]
-fuel-core-types = { version = "0.20.4", default-features = false }
-fuels = { version = "0.46", features = ["fuel-core-lib"] }
+# Dependencies from fuel-core repository:
+fuel-core-types = { workspace = true }
+# Dependencies from fuels-rs repository:
+fuels = { workspace = true, features = ["fuel-core-lib"] }
+
 primitive-types = "0.12.1"
 sha3 = "0.10.1"
-tokio = { version = "1.12", features = ["rt", "macros"] }
+tokio = { workspace = true }
 
 [[test]]
 harness = true
