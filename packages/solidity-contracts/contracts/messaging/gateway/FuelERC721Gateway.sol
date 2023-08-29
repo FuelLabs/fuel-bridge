@@ -26,10 +26,10 @@ contract FuelERC721Gateway is
     ////////////
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
+    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 fuelContractId, uint256 tokenId);
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
-    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
+    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, bytes32 fuelContractId, uint256 tokenId);
 
     ///////////////
     // Constants //
@@ -45,8 +45,8 @@ contract FuelERC721Gateway is
     // Storage //
     /////////////
 
-    /// @notice Maps ERC721 tokens to Fuel tokens to balance of the ERC721 tokens deposited
-    mapping(address => mapping(bytes32 => uint256)) private _deposits;
+    /// @notice Maps ERC721 tokens to its fuel bridge counterpart
+    mapping(address => mapping(uint256 => bytes32)) private _deposits;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -89,99 +89,83 @@ contract FuelERC721Gateway is
     // Public Functions //
     //////////////////////
 
-    /// @notice Gets the amount of tokens deposited to a corresponding token on Fuel
-    /// @param tokenAddress ERC-20 token address
-    /// @param fuelContractId ID of the corresponding token on Fuel
-    /// @return amount of tokens deposited
-    function tokensDeposited(address tokenAddress, bytes32 fuelContractId) public view returns (uint256) {
-        return _deposits[tokenAddress][fuelContractId];
+    /// @notice Gets the FuelContractId of an ERC-721 token
+    /// @param tokenAddress ERC-721 token address
+    /// @param tokenId tokenId
+    /// @return fuelContractId ID of the Fuel contract
+    function tokensDeposited(address tokenAddress, uint256 tokenId) public view returns (bytes32) {
+        return _deposits[tokenAddress][tokenId];
     }
 
     /// @notice Deposits the given tokens to an account on Fuel
     /// @param to Fuel account to deposit tokens to
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @dev Made payable to reduce gas costs
     function deposit(
         bytes32 to,
         address tokenAddress,
         bytes32 fuelContractId,
-        uint256 amount
+        uint256 tokenId
     ) external payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-            uint256(0), // OFFSET_TOKEN_ID = 64
+            tokenId,
             bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
             to, // OFFSET_TO = 128
-            amount // OFFSET_AMOUNT = 160
+            uint256(1) // OFFSET_AMOUNT = 160
         );
-        _deposit(tokenAddress, fuelContractId, amount, messageData);
+        _deposit(tokenAddress, fuelContractId, tokenId, messageData);
     }
 
     /// @notice Deposits the given tokens to a contract on Fuel with optional data
     /// @param to Fuel account or contract to deposit tokens to
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @param data Optional data to send with the deposit
     /// @dev Made payable to reduce gas costs
     function depositWithData(
         bytes32 to,
         address tokenAddress,
         bytes32 fuelContractId,
-        uint256 amount,
+        uint256 tokenId,
         bytes calldata data
     ) external payable whenNotPaused {
-        if (data.length == 0) {
-            bytes memory messageData = abi.encodePacked(
-                fuelContractId,
-                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                uint256(0), // OFFSET_TOKEN_ID = 64
-                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
-                to, // OFFSET_TO = 128
-                amount, // OFFSET_AMOUNT = 160
-                DEPOSIT_TO_CONTRACT // OFFSET_ROLE = 161
-            );
-            _deposit(tokenAddress, fuelContractId, amount, messageData);
-        } else {
-            bytes memory messageData = abi.encodePacked(
-                fuelContractId,
-                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                uint256(0), // OFFSET_TOKEN_ID = 64
-                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
-                to, // OFFSET_TO = 128
-                amount, // OFFSET_AMOUNT = 160
-                DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
-                data
-            );
-            _deposit(tokenAddress, fuelContractId, amount, messageData);
-        }
+        bytes memory messageData = abi.encodePacked(
+            fuelContractId,
+            bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
+            tokenId, // OFFSET_TOKEN_ID = 64
+            bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
+            to, // OFFSET_TO = 128
+            uint256(1), // OFFSET_AMOUNT = 160
+            DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
+            data
+        );
+        _deposit(tokenAddress, fuelContractId, tokenId, messageData);
     }
 
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
     /// @param to Account to send withdrawn tokens to
     /// @param tokenAddress Address of the token being withdrawn from Fuel
-    /// @param amount Amount of tokens to withdraw
     /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC721, it must be 0
     /// @dev Made payable to reduce gas costs
     function finalizeWithdrawal(
         address to,
         address tokenAddress,
-        uint256 amount,
+        uint256 /*amount*/,
         uint256 tokenId
     ) external payable override whenNotPaused onlyFromPortal {
-        require(amount > 0, "Cannot withdraw zero");
-        require(tokenId == 0, "Fungible tokens cannot have a tokenId");
         bytes32 fuelContractId = messageSender();
+        require(_deposits[tokenAddress][tokenId] == fuelContractId, "Fuel bridge does not own this token");
 
-        //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] - amount;
+        delete _deposits[tokenAddress][tokenId];
+
         IERC721Upgradeable(tokenAddress).transferFrom(address(this), to, tokenId);
-
         //emit event for successful token withdraw
-        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, amount);
+        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, 1);
     }
 
     ////////////////////////
@@ -191,20 +175,20 @@ contract FuelERC721Gateway is
     /// @notice Deposits the given tokens to an account or contract on Fuel
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) private {
-        require(amount > 0, "Cannot deposit zero");
-
-        //transfer tokens to this contract and update deposit balance
-        IERC721Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
-        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] + amount;
+    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 tokenId, bytes memory messageData) private {
+        // TODO: this check might be unnecessary. If the token is conformant to ERC721
+        // it should not be possible to deposit the same token again
+        require(_deposits[tokenAddress][tokenId] == 0, "tokenId is already owned by another fuel bridge");
+        _deposits[tokenAddress][tokenId] = fuelContractId;
 
         //send message to gateway on Fuel to finalize the deposit
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, messageData);
 
+        IERC721Upgradeable(tokenAddress).transferFrom(msg.sender, address(this), tokenId);
         //emit event for successful token deposit
-        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, fuelContractId, amount);
+        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, fuelContractId, tokenId);
     }
 
     /// @notice Executes a message in the given header
