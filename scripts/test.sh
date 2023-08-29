@@ -20,6 +20,12 @@ set -e
 echo "\n\nBuild projects..."
 pnpm run build
 
+# Test cargo projects
+echo "\n\nCargo test..."
+cargo test
+echo "\n\nForc test..."
+forc test
+
 # Start the docker compose file with L1 and Fuel Node
 echo "\n\nStarting docker..."
 pnpm run node:up

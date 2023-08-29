@@ -1,0 +1,7 @@
+[workspace]
+members = [
+  "packages/fungible-token/test-deposit-recipient-contract",
+  "packages/fungible-token/bridge-fungible-token",
+  "packages/message-predicates/contract-message-predicate",
+  "packages/message-predicates/contract-message-receiver",
+]

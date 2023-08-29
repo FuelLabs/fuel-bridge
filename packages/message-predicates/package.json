@@ -3,10 +3,7 @@
   "private": true,
   "main": "./dist/index.ts",
   "scripts": {
-    "test": "cargo test",
-    "check": "forc fmt --check && cargo fmt --check && cargo clippy --all-features --all-targets -- -D warnings",
-    "format": "forc fmt && cargo fmt",
-    "build": "forc build && cargo run && node ./scripts/build.js"
+    "build": "node ./scripts/build.js"
   },
   "devDependencies": {
     "fuels": "0.0.0-next-20230815002259"

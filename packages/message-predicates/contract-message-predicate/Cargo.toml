@@ -10,15 +10,24 @@ rust-version = { workspace = true }
 description = "Script and predicate for relaying contract messages."
 
 [dependencies]
-fuel-asm = "0.36.0"
-fuel-tx = "0.35.3"
+# Dependencies from the `fuel-vm` repository:
+fuel-asm = { workspace = true }
+fuel-tx = { workspace = true }
+
 sha2 = "0.10.6"
 
 [dev-dependencies]
-fuels = { version = "0.45.1", features = ["fuel-core-lib"] }
+fuels = { workspace = true, features = ["fuel-core-lib"] }
 hex = "0.4.3"
 insta = "1.28"
-tokio = { version = "1.27", features = ["rt", "macros"] }
+tokio = { workspace = true }
+
+[build-dependencies]
+sha2 = "0.10.6"
+
+# Dependencies from the `fuel-vm` repository:
+fuel-asm = { workspace = true }
+fuel-tx = { workspace = true }
 
 [[test]]
 harness = true

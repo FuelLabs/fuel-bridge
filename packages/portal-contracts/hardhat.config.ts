@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
     sepolia: {
       url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
       accounts: CONTRACTS_DEPLOYER_KEY ? [CONTRACTS_DEPLOYER_KEY] : [],
-    }
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,

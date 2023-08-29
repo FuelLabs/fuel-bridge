@@ -63,16 +63,3 @@ pub fn bytecode() -> Vec<u8> {
     script.append(&mut fn_sel_hash[0..4].to_vec());
     script
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Ensure the script bytecode doesn't change
-    #[test]
-    fn snapshot_script_bytecode() {
-        let bytecode = bytecode();
-        let serialized = hex::encode(&bytecode);
-        insta::assert_snapshot!(serialized);
-    }
-}
