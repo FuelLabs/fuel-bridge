@@ -157,6 +157,10 @@ contract FuelMessagePortal is
         return address(_fuelChainState);
     }
 
+    function getNextOutgoingMessageNonce() public view returns (uint256) {
+        return _outgoingMessageNonce;
+    }
+
     ///////////////////////////////////////
     // Incoming Message Public Functions //
     ///////////////////////////////////////
