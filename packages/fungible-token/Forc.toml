@@ -1,2 +1,0 @@
-[workspace]
-members = ["bridge-fungible-token", "test-deposit-recipient-contract"]

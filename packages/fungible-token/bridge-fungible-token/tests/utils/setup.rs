@@ -32,12 +32,12 @@ use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::Fr
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "./bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
+        abi = "packages/fungible-token/bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",
         abi =
-            "./test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
+            "packages/fungible-token/test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
     ),
 );
 
