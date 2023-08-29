@@ -28,7 +28,7 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
   const commitHashAtL1 = await fuelChainState.blockHashAtCommit(
     commitHeight.toString()
   );
-  // As we only have a limited amount of slots, the slot can contain 
+  // As we only have a limited amount of slots, the slot can contain
   // a block that was committed before we need to check if the block
   // height at the slot is greater than or equal to the target block height
   const block = await getBlock(env.fuel.provider.url, commitHashAtL1);
