@@ -10,6 +10,8 @@ import {FuelBridgeBase} from "./FuelBridgeBase.sol";
 import {FuelMessagePortal, CommonPredicates} from "../../fuelchain/FuelMessagePortal.sol";
 import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
 
+import "hardhat/console.sol";
+
 /// @title FuelERC721Gateway
 /// @notice The L1 side of the general ERC721 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
@@ -150,8 +152,9 @@ contract FuelERC721Gateway is
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
     /// @param to Account to send withdrawn tokens to
     /// @param tokenAddress Address of the token being withdrawn from Fuel
-    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC721, it must be 0
-    /// @dev Made payable to reduce gas costs
+    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens
+    /// @dev Made payable to reduce gas costs.
+    /// @dev Could remove the amount param to further reduce cost, but that implies changes in the Fuel contract
     function finalizeWithdrawal(
         address to,
         address tokenAddress,

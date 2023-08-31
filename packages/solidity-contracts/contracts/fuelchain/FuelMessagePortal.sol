@@ -10,7 +10,6 @@ import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary
 import {FuelChainState} from "./FuelChainState.sol";
 import {FuelBlockHeader, FuelBlockHeaderLib} from "./types/FuelBlockHeader.sol";
 import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "./types/FuelBlockHeaderLite.sol";
-import {SafeCall} from "../vendor/SafeCall.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 
 /// @notice Structure for proving an element in a merkle tree
@@ -285,16 +284,22 @@ contract FuelMessagePortal is
         //set message sender for receiving contract to reference
         _incomingMessageSender = message.sender;
 
-        //relay message
-        //solhint-disable-next-line avoid-low-level-calls
-        bool success = SafeCall.call(
-            address(uint160(uint256(message.recipient))),
-            message.amount * (10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS)),
-            message.data
-        );
+        (bool success, bytes memory result) = address(uint160(uint256(message.recipient))).call{
+            value: message.amount * (10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS))
+        }(message.data);
 
-        //make sure relay succeeded
-        require(success, "Message relay failed");
+        if (!success) {
+            // Look for revert reason and bubble it up if present
+            if (result.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+                /// @solidity memory-safe-assembly
+                assembly {
+                    let returndata_size := mload(result)
+                    revert(add(32, result), returndata_size)
+                }
+            }
+            revert("Message relay failed");
+        }
 
         //unset message sender reference
         _incomingMessageSender = NULL_MESSAGE_SENDER;

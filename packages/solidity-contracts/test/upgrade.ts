@@ -7,7 +7,7 @@ import type {
   HarnessObject,
 } from '../protocol/harness';
 import { setupFuel, upgradeFuel } from '../protocol/harness';
-import type { UpgradeableTester } from '../typechain/UpgradeableTester.d';
+import type { UpgradeableTester } from '../typechain';
 
 chai.use(solidity);
 const { expect } = chai;
