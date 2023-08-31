@@ -27,7 +27,7 @@ abi FungibleBridge {
     /// * `originator`: [b256] - the address entitled to a refund
     /// * `asset`: [b256] - the token to be refunded back to the originator
     #[storage(read, write)]
-    fn claim_refund(originator: b256, asset: b256);
+    fn claim_refund(originator: b256, token_address: b256, token_id: b256);
 
     /// Withdraw coins back to the base layer and burn the corresponding proxy coins.
     ///
@@ -52,4 +52,8 @@ abi FungibleBridge {
 
     /// Get the address of the gateway that holds the bridged tokens
     fn bridged_token_gateway() -> b256;
+
+    // Gets the sub_id component of the preimage of an asset_id
+    #[storage(read)]
+    fn asset_to_sub_id(asset_id: b256) -> b256;
 }

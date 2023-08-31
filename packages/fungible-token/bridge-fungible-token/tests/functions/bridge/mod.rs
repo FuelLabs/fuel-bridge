@@ -87,7 +87,7 @@ mod success {
             Bits256(encode_hex(config.overflow.two))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -99,6 +99,7 @@ mod success {
             &bridge,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
+            Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
         )
         .await;
 
@@ -198,7 +199,7 @@ mod success {
             Bits256(encode_hex(config.overflow.two))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -212,6 +213,7 @@ mod success {
             .claim_refund(
                 Bits256::from_hex_str(FROM).unwrap(),
                 Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
+                Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
             )
             .call()
             .await;
@@ -221,6 +223,7 @@ mod success {
             &bridge,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(incorrect_token).unwrap(),
+            Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
         )
         .await;
 

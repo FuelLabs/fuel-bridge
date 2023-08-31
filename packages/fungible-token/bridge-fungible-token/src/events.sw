@@ -4,7 +4,8 @@ use std::u256::U256;
 
 pub struct RefundRegisteredEvent {
     amount: b256,
-    asset: b256,
+    token_address: b256,
+    token_id: b256,
     from: b256,
 }
 

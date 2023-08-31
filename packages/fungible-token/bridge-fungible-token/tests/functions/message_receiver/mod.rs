@@ -406,7 +406,7 @@ mod success {
             Bits256(encode_hex(config.amount.not_enough))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -473,7 +473,7 @@ mod success {
             Bits256(encode_hex(config.overflow.one))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -540,7 +540,7 @@ mod success {
             Bits256(encode_hex(config.overflow.two))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -607,7 +607,7 @@ mod success {
             Bits256(encode_hex(config.overflow.three))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -679,7 +679,7 @@ mod success {
                 Bits256(encode_hex(config.amount.test))
             );
             assert_eq!(
-                refund_registered_event[0].asset,
+                refund_registered_event[0].token_address,
                 Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
             );
             assert_eq!(
@@ -749,7 +749,7 @@ mod success {
             Bits256(encode_hex(config.amount.min))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -845,7 +845,7 @@ mod success {
             Bits256(encode_hex(config.amount.min))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -857,7 +857,7 @@ mod success {
             Bits256(encode_hex(config.amount.min + one))
         );
         assert_eq!(
-            second_refund_registered_event[0].asset,
+            second_refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
