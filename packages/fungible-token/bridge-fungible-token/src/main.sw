@@ -77,7 +77,6 @@ impl MessageReceiver for Contract {
         };
 
         let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS, BRIDGED_TOKEN_DECIMALS);
-        
 
         match res_amount {
             Result::Err(_) => {
@@ -85,7 +84,6 @@ impl MessageReceiver for Contract {
                 register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
             },
             Result::Ok(amount) => {
-
                 // mint tokens & update storage
                 mint(sub_id, amount);
                 match storage.tokens_minted.try_read() {
@@ -205,7 +203,12 @@ impl FRC20 for Contract {
 
 // Storage-dependant private functions
 #[storage(write)]
-fn register_refund(from: b256, token_address: b256, token_id: b256, amount: b256) {
+fn register_refund(
+    from: b256,
+    token_address: b256,
+    token_id: b256,
+    amount: b256,
+) {
     let asset = sha256((token_address, token_id));
 
     let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
