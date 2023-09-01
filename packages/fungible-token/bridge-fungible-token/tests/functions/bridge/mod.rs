@@ -64,8 +64,6 @@ mod success {
         )
         .await;
 
-        println!("receipts: {:#?}", receipts);
-
         let refund_registered_event = bridge
             .log_decoder()
             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)

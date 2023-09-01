@@ -3,16 +3,9 @@
   "pipeline": {
     "build": {
       "cache": false,
-      "outputs": ["dist/**", "typechain/**", "artifacts/**", "out/**"]
+      "outputs": ["dist/**"]
     },
     "test": {
-      "cache": false
-    },
-    "check": {
-      "dependsOn": ["build"],
-      "cache": false
-    },
-    "format": {
       "cache": false
     }
   }

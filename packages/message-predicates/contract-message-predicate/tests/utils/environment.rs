@@ -20,7 +20,7 @@ use fuel_tx::{ConsensusParameters, Word};
 
 abigen!(Contract(
     name = "TestContract",
-    abi = "./contract-message-predicate/out/debug/contract_message_test-abi.json"
+    abi = "packages/message-predicates/contract-message-predicate/out/debug/contract_message_test-abi.json"
 ));
 
 pub const MESSAGE_SENDER_ADDRESS: &str =
