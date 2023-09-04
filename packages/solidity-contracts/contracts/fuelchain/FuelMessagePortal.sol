@@ -267,6 +267,7 @@ contract FuelMessagePortal is
                 require(amount <= ((2 ** 64) - 1), "amount-precision-incompatability");
             }
 
+            // TODO: room for gas savings - double storage read for _outgoingMessageNonce
             //emit message for Fuel clients to pickup (messageID calculated offchain)
             emit MessageSent(sender, recipient, _outgoingMessageNonce, uint64(amount), data);
 

@@ -22,7 +22,7 @@ mod success {
         interface::bridge::{
             bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund,
         },
-        setup::RefundRegisteredEvent,
+        setup::{ClaimRefundEvent, RefundRegisteredEvent},
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt};
     use std::str::FromStr;
@@ -109,6 +109,28 @@ mod success {
             .iter()
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
+
+        let claim_event = bridge
+            .log_decoder()
+            .decode_logs_with_type::<ClaimRefundEvent>(&response.receipts)
+            .unwrap();
+
+        assert_eq!(
+            claim_event[0].amount,
+            Bits256(encode_hex(config.overflow.two))
+        );
+        assert_eq!(
+            claim_event[0].originator,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
+        assert_eq!(
+            claim_event[0].token_address,
+            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+        );
+        assert_eq!(
+            claim_event[0].token_id,
+            Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap()
+        );
 
         assert_eq!(
             *bridge.contract_id().hash(),

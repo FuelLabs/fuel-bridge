@@ -11,7 +11,7 @@ use cast::*;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
-use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
+use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;
 use std::{
@@ -66,7 +66,7 @@ impl MessageReceiver for Contract {
         let asset_id = sha256((contract_id(), sub_id));
 
         match storage.asset_to_sub_id.get(asset_id).try_read() {
-            Option::Some(value) => {},
+            Option::Some(_) => {}, // asset sub id is already registered
             Option::None => storage.asset_to_sub_id.insert(asset_id, sub_id),
         };
 
@@ -134,6 +134,13 @@ impl FungibleBridge for Contract {
 
         // send a message to unlock this amount on the base layer gateway contract
         send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, token_address, token_id), 0);
+
+        log(ClaimRefundEvent {
+            amount: stored_amount,
+            originator,
+            token_address,
+            token_id,
+        });
     }
 
     #[payable]

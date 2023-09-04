@@ -5,11 +5,13 @@ import type {
   FuelChainState,
   FuelMessagePortal,
   FuelERC20Gateway,
+  FuelERC721Gateway,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
   FuelMessagePortal__factory,
   FuelERC20Gateway__factory,
+  FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
 import type { Signer as EthSigner } from 'ethers';
@@ -59,6 +61,7 @@ export interface TestEnvironment {
     fuelChainState: FuelChainState;
     fuelMessagePortal: FuelMessagePortal;
     fuelERC20Gateway: FuelERC20Gateway;
+    fuelERC721Gateway: FuelERC721Gateway;
     deployer: EthSigner;
     signers: EthSigner[];
   };
@@ -100,6 +103,9 @@ export async function setupEnvironment(
   const fuel_message_portal_addr: string =
     process.env.FUEL_MESSAGE_PORTAL_ADDRESS || '';
   const fuel_erc20_gateway_addr: string =
+    process.env.FUEL_ERC20_GATEWAY_ADDRESS || '';
+
+  const fuel_erc721_gateway_addr: string =
     process.env.FUEL_ERC20_GATEWAY_ADDRESS || '';
 
   // Create provider from http_fuel_client
@@ -186,10 +192,13 @@ export async function setupEnvironment(
   let eth_fuelChainStateAddress: string = fuel_chain_consensus_addr;
   let eth_fuelMessagePortalAddress: string = fuel_message_portal_addr;
   let eth_fuelERC20GatewayAddress: string = fuel_erc20_gateway_addr;
+  let eth_fuelERC721GatewayAddress: string = fuel_erc721_gateway_addr;
+
   if (
     !eth_fuelChainStateAddress ||
     !eth_fuelMessagePortalAddress ||
-    !eth_fuelERC20GatewayAddress
+    !eth_fuelERC20GatewayAddress ||
+    !eth_fuelERC721GatewayAddress
   ) {
     let deployerAddresses: any = null;
     try {
@@ -223,6 +232,15 @@ export async function setupEnvironment(
       }
       eth_fuelERC20GatewayAddress = deployerAddresses.FuelERC20Gateway;
     }
+
+    if (!eth_fuelERC721GatewayAddress) {
+      if (!deployerAddresses.FuelERC721Gateway) {
+        throw new Error(
+          'Failed to get FuelERC721Gateway address from deployer'
+        );
+      }
+      eth_fuelERC721GatewayAddress = deployerAddresses.FuelERC721Gateway;
+    }
   }
 
   // Connect existing contracts
@@ -241,6 +259,12 @@ export async function setupEnvironment(
       eth_deployer
     );
 
+  const eth_fuelERC721Gateway: FuelERC721Gateway =
+    FuelERC721Gateway__factory.connect(
+      eth_fuelERC721GatewayAddress,
+      eth_deployer
+    );
+
   // Return the Fuel harness object
   return {
     eth: {
@@ -249,6 +273,7 @@ export async function setupEnvironment(
       fuelChainState: eth_fuelChainState,
       fuelMessagePortal: eth_fuelMessagePortal,
       fuelERC20Gateway: eth_fuelERC20Gateway,
+      fuelERC721Gateway: eth_fuelERC721Gateway,
       deployer: eth_deployer,
       signers: [eth_signer1, eth_signer2],
     },

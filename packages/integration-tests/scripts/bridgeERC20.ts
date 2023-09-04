@@ -50,6 +50,7 @@ const TOKEN_AMOUNT = '10';
   const fuelTestToken = await getOrDeployFuelTokenContract(
     env,
     ethTestToken,
+    env.eth.fuelERC20Gateway,
     FUEL_TX_PARAMS
   );
   const fuelTestTokenId = getTokenId(fuelTestToken);

@@ -2,7 +2,7 @@ import {
   fungibleTokenBinary,
   fungibleTokenABI,
 } from '@fuel-bridge/fungible-token';
-import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
+import type { ethers } from 'ethers';
 import type { TxParams } from 'fuels';
 import { ContractFactory, bn, Contract } from 'fuels';
 
@@ -14,10 +14,12 @@ const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
 export async function getOrDeployFuelTokenContract(
   env: TestEnvironment,
-  ethTestToken: Token,
-  fuelTxParams: TxParams
+  ethTestToken: ethers.Contract,
+  ethTokenGateway: { address: string },
+  fuelTxParams: TxParams,
+  DECIMALS?: number
 ) {
-  const tokenGetWay = env.eth.fuelERC20Gateway.address.replace('0x', '');
+  const tokenGateway = ethTokenGateway.address.replace('0x', '');
   const tokenAddress = ethTestToken.address.replace('0x', '');
   const fuelAcct = env.fuel.signers[1];
 
@@ -48,11 +50,21 @@ export async function getOrDeployFuelTokenContract(
       env.fuel.deployer
     );
 
-    // Set the token gateway and token address in the contract
-    factory.setConfigurableConstants({
-      BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGetWay),
+    const BRIDGED_TOKEN_DECIMALS: number =
+      'decimals' in ethTestToken.callStatic
+        ? await ethTestToken.callStatic.decimals()
+        : 0;
+
+    const configurableConstants: any = {
+      BRIDGED_TOKEN_DECIMALS,
+      BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGateway),
       BRIDGED_TOKEN: eth_address_to_b256(tokenAddress),
-    });
+    };
+
+    if (DECIMALS !== undefined) configurableConstants['DECIMALS'] = DECIMALS;
+
+    // Set the token gateway and token address in the contract
+    factory.setConfigurableConstants(configurableConstants);
 
     const { contractId, transactionRequest } = factory.createTransactionRequest(
       {
