@@ -489,6 +489,8 @@ mod success {
 mod revert {
     use super::*;
     use crate::utils::setup::get_asset_id;
+    use crate::utils::setup::RefundRegisteredEvent;
+    use fuels::programs::contract::SettableContract;
 
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]
@@ -553,5 +555,132 @@ mod revert {
 
         // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
         withdraw(&bridge, to, withdrawal_amount, gas).await;
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "AssetNotFound")]
+    async fn asset_to_sub_id_reverts_with_wrong_token() {
+        // Try to get a sub_id for an unknown asset
+        // - Verify that it reverts with an AssetNotFound error
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let incorrect_asset_id: &str =
+            "0x1111110000000000000000000000000000000000000000000000000000111111";
+
+        let (message, coin, deposit_contract) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            config.overflow.two,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, _, _) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        bridge
+            .methods()
+            .asset_to_sub_id(Bits256::from_hex_str(incorrect_asset_id).unwrap())
+            .call()
+            .await
+            .unwrap();
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "NoRefundAvailable")]
+    async fn claim_refund_fails_with_wrong_token_address() {
+        // Send a message informing about a deposit with a random token address, different from the bridged token
+        // Upon sending this message, the contract will register a refund for the deposit and random token
+        // - Verify that trying to withdraw a completely different asset results in a NoRefundAvailable error
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+        let incorrect_token: &str =
+            "0x1111110000000000000000000000000000000000000000000000000000111111";
+        let wrong_token: &str =
+            "0x2222220000000000000000000000000000000000000000000000000000222222";
+
+        let (message, coin, deposit_contract) = create_msg_data(
+            incorrect_token,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            config.overflow.two,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs, provider) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        let receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+            &utxo_inputs.coin[..],
+        )
+        .await;
+
+        let refund_registered_event = bridge
+            .log_decoder()
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        // Verify the message value was received by the bridge contract
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Verify that no tokens were minted for message.data.to
+        assert_eq!(balance, 0);
+
+        // Check logs
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(encode_hex(config.overflow.two))
+        );
+        assert_eq!(
+            refund_registered_event[0].token_address,
+            Bits256::from_hex_str(incorrect_token).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
+
+        bridge
+            .methods()
+            .claim_refund(
+                Bits256::from_hex_str(FROM).unwrap(),
+                Bits256::from_hex_str(wrong_token).unwrap(),
+                Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
+            )
+            .call()
+            .await
+            .unwrap();
     }
 }

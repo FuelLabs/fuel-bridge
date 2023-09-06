@@ -127,7 +127,7 @@ impl FungibleBridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
-        let amount = storage.refund_amounts.get(from).get(asset).read();
+        let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256);
         require(amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
 
         // reset the refund amount to 0
@@ -149,14 +149,11 @@ impl FungibleBridge for Contract {
     fn withdraw(to: b256) {
         let amount = msg_amount();
         let asset_id = msg_asset_id();
-        let sub_id = storage.asset_to_sub_id.get(asset_id).read();
-
+        let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        // TODO: We should store all the asset ids minted
-        // and check that the asset_id is on the list of minted assets
         let origin_contract_id = sha256((contract_id(), sub_id));
         require(asset_id == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
-
+    
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
         storage.tokens_minted.write(storage.tokens_minted.read() - amount);
@@ -186,7 +183,7 @@ impl FungibleBridge for Contract {
 
     #[storage(read)]
     fn asset_to_sub_id(asset_id: b256) -> b256 {
-        storage.asset_to_sub_id.get(asset_id).read()
+        _asset_to_sub_id(asset_id)
     }
 }
 
@@ -229,4 +226,11 @@ fn register_refund(
         token_id,
         amount,
     });
+}
+
+#[storage(read)]
+fn _asset_to_sub_id(asset_id: b256) -> b256 {
+    let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
+    require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
+    sub_id.unwrap()
 }
