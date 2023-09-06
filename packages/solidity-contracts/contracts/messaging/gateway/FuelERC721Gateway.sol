@@ -28,10 +28,20 @@ contract FuelERC721Gateway is
     ////////////
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 fuelContractId, uint256 tokenId);
+    event Deposit(
+        bytes32 indexed sender,
+        address indexed tokenAddress,
+        bytes32 indexed fuelContractId,
+        uint256 tokenId
+    );
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
-    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, bytes32 fuelContractId, uint256 tokenId);
+    event Withdrawal(
+        bytes32 indexed recipient,
+        address indexed tokenAddress,
+        bytes32 indexed fuelContractId,
+        uint256 tokenId
+    );
 
     ///////////////
     // Constants //

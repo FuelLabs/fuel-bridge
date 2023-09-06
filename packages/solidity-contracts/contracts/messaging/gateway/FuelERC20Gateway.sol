@@ -29,10 +29,15 @@ contract FuelERC20Gateway is
     ////////////
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
+    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 indexed fuelContractId, uint256 amount);
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
-    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, bytes32 fuelContractId, uint256 amount);
+    event Withdrawal(
+        bytes32 indexed recipient,
+        address indexed tokenAddress,
+        bytes32 indexed fuelContractId,
+        uint256 amount
+    );
 
     ///////////////
     // Constants //

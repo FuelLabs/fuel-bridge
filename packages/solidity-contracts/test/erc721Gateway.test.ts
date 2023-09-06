@@ -480,7 +480,7 @@ describe('ERC721 Gateway', async () => {
     });
   });
 
-  describe('Make both valid and invalid ERC20 deposits', async () => {
+  describe('Make both valid and invalid ERC721 deposits', async () => {
     let provider: Provider;
     before(async () => {
       provider = env.fuelMessagePortal.provider;
@@ -712,7 +712,7 @@ describe('ERC721 Gateway', async () => {
     });
   });
 
-  describe('Make both valid and invalid ERC20 withdrawals', async () => {
+  describe('Make both valid and invalid ERC721 withdrawals', async () => {
     it('Should not be able to directly call finalize', async () => {
       await expect(
         env.fuelERC721Gateway.finalizeWithdrawal(
