@@ -4,9 +4,9 @@
   "private": true,
   "description": "Fuel Bridge",
   "scripts": {
-    "format": "turbo run format",
-    "check": "turbo run check",
-    "build": "turbo run build",
+    "format": "sh ./scripts/format.sh",
+    "check": "sh ./scripts/check.sh",
+    "build": "sh ./scripts/build.sh",
     "test": "sh ./scripts/test.sh",
     "node:build": "make -C ./docker build",
     "node:up": "make -C ./docker up",

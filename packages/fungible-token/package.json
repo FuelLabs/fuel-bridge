@@ -3,13 +3,10 @@
   "private": true,
   "main": "dist/index.ts",
   "scripts": {
-    "format": "forc fmt && cargo fmt",
-    "check": "forc fmt --check && cargo fmt --check && cargo clippy --all-features --all-targets -- -D warnings",
-    "build": "forc build && node ./scripts/build.js",
-    "test": "cargo test"
+    "build": "node ./scripts/build.js"
   },
   "dependencies": {
-    "fuels": "0.49.0",
-    "@fuel-bridge/message-predicates": "workspace:*"
+    "@fuel-bridge/message-predicates": "workspace:*",
+    "fuels": "0.0.0-next-20230815002259"
   }
 }

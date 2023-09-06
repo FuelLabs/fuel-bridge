@@ -31,7 +31,7 @@ struct Message {
 /// @notice Common predicates for Fuel inputs
 library CommonPredicates {
     bytes32 public constant CONTRACT_MESSAGE_PREDICATE =
-        0x809f80a984a60d641d4a6d284e3969ff380eb478e587bcba0ed1a3f0ef271ede;
+        0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815;
 }
 
 /// @title FuelMessagePortal

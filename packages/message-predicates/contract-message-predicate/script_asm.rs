@@ -1,7 +1,7 @@
 use fuel_asm::{op, GTFArgs, RegId};
 use sha2::{Digest, Sha256};
 
-const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u8)";
+const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u64)";
 const BYTES_PER_INSTR: u16 = 4;
 
 // Gets the bytecode for the message-to-contract script
@@ -62,17 +62,4 @@ pub fn bytecode() -> Vec<u8> {
     //add referenced data (function selector)
     script.append(&mut fn_sel_hash[0..4].to_vec());
     script
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    // Ensure the script bytecode doesn't change
-    #[test]
-    fn snapshot_script_bytecode() {
-        let bytecode = bytecode();
-        let serialized = hex::encode(&bytecode);
-        insta::assert_snapshot!(serialized);
-    }
 }

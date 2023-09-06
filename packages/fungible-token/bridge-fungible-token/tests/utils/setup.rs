@@ -32,12 +32,12 @@ use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::Fr
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "./bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
+        abi = "packages/fungible-token/bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",
         abi =
-            "./test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
+            "packages/fungible-token/test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
     ),
 );
 
@@ -480,11 +480,8 @@ pub(crate) async fn contract_balance(
         .unwrap()
 }
 
-pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, contract_id: &Bech32ContractId) -> u64 {
-    wallet
-        .get_asset_balance(&AssetId::new(*contract_id.hash()))
-        .await
-        .unwrap()
+pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) -> u64 {
+    wallet.get_asset_balance(asset_id).await.unwrap()
 }
 
 fn keccak_hash<B>(data: B) -> Bytes32
@@ -494,4 +491,8 @@ where
     let mut hasher = Keccak256::new();
     hasher.update(data);
     <[u8; Bytes32::LEN]>::from(hasher.finalize()).into()
+}
+
+pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
+    contract_id.asset_id(&Bits256::zeroed())
 }

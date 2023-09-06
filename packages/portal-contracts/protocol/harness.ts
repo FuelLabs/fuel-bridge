@@ -63,7 +63,7 @@ export async function getContractAddresses(
     FuelChainState: contracts.fuelChainState.address,
     FuelMessagePortal: contracts.fuelMessagePortal.address,
     FuelERC20Gateway: contracts.fuelERC20Gateway.address,
-    ERC20: contracts.erc20.address,
+    ERC20: contracts.erc20?.address,
     FuelChainState_impl: await upgrades.erc1967.getImplementationAddress(
       contracts.fuelChainState.address
     ),
@@ -117,7 +117,10 @@ export async function setupFuel(): Promise<HarnessObject> {
 // The full contract deployment for Fuel.
 export async function deployFuel(deployer?: Signer): Promise<FuelDeployedContracts> {
   // Deploy fuel chain state contract
-  const FuelChainState = await ethers.getContractFactory('FuelChainState', deployer);
+  const FuelChainState = await ethers.getContractFactory(
+    'FuelChainState',
+    deployer
+  );
   const fuelChainState = (await upgrades.deployProxy(FuelChainState, [], {
     initializer: 'initialize',
   })) as FuelChainState;
@@ -138,7 +141,10 @@ export async function deployFuel(deployer?: Signer): Promise<FuelDeployedContrac
   await fuelMessagePortal.deployed();
 
   // Deploy gateway contract for ERC20 bridging
-  const FuelERC20Gateway = await ethers.getContractFactory('FuelERC20Gateway', deployer);
+  const FuelERC20Gateway = await ethers.getContractFactory(
+    'FuelERC20Gateway',
+    deployer
+  );
   const fuelERC20Gateway = (await upgrades.deployProxy(
     FuelERC20Gateway,
     [fuelMessagePortal.address],

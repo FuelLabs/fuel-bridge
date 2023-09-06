@@ -8,8 +8,8 @@ This project includes both frontend and contracts. To begin, install dependencie
 - [PNPM v8.6.6 or latest stable](https://pnpm.io/installation/)
 - [Docker v20.0.21 or latest stable](https://docs.docker.com/get-docker/)
 - [Docker Compose v2.15.1 or latest stable](https://docs.docker.com/get-docker/)
-- [Rust v1.70.0 or latest `stable`](https://www.rust-lang.org/tools/install)
-- [Forc v0.40.1 with latest toolchain](https://install.fuel.network/latest)
+- [Rust v1.72.0 or latest `stable`](https://www.rust-lang.org/tools/install)
+- [Forc v0.44.1 with latest toolchain](https://install.fuel.network/latest)
 
 ## Running Project Locally
 
@@ -69,13 +69,13 @@ To make life easier we added as many useful scripts as possible to our [package.
 pnpm <command name>
 ```
 
-| Script       | Description                                                                            |
-| ------------ | -------------------------------------------------------------------------------------- |
-| `build`      | Run all build commands generating the artifacts needed to run tests or deploy packages.|
-| `test`       | Run all the tests from all the packages                                                |
-| `node:up`    | Run the local network with `fuel-core` and the `ethereum node`.                        |
-| `node:clean` | Stop and remove all development containers that are running locally.                   |
-| `node:stop`  | Stop all containers without removing data                                              |
+| Script       | Description                                                                             |
+| ------------ | --------------------------------------------------------------------------------------- |
+| `build`      | Run all build commands generating the artifacts needed to run tests or deploy packages. |
+| `test`       | Run all the tests from all the packages                                                 |
+| `node:up`    | Run the local network with `fuel-core` and the `ethereum node`.                         |
+| `node:clean` | Stop and remove all development containers that are running locally.                    |
+| `node:stop`  | Stop all containers without removing data                                               |
 
 > Other scripts can be found in [package.json](../package.json).
 

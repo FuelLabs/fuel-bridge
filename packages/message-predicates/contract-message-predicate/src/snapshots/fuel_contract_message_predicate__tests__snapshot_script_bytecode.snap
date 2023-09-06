@@ -1,0 +1,5 @@
+---
+source: packages/message-predicates/contract-message-predicate/src/lib.rs
+expression: serialized
+---
+1a40500091000050504500205049102461540117614c011d5050c02c60453020604940042d45540a24000000b93e6a3d

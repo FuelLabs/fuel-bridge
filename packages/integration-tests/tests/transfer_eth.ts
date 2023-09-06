@@ -13,12 +13,12 @@ import {
 import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import { fuels_parseEther } from '../scripts/utils/parsers';
 import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
-import { waitNextBlock } from '../scripts/utils/fuels/waitNextBlock';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
 import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
 import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
+import { getBlock } from '../scripts/utils/fuels/getBlock';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -137,10 +137,17 @@ describe('Transferring ETH', async function () {
         FUEL_TX_PARAMS
       );
       const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status.type).to.equal('success');
+      expect(fWithdrawTxResult.status).to.equal('success');
 
-      // Build a new block to commit the message
-      const lastBlockId = await waitNextBlock(env, fWithdrawTxResult.blockId);
+      // Wait for the commited block
+      const withdrawBlock = await getBlock(
+        env.fuel.provider.url,
+        fWithdrawTxResult.blockId
+      );
+      const commitHashAtL1 = await waitForBlockCommit(
+        env,
+        withdrawBlock.header.height
+      );
 
       // get message proof
       const messageOutReceipt = getMessageOutReceipt(
@@ -149,7 +156,7 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
         fWithdrawTx.id,
         messageOutReceipt.messageId,
-        lastBlockId
+        commitHashAtL1
       );
 
       // check that the sender balance has decreased by the expected amount
@@ -164,13 +171,11 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
+      // wait for block finalization
+      await waitForBlockFinalization(env, withdrawMessageProof);
+
       // construct relay message proof data
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
-      // commit block to L1
-      await waitForBlockCommit(env, relayMessageParams.rootBlockHeader);
-      // wait for block finalization
-      await waitForBlockFinalization(env, relayMessageParams.rootBlockHeader);
 
       // relay message
       await expect(

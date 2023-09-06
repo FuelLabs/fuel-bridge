@@ -15,6 +15,7 @@ mod success {
 
     use super::*;
 
+    use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
         interface::bridge::{
@@ -70,7 +71,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -115,7 +116,7 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 104);
+        assert_eq!(message_receipt.len().unwrap(), 100);
 
         // message data
         let (selector, to, token, amount) =
@@ -179,7 +180,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -238,7 +239,7 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 104);
+        assert_eq!(message_receipt.len().unwrap(), 100);
 
         // message data
         assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
@@ -288,7 +289,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -321,7 +322,7 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 104);
+        assert_eq!(message_receipt.len().unwrap(), 100);
 
         // message data
         assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
@@ -374,7 +375,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -409,7 +410,7 @@ mod success {
             message_receipt.recipient().unwrap()
         );
         assert_eq!(message_receipt.amount().unwrap(), 0);
-        assert_eq!(message_receipt.len().unwrap(), 104);
+        assert_eq!(message_receipt.len().unwrap(), 100);
 
         // message data
         assert_eq!(selector, decode_hex("0x53ef1461").to_vec());
@@ -455,8 +456,8 @@ mod success {
 }
 
 mod revert {
-
     use super::*;
+    use crate::utils::setup::get_asset_id;
 
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]
@@ -505,7 +506,7 @@ mod revert {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, bridge.contract_id()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);

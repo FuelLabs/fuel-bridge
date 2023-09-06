@@ -18,6 +18,9 @@
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",
+    "@fuel-bridge/fungible-token": "workspace:*",
+    "@fuel-bridge/message-predicates": "workspace:*",
+    "@fuel-bridge/portal-contracts": "workspace:*",
     "@types/chai": "^4.3.1",
     "@types/express": "^4.17.14",
     "@types/mocha": "^9.1.1",
@@ -26,13 +29,9 @@
     "dotenv": "^16.0.3",
     "ethereum-waffle": "^4.0.2",
     "ethers": "^5.7.2",
-    "express": "^4.18.2",
-    "fuels": "0.49.0",
+    "fuels": "0.54.1",
     "mocha": "^10.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6",
-    "@fuel-bridge/portal-contracts": "workspace:*",
-    "@fuel-bridge/message-predicates": "workspace:*",
-    "@fuel-bridge/fungible-token": "workspace:*"
+    "typescript": "^5.1.6"
   }
 }

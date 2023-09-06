@@ -19,6 +19,7 @@
     "script-upgrade": "pnpm hardhat run scripts/upgradeAll.ts",
     "script-verify-source": "pnpm hardhat run scripts/verifySource.ts",
     "script-verify-address": "pnpm hardhat run scripts/verifyAddress.ts",
+    "script-grant-role": "pnpm hardhat run scripts/grantComitterRole.ts",
     "serve-deployments": "pnpm ts-node scripts/serveDeployments.ts",
     "test": "pnpm hardhat test",
     "test-no-compile": "pnpm hardhat test --no-compile",
