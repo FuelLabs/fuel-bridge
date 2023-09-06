@@ -23,7 +23,7 @@ pub struct WithdrawalEvent {
 
 pub struct ClaimRefundEvent {
     amount: b256,
-    originator: b256,
+    from: b256,
     token_address: b256,
     token_id: b256,
 }

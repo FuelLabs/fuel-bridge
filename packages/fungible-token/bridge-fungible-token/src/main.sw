@@ -124,20 +124,20 @@ impl MessageReceiver for Contract {
 
 impl FungibleBridge for Contract {
     #[storage(read, write)]
-    fn claim_refund(originator: b256, token_address: b256, token_id: b256) {
+    fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
-        let stored_amount = storage.refund_amounts.get(originator).get(asset).read();
-        require(stored_amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
+        let amount = storage.refund_amounts.get(from).get(asset).read();
+        require(amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
 
         // reset the refund amount to 0
-        storage.refund_amounts.get(originator).insert(asset, ZERO_B256);
+        storage.refund_amounts.get(from).insert(asset, ZERO_B256);
 
         // send a message to unlock this amount on the base layer gateway contract
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, token_address, token_id), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(from, amount, token_address, token_id), 0);
 
         log(ClaimRefundEvent {
-            amount: stored_amount,
-            originator,
+            amount,
+            from,
             token_address,
             token_id,
         });
