@@ -24,10 +24,11 @@ abi FungibleBridge {
     ///
     /// # Arguments
     ///
-    /// * `originator`: [b256] - the address entitled to a refund
-    /// * `asset`: [b256] - the token to be refunded back to the originator
+    /// * `from`: [b256] - the depositor 's address entitled to a refund
+    /// * `token_address`: [b256] - the token address to be refunded back to the depositor
+    /// * `token_id`: [b256] - the token id to be refunded back to the depositor
     #[storage(read, write)]
-    fn claim_refund(originator: b256, token_address: b256, token_id: b256);
+    fn claim_refund(from: b256, token_address: b256, token_id: b256);
 
     /// Withdraw coins back to the base layer and burn the corresponding proxy coins.
     ///

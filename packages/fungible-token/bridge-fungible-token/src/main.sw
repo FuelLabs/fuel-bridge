@@ -91,9 +91,10 @@ impl MessageReceiver for Contract {
                     Option::None => storage.tokens_minted.write(amount),
                 };
 
-                // when depositing to an address, msg_data.len is 160 bytes.
-                // when depositing to a contract, msg_data.len is 161 bytes.
-                // If msg_data.len is > 161 bytes, we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
+                // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
+                // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
+                // If msg_data.len is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, 
+                // we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
                 match message_data.len {
                     ADDRESS_DEPOSIT_DATA_LEN => {
                         transfer(message_data.to, asset_id, amount);
