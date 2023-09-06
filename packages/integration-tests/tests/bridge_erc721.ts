@@ -41,7 +41,7 @@ const signerToHexTokenId = (signer: { address: string }) => {
 };
 
 describe('Bridging ERC721 tokens', async function () {
-  // Timeout 6 minutes
+  // Timeout 6 minutes 40 seconds
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
   const DECIMAL_DIFF = 1_000_000_000;
