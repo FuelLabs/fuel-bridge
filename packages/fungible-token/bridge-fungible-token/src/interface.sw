@@ -53,7 +53,7 @@ abi FungibleBridge {
     /// Get the address of the gateway that holds the bridged tokens
     fn bridged_token_gateway() -> b256;
 
-    // Gets the sub_id component of the preimage of an asset_id
+    // Recovers the sub_id used to generate an asset_id (= sha256(contract_id, sub_id))
     #[storage(read)]
     fn asset_to_sub_id(asset_id: b256) -> b256;
 }
