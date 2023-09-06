@@ -65,9 +65,8 @@ impl MessageReceiver for Contract {
         let sub_id: SubId = message_data.token_id;
         let asset_id = sha256((contract_id(), sub_id));
 
-        match storage.asset_to_sub_id.get(asset_id).try_read() {
-            Option::Some(_) => {}, // asset sub id is already registered
-            Option::None => storage.asset_to_sub_id.insert(asset_id, sub_id),
+        if storage.asset_to_sub_id.get(asset_id).try_read().is_none() {
+            storage.asset_to_sub_id.insert(asset_id, sub_id);
         };
 
         // register a refund if tokens don't match
