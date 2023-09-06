@@ -24,7 +24,7 @@ abi FungibleBridge {
     ///
     /// # Arguments
     ///
-    /// * `from`: [b256] - the depositor 's address entitled to a refund
+    /// * `from`: [b256] - the depositor's address entitled to a refund
     /// * `token_address`: [b256] - the token address to be refunded back to the depositor
     /// * `token_id`: [b256] - the token id to be refunded back to the depositor
     #[storage(read, write)]
