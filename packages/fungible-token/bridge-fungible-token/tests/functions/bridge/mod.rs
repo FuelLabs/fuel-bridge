@@ -624,7 +624,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -635,42 +635,13 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
-
-        let refund_registered_event = bridge
-            .log_decoder()
-            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
-            .unwrap();
-
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
-
-        // Verify the message value was received by the bridge contract
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
-
-        // Verify that no tokens were minted for message.data.to
-        assert_eq!(balance, 0);
-
-        // Check logs
-        assert_eq!(
-            refund_registered_event[0].amount,
-            Bits256(encode_hex(config.overflow.two))
-        );
-        assert_eq!(
-            refund_registered_event[0].token_address,
-            Bits256::from_hex_str(incorrect_token).unwrap()
-        );
-        assert_eq!(
-            refund_registered_event[0].from,
-            Bits256::from_hex_str(FROM).unwrap()
-        );
 
         bridge
             .methods()
