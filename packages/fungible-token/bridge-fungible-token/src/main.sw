@@ -153,7 +153,7 @@ impl FungibleBridge for Contract {
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
         let origin_contract_id = sha256((contract_id(), sub_id));
         require(asset_id == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
-    
+
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
         storage.tokens_minted.write(storage.tokens_minted.read() - amount);
