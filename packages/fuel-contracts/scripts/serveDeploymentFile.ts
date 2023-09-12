@@ -1,6 +1,6 @@
 import express, { Express } from 'express';
 
-const port = process.env.SERVE_PORT || 8080;
+const port = process.env.SERVE_PORT || 8081;
 const app: Express = express();
 
 app.use('/', express.static('deployments'));

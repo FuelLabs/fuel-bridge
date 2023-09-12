@@ -5,7 +5,6 @@ node_modules
 
 # local deployments
 deployments/deployments.local.json
-deployments/deployments.json
 
 coverage
 coverage.json

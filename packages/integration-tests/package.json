@@ -4,15 +4,14 @@
   "description": "The Fuel Messaging Bridge integration tests.",
   "private": true,
   "license": "APACHE-2.0",
+  "main": "scripts/index.ts",
   "scripts": {
     "format": "prettier --write ./",
     "check": "prettier --check ./",
     "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
     "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
-    "transfer": "pnpm ts-node scripts/transfer.ts",
-    "deployFuelToken": "pnpm ts-node scripts/deployFuelTokenContract.ts",
-    "serveDeployments": "pnpm ts-node scripts/serveDeployments.ts"
+    "transfer": "pnpm ts-node scripts/transfer.ts"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
@@ -22,7 +21,6 @@
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/portal-contracts": "workspace:*",
     "@types/chai": "^4.3.1",
-    "@types/express": "^4.17.14",
     "@types/mocha": "^9.1.1",
     "axios": "^0.27.2",
     "chai": "^4.3.6",

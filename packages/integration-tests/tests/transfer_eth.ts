@@ -10,7 +10,7 @@ import {
   BaseAssetId,
   MessageProof,
 } from 'fuels';
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
+import { TestEnvironment, setupEnvironment } from '../scripts/utils/setup';
 import { fuels_parseEther } from '../scripts/utils/parsers';
 import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
 import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';

@@ -1,5 +1,5 @@
 import { ContractFactory, TxParams, bn } from 'fuels';
-import { TestEnvironment } from '../../setup';
+import { TestEnvironment } from '../setup';
 import { Token } from '@fuel-bridge/portal-contracts';
 import { Contract } from 'fuels';
 

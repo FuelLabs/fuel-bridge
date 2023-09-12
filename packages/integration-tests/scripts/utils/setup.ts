@@ -8,7 +8,7 @@ import {
   Provider as FuelProvider,
   WalletUnlocked as FuelWallet,
 } from 'fuels';
-import { fuels_parseEther, fuels_formatEther } from './utils/parsers';
+import { fuels_parseEther, fuels_formatEther } from './parsers';
 import {
   FuelChainState,
   FuelChainState__factory,

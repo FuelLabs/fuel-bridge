@@ -1,4 +1,4 @@
-import { TestEnvironment } from '../../setup';
+import { TestEnvironment } from '../setup';
 import { BytesLike, MessageProof, arrayify, bn } from 'fuels';
 import { debug } from '../logs';
 

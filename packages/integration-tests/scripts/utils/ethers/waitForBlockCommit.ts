@@ -1,4 +1,4 @@
-import { TestEnvironment } from '../../setup';
+import { TestEnvironment } from '../setup';
 import { bn } from 'fuels';
 import { debug } from '../logs';
 import { delay } from '../delay';

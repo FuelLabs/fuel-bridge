@@ -1,6 +1,6 @@
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
+import { Address, BN, TransactionStatus } from 'fuels';
+import { TestEnvironment, setupEnvironment } from './utils/setup';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
 import { logETHBalances } from './utils/logs';
 import { waitForMessage } from './utils/fuels/waitForMessage';
@@ -82,7 +82,7 @@ const ETH_AMOUNT = '0.1';
   );
   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
   if (
-    fWithdrawTxResult.status !== SimplifiedTransactionStatusNameEnum.success
+    fWithdrawTxResult.status !== TransactionStatus.success
   ) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw ETH back to base layer');

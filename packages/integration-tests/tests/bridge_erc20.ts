@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { BigNumber, Signer } from 'ethers';
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
+import { TestEnvironment, setupEnvironment } from '../scripts/utils/setup';
 import { Token } from '@fuel-bridge/portal-contracts';
 import {
   AbstractAddress,
