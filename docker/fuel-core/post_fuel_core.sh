@@ -20,8 +20,9 @@ curl \
 echo " --- --- --- connected to http://$FUEL_IP:$FUEL_PORT"
 # this is needed to remove "/deployments.*.json" from variable DEPLOYMENTS_HTTP
 DEPLOYMENTS_HTTP_DIR=$(dirname "$DEPLOYMENTS_HTTP")
-# TODO: pass env variables in a better way
 echo " --- --- --- executing deploy fuel contracts"
-echo " --- --- --- HTTP_DEPLOYER=$DEPLOYMENTS_HTTP_DIR HTTP_ETHEREUM_CLIENT=$L1_CHAIN_HTTP HTTP_FUEL_CLIENT=http://$FUEL_IP:$FUEL_PORT/graphql"
-cd ./project && HTTP_DEPLOYER="$DEPLOYMENTS_HTTP_DIR" HTTP_ETHEREUM_CLIENT="$L1_CHAIN_HTTP" HTTP_FUEL_CLIENT="http://$FUEL_IP:$FUEL_PORT/graphql" pnpm --filter @fuel-bridge/fuel-contracts serveDeployment
+export HTTP_DEPLOYER=$DEPLOYMENTS_HTTP_DIR
+export HTTP_ETHEREUM_CLIENT=$L1_CHAIN_HTTP
+export HTTP_FUEL_CLIENT="http://$FUEL_IP:$FUEL_PORT/graphql"
+cd ./project && pnpm --filter @fuel-bridge/fuel-contracts serveDeployment
 echo " --- --- --- executed deploy fuel contracts"
