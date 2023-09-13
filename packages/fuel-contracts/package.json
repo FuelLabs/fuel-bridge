@@ -7,7 +7,6 @@
   "scripts": {
     "format": "prettier --write ./",
     "check": "prettier --check ./",
-    "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "deployFuelFungibleToken": "pnpm ts-node scripts/deployFuelFungibleToken.ts",
     "serveDeploymentFile": "pnpm ts-node scripts/serveDeploymentFile.ts",
     "serveDeployment": "run-s deployFuelFungibleToken serveDeploymentFile"
