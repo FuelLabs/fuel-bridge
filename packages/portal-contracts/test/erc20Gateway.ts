@@ -104,7 +104,7 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
   return 0;
 }
 
-describe.only('ERC20 Gateway', async () => {
+describe('ERC20 Gateway', async () => {
   let env: HarnessObject;
 
   // Contract constants
