@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
-import { BigNumber as BN, utils } from 'ethers';
+import { BigNumber as BN, constants, utils } from 'ethers';
 import { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import { HarnessObject, setupFuel } from '../protocol/harness';
@@ -1145,16 +1145,11 @@ describe.only('ERC20 Gateway', async () => {
   });
 
   describe('rescueETH()', async () => {
-    const defaultAdminRole =
-      '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
-
     it('Should allow to withdraw ETH sent by accident', async () => {
       const value = utils.parseEther('1'); // forwarded ether by accident
-      const toAddress = randomBytes32();
       const depositAmount = 320;
+      const toAddress = randomBytes32();
+
       await expect(() =>
         env.fuelERC20Gateway.deposit(
           toAddress,
@@ -1164,12 +1159,19 @@ describe.only('ERC20 Gateway', async () => {
           { value }
         )
       ).to.changeEtherBalance(env.fuelERC20Gateway, value);
-
       await expect(() =>
         env.fuelERC20Gateway.connect(env.deployer).rescueETH()
       ).to.changeEtherBalance(env.deployer, value);
     });
 
-    it('Should reject non-admin calls');
+    it('Should reject non-admin calls', async () => {
+      const mallory = env.signers[1];
+      const malloryAddr = (await mallory.getAddress()).toLowerCase();
+      const defaultAdminRole = constants.HashZero;
+      const error = `AccessControl: account ${malloryAddr} is missing role ${defaultAdminRole}`;
+      await expect(
+        env.fuelERC20Gateway.connect(mallory).rescueETH()
+      ).to.be.revertedWith(error);
+    });
   });
 });
