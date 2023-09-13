@@ -10,7 +10,8 @@ services:
       # to allow coping portal-contracts on Dockerfile
       context: ../
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8081/deployments.local.json"]
+      test:
+        ['CMD', 'curl', '-f', 'http://localhost:8081/deployments.local.json']
       interval: 20s
       timeout: 10s
       retries: 10

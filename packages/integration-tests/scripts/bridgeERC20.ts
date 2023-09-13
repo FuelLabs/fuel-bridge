@@ -114,9 +114,7 @@ const TOKEN_AMOUNT = '10';
   );
   const fMessageRelayTxResult = await fMessageRelayTx.waitForResult();
 
-  if (
-    fMessageRelayTxResult.status !== TransactionStatus.success
-  ) {
+  if (fMessageRelayTxResult.status !== TransactionStatus.success) {
     console.log(fMessageRelayTxResult.status);
     console.log(fMessageRelayTxResult);
     console.log(fMessageRelayTxResult.transaction.inputs);
@@ -149,9 +147,7 @@ const TOKEN_AMOUNT = '10';
     .txParams(FUEL_TX_PARAMS);
   const fWithdrawTx = await scope.call();
   const fWithdrawTxResult = fWithdrawTx.transactionResult;
-  if (
-    fWithdrawTxResult.status !== TransactionStatus.success
-  ) {
+  if (fWithdrawTxResult.status !== TransactionStatus.success) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw tokens to ethereum');
   }

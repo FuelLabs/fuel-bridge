@@ -81,9 +81,7 @@ const ETH_AMOUNT = '0.1';
     FUEL_TX_PARAMS
   );
   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-  if (
-    fWithdrawTxResult.status !== TransactionStatus.success
-  ) {
+  if (fWithdrawTxResult.status !== TransactionStatus.success) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw ETH back to base layer');
   }
