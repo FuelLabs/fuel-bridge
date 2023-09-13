@@ -12,7 +12,7 @@ struct FuelBlockHeader {
     // Merkle root of all previous consensus header hashes (not including this block)
     bytes32 prevRoot;
     // Height of this block
-    uint64 height;
+    uint32 height;
     // Time this block was created, in TAI64 format
     uint64 timestamp;
     /////////////////
@@ -62,13 +62,7 @@ library FuelBlockHeaderLib {
     /// @param header The block header structure.
     /// @return The serialized block consensus header.
     function serializeConsensusHeader(FuelBlockHeader memory header) internal pure returns (bytes memory) {
-        return
-            abi.encodePacked(
-                header.prevRoot,
-                (uint32)(header.height),
-                header.timestamp,
-                computeApplicationHeaderHash(header)
-            );
+        return abi.encodePacked(header.prevRoot, header.height, header.timestamp, computeApplicationHeaderHash(header));
     }
 
     /// @notice Produce the block consensus header hash.
