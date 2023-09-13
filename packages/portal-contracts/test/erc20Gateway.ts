@@ -1,7 +1,7 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
-import { BigNumber as BN } from 'ethers';
+import { BigNumber as BN, utils } from 'ethers';
 import { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import { HarnessObject, setupFuel } from '../protocol/harness';
@@ -104,7 +104,7 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
   return 0;
 }
 
-describe('ERC20 Gateway', async () => {
+describe.only('ERC20 Gateway', async () => {
   let env: HarnessObject;
 
   // Contract constants
@@ -1142,5 +1142,34 @@ describe('ERC20 Gateway', async () => {
         await env.fuelERC20Gateway.hasRole(pauserRole, env.addresses[2])
       ).to.equal(false);
     });
+  });
+
+  describe('rescueETH()', async () => {
+    const defaultAdminRole =
+      '0x0000000000000000000000000000000000000000000000000000000000000000';
+    const pauserRole = ethers.utils.keccak256(
+      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
+    );
+
+    it('Should allow to withdraw ETH sent by accident', async () => {
+      const value = utils.parseEther('1'); // forwarded ether by accident
+      const toAddress = randomBytes32();
+      const depositAmount = 320;
+      await expect(() =>
+        env.fuelERC20Gateway.deposit(
+          toAddress,
+          tokenAddress,
+          fuelTokenTarget2,
+          depositAmount,
+          { value }
+        )
+      ).to.changeEtherBalance(env.fuelERC20Gateway, value);
+
+      await expect(() =>
+        env.fuelERC20Gateway.connect(env.deployer).rescueETH()
+      ).to.changeEtherBalance(env.deployer, value);
+    });
+
+    it('Should reject non-admin calls');
   });
 });
