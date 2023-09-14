@@ -48,10 +48,7 @@ echo "FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS: $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRES
 echo "L1_CHAIN_HTTP: $L1_CHAIN_HTTP"
 
 # start the Fuel client
-#--db-path ${FUEL_DB_PATH}
-echo "Starting fuel node."
-sh ./post_fuel_core.sh & \
-  exec /root/fuel-core run \
+exec /root/fuel-core run \
     --ip $FUEL_IP \
     --port $FUEL_PORT \
     --db-type in-memory \

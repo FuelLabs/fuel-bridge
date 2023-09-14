@@ -1,23 +1,24 @@
 /// @dev The Fuel testing setup.
 /// A set of useful helper methods for setting up the integration test environment.
-import axios from 'axios';
-import { ethers, Signer as EthSigner } from 'ethers';
-import { Provider as EthProvider } from '@ethersproject/providers';
-import {
-  Wallet,
-  Provider as FuelProvider,
-  WalletUnlocked as FuelWallet,
-} from 'fuels';
-import { fuels_parseEther, fuels_formatEther } from './parsers';
-import {
+import type { Provider as EthProvider } from '@ethersproject/providers';
+import type {
   FuelChainState,
-  FuelChainState__factory,
   FuelMessagePortal,
-  FuelMessagePortal__factory,
   FuelERC20Gateway,
+} from '@fuel-bridge/portal-contracts';
+import {
+  FuelChainState__factory,
+  FuelMessagePortal__factory,
   FuelERC20Gateway__factory,
 } from '@fuel-bridge/portal-contracts';
 import * as dotenv from 'dotenv';
+import type { Signer as EthSigner } from 'ethers';
+import { ethers } from 'ethers';
+import type { WalletUnlocked as FuelWallet } from 'fuels';
+import { Wallet, Provider as FuelProvider } from 'fuels';
+
+import { fuels_parseEther, fuels_formatEther } from './parsers';
+
 dotenv.config();
 
 // Default config values
@@ -192,9 +193,11 @@ export async function setupEnvironment(
   ) {
     let deployerAddresses: any = null;
     try {
-      deployerAddresses = (
-        await axios.get(http_deployer + '/deployments.local.json')
-      ).data;
+      deployerAddresses = await fetch(
+        http_deployer + '/deployments.local.json'
+      ).then((resp) => {
+        return resp.json();
+      });
     } catch (e) {
       throw new Error(
         'Failed to connect to the deployer at (' +
@@ -225,16 +228,16 @@ export async function setupEnvironment(
   }
 
   // Connect existing contracts
-  let eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
+  const eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
     eth_fuelChainStateAddress,
     eth_deployer
   );
-  let eth_fuelMessagePortal: FuelMessagePortal =
+  const eth_fuelMessagePortal: FuelMessagePortal =
     FuelMessagePortal__factory.connect(
       eth_fuelMessagePortalAddress,
       eth_deployer
     );
-  let eth_fuelERC20Gateway: FuelERC20Gateway =
+  const eth_fuelERC20Gateway: FuelERC20Gateway =
     FuelERC20Gateway__factory.connect(
       eth_fuelERC20GatewayAddress,
       eth_deployer

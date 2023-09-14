@@ -1,8 +1,11 @@
 {
-  "plugins": ["@fuels/eslint-config"],
+  "extends": ["plugin:@fuels/base"],
   "rules": {
-    "no-await-in-loop": 0,
-    "prefer-destructuring": 0,
-    "no-bitwise": 0
+    "@typescript-eslint/no-explicit-any": "off",
+    "import/prefer-default-export": "off",
+    "import/no-named-as-default": "off",
+    "import/export": "off",
+    "import/default": "off",
+    "no-console": "off"
   }
 }

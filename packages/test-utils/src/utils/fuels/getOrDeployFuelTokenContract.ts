@@ -1,14 +1,14 @@
-import { ContractFactory, TxParams, bn } from 'fuels';
-import { TestEnvironment } from '../setup';
-import { Token } from '@fuel-bridge/portal-contracts';
-import { Contract } from 'fuels';
-
 import {
   fungibleTokenBinary,
   fungibleTokenABI,
 } from '@fuel-bridge/fungible-token';
+import type { Token } from '@fuel-bridge/portal-contracts';
+import type { TxParams } from 'fuels';
+import { ContractFactory, bn, Contract } from 'fuels';
+
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
+import type { TestEnvironment } from '../setup';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
@@ -39,7 +39,7 @@ export async function getOrDeployFuelTokenContract(
   }
   if (!fuelTestToken) {
     debug(`Creating Fuel fungible token contract to test with...`);
-    let bytecodeHex = fungibleTokenBinary;
+    const bytecodeHex = fungibleTokenBinary;
     debug('Replace ECR20 contract id');
     debug('Deploy contract on Fuel');
     const factory = new ContractFactory(

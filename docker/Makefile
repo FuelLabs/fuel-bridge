@@ -8,7 +8,7 @@ stop:
 	docker compose stop
 
 clean:
-	docker compose down --rmi local -v
+	docker compose down --rmi local -v --remove-orphans
 
 logs:
 	docker compose logs -f

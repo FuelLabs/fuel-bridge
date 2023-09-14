@@ -20,8 +20,9 @@
   "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@fuels/prettier-config": "^0.0.2",
-    "@fuels/ts-config": "^0.0.2",
+    "@fuels/eslint-plugin": "0.0.9",
+    "@fuels/prettier-config": "0.0.9",
+    "@fuels/ts-config": "0.0.9",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^v1.0.0-rc.1",
     "turbo": "^1.10.7"

@@ -1,12 +1,13 @@
+import type { Token } from '@fuel-bridge/portal-contracts';
+import type { Signer } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
+import type { WalletUnlocked } from 'fuels';
+
 import {
   ethers_formatToken,
   fuels_formatEther,
   fuels_formatToken,
 } from './parsers';
-import { Signer } from 'ethers';
-import { WalletUnlocked } from 'fuels';
-import { Token } from '@fuel-bridge/portal-contracts';
 
 export const LOG_CONFIG = {
   debug: process.env.DEBUG || true,

@@ -1,15 +1,19 @@
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import {
+  setupEnvironment,
+  createRelayMessageParams,
+  logETHBalances,
+  waitForMessage,
+  fuels_parseEther,
+  getMessageOutReceipt,
+  FUEL_MESSAGE_TIMEOUT_MS,
+  FUEL_TX_PARAMS,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+  getBlock,
+} from '@fuel-bridge/test-utils';
 import { parseEther } from 'ethers/lib/utils';
 import { Address, BN, TransactionStatus } from 'fuels';
-import { TestEnvironment, setupEnvironment } from './utils/setup';
-import { createRelayMessageParams } from './utils/ethers/createRelayParams';
-import { logETHBalances } from './utils/logs';
-import { waitForMessage } from './utils/fuels/waitForMessage';
-import { fuels_parseEther } from './utils/parsers';
-import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
-import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
-import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
-import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
-import { getBlock } from './utils/fuels/getBlock';
 
 const ETH_AMOUNT = '0.1';
 

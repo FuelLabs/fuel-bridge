@@ -1,5 +1,6 @@
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import { setupEnvironment } from '@fuel-bridge/test-utils';
 import { Address, bn } from 'fuels';
-import { TestEnvironment, setupEnvironment } from './utils/setup';
 
 (async function () {
   const env: TestEnvironment = await setupEnvironment({});

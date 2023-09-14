@@ -20,6 +20,7 @@
     "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/portal-contracts": "workspace:*",
+    "@fuel-bridge/test-utils": "workspace:*",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
     "axios": "^0.27.2",
