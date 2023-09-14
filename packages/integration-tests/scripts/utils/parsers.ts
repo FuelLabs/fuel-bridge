@@ -2,6 +2,7 @@
 /// A set of useful helper methods for the integration test environment.
 import { ethers, BigNumber } from 'ethers';
 import { BN } from 'fuels';
+
 import { ETHEREUM_ETH_DECIMALS, FUEL_ETH_DECIMALS } from './constants';
 
 // Parse ETH value as a string
@@ -37,7 +38,7 @@ export function ethers_parseToken(
   value: string,
   decimals: number = 18
 ): BigNumber {
-  let val = ethers.utils.parseEther(value);
+  const val = ethers.utils.parseEther(value);
   return val.div(10 ** (ETHEREUM_ETH_DECIMALS - decimals));
 }
 

@@ -1,5 +1,5 @@
-const { hexlify } = require('fuels');
 const { readFileSync, writeFileSync, mkdirSync } = require('fs');
+const { hexlify } = require('fuels');
 const { join } = require('path');
 // Set paths
 const BRIDGE_FUNGIBLE_PATH = join(

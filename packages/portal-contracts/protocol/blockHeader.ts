@@ -1,4 +1,5 @@
 import { utils } from 'ethers';
+
 import hash from './cryptography';
 
 // The BlockHeader structure.

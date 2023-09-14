@@ -1,7 +1,9 @@
-import { TestEnvironment } from '../../setup';
-import { Token, Token__factory } from '@fuel-bridge/portal-contracts';
-import { ethers_parseToken } from '../parsers';
+import type { Token } from '@fuel-bridge/portal-contracts';
+import { Token__factory } from '@fuel-bridge/portal-contracts';
+
+import type { TestEnvironment } from '../../setup';
 import { debug } from '../logs';
+import { ethers_parseToken } from '../parsers';
 
 const { ETH_ERC20_TOKEN_ADDRESS } = process.env;
 

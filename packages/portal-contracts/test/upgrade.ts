@@ -1,8 +1,10 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
-import { HarnessObject, setupFuel, upgradeFuel } from '../protocol/harness';
-import { UpgradeableTester } from '../typechain/UpgradeableTester.d';
+
+import type { HarnessObject } from '../protocol/harness';
+import { setupFuel, upgradeFuel } from '../protocol/harness';
+import type { UpgradeableTester } from '../typechain/UpgradeableTester.d';
 
 chai.use(solidity);
 const { expect } = chai;

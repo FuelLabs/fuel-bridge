@@ -1,11 +1,10 @@
-import hardhat, { ethers } from 'hardhat';
 import { promises as fs } from 'fs';
+import hardhat, { ethers } from 'hardhat';
 import fetch from 'node-fetch';
 import readline from 'readline';
-import {
-  DeployedContractAddresses,
-  getBlankAddresses,
-} from '../protocol/harness';
+
+import type { DeployedContractAddresses } from '../protocol/harness';
+import { getBlankAddresses } from '../protocol/harness';
 
 // Script utils for deploy the Fuel v2 system
 
@@ -172,7 +171,7 @@ export async function waitForConfirmations(
       await sleep(5000);
       currentBlock = await ethers.provider.getBlockNumber();
     }
-    console.log(''); // eslint-disable-line no-console
+    console.log('');
   }
 }
 
@@ -181,7 +180,7 @@ async function verifyEtherscan(contractName: string, contractAddress: string) {
   try {
     console.log(
       `\nPublishing ${contractName} source verification on Etherscan...`
-    ); // eslint-disable-line no-console
+    );
     await hardhat.run('verify:verify', {
       address: contractAddress,
       constructorArguments: [],
@@ -189,7 +188,7 @@ async function verifyEtherscan(contractName: string, contractAddress: string) {
   } catch (e) {
     let message = 'An uknown issue occurred while verifying on Etherscan.';
     if (e instanceof Error) message = e.message;
-    console.error(message); // eslint-disable-line no-console
+    console.error(message);
   }
 }
 
@@ -201,7 +200,7 @@ async function verifySourcifyFromEtherscan(
   try {
     console.log(
       `\nVerifying ${contractName} source on Sourcify from Etherscan...`
-    ); // eslint-disable-line no-console
+    );
     const network = await ethers.provider.getNetwork();
     const body = { address: contractAddress, chain: network.chainId };
     const response = await fetch(
@@ -216,16 +215,16 @@ async function verifySourcifyFromEtherscan(
     if (data.error) throw new Error(data.error);
     if (data.result) {
       if (data.result.storageTimestamp)
-        console.log('Contract source code already verified'); // eslint-disable-line no-console
+        console.log('Contract source code already verified');
       if (data.result.status == 'perfect')
-        console.log('Contract source code perfectly verified!'); // eslint-disable-line no-console
+        console.log('Contract source code perfectly verified!');
       if (data.result.status == 'partial')
-        console.log('Contract source code partially verified.'); // eslint-disable-line no-console
+        console.log('Contract source code partially verified.');
     }
   } catch (e) {
     let message = 'An uknown issue occurred while verifying on Sourcify.';
     if (e instanceof Error) message = e.message;
-    console.error(message); // eslint-disable-line no-console
+    console.error(message);
   }
 }
 

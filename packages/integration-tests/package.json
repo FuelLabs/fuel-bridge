@@ -5,8 +5,6 @@
   "private": true,
   "license": "APACHE-2.0",
   "scripts": {
-    "format": "prettier --write ./",
-    "check": "prettier --check ./",
     "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
     "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
@@ -21,7 +19,6 @@
     "@fuel-bridge/portal-contracts": "workspace:*",
     "@types/chai": "^4.3.1",
     "@types/mocha": "^9.1.1",
-    "axios": "^0.27.2",
     "chai": "^4.3.6",
     "dotenv": "^16.0.3",
     "ethereum-waffle": "^4.0.2",

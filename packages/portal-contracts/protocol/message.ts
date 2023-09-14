@@ -1,4 +1,6 @@
-import { BigNumber as BN, ethers } from 'ethers';
+import type { BigNumber as BN } from 'ethers';
+import { ethers } from 'ethers';
+
 import hash from './cryptography';
 
 // The Message structure.

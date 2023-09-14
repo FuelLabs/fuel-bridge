@@ -1,4 +1,5 @@
 import { ethers } from 'hardhat';
+
 import {
   loadDeploymentsFile,
   getNetworkName,
@@ -26,7 +27,7 @@ async function main() {
   const networkName = await getNetworkName();
 
   // Get confirmation for proxy contracts
-  console.log(''); // eslint-disable-line no-console
+  console.log('');
   const confirmProxies = await confirmationPrompt(
     `Are you sure you want to publish the verification of source code for ALL contract proxies on "${networkName}" (Y/n)? `
   );
@@ -35,7 +36,7 @@ async function main() {
   if (confirmProxies) await publishProxySourceVerification(deployments);
 
   // Get confirmation for implementation contracts
-  console.log(''); // eslint-disable-line no-console
+  console.log('');
   const confirmFuelChainStateImpl = await confirmationPrompt(
     `Are you sure you want to publish the verification of source code for the FuelChainState implementation on "${networkName}" (Y/n)? `
   );
@@ -58,6 +59,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error); // eslint-disable-line no-console
+    console.error(error);
     process.exit(1);
   });

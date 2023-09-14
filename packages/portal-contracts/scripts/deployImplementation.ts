@@ -1,4 +1,5 @@
 import { ethers, upgrades } from 'hardhat';
+
 import {
   isNetworkVerifiable,
   publishImplementationSourceVerification,
@@ -36,7 +37,7 @@ async function main() {
   const deployments = await loadDeploymentsFile();
 
   // Get confirmation
-  console.log(''); // eslint-disable-line no-console
+  console.log('');
   const confirmFuelChainState = await confirmationPrompt(
     `Are you sure you want to deploy the implementation for FuelChainState on "${networkName}" (Y/n)? `
   );
@@ -50,7 +51,7 @@ async function main() {
   // Deploy FuelChainState implementation
   let fuelChainStateAddress = null;
   if (confirmFuelChainState) {
-    console.log('Deploying FuelChainState implementation...'); // eslint-disable-line no-console
+    console.log('Deploying FuelChainState implementation...');
     const FuelChainState = await ethers.getContractFactory('FuelChainState');
     fuelChainStateAddress = (
       await upgrades.deployImplementation(FuelChainState)
@@ -60,7 +61,7 @@ async function main() {
   // Deploy FuelMessagePortal implementation
   let fuelMessagePortalAddress = null;
   if (confirmFuelMessagePortal) {
-    console.log('Deploying FuelMessagePortal implementation...'); // eslint-disable-line no-console
+    console.log('Deploying FuelMessagePortal implementation...');
     const FuelMessagePortal = await ethers.getContractFactory(
       'FuelMessagePortal'
     );
@@ -72,7 +73,7 @@ async function main() {
   // Deploy FuelERC20Gateway implementation
   let fuelERC20GatewayAddress = null;
   if (confirmFuelERC20Gateway) {
-    console.log('Deploying FuelERC20Gateway implementation...'); // eslint-disable-line no-console
+    console.log('Deploying FuelERC20Gateway implementation...');
     const FuelERC20Gateway = await ethers.getContractFactory(
       'FuelERC20Gateway'
     );
@@ -85,17 +86,17 @@ async function main() {
   const deployedBlock = await ethers.provider.getBlockNumber();
 
   // Emit the addresses of the deployed contracts
-  console.log('Successfully deployed contract implementations!\n'); // eslint-disable-line no-console
+  console.log('Successfully deployed contract implementations!\n');
   if (fuelChainStateAddress) {
-    console.log(`FuelChainState: ${fuelChainStateAddress}`); // eslint-disable-line no-console
+    console.log(`FuelChainState: ${fuelChainStateAddress}`);
     deployments.FuelChainState_impl = fuelChainStateAddress;
   }
   if (fuelMessagePortalAddress) {
-    console.log(`FuelMessagePortal: ${fuelMessagePortalAddress}`); // eslint-disable-line no-console
+    console.log(`FuelMessagePortal: ${fuelMessagePortalAddress}`);
     deployments.FuelMessagePortal_impl = fuelMessagePortalAddress;
   }
   if (fuelERC20GatewayAddress) {
-    console.log(`FuelERC20Gateway: ${fuelERC20GatewayAddress}`); // eslint-disable-line no-console
+    console.log(`FuelERC20Gateway: ${fuelERC20GatewayAddress}`);
     deployments.FuelERC20Gateway_impl = fuelERC20GatewayAddress;
   }
 
@@ -104,7 +105,7 @@ async function main() {
 
   // Confirm source verification/publishing
   if (await isNetworkVerifiable()) {
-    console.log(''); // eslint-disable-line no-console
+    console.log('');
     const confirmVerification = await confirmationPrompt(
       `Do you want to publish contract source code for verification (Y/n)? `
     );
@@ -123,6 +124,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error); // eslint-disable-line no-console
+    console.error(error);
     process.exit(1);
   });

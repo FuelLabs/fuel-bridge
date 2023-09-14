@@ -16,12 +16,12 @@ async function main() {
   // Get the contract address to verify
   console.log(
     `\nPlease enter the deployed contract address you would like to verify the source for.`
-  ); // eslint-disable-line no-console
+  );
   const contractAddress = await contractAddressPrompt();
 
   // Verify to the project source files
   try {
-    console.log(`\nVerifying deployed contract source...`); // eslint-disable-line no-console
+    console.log(`\nVerifying deployed contract source...`);
     await hardhat.run('verify', {
       address: contractAddress,
       constructorArguments: [],
@@ -29,7 +29,7 @@ async function main() {
   } catch (e) {
     let message = 'An uknown issue occurred while verifying deployed contract.';
     if (e instanceof Error) message = e.message;
-    console.error(message); // eslint-disable-line no-console
+    console.error(message);
   }
 }
 
@@ -40,7 +40,7 @@ export async function contractAddressPrompt(): Promise<string> {
   );
   if (contractAddress === null) {
     do {
-      console.log('Invalid contract address.'); // eslint-disable-line no-console
+      console.log('Invalid contract address.');
       contractAddress = validateContractAddress(
         await textPrompt('Contract address: ')
       );
@@ -67,13 +67,15 @@ export async function textPrompt(prompt: string): Promise<string> {
 function validateContractAddress(address: string): string | null {
   try {
     return ethers.utils.getAddress(address.toLowerCase());
-  } catch (e) {}
+  } catch (e) {
+    /* empty */
+  }
   return null;
 }
 
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error); // eslint-disable-line no-console
+    console.error(error);
     process.exit(1);
   });

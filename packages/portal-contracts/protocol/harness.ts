@@ -1,11 +1,12 @@
 /// @dev The Fuel testing harness.
 /// A set of useful helper methods for testing Fuel.
+import type { BigNumber as BN, Signer } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
-import { BigNumber as BN, Signer } from 'ethers';
-import { FuelChainState } from '../typechain/FuelChainState.d';
-import { FuelMessagePortal } from '../typechain/FuelMessagePortal.d';
-import { FuelERC20Gateway } from '../typechain/FuelERC20Gateway.d';
-import { Token } from '../typechain/Token.d';
+
+import type { FuelChainState } from '../typechain/FuelChainState.d';
+import type { FuelERC20Gateway } from '../typechain/FuelERC20Gateway.d';
+import type { FuelMessagePortal } from '../typechain/FuelMessagePortal.d';
+import type { Token } from '../typechain/Token.d';
 
 // All deployable contracts.
 export interface DeployedContracts {

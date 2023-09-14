@@ -1,5 +1,7 @@
-import { TestEnvironment } from '../../setup';
-import { BytesLike, MessageProof, arrayify, bn } from 'fuels';
+import type { MessageProof } from 'fuels';
+import { arrayify } from 'fuels';
+
+import type { TestEnvironment } from '../../setup';
 import { debug } from '../logs';
 
 export async function waitForBlockFinalization(

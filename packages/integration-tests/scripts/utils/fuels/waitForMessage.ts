@@ -1,6 +1,12 @@
 /// @dev The Fuel testing utils.
 /// A set of useful helper methods for the integration test environment.
-import { Provider as FuelProvider, BN, AbstractAddress, Message } from 'fuels';
+import type {
+  Provider as FuelProvider,
+  BN,
+  AbstractAddress,
+  Message,
+} from 'fuels';
+
 import { FUEL_MESSAGE_POLL_MS } from '../constants';
 import { delay } from '../delay';
 
@@ -11,10 +17,10 @@ export async function waitForMessage(
   nonce: BN,
   timeout: number
 ): Promise<Message> {
-  let startTime = new Date().getTime();
+  const startTime = new Date().getTime();
   while (new Date().getTime() - startTime < timeout) {
-    let messages = await provider.getMessages(recipient, { first: 1000 });
-    for (let message of messages) {
+    const messages = await provider.getMessages(recipient, { first: 1000 });
+    for (const message of messages) {
       if (message.nonce.toString() === nonce.toHex(32).toString()) {
         return message;
       }
