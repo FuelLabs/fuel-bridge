@@ -1,8 +1,9 @@
-import { TestEnvironment } from '../setup';
 import { bn } from 'fuels';
-import { debug } from '../logs';
+
 import { delay } from '../delay';
 import { getBlock } from '../fuels/getBlock';
+import { debug } from '../logs';
+import type { TestEnvironment } from '../setup';
 
 // 5 seconds
 const RETRY_DELAY = 5 * 1000;

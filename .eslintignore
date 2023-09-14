@@ -3,3 +3,4 @@
 **/build/
 **/typechain/
 docker/l1-chain/hardhat
+dist
