@@ -6,9 +6,9 @@ import type { Token } from '@fuel-bridge/portal-contracts';
 import type { TxParams } from 'fuels';
 import { ContractFactory, bn, Contract } from 'fuels';
 
-import type { TestEnvironment } from '../../setup';
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
+import type { TestEnvironment } from '../setup';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 

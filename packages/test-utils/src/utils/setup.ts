@@ -17,7 +17,7 @@ import { ethers } from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';
 
-import { fuels_parseEther, fuels_formatEther } from './utils/parsers';
+import { fuels_parseEther, fuels_formatEther } from './parsers';
 
 dotenv.config();
 
@@ -195,7 +195,9 @@ export async function setupEnvironment(
     try {
       deployerAddresses = await fetch(
         http_deployer + '/deployments.local.json'
-      ).then((resp) => resp.json());
+      ).then((resp) => {
+        return resp.json();
+      });
     } catch (e) {
       throw new Error(
         'Failed to connect to the deployer at (' +

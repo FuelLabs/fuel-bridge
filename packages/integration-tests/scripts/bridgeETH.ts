@@ -1,18 +1,19 @@
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import {
+  setupEnvironment,
+  createRelayMessageParams,
+  logETHBalances,
+  waitForMessage,
+  fuels_parseEther,
+  getMessageOutReceipt,
+  FUEL_MESSAGE_TIMEOUT_MS,
+  FUEL_TX_PARAMS,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+  getBlock,
+} from '@fuel-bridge/test-utils';
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
-
-import type { TestEnvironment } from '../scripts/setup';
-import { setupEnvironment } from '../scripts/setup';
-
-import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
-import { createRelayMessageParams } from './utils/ethers/createRelayParams';
-import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
-import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
-import { getBlock } from './utils/fuels/getBlock';
-import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
-import { waitForMessage } from './utils/fuels/waitForMessage';
-import { logETHBalances } from './utils/logs';
-import { fuels_parseEther } from './utils/parsers';
+import { Address, BN, TransactionStatus } from 'fuels';
 
 const ETH_AMOUNT = '0.1';
 
@@ -84,9 +85,7 @@ const ETH_AMOUNT = '0.1';
     FUEL_TX_PARAMS
   );
   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-  if (
-    fWithdrawTxResult.status !== SimplifiedTransactionStatusNameEnum.success
-  ) {
+  if (fWithdrawTxResult.status !== TransactionStatus.success) {
     console.log(fWithdrawTxResult);
     throw new Error('failed to withdraw ETH back to base layer');
   }

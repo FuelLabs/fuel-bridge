@@ -1,24 +1,25 @@
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import {
+  setupEnvironment,
+  fuels_parseEther,
+  createRelayMessageParams,
+  getMessageOutReceipt,
+  waitForMessage,
+  FUEL_TX_PARAMS,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+  getBlock,
+} from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import type { BigNumber, Signer } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
+import { Address, BN, BaseAssetId } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
-import { Address, BN, BaseAssetId } from 'fuels';
-
-import type { TestEnvironment } from '../scripts/setup';
-import { setupEnvironment } from '../scripts/setup';
-import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
-import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
-import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
-import { getBlock } from '../scripts/utils/fuels/getBlock';
-import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
-import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
-import { fuels_parseEther } from '../scripts/utils/parsers';
 
 chai.use(solidity);
 const { expect } = chai;

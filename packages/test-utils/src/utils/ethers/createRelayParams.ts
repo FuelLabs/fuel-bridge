@@ -1,7 +1,5 @@
-import type { MessageProof } from 'fuels';
-import { arrayify } from 'fuels';
-
-import type {
+import { arrayify, MessageProof } from 'fuels';
+import {
   Message,
   MessageBlockHeader,
   CommitBlockHeader,
