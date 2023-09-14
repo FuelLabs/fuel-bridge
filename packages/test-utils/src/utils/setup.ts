@@ -17,7 +17,7 @@ import { ethers } from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';
 
-import { fuels_parseEther, fuels_formatEther } from './utils/parsers';
+import { fuels_parseEther, fuels_formatEther } from './parsers';
 
 dotenv.config();
 

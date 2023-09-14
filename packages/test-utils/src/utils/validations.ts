@@ -1,7 +1,7 @@
 import type { Token } from '@fuel-bridge/portal-contracts';
 import type { Contract } from 'fuels';
 
-import type { TestEnvironment } from '../setup';
+import type { TestEnvironment } from './setup';
 
 export async function validateFundgibleContracts(
   env: TestEnvironment,

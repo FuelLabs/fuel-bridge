@@ -1,8 +1,8 @@
 import type { MessageProof } from 'fuels';
 import { arrayify } from 'fuels';
 
-import type { TestEnvironment } from '../../setup';
 import { debug } from '../logs';
+import type { TestEnvironment } from '../setup';
 
 export async function waitForBlockFinalization(
   env: TestEnvironment,

@@ -1,30 +1,31 @@
 import type { Token } from '@fuel-bridge/portal-contracts';
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import {
+  setupEnvironment,
+  relayCommonMessage,
+  waitForMessage,
+  createRelayMessageParams,
+  getOrDeployECR20Contract,
+  getOrDeployFuelTokenContract,
+  FUEL_TX_PARAMS,
+  getMessageOutReceipt,
+  fuel_to_eth_address,
+  LOG_CONFIG,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+  getTokenId,
+  getBlock,
+} from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import type { BigNumber, Signer } from 'ethers';
+import { Address, BN, InputType } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
-import { Address, BN, InputType } from 'fuels';
-
-import type { TestEnvironment } from '../scripts/setup';
-import { setupEnvironment } from '../scripts/setup';
-import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
-import { getOrDeployECR20Contract } from '../scripts/utils/ethers/getOrDeployECR20Contract';
-import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
-import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
-import { getBlock } from '../scripts/utils/fuels/getBlock';
-import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
-import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeployFuelTokenContract';
-import { getTokenId } from '../scripts/utils/fuels/getTokenId';
-import { relayCommonMessage } from '../scripts/utils/fuels/relayCommonMessage';
-import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
-import { LOG_CONFIG } from '../scripts/utils/logs';
-import { fuel_to_eth_address } from '../scripts/utils/parsers';
 
 LOG_CONFIG.debug = false;
 
