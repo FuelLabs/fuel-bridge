@@ -1,26 +1,30 @@
 /// @dev The Fuel testing utils.
 /// A set of useful helper methods for the integration test environment.
 import {
+  contractMessagePredicate,
+  contractMessageScript,
+} from '@fuel-bridge/message-predicates';
+import type {
   Message,
   WalletUnlocked as FuelWallet,
+  TransactionRequestLike,
+  TransactionResponse,
+} from 'fuels';
+import {
   ZeroBytes32,
   ScriptTransactionRequest,
-  TransactionRequestLike,
   arrayify,
   InputType,
   hexlify,
   OutputType,
-  TransactionResponse,
   Predicate,
   bn,
   MAX_GAS_PER_TX,
 } from 'fuels';
+
 import { debug } from '../logs';
+
 import { resourcesToInputs } from './transaction';
-import {
-  contractMessagePredicate,
-  contractMessageScript,
-} from '@fuel-bridge/message-predicates';
 
 // Create a predicate for common messages
 const predicate = new Predicate(contractMessagePredicate, 0);
@@ -139,7 +143,7 @@ export async function relayCommonMessage(
   let messageRelayDetails: CommonMessageDetails = null;
   const predicateRoot = message.recipient.toHexString();
 
-  for (let details of COMMON_RELAYABLE_MESSAGES) {
+  for (const details of COMMON_RELAYABLE_MESSAGES) {
     if (details.predicateRoot == predicateRoot) {
       messageRelayDetails = details;
       break;
@@ -149,7 +153,7 @@ export async function relayCommonMessage(
     throw new Error('message is not a common relayable message');
 
   // build and send transaction
-  let transaction = await messageRelayDetails.buildTx(
+  const transaction = await messageRelayDetails.buildTx(
     relayer,
     message,
     messageRelayDetails,

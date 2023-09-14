@@ -2,3 +2,4 @@
 **/coverage/
 **/build/
 **/typechain/
+docker/l1-chain/hardhat

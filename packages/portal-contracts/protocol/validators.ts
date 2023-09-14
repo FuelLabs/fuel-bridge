@@ -1,6 +1,6 @@
+import type { Signature } from 'ethers';
+import type { SigningKey } from 'ethers/lib/utils';
 import { ethers } from 'hardhat';
-import { Signature } from 'ethers';
-import { SigningKey } from 'ethers/lib/utils';
 
 // Sign a messag with a signer, returning the signature object (v, r, s components)
 export async function componentSign(
@@ -18,7 +18,7 @@ export async function compactSign(
   message: string
 ): Promise<string> {
   const sig = await componentSign(signer, message);
-  // eslint-disable-next-line no-underscore-dangle
+
   const compactSig = sig.r.concat(sig._vs.slice(2));
   return compactSig;
 }

@@ -1,7 +1,8 @@
-import { Signer, ethers } from 'ethers';
-import { isAddress } from 'ethers/lib/utils';
-import { FuelChainState__factory } from '../typechain';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { ethers } from 'ethers';
+import { isAddress } from 'ethers/lib/utils';
+
+import { FuelChainState__factory } from '../typechain';
 
 const main = async () => {
   const { DEPLOYER_KEY, FUEL_CHAIN_STATE_ADDRESS, COMITTER_ADDRESS, RPC_URL } =

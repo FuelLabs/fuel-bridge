@@ -1,5 +1,6 @@
 // Helper functions for testing
 import { BigNumber as BN } from 'ethers';
+
 import hash from './cryptography';
 
 export function randomAddress(): string {

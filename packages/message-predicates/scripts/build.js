@@ -1,5 +1,5 @@
-const { hexlify } = require('fuels');
 const { readFileSync, writeFileSync, mkdirSync } = require('fs');
+const { hexlify } = require('fuels');
 const { join } = require('path');
 // Set paths
 const CONTRACT_PATH = join(

@@ -1,19 +1,22 @@
+import type { Provider } from '@ethersproject/abstract-provider';
+import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { ethers } from 'hardhat';
 import { BigNumber as BN } from 'ethers';
-import { Provider } from '@ethersproject/abstract-provider';
-import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
-import { MessageTester } from '../typechain/MessageTester.d';
-import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, {
-  BlockHeaderLite,
+import { ethers } from 'hardhat';
+
+import type { BlockHeaderLite } from '../protocol/blockHeader';
+import type BlockHeader from '../protocol/blockHeader';
+import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
 import { EMPTY, ZERO } from '../protocol/constants';
+import { setupFuel } from '../protocol/harness';
+import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomBytes32, tai64Time } from '../protocol/utils';
+import type { MessageTester } from '../typechain/MessageTester.d';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -67,7 +70,6 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
 }
 
 describe('Incoming Messages', async () => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let env: HarnessObject;
   let fuelBaseAssetDecimals: number;
   let baseAssetConversion: number;

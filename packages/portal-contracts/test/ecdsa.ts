@@ -1,9 +1,11 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { ethers } from 'hardhat';
-import { BigNumber as BN, Contract } from 'ethers';
-import { componentSign } from '../protocol/validators';
+import type { Contract } from 'ethers';
+import { BigNumber as BN } from 'ethers';
 import { SigningKey } from 'ethers/lib/utils';
+import { ethers } from 'hardhat';
+
+import { componentSign } from '../protocol/validators';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -71,21 +73,21 @@ describe('ECDSA', async () => {
 
     // an r value < 1 makes the signature invalid. ecrecover will return 0x0
     const badRValue = ethers.constants.HashZero;
-    // eslint-disable-next-line no-underscore-dangle
+
     const badSigCompact = badRValue.concat(sig._vs.slice(2));
     await expect(
       mockCrypto.addressFromSignature(badSigCompact, msg)
     ).to.be.revertedWith('signature-invalid');
 
     // signature too short
-    // eslint-disable-next-line no-underscore-dangle
+
     const shortSig = sig.r.concat(sig._vs.slice(4));
     await expect(
       mockCrypto.addressFromSignature(shortSig, msg)
     ).to.be.revertedWith('signature-invalid-length');
 
     // signature too long
-    // eslint-disable-next-line no-underscore-dangle
+
     const longSig = sig.r.concat(sig._vs.slice(2)).concat('aa');
     await expect(
       mockCrypto.addressFromSignature(longSig, msg)

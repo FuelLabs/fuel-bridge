@@ -1,4 +1,4 @@
-import { HardhatUserConfig } from 'hardhat/types';
+import type { HardhatUserConfig } from 'hardhat/types';
 import '@nomiclabs/hardhat-etherscan';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-typechain';

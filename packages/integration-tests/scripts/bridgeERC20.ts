@@ -1,22 +1,25 @@
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
 import { Address, BN, SimplifiedTransactionStatusNameEnum } from 'fuels';
-import { ethers_parseToken, fuels_parseToken } from './utils/parsers';
-import { waitForMessage } from './utils/fuels/waitForMessage';
-import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
-import { logETHBalances, logTokenBalances } from './utils/logs';
+
+import type { TestEnvironment } from '../scripts/setup';
+import { setupEnvironment } from '../scripts/setup';
+
+import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
 import { createRelayMessageParams } from './utils/ethers/createRelayParams';
 import {
   getOrDeployECR20Contract,
   mintECR20,
 } from './utils/ethers/getOrDeployECR20Contract';
-import { getOrDeployFuelTokenContract } from './utils/fuels/getOrDeployFuelTokenContract';
-import { validateFundgibleContracts } from './utils/validations';
-import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
-import { FUEL_MESSAGE_TIMEOUT_MS, FUEL_TX_PARAMS } from './utils/constants';
 import { waitForBlockCommit } from './utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from './utils/ethers/waitForBlockFinalization';
-import { getTokenId } from './utils/fuels/getTokenId';
 import { getBlock } from './utils/fuels/getBlock';
+import { getMessageOutReceipt } from './utils/fuels/getMessageOutReceipt';
+import { getOrDeployFuelTokenContract } from './utils/fuels/getOrDeployFuelTokenContract';
+import { getTokenId } from './utils/fuels/getTokenId';
+import { relayCommonMessage } from './utils/fuels/relayCommonMessage';
+import { waitForMessage } from './utils/fuels/waitForMessage';
+import { logETHBalances, logTokenBalances } from './utils/logs';
+import { ethers_parseToken, fuels_parseToken } from './utils/parsers';
+import { validateFundgibleContracts } from './utils/validations';
 
 const TOKEN_AMOUNT = '10';
 

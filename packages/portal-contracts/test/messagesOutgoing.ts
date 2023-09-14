@@ -1,11 +1,13 @@
+import type { Provider } from '@ethersproject/abstract-provider';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { ethers } from 'hardhat';
 import { BigNumber as BN } from 'ethers';
-import { Provider } from '@ethersproject/abstract-provider';
-import { MessageTester } from '../typechain/MessageTester.d';
-import { HarnessObject, setupFuel } from '../protocol/harness';
+import { ethers } from 'hardhat';
+
+import type { HarnessObject } from '../protocol/harness';
+import { setupFuel } from '../protocol/harness';
 import { randomBytes, randomBytes32 } from '../protocol/utils';
+import type { MessageTester } from '../typechain/MessageTester.d';
 
 chai.use(solidity);
 const { expect } = chai;

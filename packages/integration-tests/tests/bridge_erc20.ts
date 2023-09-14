@@ -1,31 +1,30 @@
+import type { Token } from '@fuel-bridge/portal-contracts';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber, Signer } from 'ethers';
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { Token } from '@fuel-bridge/portal-contracts';
-import {
+import type { BigNumber, Signer } from 'ethers';
+import type {
   AbstractAddress,
-  Address,
-  BN,
   Contract,
   WalletUnlocked as FuelWallet,
-  InputType,
   MessageProof,
-  bn,
 } from 'fuels';
-import { relayCommonMessage } from '../scripts/utils/fuels/relayCommonMessage';
-import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
+import { Address, BN, InputType } from 'fuels';
+
+import type { TestEnvironment } from '../scripts/setup';
+import { setupEnvironment } from '../scripts/setup';
+import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
 import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
 import { getOrDeployECR20Contract } from '../scripts/utils/ethers/getOrDeployECR20Contract';
-import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeployFuelTokenContract';
-import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
-import { fuel_to_eth_address } from '../scripts/utils/parsers';
-import { LOG_CONFIG } from '../scripts/utils/logs';
 import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
 import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
-import { getTokenId } from '../scripts/utils/fuels/getTokenId';
 import { getBlock } from '../scripts/utils/fuels/getBlock';
+import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
+import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeployFuelTokenContract';
+import { getTokenId } from '../scripts/utils/fuels/getTokenId';
+import { relayCommonMessage } from '../scripts/utils/fuels/relayCommonMessage';
+import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
+import { LOG_CONFIG } from '../scripts/utils/logs';
+import { fuel_to_eth_address } from '../scripts/utils/parsers';
 
 LOG_CONFIG.debug = false;
 
@@ -125,7 +124,7 @@ describe('Bridging ERC20 tokens', async function () {
       ).to.not.be.reverted;
 
       // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      let tx = await env.eth.fuelERC20Gateway
+      const tx = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
         .deposit(
           fuelTokenReceiverAddress,
@@ -133,16 +132,18 @@ describe('Bridging ERC20 tokens', async function () {
           fuel_testContractId,
           NUM_TOKENS
         );
-      let result = await tx.wait();
+      const result = await tx.wait();
       expect(result.status).to.equal(1);
 
       // parse events from logs
-      let event = env.eth.fuelMessagePortal.interface.parseLog(result.logs[2]);
+      const event = env.eth.fuelMessagePortal.interface.parseLog(
+        result.logs[2]
+      );
       fuelTokenMessageNonce = new BN(event.args.nonce.toHexString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
       // check that the sender balance has decreased by the expected amount
-      let newSenderBalance = await eth_testToken.balanceOf(
+      const newSenderBalance = await eth_testToken.balanceOf(
         ethereumTokenSenderAddress
       );
       expect(newSenderBalance.eq(ethereumTokenSenderBalance.sub(NUM_TOKENS))).to
@@ -167,7 +168,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check ERC20 arrived on Fuel', async () => {
       // check that the recipient balance has increased by the expected amount
-      let newReceiverBalance = await fuelTokenReceiver.getBalance(
+      const newReceiverBalance = await fuelTokenReceiver.getBalance(
         fuel_testAssetId
       );
       expect(
@@ -181,7 +182,6 @@ describe('Bridging ERC20 tokens', async function () {
   describe('Bridge ERC20 from Fuel', async () => {
     const NUM_TOKENS = 10_000_000_000;
     let fuelTokenSender: FuelWallet;
-    let fuelTokenSenderBalance: BN;
     let ethereumTokenReceiver: Signer;
     let ethereumTokenReceiverAddress: string;
     let ethereumTokenReceiverBalance: BigNumber;
@@ -189,9 +189,6 @@ describe('Bridging ERC20 tokens', async function () {
 
     before(async () => {
       fuelTokenSender = env.fuel.signers[0];
-      fuelTokenSenderBalance = await fuelTokenSender.getBalance(
-        fuel_testAssetId
-      );
       ethereumTokenReceiver = env.eth.signers[0];
       ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
       ethereumTokenReceiverBalance = await eth_testToken.balanceOf(
@@ -250,7 +247,9 @@ describe('Bridging ERC20 tokens', async function () {
       );
 
       // check that the sender balance has decreased by the expected amount
-      let newSenderBalance = await fuelTokenSender.getBalance(fuel_testAssetId);
+      const newSenderBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
       expect(
         newSenderBalance.eq(
           fuelTokenSenderBalance.sub(NUM_TOKENS / DECIMAL_DIFF)
@@ -279,7 +278,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check ERC20 arrived on Ethereum', async () => {
       // check that the recipient balance has increased by the expected amount
-      let newReceiverBalance = await eth_testToken.balanceOf(
+      const newReceiverBalance = await eth_testToken.balanceOf(
         ethereumTokenReceiverAddress
       );
       expect(
