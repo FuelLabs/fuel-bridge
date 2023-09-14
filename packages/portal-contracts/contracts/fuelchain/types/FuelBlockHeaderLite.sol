@@ -9,7 +9,7 @@ struct FuelBlockHeaderLite {
     // Merkle root of all previous consensus header hashes (not including this block)
     bytes32 prevRoot;
     // Height of this block
-    uint64 height;
+    uint32 height;
     // Time this block was created, in TAI64 format
     uint64 timestamp;
     // Hash of serialized application header for this block
