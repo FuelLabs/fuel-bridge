@@ -195,9 +195,7 @@ export async function setupEnvironment(
     try {
       deployerAddresses = await fetch(
         http_deployer + '/deployments.local.json'
-      ).then((resp) => {
-        return resp.json();
-      });
+      ).then((resp) => resp.json());
     } catch (e) {
       throw new Error(
         'Failed to connect to the deployer at (' +
