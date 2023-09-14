@@ -1,6 +1,6 @@
+import dotenv from 'dotenv';
 import { readFileSync, writeFileSync } from 'fs';
 import { join } from 'path';
-import dotenv from 'dotenv';
 
 const FILE_NAME = '.fuelChainConsts.env';
 const FUEL_CHAIN_PATH = join(

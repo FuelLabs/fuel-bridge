@@ -1,10 +1,13 @@
+import type { Signer } from 'ethers';
 import { ethers } from 'hardhat';
-import {
+
+import type {
   FuelDeployedContractAddresses,
   DeployedContracts,
-  deployFuel,
-  getContractAddresses,
 } from '../protocol/harness';
+import { deployFuel, getContractAddresses } from '../protocol/harness';
+import type { Token } from '../typechain';
+
 import {
   isNetworkVerifiable,
   publishProxySourceVerification,
@@ -14,9 +17,6 @@ import {
   confirmationPrompt,
   waitForConfirmations,
 } from './utils';
-import { Signer } from 'ethers';
-import { deployERC20 } from './deployErc20';
-import { Token } from '../typechain';
 
 // Script to deploy the Fuel v2 system
 
@@ -29,7 +29,6 @@ import { Token } from '../typechain';
 // You can then connect to localhost (ethers, metamask, etc.) and the Fuel system will be deployed there at the addresses given
 
 const QUICK_DEPLOY = !!process.env.QUICK_DEPLOY;
-const DEPLOY_ERC20 = !!process.env.DEPLOY_ERC20;
 
 async function main() {
   let deployer: Signer | undefined = undefined;
@@ -54,7 +53,7 @@ async function main() {
   // Get confirmation
   let confirm = true;
   if (!QUICK_DEPLOY) {
-    console.log(''); // eslint-disable-line no-console
+    console.log('');
     confirm = await confirmationPrompt(
       `Are you sure you want to deploy ALL proxy and implementation contracts on "${networkName}" (Y/n)? `
     );
@@ -62,15 +61,11 @@ async function main() {
   if (confirm) {
     // Setup Fuel
     let contracts: DeployedContracts;
-    let erc20: Token | undefined = undefined;
+    const erc20: Token | undefined = undefined;
     let deployments: FuelDeployedContractAddresses;
     try {
-      console.log('Deploying contracts...'); // eslint-disable-line no-console
+      console.log('Deploying contracts...');
       contracts = await deployFuel(deployer);
-
-      if (DEPLOY_ERC20) {
-        erc20 = await deployERC20(deployer);
-      }
 
       deployments = await getContractAddresses({ ...contracts, erc20 });
     } catch (e) {
@@ -81,9 +76,9 @@ async function main() {
     const deployedBlock = await ethers.provider.getBlockNumber();
 
     // Emit the addresses of the deployed contracts
-    console.log('Successfully deployed contracts!\n'); // eslint-disable-line no-console
+    console.log('Successfully deployed contracts!\n');
     Object.entries(deployments).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`); // eslint-disable-line no-console
+      console.log(`${key}: ${value}`);
     });
 
     // Write deployments to file
@@ -91,7 +86,7 @@ async function main() {
 
     // Confirm source verification/publishing
     if (!QUICK_DEPLOY && (await isNetworkVerifiable())) {
-      console.log(''); // eslint-disable-line no-console
+      console.log('');
       const confirmVerification = await confirmationPrompt(
         `Do you want to publish contract source code for verification (Y/n)? `
       );
@@ -112,6 +107,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error); // eslint-disable-line no-console
+    console.error(error);
     process.exit(1);
   });

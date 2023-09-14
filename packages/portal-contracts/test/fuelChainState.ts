@@ -1,10 +1,13 @@
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, { computeBlockId } from '../protocol/blockHeader';
-import { EMPTY } from '../protocol/constants';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
+
+import type BlockHeader from '../protocol/blockHeader';
+import { computeBlockId } from '../protocol/blockHeader';
+import { EMPTY } from '../protocol/constants';
+import { setupFuel } from '../protocol/harness';
+import type { HarnessObject } from '../protocol/harness';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 
 chai.use(solidity);

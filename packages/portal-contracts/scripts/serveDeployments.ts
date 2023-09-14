@@ -1,4 +1,5 @@
-import express, { Express } from 'express';
+import type { Express } from 'express';
+import express from 'express';
 
 // Script to serve the local deployment addresses
 
@@ -16,5 +17,5 @@ const app: Express = express();
 app.use('/', express.static('deployments'));
 
 app.listen(port, () => {
-  console.log(`Server is running at https://localhost:${port}`); // eslint-disable-line no-console
+  console.log(`Server is running at https://localhost:${port}`);
 });

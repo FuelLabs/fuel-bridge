@@ -1,5 +1,7 @@
 import { ethers } from 'hardhat';
+
 import { upgradeFuel } from '../protocol/harness';
+
 import {
   isNetworkVerifiable,
   publishImplementationSourceVerification,
@@ -39,14 +41,14 @@ async function main() {
   const deployments = await loadDeploymentsFile();
 
   // Get confirmation
-  console.log(''); // eslint-disable-line no-console
+  console.log('');
   const confirmUpgrade = await confirmationPrompt(
     `Are you sure you want to upgrade ALL contracts on "${networkName}" (Y/n)? `
   );
   if (confirmUpgrade) {
     // Upgrade Fuel
     try {
-      console.log('Upgrading contracts...'); // eslint-disable-line no-console
+      console.log('Upgrading contracts...');
       await upgradeFuel(deployments);
     } catch (e) {
       throw new Error(
@@ -56,9 +58,9 @@ async function main() {
     const deployedBlock = await ethers.provider.getBlockNumber();
 
     // Emit the addresses of the deployed contracts
-    console.log('Successfully upgraded contracts!\n'); // eslint-disable-line no-console
+    console.log('Successfully upgraded contracts!\n');
     Object.entries(deployments).forEach(([key, value]) => {
-      console.log(`${key}: ${value}`); // eslint-disable-next-line no-console
+      console.log(`${key}: ${value}`);
     });
 
     // Write deployments to file
@@ -66,7 +68,7 @@ async function main() {
 
     // Confirm source verification/publishing
     if (await isNetworkVerifiable()) {
-      console.log(''); // eslint-disable-line no-console
+      console.log('');
       const confirmVerification = await confirmationPrompt(
         `Do you want to publish contract source code for verification (Y/n)? `
       );
@@ -86,6 +88,6 @@ async function main() {
 main()
   .then(() => process.exit(0))
   .catch((error) => {
-    console.error(error); // eslint-disable-line no-console
+    console.error(error);
     process.exit(1);
   });
