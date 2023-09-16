@@ -2,9 +2,13 @@
   "name": "@fuel-bridge/portal-contracts",
   "version": "0.0.0",
   "description": "The Fuel v2 Solidity smart contracts.",
-  "main": "typechain/index.ts",
   "private": true,
   "license": "APACHE-2.0",
+  "files": [
+    "typechain",
+    "contracts",
+    "abi"
+  ],
   "scripts": {
     "build": "run-s clean compile",
     "clean": "pnpm hardhat clean",

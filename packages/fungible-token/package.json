@@ -1,12 +1,16 @@
 {
   "name": "@fuel-bridge/fungible-token",
   "private": true,
-  "main": "dist/index.ts",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "main": "dist/index.js",
   "scripts": {
-    "build": "node ./scripts/build.js"
+    "build": "tsup"
   },
   "dependencies": {
     "@fuel-bridge/message-predicates": "workspace:*",
+    "@fuel-bridge/esbuild-bin-loader": "workspace:*",
     "fuels": "0.54.1"
   }
 }

@@ -2,7 +2,7 @@ import {
   fungibleTokenBinary,
   fungibleTokenABI,
 } from '@fuel-bridge/fungible-token';
-import type { Token } from '@fuel-bridge/portal-contracts';
+import type { Token } from '@fuel-bridge/portal-contracts/typechain';
 import type { TxParams } from 'fuels';
 import { ContractFactory, bn, Contract } from 'fuels';
 
