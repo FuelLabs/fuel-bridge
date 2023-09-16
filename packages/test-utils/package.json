@@ -1,23 +1,14 @@
 {
   "name": "@fuel-bridge/test-utils",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "The Fuel Messaging Bridge integration tests.",
   "private": true,
   "license": "APACHE-2.0",
-  "main": "src/index.ts",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "module": "dist/index.mjs",
-    "types": "dist/index.d.ts",
-    "typings": "dist/index.d.ts",
-    "exports": {
-      ".": {
-        "require": "./dist/index.js",
-        "types": "./dist/index.d.ts",
-        "default": "./dist/index.mjs"
-      }
-    }
-  },
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "typings": "dist/index.d.ts",
+  "require": "./dist/index.js",
+  "main": "dist/index.js",
   "files": [
     "./dist"
   ],
@@ -28,12 +19,10 @@
     "fuels": ">=0.54.1",
     "ethers": ">=5.7.2"
   },
-  "dependencies": {
+  "devDependencies": {
     "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
-    "@fuel-bridge/portal-contracts": "workspace:*"
-  },
-  "devDependencies": {
+    "@fuel-bridge/portal-contracts": "workspace:*",
     "@ethersproject/abi": "^5.7.0",
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",

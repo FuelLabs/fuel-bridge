@@ -5,5 +5,5 @@ export default {
   treeshake: true,
   format: ['cjs', 'esm'],
   minify: true,
-  entry: ['./exports/abi.ts'],
+  entry: ['./exports/index.ts'],
 };

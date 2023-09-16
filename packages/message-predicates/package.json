@@ -1,10 +1,13 @@
 {
   "name": "@fuel-bridge/message-predicates",
-  "private": true,
+  "version": "0.0.1",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
   "main": "dist/index.js",
+  "files": [
+    "./dist"
+  ],
   "scripts": {
     "build": "tsup"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@fuel-bridge/fungible-token",
-  "private": true,
+  "version": "0.0.1",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
