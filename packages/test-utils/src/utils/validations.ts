@@ -1,4 +1,4 @@
-import type { Token } from '@fuel-bridge/portal-contracts/typechain';
+import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { Contract } from 'fuels';
 
 import type { TestEnvironment } from './setup';

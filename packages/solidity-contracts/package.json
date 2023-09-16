@@ -1,5 +1,5 @@
 {
-  "name": "@fuel-bridge/portal-contracts",
+  "name": "@fuel-bridge/solidity-contracts",
   "version": "0.0.1",
   "description": "The Fuel v2 Solidity smart contracts.",
   "private": true,
