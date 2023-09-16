@@ -3,11 +3,12 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "cache": false,
-      "outputs": ["dist/**", "typechain/**"]
+      "cache": true,
+      "outputs": ["dist/**", "typechain/**", "artifacts/**"]
     },
     "test": {
-      "cache": false
+      "dependsOn": ["^build"],
+      "cache": true
     }
   }
 }
