@@ -9,7 +9,7 @@ RUN npm i -g pnpm
 WORKDIR /l1chain
 
 # clone the contracts repo
-ADD ./packages/portal-contracts /l1chain/fuel-v2-contracts
+ADD ./packages/solidity-contracts /l1chain/fuel-v2-contracts
 # copy over the fuel chain and replace consts values
 ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
 WORKDIR /l1chain/fuel-v2-contracts

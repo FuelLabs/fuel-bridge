@@ -6,7 +6,7 @@
 #
 # By ready it means;
 # - The L1 node is started
-# - The portal-contracts are deployed to the L1 node;
+# - The solidity-contracts are deployed to the L1 node;
 # - The Fuel Node is started
 # - The Fuel Node is connected to the L1 node and syncing blocks
 #

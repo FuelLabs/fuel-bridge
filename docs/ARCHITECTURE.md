@@ -43,7 +43,7 @@ The Fuel blockchain aims to be scalable, and thus is able to generate blocks at 
 
 ### Message passing from L1 to L2
 
-The [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event to be picked up by Fuel 's sequencers, containing the message payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message and payload. This UTXO can be "spent" (i.e. delivered) by any party on the L2 blockchain.
+The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event to be picked up by Fuel 's sequencers, containing the message payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message and payload. This UTXO can be "spent" (i.e. delivered) by any party on the L2 blockchain.
 
 #### L1 Deposit
 
@@ -54,8 +54,8 @@ TODO update this diagram
 
 You can follow the actual implementation of the message processing flow via:
 
-- [FuelERC20Gateway.sol](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `deposit` function
-- [FuelMessagePortal.sol](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `sendMessage` function
+- [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `deposit` function
+- [FuelMessagePortal.sol](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `sendMessage` function
 - [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `process_message` function
 
 ### Message passing from L2 to L1
@@ -64,36 +64,36 @@ The mechanism that implements messaging from L2 to L1 can be more convoluted; be
 
 Any user on the L2 can trigger transactions that generate a message. This message is included as part of the Fuel block, and its inclusion can be proven by verifying a `Merkle root` in the block header that commits to a `Merkle tree` containing the message. The block hash is derived, among other fields, from this root.
 
-Fuel blocks are packed and committed together by the mechanism described two sections above, `block comitting`. A Fuel epoch will be committed at the [Chain State contract](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
+Fuel blocks are packed and committed together by the mechanism described two sections above, `block comitting`. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
 
 Once the committed epoch has finalized, an user in the L1 blockchain can prove that the original message was included in the finalized epoch:
 
 - First, it is needed to prove that a certain block (identified by its block hash) exists in the committed epoch. This is done with a `Merkle proof`.
 - Once proven that the block exists, by the same mechanism, it is possible to prove that the message exists as part of the block.
 
-An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
+An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
 
 #### L2 (Fuel) Withdrawal
 
 A bridge withdrawal is an example implementation of message passing from L2 entities to L1 entities.
 
-The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw), which will burn the tokens and generate a message to be included in a Fuel block, with recipient to the [L1 Bridge Contract](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol).
+The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw), which will burn the tokens and generate a message to be included in a Fuel block, with recipient to the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol).
 
 Once the transaction has been included in the Fuel blockchain, the user will need to await two events:
 
-- First, the Fuel blockchain will need to close the epoch. The epoch will be committed to the L1 blockchain in the [Chain State contract](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol). It will be possible to prove the inclusion of all the blocks in the epoch with the `Merkle root` of the `Fuel root block` (commit).
+- First, the Fuel blockchain will need to close the epoch. The epoch will be committed to the L1 blockchain in the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol). It will be possible to prove the inclusion of all the blocks in the epoch with the `Merkle root` of the `Fuel root block` (commit).
 - Then, once the epoch has been committed, it is needed to wait for its finalization.
 
-After finality has been reached for the epoch that includes the block where the withdrawal transaction was signaled, the user can request the proofs of inclusion of both the message in the Fuel block, and the Fuel block in the Fuel epoch. The user will send a transaction call to the [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function that will check the attached proofs and the finalization status of the epoch that the message belongs to, then proceed to unpack the payload of said message, that should contain an execution instruction to call `finalizeWithdrawal` in the [L1 Bridge Contract](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol), releasing the L1 locked tokens.
+After finality has been reached for the epoch that includes the block where the withdrawal transaction was signaled, the user can request the proofs of inclusion of both the message in the Fuel block, and the Fuel block in the Fuel epoch. The user will send a transaction call to the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function that will check the attached proofs and the finalization status of the epoch that the message belongs to, then proceed to unpack the payload of said message, that should contain an execution instruction to call `finalizeWithdrawal` in the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol), releasing the L1 locked tokens.
 
 ![L2 Withdrawal](l2_withdrawal.png)
 
 You can follow the implementation of this flow via:
 
 - [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `withdraw` function
-- [FuelChainState.sol](../packages/portal-contracts/contracts/fuelchain/FuelChainState.sol) 's `commit` and `finalized` functions
-- [Message Portal](../packages/portal-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function
-- [FuelERC20Gateway.sol](../packages/portal-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `finalizeWithdrawal`
+- [FuelChainState.sol](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) 's `commit` and `finalized` functions
+- [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function
+- [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `finalizeWithdrawal`
 
 ## Decimals adjustment
 
