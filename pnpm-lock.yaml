@@ -12,17 +12,17 @@ importers:
   .:
     dependencies:
       '@fuels/changeset':
-        specifier: 0.0.10-dev-2bed1f0
-        version: 0.0.10-dev-2bed1f0
+        specifier: 0.0.10
+        version: 0.0.10
       '@fuels/eslint-plugin':
-        specifier: 0.0.9
-        version: 0.0.9(eslint@8.49.0)(typescript@5.2.2)
+        specifier: 0.0.10
+        version: 0.0.10(eslint@8.49.0)(typescript@5.2.2)
       '@fuels/prettier-config':
-        specifier: 0.0.9
-        version: 0.0.9(prettier@2.7.1)
+        specifier: 0.0.10
+        version: 0.0.10(prettier@2.7.1)
       '@fuels/ts-config':
-        specifier: 0.0.9
-        version: 0.0.9(typescript@5.2.2)
+        specifier: 0.0.10
+        version: 0.0.10(typescript@5.2.2)
       eslint:
         specifier: ^8.49.0
         version: 8.49.0
@@ -1875,8 +1875,8 @@ packages:
   /@fuel-ts/wordlists@0.54.1:
     resolution: {integrity: sha512-5Pye5eN8zSrYOu0BQzhBBvibp0k9MVWfl6k0NPenXp+dyq18BcqyxdPb76bGDLupd6TRQ8YfJzYub+dqC9su+A==}
 
-  /@fuels/changeset@0.0.10-dev-2bed1f0:
-    resolution: {integrity: sha512-qd4hWVU2mKlq5pfjanWOCsaWvr/Naog0GpRiboyqiBriF1SFjZdhEMR+VQHDYoqZ29wro7GWrNdAc/o6MPCF+A==}
+  /@fuels/changeset@0.0.10:
+    resolution: {integrity: sha512-JRHAo8bYqCe4cGq7YsqurL7Vcmr/nu4nCHY1SdOZN/7sRcf3fbfrTz9VF9+WURjs6aGt1k9WcZGckHa3OJ89Ng==}
     dependencies:
       '@changesets/get-github-info': 0.5.2
       dotenv: 16.3.1
@@ -1884,8 +1884,8 @@ packages:
       - encoding
     dev: false
 
-  /@fuels/eslint-plugin@0.0.9(eslint@8.49.0)(typescript@5.2.2):
-    resolution: {integrity: sha512-2pECNfYPo2jnvUs98yOQ3P3SmIqiy5SophnCl4wYLS9ZlA9K8wQk831ecm6gAW9HpFeFCaikFUcZ3fM6uAQxIg==}
+  /@fuels/eslint-plugin@0.0.10(eslint@8.49.0)(typescript@5.2.2):
+    resolution: {integrity: sha512-Qdp4ybNuesIFF9TkJvoFpbjod4eqWrJ8aHlpoQOZuN6Cs4Wjc1p8VRkLPKplx0pjs74R7Jtg8D1SCFXi5b+wQA==}
     peerDependencies:
       eslint: ^8.48.0
     dependencies:
@@ -1913,16 +1913,16 @@ packages:
       - typescript
     dev: false
 
-  /@fuels/prettier-config@0.0.9(prettier@2.7.1):
-    resolution: {integrity: sha512-/Foww7TXrf9gdCYe1ax53MGz9Ep6ue/j7MfvAtaZC7P5BrORHef2UMHSeAU6oMiY5L72OYFD2uMgcFVF87VLWQ==}
+  /@fuels/prettier-config@0.0.10(prettier@2.7.1):
+    resolution: {integrity: sha512-ErdOffGOzWaJoDR6uKp6rXbkAWAb0ljVKSbfE9axhP2bYZvrgMYaiz6Hud0soKTncXeHOMUl0Qa3/RFrJjU8wg==}
     peerDependencies:
       prettier: ^3.0.3
     dependencies:
       prettier: 2.7.1
     dev: false
 
-  /@fuels/ts-config@0.0.9(typescript@5.2.2):
-    resolution: {integrity: sha512-NCUvTITS/ucVmCRhOdRy7uARbz/MDFLMF/Z7Uq6LhWX96u5zIpBcOZxA3RpxHN/QdyBgTQJL2seq0oL9RImsow==}
+  /@fuels/ts-config@0.0.10(typescript@5.2.2):
+    resolution: {integrity: sha512-HmWONvJSsC8gxp09vVF42au/ANXnMne/lQHRU/jWoYPcbdRXIoVLFQ8bCT459bHdV49oMrMRrQw1CTJYO/R8Vg==}
     peerDependencies:
       typescript: 5.2.2
     dependencies:
@@ -6119,7 +6119,7 @@ packages:
       eslint-plugin-import: 2.28.1(@typescript-eslint/parser@6.7.0)(eslint-import-resolver-typescript@3.6.0)(eslint@8.49.0)
       fast-glob: 3.3.1
       get-tsconfig: 4.7.0
-      is-core-module: 2.12.1
+      is-core-module: 2.13.0
       is-glob: 4.0.3
     transitivePeerDependencies:
       - '@typescript-eslint/parser'
@@ -6241,7 +6241,7 @@ packages:
       minimatch: 3.1.2
       object.entries: 1.1.7
       object.fromentries: 2.0.7
-      semver: 6.3.0
+      semver: 6.3.1
     dev: false
 
   /eslint-plugin-prettier@5.0.0(eslint-config-prettier@9.0.0)(eslint@8.49.0)(prettier@3.0.3):
@@ -8591,12 +8591,6 @@ packages:
     dependencies:
       ci-info: 3.8.0
     dev: true
-
-  /is-core-module@2.12.1:
-    resolution: {integrity: sha512-Q4ZuBAe2FUsKtyQJoQHlvP8OvBERxO3jEmy1I7hcRXcJBGGHFh/aJBswbXuS9sgrDH2QUO8ilkwNPHvHMd8clg==}
-    dependencies:
-      has: 1.0.3
-    dev: false
 
   /is-core-module@2.13.0:
     resolution: {integrity: sha512-Z7dk6Qo8pOCp3l4tsX2C5ZVas4V+UxwQodwZhLopL91TX8UyyHEXafPcyoeeWuLrwzHcr3igO78wNLwHJHsMCQ==}
@@ -11711,7 +11705,7 @@ packages:
     resolution: {integrity: sha512-iMDbmAWtfU+MHpxt/I5iWI7cY6YVEZUQ3MBgPQ++XD1PELuJHIl82xBmObyP2KyQmkNB2dsqF7seoQQiAn5yDQ==}
     hasBin: true
     dependencies:
-      is-core-module: 2.12.1
+      is-core-module: 2.13.0
       path-parse: 1.0.7
       supports-preserve-symlinks-flag: 1.0.0
     dev: false
@@ -11966,11 +11960,6 @@ packages:
   /semver@5.7.1:
     resolution: {integrity: sha512-sauaDf/PZdVgrLTNYHRtpXa1iRiKcaebiKQ1BJdpQlWH2lCvexQdX55snPFyK7QzpudqbCI0qXFfOasHdyNDGQ==}
     hasBin: true
-
-  /semver@6.3.0:
-    resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
-    hasBin: true
-    dev: false
 
   /semver@6.3.1:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
