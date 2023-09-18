@@ -5,6 +5,7 @@
     "var-name-mixedcase": null,
     "no-inline-assembly": null,
     "avoid-tx-origin": null,
+    "avoid-low-level-calls": null,
     "func-visibility": ["error", { "ignoreConstructors": true }]
   }
 }
