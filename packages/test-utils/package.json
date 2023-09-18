@@ -2,7 +2,6 @@
   "name": "@fuel-bridge/test-utils",
   "version": "0.0.1",
   "description": "The Fuel Messaging Bridge integration tests.",
-  "private": true,
   "license": "APACHE-2.0",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",

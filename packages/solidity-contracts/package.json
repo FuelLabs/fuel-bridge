@@ -2,7 +2,6 @@
   "name": "@fuel-bridge/solidity-contracts",
   "version": "0.0.1",
   "description": "The Fuel v2 Solidity smart contracts.",
-  "private": true,
   "license": "APACHE-2.0",
   "files": [
     "typechain",
