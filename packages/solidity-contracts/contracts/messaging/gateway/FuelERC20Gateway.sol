@@ -174,6 +174,13 @@ contract FuelERC20Gateway is
         emit Withdrawal(bytes32(uint256(uint160(to))), tokenId, fuelTokenId, amount);
     }
 
+    /// @notice Allows the admin to rescue ETH sent to this contract by accident
+    /// @dev Made payable to reduce gas costs
+    function rescueETH() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+        (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
+        require(success);
+    }
+
     ////////////////////////
     // Internal Functions //
     ////////////////////////
