@@ -5,4 +5,4 @@
 '@fuel-bridge/test-utils': patch
 ---
 
-Release fuel-bridge packages first version
+feat: release fuel-bridge packages first version
