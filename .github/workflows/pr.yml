@@ -13,6 +13,33 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  check-packages-changed:
+    name: Check if packages have change
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.packages-changed.outputs.any_changed }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check external packages changes
+        id: packages-changed
+        uses: tj-actions/changed-files@v22.2
+        with:
+          files: |
+            **/packages/**
+
+  changesets:
+    name: Changeset Checks
+    needs: check-packages-changed
+    if: ${{ github.head_ref != 'changeset-release/main' && needs.check-packages-changed.outputs.changed == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          # need this to get full git-history/clone in order to build changelogs and check changesets
+          fetch-depth: 0
+      - uses: FuelLabs/github-actions/setups/node@master
+      - run: pnpm changeset:check
+
   validate:
     runs-on: buildjet-4vcpu-ubuntu-2204
     steps:
@@ -24,11 +51,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/setup-rust
 
-      - name: Check projects formatting
-        run: pnpm check
-
       - name: Build projects
         run: pnpm build
+
+      - name: Check projects formatting
+        run: pnpm check
 
       - name: Test projects
         run: pnpm test

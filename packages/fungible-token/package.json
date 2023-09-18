@@ -8,9 +8,7 @@
   "scripts": {
     "build": "tsup"
   },
-  "dependencies": {
-    "@fuel-bridge/message-predicates": "workspace:*",
-    "@fuel-bridge/esbuild-bin-loader": "workspace:*",
-    "fuels": "0.54.1"
+  "devDependencies": {
+    "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader"
   }
 }

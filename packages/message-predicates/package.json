@@ -12,7 +12,6 @@
     "build": "tsup"
   },
   "devDependencies": {
-    "fuels": "0.54.1",
-    "@fuel-bridge/esbuild-bin-loader": "workspace:*"
+    "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader"
   }
 }
