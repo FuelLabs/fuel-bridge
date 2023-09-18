@@ -5,12 +5,12 @@ import type {
   FuelChainState,
   FuelMessagePortal,
   FuelERC20Gateway,
-} from '@fuel-bridge/portal-contracts';
+} from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
   FuelMessagePortal__factory,
   FuelERC20Gateway__factory,
-} from '@fuel-bridge/portal-contracts';
+} from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
 import type { Signer as EthSigner } from 'ethers';
 import { ethers } from 'ethers';

@@ -1,18 +1,15 @@
 {
-  "name": "@fuel-bridge/message-predicates",
+  "name": "@fuel-bridge/esbuild-bin-loader",
   "version": "0.0.1",
+  "private": true,
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
   "main": "dist/index.js",
-  "files": [
-    "./dist"
-  ],
   "scripts": {
     "build": "tsup"
   },
-  "devDependencies": {
-    "fuels": "0.54.1",
-    "@fuel-bridge/esbuild-bin-loader": "workspace:*"
+  "dependencies": {
+    "fuels": "0.54.1"
   }
 }

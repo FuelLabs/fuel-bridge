@@ -1,5 +1,5 @@
-import type { Token } from '@fuel-bridge/portal-contracts';
-import { Token__factory } from '@fuel-bridge/portal-contracts';
+import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
+import { Token__factory } from '@fuel-bridge/solidity-contracts/typechain';
 
 import { debug } from '../logs';
 import { ethers_parseToken } from '../parsers';

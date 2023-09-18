@@ -57,7 +57,7 @@ This section has a brief description of each directory. More details can be foun
 
 - [packages/fungible-token](../packages/fungible-token/) The contract that bridges ECR20 tokens into Fuel using the message bridge;
 - [packages/message-predicates](../packages/message-predicates/) The predicates that receive the data from the base layer into Fuel;
-- [packages/portal-contracts](../packages/portal-contracts/) The Fuel Solidity contracts architecture for state and message bridging;
+- [packages/solidity-contracts](../packages/solidity-contracts/) The Fuel Solidity contracts architecture for state and message bridging;
 - [packages/integration-tests](../packages/integration-tests/) Integration tests for the Fuel Messaging Bridge;
 - [docker](../docker/) Docker configuration with L1 and Fuel Core working together.
 

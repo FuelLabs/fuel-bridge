@@ -1,11 +1,5 @@
 # Fuel Solidity Contracts
 
-<!-- Disable markdownlint for long lines. -->
-<!-- markdownlint-disable-file MD013 -->
-
-![ci](https://github.com/fuellabs/fuel-v2-contracts/workflows/Node.js%20Tests%20and%20Coverage/badge.svg?branch=master)
-[![codecov](https://codecov.io/gh/fuellabs/fuel-v2-contracts/branch/master/graph/badge.svg?token=FVXeaaBA3d)](https://codecov.io/gh/fuellabs/fuel-v2-contracts)
-
 The Fuel Solidity smart contract architecture.
 
 ## Table of contents
@@ -32,22 +26,7 @@ The Fuel Solidity smart contract architecture.
 
 | dep     | version                                                  |
 | ------- | -------------------------------------------------------- |
-| Node.js | [>=v14.0.0](https://nodejs.org/en/blog/release/v14.0.0/) |
-
-### Building
-
-Install dependencies:
-
-```sh
-npm ci
-```
-
-Build and run tests:
-
-```sh
-npm run build
-npm test
-```
+| Node.js | [>=v18.0.0](https://nodejs.org/en/blog/release/v18.0.0/) |
 
 ## Deployed Contract Addresses
 

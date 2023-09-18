@@ -1,4 +1,4 @@
-import type { Token } from '@fuel-bridge/portal-contracts';
+import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { Signer } from 'ethers';
 import { formatEther } from 'ethers/lib/utils';
 import type { WalletUnlocked } from 'fuels';
