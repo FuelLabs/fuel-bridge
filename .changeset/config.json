@@ -1,0 +1,18 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@2.0.0/schema.json",
+  "changelog": ["@fuels/changeset", { "repo": "FuelLabs/fuel-bridge" }],
+  "commit": false,
+  "fixed": [["@fuel-bridge/*"]],
+  "ignore": [
+    "@fuel-bridge/integration-tests",
+    "@fuel-bridge/esbuild-bin-loader"
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "snapshot": {
+    "useCalculatedVersion": true,
+    "prereleaseTemplate": "{tag}-{commit}"
+  }
+}
