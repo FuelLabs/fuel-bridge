@@ -14,7 +14,7 @@ import {
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
-import type { Signer as EthSigner } from 'ethers';
+import type { Wallet as EthSigner } from 'ethers';
 import { ethers } from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';
@@ -206,6 +206,7 @@ export async function setupEnvironment(
         http_deployer + '/deployments.local.json'
       ).then((resp) => resp.json());
     } catch (e) {
+      console.error(e);
       throw new Error(
         'Failed to connect to the deployer at (' +
           http_deployer +

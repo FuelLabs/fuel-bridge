@@ -1,35 +1,32 @@
+import type { NFT } from '@fuel-bridge/solidity-contracts/typechain';
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import {
+  setupEnvironment,
+  relayCommonMessage,
+  waitForMessage,
+  createRelayMessageParams,
+  getOrDeployFuelTokenContract,
+  FUEL_TX_PARAMS,
+  getMessageOutReceipt,
+  fuel_to_eth_address,
+  LOG_CONFIG,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+  getTokenId,
+  getBlock,
+  getOrDeployERC721Contract,
+} from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
-import { BigNumber, Signer, Wallet, utils } from 'ethers';
-import { TestEnvironment, setupEnvironment } from '../scripts/setup';
-import { NFT } from '@fuel-bridge/portal-contracts';
-import {
+import type { Wallet } from 'ethers';
+import { BigNumber, utils } from 'ethers';
+import { Address, BN, InputType } from 'fuels';
+import type {
   AbstractAddress,
-  Address,
-  BN,
   Contract,
   WalletUnlocked as FuelWallet,
-  InputType,
   MessageProof,
-  bn,
-  hexlify,
 } from 'fuels';
-import { relayCommonMessage } from '../scripts/utils/fuels/relayCommonMessage';
-import { waitForMessage } from '../scripts/utils/fuels/waitForMessage';
-import { createRelayMessageParams } from '../scripts/utils/ethers/createRelayParams';
-import { getOrDeployERC721Contract } from '../scripts/utils/ethers/getOrDeployERC721Contract';
-import { getOrDeployFuelTokenContract } from '../scripts/utils/fuels/getOrDeployFuelTokenContract';
-import { FUEL_TX_PARAMS } from '../scripts/utils/constants';
-import { getMessageOutReceipt } from '../scripts/utils/fuels/getMessageOutReceipt';
-import {
-  eth_address_to_b256,
-  fuel_to_eth_address,
-} from '../scripts/utils/parsers';
-import { LOG_CONFIG } from '../scripts/utils/logs';
-import { waitForBlockCommit } from '../scripts/utils/ethers/waitForBlockCommit';
-import { waitForBlockFinalization } from '../scripts/utils/ethers/waitForBlockFinalization';
-import { getTokenId } from '../scripts/utils/fuels/getTokenId';
-import { getBlock } from '../scripts/utils/fuels/getBlock';
 
 LOG_CONFIG.debug = false;
 
@@ -44,7 +41,6 @@ describe('Bridging ERC721 tokens', async function () {
   // Timeout 6 minutes 40 seconds
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
-  const DECIMAL_DIFF = 1_000_000_000;
 
   let env: TestEnvironment;
   let eth_testToken: NFT;
@@ -105,23 +101,17 @@ describe('Bridging ERC721 tokens', async function () {
 
   describe('Bridge ERC721 to Fuel', async () => {
     let ethereumTokenSender: Wallet;
-    let ethereumTokenSenderAddress: string;
     let fuelTokenReceiver: FuelWallet;
     let fuelTokenReceiverAddress: string;
-    let fuelTokenReceiverBalance: BN;
     let fuelTokenMessageNonce: BN;
     let fuelTokenMessageReceiver: AbstractAddress;
 
     before(async () => {
       ethereumTokenSender = env.eth.signers[0];
-      ethereumTokenSenderAddress = ethereumTokenSender.address;
       fuelTokenReceiver = env.fuel.signers[0];
       fuelTokenReceiverAddress = fuelTokenReceiver.address.toHexString();
       eth_tokenId = signerToHexTokenId(ethereumTokenSender);
       fuel_testAssetId = getTokenId(fuel_testToken, eth_tokenId);
-      fuelTokenReceiverBalance = await fuelTokenReceiver.getBalance(
-        fuel_testAssetId
-      );
     });
 
     it('Bridge ERC721 via FuelERC721Gateway', async () => {
@@ -131,7 +121,7 @@ describe('Bridging ERC721 tokens', async function () {
         .approve(env.eth.fuelERC721Gateway.address, eth_tokenId);
 
       // use the FuelERC721Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      let result = await env.eth.fuelERC721Gateway
+      const result = await env.eth.fuelERC721Gateway
         .connect(ethereumTokenSender)
         .deposit(
           fuelTokenReceiverAddress,
@@ -160,7 +150,7 @@ describe('Bridging ERC721 tokens', async function () {
       expect(rest.length).to.be.equal(0);
 
       // parse events from logs
-      let event = env.eth.fuelMessagePortal.interface.parseLog(log);
+      const event = env.eth.fuelMessagePortal.interface.parseLog(log);
       fuelTokenMessageNonce = new BN(event.args.nonce.toHexString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
@@ -199,16 +189,12 @@ describe('Bridging ERC721 tokens', async function () {
     let fuelTokenSender: FuelWallet;
     let ethereumTokenReceiver: Wallet;
     let ethereumTokenReceiverAddress: string;
-    let ethereumTokenReceiverBalance: BigNumber;
     let withdrawMessageProof: MessageProof;
 
     before(async () => {
       fuelTokenSender = env.fuel.signers[0];
       ethereumTokenReceiver = env.eth.signers[1];
       ethereumTokenReceiverAddress = ethereumTokenReceiver.address;
-      ethereumTokenReceiverBalance = await eth_testToken.balanceOf(
-        ethereumTokenReceiverAddress
-      );
     });
 
     it('Bridge ERC721 via Fuel token contract', async () => {
@@ -259,7 +245,9 @@ describe('Bridging ERC721 tokens', async function () {
       );
 
       // check that the sender balance has decreased by the expected amount
-      let newSenderBalance = await fuelTokenSender.getBalance(fuel_testAssetId);
+      const newSenderBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
       expect(newSenderBalance.toNumber()).to.be.eq(0);
     });
 

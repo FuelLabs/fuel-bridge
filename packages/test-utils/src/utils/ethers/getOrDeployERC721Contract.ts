@@ -1,6 +1,8 @@
-import { TestEnvironment } from '../../setup';
-import { NFT__factory, NFT } from '@fuel-bridge/portal-contracts';
+import type { NFT } from '@fuel-bridge/solidity-contracts/typechain';
+import { NFT__factory } from '@fuel-bridge/solidity-contracts/typechain';
+
 import { debug } from '../logs';
+import type { TestEnvironment } from '../setup';
 
 const { ETH_ERC721_TOKEN_ADDRESS } = process.env;
 
@@ -9,7 +11,6 @@ export async function getOrDeployERC721Contract(env: TestEnvironment) {
   const ethDeployer = env.eth.deployer;
   const ethDeployerAddr = await ethDeployer.getAddress();
   const ethAcct = env.eth.signers[1];
-
   // load ERC721 contract
   let ethTestNft: NFT = null;
   if (ETH_ERC721_TOKEN_ADDRESS) {

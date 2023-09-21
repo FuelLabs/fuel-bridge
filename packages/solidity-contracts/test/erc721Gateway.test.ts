@@ -1,26 +1,23 @@
+import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
+import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
+import type { BigNumberish, BytesLike } from 'ethers';
+import { BigNumber as BN, BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
+
+import type { BlockHeaderLite } from '../protocol/blockHeader';
+import type BlockHeader from '../protocol/blockHeader';
 import {
-  BigNumber as BN,
-  BigNumber,
-  BigNumberish,
-  BytesLike,
-  Signer,
-} from 'ethers';
-import { Provider } from '@ethersproject/abstract-provider';
-import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
-import { HarnessObject, setupFuel } from '../protocol/harness';
-import BlockHeader, {
-  BlockHeaderLite,
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
 import { EMPTY, ZERO } from '../protocol/constants';
+import { setupFuel } from '../protocol/harness';
+import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomAddress, randomBytes32, tai64Time } from '../protocol/utils';
-import { NFT } from '../typechain';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { NFT } from '../typechain';
 
 const CONTRACT_MESSAGE_PREDICATE =
   '0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815';
@@ -481,11 +478,6 @@ describe('ERC721 Gateway', async () => {
   });
 
   describe('Make both valid and invalid ERC721 deposits', async () => {
-    let provider: Provider;
-    before(async () => {
-      provider = env.fuelMessagePortal.provider;
-    });
-
     it('Should be able to deposit tokens', async () => {
       const testDeposit = async (
         signer: SignerWithAddress,
