@@ -103,7 +103,7 @@ export async function setupEnvironment(
     process.env.FUEL_ERC20_GATEWAY_ADDRESS || '';
 
   // Create provider from http_fuel_client
-  const fuel_provider = new FuelProvider(http_fuel_client);
+  const fuel_provider = await FuelProvider.create(http_fuel_client);
   try {
     await fuel_provider.getBlockNumber();
   } catch (e) {
