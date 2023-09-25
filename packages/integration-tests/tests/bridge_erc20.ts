@@ -216,17 +216,16 @@ describe('Bridging ERC20 tokens', async function () {
           },
         })
         .fundWithRequiredCoins();
+      const transactionRequest = await scope.getTransactionRequest();
 
       // Remove input messages form the trasaction
       // This is a issue with the current Sway implementation
       // msg_sender().unwrap();
-      scope.transactionRequest.inputs = scope.transactionRequest.inputs.filter(
+      transactionRequest.inputs = transactionRequest.inputs.filter(
         (i) => i.type !== InputType.Message
       );
 
-      const tx = await fuelTokenSender.sendTransaction(
-        scope.transactionRequest
-      );
+      const tx = await fuelTokenSender.sendTransaction(transactionRequest);
       const fWithdrawTxResult = await tx.waitForResult();
       expect(fWithdrawTxResult.status).to.equal('success');
 
