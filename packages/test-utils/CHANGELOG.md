@@ -1,5 +1,11 @@
 # @fuel-bridge/test-utils
 
+## 0.1.1
+
+### Patch Changes
+
+- ✨ feat: update fuels-ts, by [@LuizAsFight](https://github.com/LuizAsFight) (See [#74](https://github.com/FuelLabs/fuel-bridge/pull/74))
+
 ## 0.1.0
 
 ### Patch Changes
