@@ -62,7 +62,7 @@ impl MessageReceiver for Contract {
         let message_data = MessageData::parse(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        let sub_id: SubId = message_data.token_id;
+        let sub_id = message_data.token_id;
         let asset_id = sha256((contract_id(), sub_id));
 
         if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
