@@ -489,8 +489,6 @@ mod success {
 mod revert {
     use super::*;
     use crate::utils::setup::get_asset_id;
-    use crate::utils::setup::RefundRegisteredEvent;
-    use fuels::programs::contract::SettableContract;
 
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]
