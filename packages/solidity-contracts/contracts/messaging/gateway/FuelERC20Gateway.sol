@@ -106,7 +106,7 @@ contract FuelERC20Gateway is
     }
 
     /// @notice Deposits the given tokens to an account on Fuel
-    /// @param to Fuel account to deposit tokens to
+    /// @param to Fuel address to deposit tokens to
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
