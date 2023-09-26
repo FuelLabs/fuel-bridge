@@ -60,9 +60,6 @@ describe('Bridging ERC20 tokens', async function () {
     );
     fuel_testContractId = fuel_testToken.id.toHexString();
     fuel_testAssetId = getTokenId(fuel_testToken);
-  });
-
-  it('Setup tokens to bridge', async () => {
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
       .dryRun();

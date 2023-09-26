@@ -65,9 +65,7 @@ describe('Bridging ERC721 tokens', async function () {
       0
     );
     fuel_testContractId = fuel_testToken.id.toHexString();
-  });
 
-  it('Setup tokens to bridge', async () => {
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
       .dryRun();
