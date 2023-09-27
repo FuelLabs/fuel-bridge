@@ -1,5 +1,7 @@
 use crate::utils::{
-    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, FROM, PROXY_TOKEN_DECIMALS, TO},
+    constants::{
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS, TO,
+    },
     setup::{
         create_msg_data, create_wallet, relay_message_to_contract, setup_environment,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
@@ -30,6 +32,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.test,
@@ -77,6 +80,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.max,
@@ -125,6 +129,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.test,
@@ -179,6 +184,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.max,
@@ -233,6 +239,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.test,
@@ -287,6 +294,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
             config.amount.max,
@@ -348,6 +356,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.not_enough,
@@ -397,7 +406,7 @@ mod success {
             Bits256(encode_hex(config.amount.not_enough))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -414,6 +423,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.one,
@@ -463,7 +473,7 @@ mod success {
             Bits256(encode_hex(config.overflow.one))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -480,6 +490,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
@@ -529,7 +540,7 @@ mod success {
             Bits256(encode_hex(config.overflow.two))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -546,6 +557,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.overflow.three,
@@ -595,7 +607,7 @@ mod success {
             Bits256(encode_hex(config.overflow.three))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
         assert_eq!(
@@ -615,6 +627,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
             config.amount.test,
@@ -666,7 +679,7 @@ mod success {
                 Bits256(encode_hex(config.amount.test))
             );
             assert_eq!(
-                refund_registered_event[0].asset,
+                refund_registered_event[0].token_address,
                 Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
             );
             assert_eq!(
@@ -686,6 +699,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,
@@ -735,7 +749,7 @@ mod success {
             Bits256(encode_hex(config.amount.min))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -754,6 +768,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,
@@ -767,6 +782,7 @@ mod success {
 
         let (message2, _, _) = create_msg_data(
             incorrect_token,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min + one,
@@ -829,7 +845,7 @@ mod success {
             Bits256(encode_hex(config.amount.min))
         );
         assert_eq!(
-            refund_registered_event[0].asset,
+            refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -841,7 +857,7 @@ mod success {
             Bits256(encode_hex(config.amount.min + one))
         );
         assert_eq!(
-            second_refund_registered_event[0].asset,
+            second_refund_registered_event[0].token_address,
             Bits256::from_hex_str(incorrect_token).unwrap()
         );
         assert_eq!(
@@ -865,6 +881,7 @@ mod revert {
 
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,

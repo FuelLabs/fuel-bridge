@@ -9,11 +9,12 @@ use fuels::{
 pub(crate) async fn claim_refund(
     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
     originator: Bits256,
-    asset: Bits256,
+    token_address: Bits256,
+    token_id: Bits256,
 ) -> FuelCallResponse<()> {
     contract
         .methods()
-        .claim_refund(originator, asset)
+        .claim_refund(originator, token_address, token_id)
         .call()
         .await
         .unwrap()

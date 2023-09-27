@@ -2,9 +2,12 @@ import chai from 'chai';
 import { solidity } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
 
-import type { HarnessObject } from '../protocol/harness';
+import type {
+  DeployedContractAddresses,
+  HarnessObject,
+} from '../protocol/harness';
 import { setupFuel, upgradeFuel } from '../protocol/harness';
-import type { UpgradeableTester } from '../typechain/UpgradeableTester.d';
+import type { UpgradeableTester } from '../typechain';
 
 chai.use(solidity);
 const { expect } = chai;
@@ -30,13 +33,15 @@ describe('Contract Upgradability', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
     it('Should be able to upgrade contracts', async () => {
-      const contracts = {
+      const contracts: DeployedContractAddresses = {
         FuelChainState: env.fuelChainState.address,
         FuelMessagePortal: env.fuelMessagePortal.address,
         FuelERC20Gateway: env.fuelERC20Gateway.address,
+        FuelERC721Gateway: env.fuelERC721Gateway.address,
         FuelChainState_impl: '',
         FuelMessagePortal_impl: '',
         FuelERC20Gateway_impl: '',
+        FuelERC721Gateway_impl: '',
       };
       const upgradedContracts = await upgradeFuel(contracts, env.deployer);
 

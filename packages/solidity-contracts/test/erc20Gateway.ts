@@ -40,6 +40,7 @@ declare class MerkleProof {
 // Computes data for message
 function computeMessageData(
   fuelTokenId: string,
+  tokenAddress: string,
   tokenId: string,
   from: string,
   to: string,
@@ -52,8 +53,24 @@ function computeMessageData(
       .substring(0, 4);
     if (data.length == 0) {
       return ethers.utils.solidityPack(
-        ['bytes32', 'bytes32', 'bytes32', 'bytes32', 'uint256', 'bytes1'],
-        [fuelTokenId, tokenId, from, to, amount, depositToContractFlag]
+        [
+          'bytes32',
+          'bytes32',
+          'bytes32',
+          'bytes32',
+          'bytes32',
+          'uint256',
+          'bytes1',
+        ],
+        [
+          fuelTokenId,
+          tokenAddress,
+          tokenId,
+          from,
+          to,
+          amount,
+          depositToContractFlag,
+        ]
       );
     } else {
       return ethers.utils.solidityPack(
@@ -62,17 +79,27 @@ function computeMessageData(
           'bytes32',
           'bytes32',
           'bytes32',
+          'bytes32',
           'uint256',
           'bytes1',
           'bytes',
         ],
-        [fuelTokenId, tokenId, from, to, amount, depositToContractFlag, data]
+        [
+          fuelTokenId,
+          tokenAddress,
+          tokenId,
+          from,
+          to,
+          amount,
+          depositToContractFlag,
+          data,
+        ]
       );
     }
   }
   return ethers.utils.solidityPack(
-    ['bytes32', 'bytes32', 'bytes32', 'bytes32', 'uint256'],
-    [fuelTokenId, tokenId, from, to, amount]
+    ['bytes32', 'bytes32', 'bytes32', 'bytes32', 'bytes32', 'uint256'],
+    [fuelTokenId, tokenAddress, tokenId, from, to, amount]
   );
 }
 
@@ -189,6 +216,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[2],
         tokenAddress,
         100,
+        ethers.constants.HashZero,
       ])
     );
     messageWithdrawal2 = new Message(
@@ -200,6 +228,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         75,
+        ethers.constants.HashZero,
       ])
     );
     messageWithdrawal3 = new Message(
@@ -211,6 +240,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         250,
+        ethers.constants.HashZero,
       ])
     );
     // message with amount too large
@@ -223,6 +253,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         1000,
+        ethers.constants.HashZero,
       ])
     );
     // message with zero value
@@ -235,6 +266,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         0,
+        ethers.constants.HashZero,
       ])
     );
     // message with bad L2 token
@@ -247,6 +279,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         10,
+        ethers.constants.HashZero,
       ])
     );
     // message with bad L1 token
@@ -259,6 +292,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         randomAddress(),
         10,
+        ethers.constants.HashZero,
       ])
     );
     // message from untrusted sender
@@ -271,6 +305,7 @@ describe('ERC20 Gateway', async () => {
         env.addresses[3],
         tokenAddress,
         250,
+        ethers.constants.HashZero,
       ])
     );
 
@@ -599,6 +634,7 @@ describe('ERC20 Gateway', async () => {
       const messageData = computeMessageData(
         fuelTokenTarget2,
         tokenAddress.split('0x').join('0x000000000000000000000000'),
+        ethers.constants.HashZero,
         env.addresses[0].split('0x').join('0x000000000000000000000000'),
         toAddress,
         depositAmount2
@@ -655,6 +691,7 @@ describe('ERC20 Gateway', async () => {
       const messageData = computeMessageData(
         fuelTokenTarget1,
         tokenAddress.split('0x').join('0x000000000000000000000000'),
+        ethers.constants.HashZero,
         env.addresses[0].split('0x').join('0x000000000000000000000000'),
         toAddress,
         depositAmount,
@@ -711,6 +748,7 @@ describe('ERC20 Gateway', async () => {
       const messageData = computeMessageData(
         fuelTokenTarget2,
         tokenAddress.split('0x').join('0x000000000000000000000000'),
+        ethers.constants.HashZero,
         env.addresses[0].split('0x').join('0x000000000000000000000000'),
         toAddress,
         depositAmount,
@@ -736,7 +774,8 @@ describe('ERC20 Gateway', async () => {
         env.fuelERC20Gateway.finalizeWithdrawal(
           env.addresses[2],
           tokenAddress,
-          BN.from(100)
+          BN.from(100),
+          ethers.constants.HashZero
         )
       ).to.be.revertedWith('Caller is not the portal');
     });
@@ -825,7 +864,8 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.reverted;
+
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -857,7 +897,7 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWith('Cannot withdraw zero');
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -889,7 +929,7 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.reverted;
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -921,7 +961,7 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.reverted;
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -953,7 +993,7 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.reverted;
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -1047,7 +1087,7 @@ describe('ERC20 Gateway', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWith('Pausable: paused');
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);

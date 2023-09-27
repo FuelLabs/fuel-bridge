@@ -7,4 +7,5 @@ pub enum BridgeFungibleTokenError {
     NoRefundAvailable: (),
     OverflowError: (),
     UnderflowError: (),
+    AssetNotFound: (),
 }

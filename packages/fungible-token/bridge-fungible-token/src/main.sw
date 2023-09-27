@@ -10,8 +10,8 @@ mod utils;
 use cast::*;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
-use data_structures::MessageData;
-use events::{DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
+use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
+use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{FRC20, FungibleBridge};
 use reentrancy::reentrancy_guard;
 use std::{
@@ -43,6 +43,7 @@ configurable {
 }
 
 storage {
+    asset_to_sub_id: StorageMap<b256, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
     tokens_minted: u64 = 0,
 }
@@ -61,9 +62,17 @@ impl MessageReceiver for Contract {
         let message_data = MessageData::parse(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
+        let sub_id = message_data.token_id;
+        let asset_id = sha256((contract_id(), sub_id));
+
+        if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
+        {
+            storage.asset_to_sub_id.insert(asset_id, sub_id);
+        };
+
         // register a refund if tokens don't match
-        if (message_data.token != BRIDGED_TOKEN) {
-            register_refund(message_data.from, message_data.token, message_data.amount);
+        if (message_data.token_address != BRIDGED_TOKEN) {
+            register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
             return;
         };
 
@@ -72,34 +81,33 @@ impl MessageReceiver for Contract {
         match res_amount {
             Result::Err(_) => {
                 // register a refund if value can't be adjusted
-                register_refund(message_data.from, message_data.token, message_data.amount);
+                register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
             },
             Result::Ok(amount) => {
-                let subId: SubId = ZERO_B256;
-                let tokenId = sha256((contract_id(), subId));
                 // mint tokens & update storage
-                mint(subId, amount);
+                mint(sub_id, amount);
                 match storage.tokens_minted.try_read() {
                     Option::Some(value) => storage.tokens_minted.write(value + amount),
                     Option::None => storage.tokens_minted.write(amount),
                 };
 
-                // when depositing to an address, msg_data.len is 160 bytes.
-                // when depositing to a contract, msg_data.len is 161 bytes.
-                // If msg_data.len is > 161 bytes, we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
+                // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
+                // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
+                // If msg_data.len is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, 
+                // we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
                 match message_data.len {
-                    160 => {
-                        transfer(message_data.to, tokenId, amount);
+                    ADDRESS_DEPOSIT_DATA_LEN => {
+                        transfer(message_data.to, asset_id, amount);
                     },
-                    161 => {
-                        transfer(message_data.to, tokenId, amount);
+                    CONTRACT_DEPOSIT_WITHOUT_DATA_LEN => {
+                        transfer(message_data.to, asset_id, amount);
                     },
                     _ => {
                         if let Identity::ContractId(id) = message_data.to {
                             let dest_contract = abi(MessageReceiver, id.into());
                             dest_contract.process_message {
                                 coins: amount,
-                                asset_id: tokenId,
+                                asset_id,
                             }(msg_idx);
                         };
                     },
@@ -117,15 +125,23 @@ impl MessageReceiver for Contract {
 
 impl FungibleBridge for Contract {
     #[storage(read, write)]
-    fn claim_refund(originator: b256, asset: b256) {
-        let stored_amount = storage.refund_amounts.get(originator).get(asset).read();
-        require(stored_amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
+    fn claim_refund(from: b256, token_address: b256, token_id: b256) {
+        let asset = sha256((token_address, token_id));
+        let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256);
+        require(amount != ZERO_B256, BridgeFungibleTokenError::NoRefundAvailable);
 
         // reset the refund amount to 0
-        storage.refund_amounts.get(originator).insert(asset, ZERO_B256);
+        storage.refund_amounts.get(from).insert(asset, ZERO_B256);
 
         // send a message to unlock this amount on the base layer gateway contract
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(originator, stored_amount, asset), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(from, amount, token_address, token_id), 0);
+
+        log(ClaimRefundEvent {
+            amount,
+            from,
+            token_address,
+            token_id,
+        });
     }
 
     #[payable]
@@ -133,20 +149,19 @@ impl FungibleBridge for Contract {
     fn withdraw(to: b256) {
         let amount = msg_amount();
         let asset_id = msg_asset_id();
+        let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        // TODO: We should store all the asset ids minted
-        // and check that the asset_id is on the list of minted assets
-        let origin_contract_id = sha256((contract_id(), ZERO_B256));
+        let origin_contract_id = sha256((contract_id(), sub_id));
         require(asset_id == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
         storage.tokens_minted.write(storage.tokens_minted.read() - amount);
-        burn(ZERO_B256, amount);
+        burn(sub_id, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
@@ -164,6 +179,11 @@ impl FungibleBridge for Contract {
 
     fn bridged_token_gateway() -> b256 {
         BRIDGED_TOKEN_GATEWAY
+    }
+
+    #[storage(read)]
+    fn asset_to_sub_id(asset_id: b256) -> b256 {
+        _asset_to_sub_id(asset_id)
     }
 }
 
@@ -188,15 +208,29 @@ impl FRC20 for Contract {
 
 // Storage-dependant private functions
 #[storage(write)]
-fn register_refund(from: b256, asset: b256, amount: b256) {
-    let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
-    let new_amount = U256::from(amount).add(previous_amount); // U256 has overflow checks built in;
-    let new_amount_b256 = <U256 as From<b256>>::into(new_amount);
+fn register_refund(
+    from: b256,
+    token_address: b256,
+    token_id: b256,
+    amount: b256,
+) {
+    let asset = sha256((token_address, token_id));
 
-    storage.refund_amounts.get(from).insert(asset, new_amount_b256);
+    let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
+    let new_amount: b256 = U256::from(amount).add(previous_amount).into(); // U256 has overflow checks built in;
+
+    storage.refund_amounts.get(from).insert(asset, new_amount);
     log(RefundRegisteredEvent {
         from,
-        asset,
+        token_address,
+        token_id,
         amount,
     });
+}
+
+#[storage(read)]
+fn _asset_to_sub_id(asset_id: b256) -> b256 {
+    let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
+    require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
+    sub_id.unwrap()
 }

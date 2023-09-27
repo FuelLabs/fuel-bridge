@@ -682,7 +682,7 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWith('Invalid message sender');
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -952,7 +952,7 @@ describe('Incoming Messages', async () => {
           blockInHistoryProof,
           messageInBlockProof
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWith('ReentrancyGuard: reentrant call');
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(
           messageReentrantId
