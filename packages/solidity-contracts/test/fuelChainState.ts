@@ -1,5 +1,4 @@
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import { BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
 
@@ -10,7 +9,6 @@ import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 
-chai.use(solidity);
 const { expect } = chai;
 
 // Create a simple block
@@ -280,7 +278,7 @@ describe('Fuel Chain State', async () => {
     it('Should not be able to verify invalid block', async () => {
       await expect(
         env.fuelChainState.finalized(randomBytes32(), 0)
-      ).to.be.revertedWith('Unknown block');
+      ).to.be.revertedWithCustomError(env.fuelChainState, 'UnknownBlock');
     });
   });
 

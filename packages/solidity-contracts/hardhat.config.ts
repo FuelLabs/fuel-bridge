@@ -1,6 +1,6 @@
 import { config as dotEnvConfig } from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/types';
-import '@nomiclabs/hardhat-waffle';
+import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-etherscan';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-typechain';

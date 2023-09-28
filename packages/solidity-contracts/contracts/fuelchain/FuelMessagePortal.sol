@@ -61,6 +61,19 @@ contract FuelMessagePortal is
     /// @dev Emitted when a message is successfully relayed to Ethereum from Fuel
     event MessageRelayed(bytes32 indexed messageId, bytes32 indexed sender, bytes32 indexed recipient, uint64 amount);
 
+    ////////////
+    // Errors //
+    ////////////
+
+    error UnfinalizedBlock();
+    error InvalidBlockInHistoryProof();
+    error InvalidMessageInBlockProof();
+    error CurrentMessageSenderNotSet();
+    error MessageDataTooLarge();
+    error AmountPrecisionIncompatibility();
+    error AmountTooBig();
+    error AlreadyRelayed();
+
     ///////////////
     // Constants //
     ///////////////
@@ -71,6 +84,7 @@ contract FuelMessagePortal is
     /// @dev The number of decimals that the base Fuel asset uses
     uint256 public constant FUEL_BASE_ASSET_DECIMALS = 9;
     uint256 public constant ETH_DECIMALS = 18;
+    uint256 public constant PRECISION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
     /// @dev The max message data size in bytes
     uint256 public constant MAX_MESSAGE_DATA_SIZE = 2 ** 16;
@@ -179,37 +193,34 @@ contract FuelMessagePortal is
         MerkleProof calldata messageInBlockProof
     ) external payable whenNotPaused {
         //verify root block header
-        require(
-            _fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height),
-            "Unfinalized root block"
-        );
+         if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
+            revert UnfinalizedBlock();
 
         //verify block in history
-        require(
-            verifyBinaryTree(
+        if(
+            !verifyBinaryTree(
                 rootBlockHeader.prevRoot,
                 abi.encodePacked(blockHeader.computeConsensusHeaderHash()),
                 blockInHistoryProof.proof,
                 blockInHistoryProof.key,
                 rootBlockHeader.height
-            ),
-            "Invalid block in history proof"
-        );
+            )
+            
+        ) revert InvalidBlockInHistoryProof();
 
         //verify message in block
         bytes32 messageId = CryptographyLib.hash(
             abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
         );
-        require(
-            verifyBinaryTree(
+        if(
+            !verifyBinaryTree(
                 blockHeader.outputMessagesRoot,
                 abi.encodePacked(messageId),
                 messageInBlockProof.proof,
                 messageInBlockProof.key,
                 blockHeader.outputMessagesCount
-            ),
-            "Invalid message in block proof"
-        );
+            )
+        ) revert InvalidMessageInBlockProof();
 
         //execute message
         _executeMessage(messageId, message);
@@ -225,7 +236,7 @@ contract FuelMessagePortal is
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
     /// @return sender the address of the sender on Fuel
     function messageSender() external view returns (bytes32) {
-        require(_incomingMessageSender != NULL_MESSAGE_SENDER, "Current message sender not set");
+        if (_incomingMessageSender == NULL_MESSAGE_SENDER) revert CurrentMessageSenderNotSet();
         return _incomingMessageSender;
     }
 
@@ -257,14 +268,14 @@ contract FuelMessagePortal is
         bytes32 sender = bytes32(uint256(uint160(msg.sender)));
         unchecked {
             //make sure data size is not too large
-            require(data.length < MAX_MESSAGE_DATA_SIZE, "message-data-too-large");
+            if (data.length >= MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
 
             //make sure amount fits into the Fuel base asset decimal level
             uint256 precision = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
             uint256 amount = msg.value / precision;
             if (msg.value > 0) {
-                require(amount * precision == msg.value, "amount-precision-incompatability");
-                require(amount <= ((2 ** 64) - 1), "amount-precision-incompatability");
+                if (amount * PRECISION != msg.value) revert AmountPrecisionIncompatibility();
+                if (amount > type(uint64).max) revert AmountTooBig();
             }
 
             // TODO: room for gas savings - double storage read for _outgoingMessageNonce
@@ -280,7 +291,7 @@ contract FuelMessagePortal is
     /// @param messageId The id of message to execute
     /// @param message The message to execute
     function _executeMessage(bytes32 messageId, Message calldata message) private nonReentrant {
-        require(!_incomingMessageSuccessful[messageId], "Already relayed");
+        if (_incomingMessageSuccessful[messageId]) revert AlreadyRelayed();
 
         //set message sender for receiving contract to reference
         _incomingMessageSender = message.sender;

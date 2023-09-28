@@ -1,7 +1,6 @@
 import type { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import { BigNumber as BN } from 'ethers';
 import { ethers } from 'hardhat';
 
@@ -18,7 +17,6 @@ import Message, { computeMessageId } from '../protocol/message';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 import type { MessageTester } from '../typechain/MessageTester.d';
 
-chai.use(solidity);
 const { expect } = chai;
 
 // Merkle tree node structure
@@ -466,15 +464,18 @@ describe('Incoming Messages', async () => {
     });
 
     it('Should not get a valid message sender outside of relaying', async () => {
-      await expect(env.fuelMessagePortal.messageSender()).to.be.revertedWith(
-        'Current message sender not set'
+      await expect(
+        env.fuelMessagePortal.messageSender()
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'CurrentMessageSenderNotSet'
       );
     });
 
     it('Should not be able to call messageable contract directly', async () => {
       await expect(
         messageTester.receiveMessage(messageTestData3, messageTestData3)
-      ).to.be.revertedWith('Caller is not the portal');
+      ).to.be.revertedWithCustomError(messageTester, 'CallerIsNotPortal');
     });
 
     it('Should not be able to relay message with bad root block', async () => {
@@ -495,7 +496,7 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Unknown block');
+      ).to.be.revertedWithCustomError(env.fuelChainState, 'UnknownBlock');
       await expect(
         env.fuelMessagePortal.relayMessage(
           message1,
@@ -504,7 +505,10 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Unfinalized root block');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'UnfinalizedBlock'
+      );
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -533,7 +537,10 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Invalid block in history proof');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'InvalidBlockInHistoryProof'
+      );
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -597,7 +604,7 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Already relayed');
+      ).to.be.revertedWithCustomError(env.fuelMessagePortal, 'AlreadyRelayed');
     });
 
     it('Should not be able to relay message with low gas', async () => {
@@ -682,7 +689,7 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Invalid message sender');
+      ).to.be.revertedWithCustomError(messageTester, 'InvalidMessageSender');
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -827,7 +834,10 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Invalid message in block proof');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'InvalidMessageInBlockProof'
+      );
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -859,7 +869,10 @@ describe('Incoming Messages', async () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Invalid message in block proof');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'InvalidMessageInBlockProof'
+      );
       expect(
         await provider.getBalance(env.fuelMessagePortal.address)
       ).to.be.equal(portalBalance);

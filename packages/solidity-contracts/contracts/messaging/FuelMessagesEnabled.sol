@@ -6,6 +6,13 @@ import {FuelMessagePortal} from "../fuelchain/FuelMessagePortal.sol";
 /// @title FuelMessagesEnabled
 /// @notice Helper contract for contracts sending and receiving messages from Fuel
 abstract contract FuelMessagesEnabled {
+    ////////////
+    // Errors //
+    ////////////
+
+    error CallerIsNotPortal();
+    error InvalidMessageSender();
+    
     /////////////
     // Storage //
     /////////////
@@ -19,15 +26,15 @@ abstract contract FuelMessagesEnabled {
 
     /// @notice Enforces that the modified function is only callable by the Fuel message portal
     modifier onlyFromPortal() {
-        require(msg.sender == address(_fuelMessagePortal), "Caller is not the portal");
+        if (msg.sender != address(_fuelMessagePortal)) revert CallerIsNotPortal();
         _;
     }
 
     /// @notice Enforces that the modified function is only callable by the portal and a specific Fuel account
     /// @param fuelSender The only sender on Fuel which is authenticated to call this function
     modifier onlyFromFuelSender(bytes32 fuelSender) {
-        require(msg.sender == address(_fuelMessagePortal), "Caller is not the portal");
-        require(_fuelMessagePortal.messageSender() == fuelSender, "Invalid message sender");
+        if (msg.sender != address(_fuelMessagePortal)) revert CallerIsNotPortal();
+        if (_fuelMessagePortal.messageSender() != fuelSender) revert InvalidMessageSender();
         _;
     }
 

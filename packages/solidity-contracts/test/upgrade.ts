@@ -1,5 +1,4 @@
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import { ethers } from 'hardhat';
 
 import type {
@@ -9,7 +8,6 @@ import type {
 import { setupFuel, upgradeFuel } from '../protocol/harness';
 import type { UpgradeableTester } from '../typechain';
 
-chai.use(solidity);
 const { expect } = chai;
 
 describe('Contract Upgradability', async () => {

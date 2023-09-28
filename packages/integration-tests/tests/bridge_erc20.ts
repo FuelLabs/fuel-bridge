@@ -17,7 +17,6 @@ import {
   getBlock,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import type { BigNumber, Signer } from 'ethers';
 import { Address, BN, InputType } from 'fuels';
 import type {
@@ -29,7 +28,6 @@ import type {
 
 LOG_CONFIG.debug = false;
 
-chai.use(solidity);
 const { expect } = chai;
 
 describe('Bridging ERC20 tokens', async function () {
@@ -78,15 +76,11 @@ describe('Bridging ERC20 tokens', async function () {
     expect(await eth_testToken.decimals()).to.equal(18);
 
     // mint tokens as starting balances
-    await expect(
-      eth_testToken.mint(await env.eth.deployer.getAddress(), 10_000)
-    ).to.not.be.reverted;
-    await expect(
-      eth_testToken.mint(await env.eth.signers[0].getAddress(), 10_000)
-    ).to.not.be.reverted;
-    await expect(
-      eth_testToken.mint(await env.eth.signers[1].getAddress(), 10_000)
-    ).to.not.be.reverted;
+    await eth_testToken.mint(await env.eth.deployer.getAddress(), 10_000);
+
+    await eth_testToken.mint(await env.eth.signers[0].getAddress(), 10_000);
+
+    await eth_testToken.mint(await env.eth.signers[1].getAddress(), 10_000);
   });
 
   describe('Bridge ERC20 to Fuel', async () => {
@@ -116,11 +110,9 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Bridge ERC20 via FuelERC20Gateway', async () => {
       // approve FuelERC20Gateway to spend the tokens
-      await expect(
-        eth_testToken
-          .connect(ethereumTokenSender)
-          .approve(env.eth.fuelERC20Gateway.address, NUM_TOKENS)
-      ).to.not.be.reverted;
+      await eth_testToken
+        .connect(ethereumTokenSender)
+        .approve(env.eth.fuelERC20Gateway.address, NUM_TOKENS);
 
       // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
       const tx = await env.eth.fuelERC20Gateway
@@ -264,15 +256,13 @@ describe('Bridging ERC20 tokens', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // relay message
-      await expect(
-        env.eth.fuelMessagePortal.relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        )
-      ).to.not.be.reverted;
+      await env.eth.fuelMessagePortal.relayMessage(
+        relayMessageParams.message,
+        relayMessageParams.rootBlockHeader,
+        relayMessageParams.blockHeader,
+        relayMessageParams.blockInHistoryProof,
+        relayMessageParams.messageInBlockProof
+      );
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {
