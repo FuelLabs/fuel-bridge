@@ -268,7 +268,7 @@ contract FuelMessagePortal is
         bytes32 sender = bytes32(uint256(uint160(msg.sender)));
         unchecked {
             //make sure data size is not too large
-            if (data.length > MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
+            if (data.length >= MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
 
             //make sure amount fits into the Fuel base asset decimal level
             uint256 precision = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
