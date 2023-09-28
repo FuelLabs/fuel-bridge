@@ -22,6 +22,7 @@
     "check": "pnpm solhint \"contracts/**/*.sol\"",
     "node": "pnpm hardhat node --network hardhat",
     "node-deploy": "QUICK_DEPLOY=true pnpm hardhat run --network localhost scripts/deployAll.ts",
+    "deploy-erc20-faucet": "pnpm hardhat run --network localhost scripts/deployERC20Faucet.ts",
     "start-mining": "pnpm hardhat run --no-compile --network localhost scripts/startAutoMining.ts",
     "script-deploy": "pnpm hardhat run scripts/deployAll.ts",
     "script-deploy-impl": "pnpm hardhat run scripts/deployImplementation.ts",

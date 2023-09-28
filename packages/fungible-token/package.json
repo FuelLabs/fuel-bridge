@@ -6,9 +6,12 @@
   "typings": "dist/index.d.ts",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "deploy-erc20-faucet": "cd scripts && ts-node ./deployFRC20FaucetContract.ts"
   },
   "devDependencies": {
-    "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader"
+    "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader",
+    "fuels": "0.58.0",
+    "ts-node": "^10.9.1"
   }
 }
