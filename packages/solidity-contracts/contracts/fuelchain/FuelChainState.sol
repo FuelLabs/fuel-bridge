@@ -45,6 +45,12 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     /// @dev Emitted when a commit is first submitted
     event CommitSubmitted(uint256 indexed commitHeight, bytes32 blockHash);
 
+    ////////////
+    // Errors //
+    ////////////
+
+    error UnknownBlock();
+
     /////////////
     // Storage //
     /////////////
@@ -117,7 +123,7 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
         // TODO This division could be done offchain, or at least also could be assembly'ed to avoid non-zero division check
         uint256 commitHeight = blockHeight / BLOCKS_PER_COMMIT_INTERVAL;
         Commit storage commitSlot = _commitSlots[commitHeight % NUM_COMMIT_SLOTS];
-        require(commitSlot.blockHash == blockHash, "Unknown block");
+        if (commitSlot.blockHash != blockHash) revert UnknownBlock();
 
         return block.timestamp >= uint256(commitSlot.timestamp) + TIME_TO_FINALIZE;
     }

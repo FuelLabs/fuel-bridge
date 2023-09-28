@@ -11,7 +11,6 @@ import {
   getBlock,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import type { BigNumber, Signer } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { Address, BN, BaseAssetId } from 'fuels';
@@ -21,7 +20,6 @@ import type {
   MessageProof,
 } from 'fuels';
 
-chai.use(solidity);
 const { expect } = chai;
 
 describe('Transferring ETH', async function () {
@@ -179,15 +177,13 @@ describe('Transferring ETH', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // relay message
-      await expect(
-        env.eth.fuelMessagePortal.relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        )
-      ).to.not.be.reverted;
+      await env.eth.fuelMessagePortal.relayMessage(
+        relayMessageParams.message,
+        relayMessageParams.rootBlockHeader,
+        relayMessageParams.blockHeader,
+        relayMessageParams.blockInHistoryProof,
+        relayMessageParams.messageInBlockProof
+      );
     });
 
     it('Check ETH arrived on Ethereum', async () => {

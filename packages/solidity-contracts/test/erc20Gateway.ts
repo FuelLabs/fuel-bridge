@@ -1,7 +1,6 @@
 import type { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import { BigNumber as BN, constants, utils } from 'ethers';
 import { ethers } from 'hardhat';
 
@@ -17,7 +16,6 @@ import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomAddress, randomBytes32, tai64Time } from '../protocol/utils';
 
-chai.use(solidity);
 const { expect } = chai;
 
 // Merkle tree node structure
@@ -777,7 +775,10 @@ describe('ERC20 Gateway', async () => {
           BN.from(100),
           ethers.constants.HashZero
         )
-      ).to.be.revertedWith('Caller is not the portal');
+      ).to.be.revertedWithCustomError(
+        env.fuelERC20Gateway,
+        'CallerIsNotPortal'
+      );
     });
 
     it('Should be able to finalize valid withdrawal through portal', async () => {

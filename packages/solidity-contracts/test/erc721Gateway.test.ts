@@ -1,7 +1,6 @@
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import type { BigNumberish, BytesLike } from 'ethers';
 import { BigNumber as BN, BigNumber } from 'ethers';
 import { ethers } from 'hardhat';
@@ -22,7 +21,6 @@ import type { NFT } from '../typechain';
 const CONTRACT_MESSAGE_PREDICATE =
   '0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815';
 
-chai.use(solidity);
 const { expect } = chai;
 
 // Merkle tree node structure
@@ -713,7 +711,10 @@ describe('ERC721 Gateway', async () => {
           BN.from(100),
           ethers.constants.HashZero
         )
-      ).to.be.revertedWith('Caller is not the portal');
+      ).to.be.revertedWithCustomError(
+        env.fuelERC721Gateway,
+        'CallerIsNotPortal'
+      );
     });
 
     it('Should be able to finalize valid withdrawal through portal', async () => {

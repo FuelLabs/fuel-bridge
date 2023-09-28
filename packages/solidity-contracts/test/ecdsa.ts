@@ -1,5 +1,4 @@
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import type { Contract } from 'ethers';
 import { BigNumber as BN } from 'ethers';
 import { SigningKey } from 'ethers/lib/utils';
@@ -7,7 +6,6 @@ import { ethers } from 'hardhat';
 
 import { componentSign } from '../protocol/validators';
 
-chai.use(solidity);
 const { expect } = chai;
 
 const SECP256K1N = BN.from(

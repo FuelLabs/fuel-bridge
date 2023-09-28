@@ -17,7 +17,6 @@ import {
   getOrDeployERC721Contract,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import type { Wallet } from 'ethers';
 import { BigNumber, utils } from 'ethers';
 import { Address, BN, InputType } from 'fuels';
@@ -30,7 +29,6 @@ import type {
 
 LOG_CONFIG.debug = false;
 
-chai.use(solidity);
 const { expect } = chai;
 
 const signerToHexTokenId = (signer: { address: string }) => {

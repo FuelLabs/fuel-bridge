@@ -1,6 +1,5 @@
 import type { Provider } from '@ethersproject/abstract-provider';
 import chai from 'chai';
-import { solidity } from 'ethereum-waffle';
 import { BigNumber as BN } from 'ethers';
 import { ethers } from 'hardhat';
 
@@ -9,7 +8,6 @@ import { setupFuel } from '../protocol/harness';
 import { randomBytes, randomBytes32 } from '../protocol/utils';
 import type { MessageTester } from '../typechain/MessageTester.d';
 
-chai.use(solidity);
 const { expect } = chai;
 
 describe('Outgoing Messages', async () => {
@@ -348,7 +346,10 @@ describe('Outgoing Messages', async () => {
         env.fuelMessagePortal.sendMessage(recipient, [], {
           value: 1,
         })
-      ).to.be.revertedWith('amount-precision-incompatability');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'AmountPrecisionIncompatibility'
+      );
     });
 
     it('Should not be able to send message with amount too big', async () => {
@@ -357,19 +358,31 @@ describe('Outgoing Messages', async () => {
         env.addresses[0],
         '0xf00000000000000000000000',
       ]);
+
+      const maxUint64 = BN.from('0xffffffffffffffff');
+      const precision = 10 ** 9;
+
+      const maxAllowedValue = maxUint64.mul(precision);
+      await env.fuelMessagePortal.sendMessage(recipient, [], {
+        value: maxAllowedValue,
+      });
+
+      const minUnallowedValue = maxUint64.add(1).mul(precision);
       await expect(
         env.fuelMessagePortal.sendMessage(recipient, [], {
-          value: BN.from('0x3b9aca000000000000000000'),
+          value: minUnallowedValue,
         })
-      ).to.be.revertedWith('amount-precision-incompatability');
+      ).to.be.revertedWithCustomError(env.fuelMessagePortal, 'AmountTooBig');
     });
-
     it('Should not be able to send message with too much data', async () => {
       const recipient = randomBytes32();
       const data = new Uint8Array(65536 + 1);
       await expect(
         env.fuelMessagePortal.sendMessage(recipient, data)
-      ).to.be.revertedWith('message-data-too-large');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'MessageDataTooLarge'
+      );
     });
 
     it('Should be able to send message with only ETH', async () => {
