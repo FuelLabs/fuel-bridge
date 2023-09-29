@@ -247,7 +247,7 @@ contract FuelMessagePortal is
     /// @notice Send a message to a recipient on Fuel
     /// @param recipient The target message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
-    function sendMessage(bytes32 recipient, bytes memory data) external payable whenNotPaused {
+    function sendMessage(bytes32 recipient, bytes calldata data) external payable whenNotPaused {
         _sendOutgoingMessage(recipient, data);
     }
 
@@ -280,10 +280,11 @@ contract FuelMessagePortal is
 
             // TODO: room for gas savings - double storage read for _outgoingMessageNonce
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            emit MessageSent(sender, recipient, _outgoingMessageNonce, uint64(amount), data);
+            uint nonce = _outgoingMessageNonce;
+            emit MessageSent(sender, recipient, nonce, uint64(amount), data);
 
             // increment nonce for next message
-            ++_outgoingMessageNonce;
+            _outgoingMessageNonce = nonce + 1;
         }
     }
 
