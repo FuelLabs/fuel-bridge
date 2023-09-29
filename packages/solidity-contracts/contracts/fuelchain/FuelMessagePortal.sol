@@ -278,7 +278,6 @@ contract FuelMessagePortal is
                 if (amount > type(uint64).max) revert AmountTooBig();
             }
 
-            // TODO: room for gas savings - double storage read for _outgoingMessageNonce
             //emit message for Fuel clients to pickup (messageID calculated offchain)
             uint nonce = _outgoingMessageNonce;
             emit MessageSent(sender, recipient, nonce, uint64(amount), data);
