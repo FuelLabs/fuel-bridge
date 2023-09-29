@@ -142,19 +142,7 @@ contract FuelERC20Gateway is
         uint256 amount,
         bytes calldata data
     ) external payable whenNotPaused {
-        if (data.length == 0) {
-            bytes memory messageData = abi.encodePacked(
-                fuelContractId,
-                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                bytes32(0), // OFFSET_TOKEN_ID = 64
-                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
-                to, // OFFSET_TO = 128
-                amount, // OFFSET_AMOUNT = 160
-                DEPOSIT_TO_CONTRACT // OFFSET_ROLE = 161
-            );
-            _deposit(tokenAddress, fuelContractId, amount, messageData);
-        } else {
-            bytes memory messageData = abi.encodePacked(
+        bytes memory messageData = abi.encodePacked(
                 fuelContractId,
                 bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
                 bytes32(0), // OFFSET_TOKEN_ID = 64
@@ -164,8 +152,7 @@ contract FuelERC20Gateway is
                 DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
                 data
             );
-            _deposit(tokenAddress, fuelContractId, amount, messageData);
-        }
+        _deposit(tokenAddress, fuelContractId, amount, messageData);
     }
 
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
