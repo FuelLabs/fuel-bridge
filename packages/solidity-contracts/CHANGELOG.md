@@ -1,5 +1,11 @@
 # @fuel-bridge/solidity-contracts
 
+## 0.2.1
+
+### Patch Changes
+
+- Changes require statements to if-revert-custom-error for better interfacing and reduced gas costs, by [@DefiCake](https://github.com/DefiCake) (See [#60](https://github.com/FuelLabs/fuel-bridge/pull/60))
+
 ## 0.2.0
 
 ### Minor Changes
