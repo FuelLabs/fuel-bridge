@@ -4,15 +4,20 @@ import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import type { BigNumber as BN, Signer } from 'ethers';
 import { ethers, upgrades } from 'hardhat';
 
-import type { FuelERC721Gateway, NFT } from '../typechain';
-import type { FuelChainState } from '../typechain/FuelChainState.d';
-import type { FuelERC20Gateway } from '../typechain/FuelERC20Gateway.d';
-import type { FuelMessagePortal } from '../typechain/FuelMessagePortal.d';
-import type { Token } from '../typechain/Token.d';
+import type {
+  FuelMessagePortal,
+  MockFuelMessagePortal,
+  FuelChainState,
+  FuelERC20Gateway,
+  FuelERC721Gateway,
+  Token,
+  NFT,
+} from '../typechain';
 
 // All deployable contracts.
 export interface DeployedContracts {
   fuelMessagePortal: FuelMessagePortal;
+  fuelMessagePortalMock: MockFuelMessagePortal;
   fuelChainState: FuelChainState;
   fuelERC20Gateway: FuelERC20Gateway;
   fuelERC721Gateway: FuelERC721Gateway;
@@ -29,12 +34,8 @@ export interface DeployedContractAddresses {
 }
 
 // The harness object.
-export interface HarnessObject {
+export interface HarnessObject extends DeployedContracts {
   contractAddresses: DeployedContractAddresses;
-  fuelMessagePortal: FuelMessagePortal;
-  fuelChainState: FuelChainState;
-  fuelERC20Gateway: FuelERC20Gateway;
-  fuelERC721Gateway: FuelERC721Gateway;
   token: Token;
   nft: NFT;
   signer: string;
@@ -119,10 +120,7 @@ export async function setupFuel(): Promise<HarnessObject> {
   // Return the Fuel harness object
   return {
     contractAddresses: await getContractAddresses(contracts),
-    fuelChainState: contracts.fuelChainState,
-    fuelMessagePortal: contracts.fuelMessagePortal,
-    fuelERC20Gateway: contracts.fuelERC20Gateway,
-    fuelERC721Gateway: contracts.fuelERC721Gateway,
+    ...contracts,
     token,
     nft,
     deployer,
@@ -161,6 +159,10 @@ export async function deployFuel(
   )) as FuelMessagePortal;
   await fuelMessagePortal.deployed();
 
+  const fuelMessagePortalMock = await ethers
+    .getContractFactory('MockFuelMessagePortal', deployer)
+    .then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
+
   // Deploy gateway contract for ERC20 bridging
   const FuelERC20Gateway = await ethers.getContractFactory(
     'FuelERC20Gateway',
@@ -168,7 +170,7 @@ export async function deployFuel(
   );
   const fuelERC20Gateway = (await upgrades.deployProxy(
     FuelERC20Gateway,
-    [fuelMessagePortal.address],
+    [fuelMessagePortalMock.address],
     {
       initializer: 'initialize',
     }
@@ -193,6 +195,7 @@ export async function deployFuel(
   return {
     fuelChainState,
     fuelMessagePortal,
+    fuelMessagePortalMock,
     fuelERC20Gateway,
     fuelERC721Gateway,
   };
