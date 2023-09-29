@@ -1,5 +1,11 @@
 # @fuel-bridge/solidity-contracts
 
+## 0.2.2
+
+### Patch Changes
+
+- Added some minor gas optimizations, by [@DefiCake](https://github.com/DefiCake) (See [#78](https://github.com/FuelLabs/fuel-bridge/pull/78))
+
 ## 0.2.1
 
 ### Patch Changes
