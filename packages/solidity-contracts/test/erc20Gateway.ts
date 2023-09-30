@@ -4,31 +4,74 @@ import type { BigNumberish } from 'ethers';
 import { BigNumber as BN, constants, utils } from 'ethers';
 import hre from 'hardhat';
 
-import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import { randomAddress, randomBytes32 } from '../protocol/utils';
+import type {
+  FuelERC20Gateway,
+  MockFuelMessagePortal,
+  Token,
+} from '../typechain';
 
 import { impersonateAccount } from './hardhat-utils/impersonateAccount';
 
 const { expect } = chai;
 const { ethers, deployments } = hre;
 
+type Fixture = Pick<
+  HarnessObject,
+  | 'token'
+  | 'fuelERC20Gateway'
+  | 'addresses'
+  | 'signers'
+  | 'deployer'
+  | 'initialTokenAmount'
+> & { fuelMessagePortalMock: MockFuelMessagePortal };
+
 describe('ERC20 Gateway', async () => {
-  let env: HarnessObject;
+  let env: Fixture;
 
   // Message data
   const fuelTokenTarget1 = randomBytes32();
   const fuelTokenTarget2 = randomBytes32();
 
-  const fixture = deployments.createFixture(async () => {
-    const env = await setupFuel();
+  const fixture = deployments.createFixture(async (hre) => {
+    const signers = await hre.ethers.getSigners();
+    const addresses = signers.map((signer) => signer.address);
+    const [deployer] = signers;
 
-    // set token approval for gateway
-    await env.token
-      .connect(env.signers[0])
-      .approve(env.fuelERC20Gateway.address, env.initialTokenAmount);
+    const token = await hre.ethers
+      .getContractFactory('Token', deployer)
+      .then((factory) => factory.deploy() as Promise<Token>);
+    const fuelMessagePortalMock = await hre.ethers
+      .getContractFactory('MockFuelMessagePortal', deployer)
+      .then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
+    const fuelERC20Gateway = await hre.ethers
+      .getContractFactory('FuelERC20Gateway', deployer)
+      .then(
+        (factory) =>
+          hre.upgrades.deployProxy(factory, [fuelMessagePortalMock.address], {
+            initializer: 'initialize',
+          }) as Promise<FuelERC20Gateway>
+      );
 
-    return env;
+    const initialTokenAmount = ethers.utils.parseEther('1000000');
+    for (let i = 0; i < signers.length; i += 1) {
+      await token.mint(await signers[i].getAddress(), initialTokenAmount);
+    }
+
+    await token
+      .connect(signers[0])
+      .approve(fuelERC20Gateway.address, initialTokenAmount);
+
+    return {
+      token,
+      fuelMessagePortalMock,
+      fuelERC20Gateway,
+      addresses,
+      signers,
+      deployer,
+      initialTokenAmount,
+    };
   });
 
   before(async () => {
@@ -80,7 +123,7 @@ describe('ERC20 Gateway', async () => {
       );
 
       async function behavesLikeGatewayDeposit(
-        { token, fuelERC20Gateway }: HarnessObject,
+        { token, fuelERC20Gateway }: Fixture,
         depositAmount: BigNumberish,
         depositRecipient: string,
         fuelTokenTarget: string

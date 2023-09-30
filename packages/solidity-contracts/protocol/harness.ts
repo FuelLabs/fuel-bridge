@@ -6,7 +6,6 @@ import { ethers, upgrades } from 'hardhat';
 
 import type {
   FuelMessagePortal,
-  MockFuelMessagePortal,
   FuelChainState,
   FuelERC20Gateway,
   FuelERC721Gateway,
@@ -17,7 +16,6 @@ import type {
 // All deployable contracts.
 export interface DeployedContracts {
   fuelMessagePortal: FuelMessagePortal;
-  fuelMessagePortalMock: MockFuelMessagePortal;
   fuelChainState: FuelChainState;
   fuelERC20Gateway: FuelERC20Gateway;
   fuelERC721Gateway: FuelERC721Gateway;
@@ -159,10 +157,6 @@ export async function deployFuel(
   )) as FuelMessagePortal;
   await fuelMessagePortal.deployed();
 
-  const fuelMessagePortalMock = await ethers
-    .getContractFactory('MockFuelMessagePortal', deployer)
-    .then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
-
   // Deploy gateway contract for ERC20 bridging
   const FuelERC20Gateway = await ethers.getContractFactory(
     'FuelERC20Gateway',
@@ -170,7 +164,7 @@ export async function deployFuel(
   );
   const fuelERC20Gateway = (await upgrades.deployProxy(
     FuelERC20Gateway,
-    [fuelMessagePortalMock.address],
+    [fuelMessagePortal.address],
     {
       initializer: 'initialize',
     }
@@ -195,7 +189,6 @@ export async function deployFuel(
   return {
     fuelChainState,
     fuelMessagePortal,
-    fuelMessagePortalMock,
     fuelERC20Gateway,
     fuelERC721Gateway,
   };
