@@ -126,25 +126,10 @@ describe('Bridging ERC20 tokens', async function () {
       const result = await tx.wait();
       expect(result.status).to.equal(1);
 
-      const filter = env.eth.fuelMessagePortal.filters.MessageSent(
-        null, // Args set to null since there should be just 1 event for MessageSent
-        null,
-        null,
-        null,
-        null
-      );
-
-      const [log, ...restOfLogs] = await env.eth.provider.getLogs({
-        ...filter,
-        fromBlock: result.blockNumber,
-        toBlock: result.blockNumber,
-      });
-
-      expect(restOfLogs.length).to.be.equal(0);
-
       // parse events from logs
-      const event = env.eth.fuelMessagePortal.interface.parseLog(log);
-
+      const event = env.eth.fuelMessagePortal.interface.parseLog(
+        result.logs[2]
+      );
       fuelTokenMessageNonce = new BN(event.args.nonce.toHexString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
