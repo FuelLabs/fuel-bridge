@@ -33,7 +33,7 @@ use std::{
     },
     u256::U256,
 };
-use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
+use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data, encode_register_calldata};
 
 configurable {
     DECIMALS: u8 = 9u8,
@@ -126,6 +126,11 @@ impl MessageReceiver for Contract {
 }
 
 impl Bridge for Contract {
+    #[storage(read)]
+    fn register_bridge() {
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_register_calldata(BRIDGED_TOKEN), 0);
+    }
+
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
