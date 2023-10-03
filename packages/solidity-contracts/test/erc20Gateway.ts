@@ -79,11 +79,6 @@ describe('ERC20 Gateway', async () => {
   });
 
   describe('Make both valid and invalid ERC20 deposits', async () => {
-    // let provider: Provider;
-    // before(async () => {
-    //   provider = env.fuelMessagePortal.provider;
-    // });
-
     it('Should not be able to deposit zero', async () => {
       const { token, fuelERC20Gateway } = env;
 

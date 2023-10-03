@@ -6,6 +6,10 @@ import type BlockHeader from './blockHeader';
 import { ZERO, EMPTY } from './constants';
 import hash from './cryptography';
 
+export const DEPOSIT_TO_CONTRACT_FLAG = ethers.utils
+  .keccak256(ethers.utils.toUtf8Bytes('DEPOSIT_TO_CONTRACT'))
+  .substring(0, 4);
+
 export function randomAddress(): string {
   return hash(
     BN.from(Math.floor(Math.random() * 1_000_000)).toHexString()
@@ -63,60 +67,34 @@ export function computeMessageData(
   amount: number,
   data?: BytesLike
 ): string {
+  const typings = [
+    'bytes32',
+    'bytes32',
+    'uint256',
+    'bytes32',
+    'bytes32',
+    'uint256',
+  ];
+  const values: (string | number | BN | BytesLike)[] = [
+    fuelContractId,
+    tokenAddress,
+    BigNumber.from(tokenId),
+    from,
+    to,
+    amount,
+  ];
+
   if (data) {
-    const depositToContractFlag = ethers.utils
-      .keccak256(ethers.utils.toUtf8Bytes('DEPOSIT_TO_CONTRACT'))
-      .substring(0, 4);
-    if (data.length == 0) {
-      return ethers.utils.solidityPack(
-        [
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes1',
-        ],
-        [
-          fuelContractId,
-          tokenAddress,
-          BigNumber.from(tokenId),
-          from,
-          to,
-          amount,
-          depositToContractFlag,
-        ]
-      );
-    } else {
-      return ethers.utils.solidityPack(
-        [
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes1',
-          'bytes',
-        ],
-        [
-          fuelContractId,
-          tokenAddress,
-          BigNumber.from(tokenId),
-          from,
-          to,
-          amount,
-          depositToContractFlag,
-          data,
-        ]
-      );
+    typings.push('bytes1');
+    values.push(DEPOSIT_TO_CONTRACT_FLAG);
+
+    if (data.length > 0) {
+      typings.push('bytes');
+      values.push(data);
     }
   }
-  return ethers.utils.solidityPack(
-    ['bytes32', 'bytes32', 'uint256', 'bytes32', 'bytes32', 'uint256'],
-    [fuelContractId, tokenAddress, BigNumber.from(tokenId), from, to, amount]
-  );
+
+  return ethers.utils.solidityPack(typings, values);
 }
 
 // Create a simple block
