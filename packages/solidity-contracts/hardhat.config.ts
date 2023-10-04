@@ -4,6 +4,7 @@ import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-etherscan';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-typechain';
+import 'hardhat-deploy';
 import 'solidity-coverage';
 import 'hardhat-gas-reporter';
 

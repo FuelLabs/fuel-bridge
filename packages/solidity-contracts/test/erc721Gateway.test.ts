@@ -2,7 +2,7 @@ import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import type { BigNumberish, BytesLike } from 'ethers';
-import { BigNumber as BN, BigNumber } from 'ethers';
+import { BigNumber as BN } from 'ethers';
 import { ethers } from 'hardhat';
 
 import type { BlockHeaderLite } from '../protocol/blockHeader';
@@ -15,7 +15,12 @@ import { EMPTY, ZERO } from '../protocol/constants';
 import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
-import { randomAddress, randomBytes32, tai64Time } from '../protocol/utils';
+import {
+  computeMessageData,
+  randomAddress,
+  randomBytes32,
+  tai64Time,
+} from '../protocol/utils';
 import type { NFT } from '../typechain';
 
 const CONTRACT_MESSAGE_PREDICATE =
@@ -38,72 +43,6 @@ declare class TreeNode {
 declare class MerkleProof {
   key: number;
   proof: string[];
-}
-
-// Computes data for message
-function computeMessageData(
-  fuelContractId: string,
-  tokenAddress: string,
-  tokenId: BigNumberish,
-  from: string,
-  to: string,
-  amount: number,
-  data?: BytesLike
-): string {
-  if (data) {
-    const depositToContractFlag = ethers.utils
-      .keccak256(ethers.utils.toUtf8Bytes('DEPOSIT_TO_CONTRACT'))
-      .substring(0, 4);
-    if (data.length == 0) {
-      return ethers.utils.solidityPack(
-        [
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes1',
-        ],
-        [
-          fuelContractId,
-          tokenAddress,
-          BigNumber.from(tokenId),
-          from,
-          to,
-          amount,
-          depositToContractFlag,
-        ]
-      );
-    } else {
-      return ethers.utils.solidityPack(
-        [
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes32',
-          'bytes32',
-          'uint256',
-          'bytes1',
-          'bytes',
-        ],
-        [
-          fuelContractId,
-          tokenAddress,
-          BigNumber.from(tokenId),
-          from,
-          to,
-          amount,
-          depositToContractFlag,
-          data,
-        ]
-      );
-    }
-  }
-  return ethers.utils.solidityPack(
-    ['bytes32', 'bytes32', 'uint256', 'bytes32', 'bytes32', 'uint256'],
-    [fuelContractId, tokenAddress, BigNumber.from(tokenId), from, to, amount]
-  );
 }
 
 // Create a simple block
