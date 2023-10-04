@@ -1,7 +1,14 @@
 // Helper functions for testing
-import { BigNumber as BN } from 'ethers';
+import type { BigNumberish, BytesLike } from 'ethers';
+import { BigNumber as BN, BigNumber, ethers } from 'ethers';
 
+import type BlockHeader from './blockHeader';
+import { ZERO, EMPTY } from './constants';
 import hash from './cryptography';
+
+export const DEPOSIT_TO_CONTRACT_FLAG = ethers.utils
+  .keccak256(ethers.utils.toUtf8Bytes('DEPOSIT_TO_CONTRACT'))
+  .substring(0, 4);
 
 export function randomAddress(): string {
   return hash(
@@ -48,4 +55,65 @@ export function tai64Time(millis: number): string {
   return BN.from(Math.floor(millis / 1000))
     .add(zeroPointOffset)
     .toHexString();
+}
+
+// Computes data for message
+export function computeMessageData(
+  fuelContractId: string,
+  tokenAddress: string,
+  tokenId: BigNumberish,
+  from: string,
+  to: string,
+  amount: number,
+  data?: BytesLike
+): string {
+  const typings = [
+    'bytes32',
+    'bytes32',
+    'uint256',
+    'bytes32',
+    'bytes32',
+    'uint256',
+  ];
+  const values: (string | number | BN | BytesLike)[] = [
+    fuelContractId,
+    tokenAddress,
+    BigNumber.from(tokenId),
+    from,
+    to,
+    amount,
+  ];
+
+  if (data) {
+    typings.push('bytes1');
+    values.push(DEPOSIT_TO_CONTRACT_FLAG);
+
+    if (data.length > 0) {
+      typings.push('bytes');
+      values.push(data);
+    }
+  }
+
+  return ethers.utils.solidityPack(typings, values);
+}
+
+// Create a simple block
+export function createFuelBlock(
+  prevRoot: string,
+  blockHeight: number,
+  timestamp?: string,
+  outputMessagesCount?: string,
+  outputMessagesRoot?: string
+): BlockHeader {
+  const header: BlockHeader = {
+    prevRoot: prevRoot ? prevRoot : ZERO,
+    height: blockHeight.toString(),
+    timestamp: timestamp ? timestamp : '0',
+    daHeight: '0',
+    txCount: '0',
+    outputMessagesCount: outputMessagesCount ? outputMessagesCount : '0',
+    txRoot: EMPTY,
+    outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
+  };
+  return header;
 }
