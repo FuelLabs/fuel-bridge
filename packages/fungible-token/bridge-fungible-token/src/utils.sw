@@ -102,12 +102,12 @@ pub fn encode_data(to: b256, amount: b256, bridged_token: b256, token_id: b256) 
 
 pub fn encode_register_calldata(bridged_token: b256) -> Bytes {
     let mut data = Bytes::with_capacity(36);
-    
+        
     // First 4 bytes are funcSig: aec97dc6  =>  registerAsReceiver(address)  
-    data.push(0x64u8);
-    data.push(0xa7u8);
-    data.push(0xfau8);
-    data.push(0xd9u8);
+    data.push(0xaeu8);
+    data.push(0xc9u8);
+    data.push(0x7du8);
+    data.push(0xc6u8);
 
     // Now the parameters
     data.append(Bytes::from(bridged_token));
