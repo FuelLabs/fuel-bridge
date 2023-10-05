@@ -16,6 +16,12 @@ WORKDIR /l1chain/fuel-v2-contracts
 
 # build the ethereum contracts and environment
 RUN pnpm install
+
+# Take advantage of cache by putting a placeholder and downloading the compiler
+ADD ./docker/l1-chain/Placeholder.sol /l1chain/fuel-v2-contracts/contracts/Placeholder.sol
+COPY ./docker/l1-chain/hardhat/hardhat.config.ts .
+RUN pnpm compile
+
 # replace the fuel chain consts values and change contract code
 ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
 ADD ./packages/solidity-contracts/scripts/replaceFuelChainConsts.ts /l1chain/fuel-v2-contracts/scripts/replaceFuelChainConsts.ts
@@ -27,7 +33,6 @@ RUN pnpm ts-node scripts/replaceFuelChainConsts.ts
 
 # remove build dependencies
 # RUN pnpm prune --prod
-COPY ./docker/l1-chain/hardhat/hardhat.config.ts .
 RUN pnpm compile
 
 # Create deployments dir
