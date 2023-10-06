@@ -8,7 +8,7 @@
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
       "source.fixAll.eslint": true
-    },
+    }
   },
   "solidity.compileUsingRemoteVersion": "v0.8.9+commit.e5eed63a"
 }
