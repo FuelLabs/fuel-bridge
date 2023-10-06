@@ -23,7 +23,7 @@ type Env = {
   deployer: SignerWithAddress;
 };
 
-describe.only('erc20GatewayV2', () => {
+describe('erc20GatewayV2', () => {
   const fixture = async () => {
     const signers = await hre.ethers.getSigners();
     const [deployer] = signers;
