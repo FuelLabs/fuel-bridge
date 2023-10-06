@@ -33,7 +33,12 @@ use std::{
     },
     u256::U256,
 };
-use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data, encode_register_calldata};
+use utils::{
+    adjust_deposit_decimals,
+    adjust_withdrawal_decimals,
+    encode_data,
+    encode_register_calldata,
+};
 
 configurable {
     DECIMALS: u8 = 9u8,
