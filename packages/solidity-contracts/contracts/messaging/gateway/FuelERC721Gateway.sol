@@ -58,7 +58,7 @@ contract FuelERC721Gateway is
     /////////////
 
     /// @notice Maps ERC721 tokens to its fuel bridge counterpart
-    mapping(address => mapping(uint256 => bytes32)) private _deposits;
+    mapping(address => mapping(uint256 => bytes32)) internal _deposits;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -190,7 +190,7 @@ contract FuelERC721Gateway is
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param tokenId tokenId to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 tokenId, bytes memory messageData) private {
+    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 tokenId, bytes memory messageData) internal virtual {
         // TODO: this check might be unnecessary. If the token is conformant to ERC721
         // it should not be possible to deposit the same token again
         require(_deposits[tokenAddress][tokenId] == 0, "tokenId is already owned by another fuel bridge");
