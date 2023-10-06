@@ -1,8 +1,12 @@
+import type { JsonRpcProvider } from '@ethersproject/providers';
 import type { MessageProof } from 'fuels';
 import { arrayify } from 'fuels';
 
 import { debug } from '../logs';
 import type { TestEnvironment } from '../setup';
+
+import { hardhatSkipTime } from './hardhatSkipTime';
+import { isHardhatProvider } from './isHardhatProvider';
 
 export async function waitForBlockFinalization(
   env: TestEnvironment,
@@ -10,6 +14,20 @@ export async function waitForBlockFinalization(
 ) {
   // connect to FuelChainState contract as the permissioned block comitter
   const fuelChainState = env.eth.fuelChainState.connect(env.eth.provider);
+
+  // If we are connecting to a hardhat instance, we can speed up the wait
+  if (await isHardhatProvider(env.eth.provider)) {
+    const time = await fuelChainState.TIME_TO_FINALIZE();
+
+    await hardhatSkipTime(env.eth.provider as JsonRpcProvider, time);
+
+    const isFinalized = await fuelChainState.finalized(
+      arrayify(messageProof.commitBlockHeader.id),
+      messageProof.commitBlockHeader.height.toString()
+    );
+
+    if (isFinalized) return;
+  }
 
   return new Promise((resolve) => {
     debug('Waiting for block to be finalized on L1...');
