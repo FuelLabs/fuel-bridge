@@ -3,7 +3,7 @@ import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import type { BigNumberish, BytesLike } from 'ethers';
 import { BigNumber as BN } from 'ethers';
-import { ethers } from 'hardhat';
+import { deployments, ethers } from 'hardhat';
 
 import type { BlockHeaderLite } from '../protocol/blockHeader';
 import type BlockHeader from '../protocol/blockHeader';
@@ -12,7 +12,6 @@ import {
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
 import { EMPTY, ZERO } from '../protocol/constants';
-import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import {
@@ -21,7 +20,12 @@ import {
   randomBytes32,
   tai64Time,
 } from '../protocol/utils';
-import type { NFT } from '../typechain';
+import type {
+  FuelChainState,
+  FuelERC721Gateway,
+  FuelMessagePortal,
+  NFT,
+} from '../typechain';
 
 const CONTRACT_MESSAGE_PREDICATE =
   '0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815';
@@ -76,8 +80,78 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
   return 0;
 }
 
+type Env = Pick<
+  HarnessObject,
+  | 'fuelChainState'
+  | 'fuelMessagePortal'
+  | 'nft'
+  | 'fuelERC721Gateway'
+  | 'addresses'
+  | 'signers'
+  | 'deployer'
+>;
+
+const fixture = deployments.createFixture(
+  async ({ ethers, upgrades: { deployProxy } }) => {
+    const signers = await ethers.getSigners();
+    const addresses = signers.map((signer) => signer.address);
+    const [deployer] = signers;
+
+    const proxyOptions = {
+      initializer: 'initialize',
+    };
+
+    const NFT = await ethers.getContractFactory('NFT', deployer);
+    const nft = (await NFT.deploy()) as NFT;
+
+    const fuelChainState = await ethers
+      .getContractFactory('FuelChainState', deployer)
+      .then(
+        (factory) =>
+          deployProxy(factory, [], proxyOptions) as Promise<FuelChainState>
+      );
+
+    const fuelMessagePortal = await ethers
+      .getContractFactory('FuelMessagePortal', deployer)
+      .then(
+        (factory) =>
+          deployProxy(
+            factory,
+            [fuelChainState.address],
+            proxyOptions
+          ) as Promise<FuelMessagePortal>
+      );
+
+    const fuelERC721Gateway = await ethers
+      .getContractFactory('FuelERC721Gateway', deployer)
+      .then(
+        (factory) =>
+          deployProxy(
+            factory,
+            [fuelMessagePortal.address],
+            proxyOptions
+          ) as Promise<FuelERC721Gateway>
+      );
+
+    // Mint some dummy token for deposit testing
+    for (let i = 0; i < signers.length; i += 1) {
+      await nft.mint(await signers[i].getAddress(), i);
+    }
+
+    return {
+      nft,
+      fuelChainState,
+      fuelMessagePortal,
+      fuelERC721Gateway,
+      addresses,
+      signers,
+      deployer,
+    };
+  }
+);
+
 describe('ERC721 Gateway', async () => {
-  let env: HarnessObject;
+  let env: Env;
 
   // Contract constants
   const TIME_TO_FINALIZE = 10800;
@@ -137,7 +211,7 @@ describe('ERC721 Gateway', async () => {
   }
 
   before(async () => {
-    env = await setupFuel();
+    env = await fixture();
 
     // get data for building messages
     gatewayAddress = env.fuelERC721Gateway.address
@@ -262,12 +336,6 @@ describe('ERC721 Gateway', async () => {
       0
     );
     ethers.provider.send('evm_increaseTime', [TIME_TO_FINALIZE]);
-
-    // set token approval for gateway
-    await env.token.approve(
-      env.fuelERC721Gateway.address,
-      env.initialTokenAmount
-    );
   });
 
   describe('Verify access control', async () => {
@@ -765,10 +833,6 @@ describe('ERC721 Gateway', async () => {
     });
 
     it('Should not be able to finalize withdrawal with bad sender', async () => {
-      const gatewayBalance = await env.token.balanceOf(
-        env.fuelERC721Gateway.address
-      );
-      const recipientBalance = await env.token.balanceOf(env.addresses[3]);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageBadSender,
         26
@@ -788,12 +852,6 @@ describe('ERC721 Gateway', async () => {
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
-      expect(
-        await env.token.balanceOf(env.fuelERC721Gateway.address)
-      ).to.be.equal(gatewayBalance);
-      expect(await env.token.balanceOf(env.addresses[3])).to.be.equal(
-        recipientBalance
-      );
     });
   });
 
@@ -886,10 +944,6 @@ describe('ERC721 Gateway', async () => {
     });
 
     it('Should not be able to deposit when paused', async () => {
-      const gatewayBalance = await env.token.balanceOf(
-        env.fuelERC721Gateway.address
-      );
-
       // Deposit 175 to fuelTokenTarget1
       await expect(
         env.fuelERC721Gateway.deposit(
@@ -899,16 +953,9 @@ describe('ERC721 Gateway', async () => {
           175
         )
       ).to.be.revertedWith('Pausable: paused');
-      expect(
-        await env.token.balanceOf(env.fuelERC721Gateway.address)
-      ).to.be.equal(gatewayBalance);
     });
 
     it('Should not be able to deposit with data when paused', async () => {
-      const gatewayBalance = await env.token.balanceOf(
-        env.fuelERC721Gateway.address
-      );
-
       // Deposit 205 to fuelTokenTarget1
       await expect(
         env.fuelERC721Gateway.depositWithData(
@@ -919,9 +966,6 @@ describe('ERC721 Gateway', async () => {
           []
         )
       ).to.be.revertedWith('Pausable: paused');
-      expect(
-        await env.token.balanceOf(env.fuelERC721Gateway.address)
-      ).to.be.equal(gatewayBalance);
     });
 
     it('Should be able to unpause as admin', async () => {
