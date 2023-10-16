@@ -94,7 +94,7 @@ const ETH_AMOUNT = '0.1';
   console.log('Building message proof...');
   const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
 
-  console.log('Waiting for block to be commited...');
+  console.log('Waiting for block to be committed...');
   const withdrawBlock = await getBlock(
     env.fuel.provider.url,
     fWithdrawTxResult.blockId

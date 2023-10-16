@@ -218,7 +218,7 @@ describe('Bridging ERC20 tokens', async function () {
       const fWithdrawTxResult = await tx.waitForResult();
       expect(fWithdrawTxResult.status).to.equal('success');
 
-      // Wait for the commited block
+      // Wait for the committed block
       const withdrawBlock = await getBlock(
         env.fuel.provider.url,
         fWithdrawTxResult.blockId
