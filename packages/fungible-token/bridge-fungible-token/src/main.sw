@@ -12,7 +12,7 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::{FRC20, FungibleBridge};
+use interface::{frc20::FRC20, bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
@@ -29,6 +29,7 @@ use std::{
         mint,
         transfer,
     },
+    string::String,
     u256::U256,
 };
 use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
@@ -123,7 +124,7 @@ impl MessageReceiver for Contract {
     }
 }
 
-impl FungibleBridge for Contract {
+impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
@@ -193,16 +194,28 @@ impl FRC20 for Contract {
         U256::from((0, 0, 0, storage.tokens_minted.read()))
     }
 
+    #[storage(read)]
     fn name() -> str[64] {
         NAME
     }
 
+    #[storage(read)]
     fn symbol() -> str[32] {
         SYMBOL
     }
 
+    #[storage(read)]
     fn decimals() -> u8 {
         DECIMALS
+    }
+}
+
+impl SRC7 for Contract {
+
+    // TODO: implement SRC-8
+    #[storage(read)]
+    fn metadata(asset: AssetId, key: String) -> Option<Metadata> {
+        None
     }
 }
 
