@@ -1,43 +1,43 @@
 [[package]]
-name = 'bridge_fungible_token'
-source = 'member'
+name = "bridge_fungible_token"
+source = "member"
 dependencies = [
-    'contract_message_receiver',
-    'reentrancy',
-    'std',
+    "contract_message_receiver",
+    "reentrancy",
+    "std",
 ]
 
 [[package]]
-name = 'contract_message_receiver'
-source = 'member'
-dependencies = ['std']
+name = "contract_message_receiver"
+source = "member"
+dependencies = ["std"]
 
 [[package]]
-name = 'contract_message_test'
-source = 'member'
+name = "contract_message_test"
+source = "member"
 dependencies = [
-    'contract_message_receiver',
-    'std',
+    "contract_message_receiver",
+    "std",
 ]
 
 [[package]]
-name = 'core'
-source = 'path+from-root-EB296BD18C0E4CC4'
+name = "core"
+source = "path+from-root-AD80769CAE44474A"
 
 [[package]]
-name = 'reentrancy'
-source = 'git+https://github.com/FuelLabs/sway-libs?tag=v0.12.0#063f118a3104adb6a04207ca877993b5ad03a492'
-dependencies = ['std']
+name = "reentrancy"
+source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.12.0#063f118a3104adb6a04207ca877993b5ad03a492"
+dependencies = ["std"]
 
 [[package]]
-name = 'std'
-source = 'git+https://github.com/fuellabs/sway?tag=v0.44.1#04a597093e7441898933dd412b8e4dc6ac860cd3'
-dependencies = ['core']
+name = "std"
+source = "git+https://github.com/fuellabs/sway?tag=v0.46.0#e75f14b03636bc96751a6760304a1a6d3eb5937d"
+dependencies = ["core"]
 
 [[package]]
-name = 'test_deposit_recipient_contract'
-source = 'member'
+name = "test_deposit_recipient_contract"
+source = "member"
 dependencies = [
-    'contract_message_receiver',
-    'std',
+    "contract_message_receiver",
+    "std",
 ]

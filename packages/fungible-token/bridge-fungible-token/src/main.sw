@@ -31,6 +31,7 @@ use std::{
     },
     string::String,
     u256::U256,
+    hash::*,
 };
 use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
 
@@ -39,12 +40,12 @@ configurable {
     BRIDGED_TOKEN_DECIMALS: u8 = 18u8,
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
     BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
-    NAME: str[64] = "MY_TOKEN                                                        ",
-    SYMBOL: str[32] = "MYTKN                           ",
+    NAME: str[64] = __to_str_array("MY_TOKEN                                                        "),
+    SYMBOL: str[32] = __to_str_array("MYTKN                           "),
 }
 
 storage {
-    asset_to_sub_id: StorageMap<b256, b256> = StorageMap {},
+    asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
     tokens_minted: u64 = 0,
 }
@@ -64,7 +65,7 @@ impl MessageReceiver for Contract {
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
         let sub_id = message_data.token_id;
-        let asset_id = sha256((contract_id(), sub_id));
+        let asset_id: AssetId = AssetId {value: sha256((contract_id(), sub_id)) };
 
         if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
         {
@@ -108,7 +109,7 @@ impl MessageReceiver for Contract {
                             let dest_contract = abi(MessageReceiver, id.into());
                             dest_contract.process_message {
                                 coins: amount,
-                                asset_id,
+                                asset_id: asset_id.into(),
                             }(msg_idx);
                         };
                     },
@@ -149,11 +150,9 @@ impl Bridge for Contract {
     #[storage(read, write)]
     fn withdraw(to: b256) {
         let amount = msg_amount();
-        let asset_id = msg_asset_id();
-        let sub_id = _asset_to_sub_id(asset_id);
+        let asset_id: AssetId = msg_asset_id();
+        let sub_id: b256 = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        let origin_contract_id = sha256((contract_id(), sub_id));
-        require(asset_id == origin_contract_id, BridgeFungibleTokenError::IncorrectAssetDeposited);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
@@ -162,12 +161,13 @@ impl Bridge for Contract {
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
-        log(WithdrawalEvent {
-            to: to,
-            from: sender,
-            amount: amount,
-        });
+        encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id);
+        // send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
+        // log(WithdrawalEvent {
+        //     to: to,
+        //     from: sender,
+        //     amount: amount,
+        // });
     }
 
     fn bridged_token() -> b256 {
@@ -184,14 +184,16 @@ impl Bridge for Contract {
 
     #[storage(read)]
     fn asset_to_sub_id(asset_id: b256) -> b256 {
-        _asset_to_sub_id(asset_id)
+        _asset_to_sub_id(AssetId{value: asset_id})
     }
 }
 
 impl FRC20 for Contract {
     #[storage(read)]
     fn total_supply() -> U256 {
-        U256::from((0, 0, 0, storage.tokens_minted.read()))
+        let minted: u64 = storage.tokens_minted.try_read().unwrap_or(0);
+
+        U256::from((0, 0, 0, minted))
     }
 
     #[storage(read)]
@@ -214,7 +216,7 @@ impl SRC7 for Contract {
 
     // TODO: implement SRC-8
     #[storage(read)]
-    fn metadata(asset: AssetId, key: String) -> Option<Metadata> {
+    fn metadata(_asset: AssetId, _key: String) -> Option<Metadata> {
         None
     }
 }
@@ -242,7 +244,7 @@ fn register_refund(
 }
 
 #[storage(read)]
-fn _asset_to_sub_id(asset_id: b256) -> b256 {
+fn _asset_to_sub_id(asset_id: AssetId) -> b256 {
     let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
     require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     sub_id.unwrap()

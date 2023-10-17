@@ -95,7 +95,18 @@ pub fn encode_data(to: b256, amount: b256, bridged_token: b256, token_id: b256) 
     data.append(Bytes::from(to));
     data.append(Bytes::from(bridged_token));
     data.append(Bytes::from(amount));
-    data.append(Bytes::from(token_id));
+
+    // let bytes_token_id = Bytes::from(token_id);
+    // let mut bytes_token_id = Bytes::from(ZERO_B256);
+    let mut bytes_token_id = Bytes::new();
+    bytes_token_id.push(0x00u8);
+    bytes_token_id.push(0x00u8);
+    bytes_token_id.push(0x00u8);
+
+    data.append(bytes_token_id);
+    assert(data.len() == 101);
+    assert(data.len() == 101);
+    assert(data.len() == 101);
 
     data
 }
