@@ -161,8 +161,7 @@ impl Bridge for Contract {
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, ZERO_B256), 0);
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
