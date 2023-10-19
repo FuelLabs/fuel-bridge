@@ -10,6 +10,6 @@ pub enum Metadata {
 }
 
 abi SRC7 {
-     #[storage(read)]
-     fn metadata(asset: AssetId, key: String) -> Option<Metadata>;
+    #[storage(read)]
+    fn metadata(asset: AssetId, key: String) -> Option<Metadata>;
 }

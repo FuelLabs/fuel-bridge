@@ -415,18 +415,18 @@ mod success {
 
         assert_eq!(balance, fuel_side_token_amount);
 
-        // // Now try to withdraw
+        // Now try to withdraw
         let withdrawal_amount = fuel_side_token_amount;
         let gas = 10_000;
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
-        
+
         let message_receipt = call_response
-        .receipts
-        .iter()
-        .find(|&r| matches!(r, Receipt::MessageOut { .. }))
-        .unwrap();
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
 
         let (selector, to, token, msg_data_amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
@@ -486,11 +486,10 @@ mod success {
     }
 }
 
-
 mod revert {
     use super::*;
     use crate::utils::setup::get_asset_id;
-    
+
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]
     async fn withdraw_fails_with_too_small_value() {
@@ -500,12 +499,12 @@ mod revert {
         if BRIDGED_TOKEN_DECIMALS >= PROXY_TOKEN_DECIMALS {
             panic!("Revert(0)");
         }
-        
+
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        
+
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
@@ -517,16 +516,16 @@ mod revert {
             None,
         )
         .await;
-    
-    let (bridge, utxo_inputs, provider) = setup_environment(
-        &mut wallet,
-        vec![coin],
-        vec![message],
-        deposit_contract,
-        None,
-        configurables,
-    )
-    .await;
+
+        let (bridge, utxo_inputs, provider) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -536,26 +535,25 @@ mod revert {
             &utxo_inputs.coin[..],
         )
         .await;
-    
-    let asset_balance =
-    contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-    let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
-    
-    // Verify the message value was received by the bridge contract
-    assert_eq!(asset_balance, MESSAGE_AMOUNT);
-    
-    // Check that wallet now has bridged coins
-    assert_eq!(balance, config.fuel_equivalent_amount(config.amount.max));
-    
-    // Now try to withdraw
-    let withdrawal_amount = 999999999;
-    let gas = 0;
-    let to = Bits256(*wallet.address().hash());
-    
-    // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
-    withdraw(&bridge, to, withdrawal_amount, gas).await;
+
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        // Verify the message value was received by the bridge contract
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.max));
+
+        // Now try to withdraw
+        let withdrawal_amount = 999999999;
+        let gas = 0;
+        let to = Bits256(*wallet.address().hash());
+
+        // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
+        withdraw(&bridge, to, withdrawal_amount, gas).await;
     }
-    
 
     #[tokio::test]
     #[should_panic(expected = "AssetNotFound")]

@@ -19,8 +19,8 @@ use fuels::{
     },
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
-        Address, AssetConfig, AssetId as FuelsAssetId, Bech32ContractId, Config, Contract, ContractId,
-        LoadConfiguration, Provider, ScriptTransaction, TxParameters,
+        Address, AssetConfig, AssetId as FuelsAssetId, Bech32ContractId, Config, Contract,
+        ContractId, LoadConfiguration, Provider, ScriptTransaction, TxParameters,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{message::Message, Bits256},
@@ -319,7 +319,11 @@ pub(crate) async fn relay_message_to_contract(
         message,
         contracts,
         gas_coins,
-        &[Output::variable(Address::zeroed(), 0, FuelsAssetId::default())],
+        &[Output::variable(
+            Address::zeroed(),
+            0,
+            FuelsAssetId::default(),
+        )],
         TxParameters::default(),
     )
     .await;

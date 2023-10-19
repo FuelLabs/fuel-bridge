@@ -12,7 +12,7 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::{frc20::FRC20, bridge::Bridge, src7::{Metadata, SRC7}};
+use interface::{bridge::Bridge, frc20::FRC20, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
@@ -21,17 +21,17 @@ use std::{
     },
     constants::ZERO_B256,
     context::msg_amount,
+    hash::Hash,
     hash::sha256,
     inputs::input_message_sender,
     message::send_message,
+    string::String,
     token::{
         burn,
         mint,
         transfer,
     },
-    string::String,
     u256::U256,
-    hash::Hash,
 };
 use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
 
@@ -65,7 +65,7 @@ impl MessageReceiver for Contract {
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
         let sub_id = message_data.token_id;
-        let asset_id: AssetId = AssetId {value: sha256((contract_id(), sub_id)) };
+        let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
 
         if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
         {
@@ -150,8 +150,8 @@ impl Bridge for Contract {
     #[storage(read, write)]
     fn withdraw(to: b256) {
         let amount = msg_amount();
-        let asset_id: AssetId = msg_asset_id();
-        let sub_id: b256 = _asset_to_sub_id(asset_id);
+        let asset_id = msg_asset_id();
+        let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
@@ -162,7 +162,7 @@ impl Bridge for Contract {
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
 
-        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, ZERO_B256), 0);        
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, ZERO_B256), 0);
         log(WithdrawalEvent {
             to: to,
             from: sender,
@@ -184,7 +184,7 @@ impl Bridge for Contract {
 
     #[storage(read)]
     fn asset_to_sub_id(asset_id: b256) -> b256 {
-        _asset_to_sub_id(AssetId{value: asset_id})
+        _asset_to_sub_id(AssetId::from(asset_id))
     }
 }
 
@@ -213,7 +213,6 @@ impl FRC20 for Contract {
 }
 
 impl SRC7 for Contract {
-
     // TODO: implement SRC-8
     #[storage(read)]
     fn metadata(_asset: AssetId, _key: String) -> Option<Metadata> {
