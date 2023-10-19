@@ -26,7 +26,7 @@ pub(crate) async fn withdraw(
     amount: u64,
     gas: u64,
 ) -> FuelCallResponse<()> {
-    let tx_params = TxParameters::new(0, 30_000_000, 0);
+    let tx_params = TxParameters::new(0, gas, 0);
     let contract_id = contract.contract_id();
     let asset_id = get_asset_id(contract_id);
     let call_params = CallParameters::new(amount, asset_id, gas);

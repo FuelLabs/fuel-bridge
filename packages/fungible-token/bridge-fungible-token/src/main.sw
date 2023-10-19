@@ -31,7 +31,7 @@ use std::{
     },
     string::String,
     u256::U256,
-    hash::*,
+    hash::Hash,
 };
 use utils::{adjust_deposit_decimals, adjust_withdrawal_decimals, encode_data};
 
@@ -161,13 +161,13 @@ impl Bridge for Contract {
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
-        encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id);
-        // send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
-        // log(WithdrawalEvent {
-        //     to: to,
-        //     from: sender,
-        //     amount: amount,
-        // });
+
+        send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, ZERO_B256), 0);        
+        log(WithdrawalEvent {
+            to: to,
+            from: sender,
+            amount: amount,
+        });
     }
 
     fn bridged_token() -> b256 {
