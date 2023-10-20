@@ -159,7 +159,7 @@ export async function deployFuel(
 
   // Deploy gateway contract for ERC20 bridging
   const FuelERC20Gateway = await ethers.getContractFactory(
-    'FuelERC20Gateway',
+    'FuelERC20GatewayV2',
     deployer
   );
   const fuelERC20Gateway = (await upgrades.deployProxy(
@@ -173,7 +173,7 @@ export async function deployFuel(
 
   // Deploy gateway contract for ERC721 bridging
   const FuelERC721Gateway = await ethers.getContractFactory(
-    'FuelERC721Gateway',
+    'FuelERC721GatewayV2',
     deployer
   );
   const fuelERC721Gateway = (await upgrades.deployProxy(

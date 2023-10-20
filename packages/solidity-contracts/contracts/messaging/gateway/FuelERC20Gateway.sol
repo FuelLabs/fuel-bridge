@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.9;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
@@ -54,7 +54,7 @@ contract FuelERC20Gateway is
     /////////////
 
     /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
-    mapping(address => mapping(bytes32 => uint256)) private _deposits;
+    mapping(address => mapping(bytes32 => uint256)) internal _deposits;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -101,7 +101,7 @@ contract FuelERC20Gateway is
     /// @param tokenAddress ERC-20 token address
     /// @param fuelContractId ID of the corresponding token on Fuel
     /// @return amount of tokens deposited
-    function tokensDeposited(address tokenAddress, bytes32 fuelContractId) public view returns (uint256) {
+    function tokensDeposited(address tokenAddress, bytes32 fuelContractId) public view virtual returns (uint256) {
         return _deposits[tokenAddress][fuelContractId];
     }
 
@@ -116,7 +116,7 @@ contract FuelERC20Gateway is
         address tokenAddress,
         bytes32 fuelContractId,
         uint256 amount
-    ) external payable whenNotPaused {
+    ) external virtual payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
@@ -141,7 +141,7 @@ contract FuelERC20Gateway is
         bytes32 fuelContractId,
         uint256 amount,
         bytes calldata data
-    ) external payable whenNotPaused {
+    ) external virtual payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
                 fuelContractId,
                 bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
@@ -181,7 +181,7 @@ contract FuelERC20Gateway is
 
     /// @notice Allows the admin to rescue ETH sent to this contract by accident
     /// @dev Made payable to reduce gas costs
-    function rescueETH() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function rescueETH() external virtual payable onlyRole(DEFAULT_ADMIN_ROLE) {
         (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
         require(success);
     }
@@ -195,7 +195,7 @@ contract FuelERC20Gateway is
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) private {
+    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) internal virtual {
         require(amount > 0, "Cannot deposit zero");
 
         //transfer tokens to this contract and update deposit balance

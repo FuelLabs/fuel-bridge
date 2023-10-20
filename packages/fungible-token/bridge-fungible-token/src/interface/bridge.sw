@@ -38,4 +38,8 @@ abi Bridge {
     // Recovers the sub_id used to generate an asset_id (= sha256(contract_id, sub_id))
     #[storage(read)]
     fn asset_to_sub_id(asset_id: b256) -> b256;
+
+    /// Sends a message to the L1 gateway to inform of capabilities to receive funds
+    #[storage(read)]
+    fn register_bridge();
 }

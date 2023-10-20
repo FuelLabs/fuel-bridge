@@ -4,11 +4,25 @@ import {
 } from '@fuel-bridge/fungible-token';
 import type { ethers } from 'ethers';
 import type { TxParams } from 'fuels';
-import { ContractFactory, bn, Contract } from 'fuels';
+import {
+  ContractFactory,
+  bn,
+  Contract,
+  TransactionStatus,
+  InputType,
+} from 'fuels';
 
+import {
+  createRelayMessageParams,
+  waitForBlockCommit,
+  waitForBlockFinalization,
+} from '../ethers';
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
 import type { TestEnvironment } from '../setup';
+
+import { getBlock } from './getBlock';
+import { getMessageOutReceipt } from './getMessageOutReceipt';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
@@ -91,6 +105,61 @@ export async function getOrDeployFuelTokenContract(
     debug(
       `Fuel fungible token contract created at ${fuelTestToken.id.toHexString()}.`
     );
+
+    const [fuelSigner] = env.fuel.signers;
+    fuelTestToken.account = fuelSigner;
+
+    await fuelTestToken.functions
+      .register_bridge()
+      .callParams({})
+      .fundWithRequiredCoins()
+      .then((scope) => scope.getTransactionRequest())
+      .then((txRequest) => {
+        txRequest.inputs = txRequest.inputs.filter(
+          (i) => i.type !== InputType.Message
+        );
+        return txRequest;
+      })
+      .then((txRequest) => fuelTestToken.account.sendTransaction(txRequest))
+      .then((txResponse) => txResponse.waitForResult())
+      .then((txResult) =>
+        txResult.status === TransactionStatus.success
+          ? Promise.all([
+              txResult,
+              getBlock(env.fuel.provider.url, txResult.blockId!),
+            ])
+          : Promise.reject('register_bridge() transaction failed')
+      )
+      .then(([txResult, block]) =>
+        Promise.all([txResult, waitForBlockCommit(env, block.header.height)])
+      )
+      .then(([txResult, commitHash]) => {
+        const { messageId } = getMessageOutReceipt(txResult.receipts);
+
+        return env.fuel.provider.getMessageProof(
+          txResult.id!,
+          messageId,
+          commitHash
+        );
+      })
+      .then((messageProof) =>
+        Promise.all([
+          createRelayMessageParams(messageProof),
+          waitForBlockFinalization(env, messageProof),
+        ])
+      )
+      .then(([relayMessageParams]) =>
+        env.eth.fuelMessagePortal.relayMessage(
+          relayMessageParams.message,
+          relayMessageParams.rootBlockHeader,
+          relayMessageParams.blockHeader,
+          relayMessageParams.blockInHistoryProof,
+          relayMessageParams.messageInBlockProof
+        )
+      )
+      .then((tx) => tx.wait());
+
+    debug('Set up bridge contract');
   }
   fuelTestToken.account = fuelAcct;
   const fuelTestTokenId = fuelTestToken.id.toHexString();
