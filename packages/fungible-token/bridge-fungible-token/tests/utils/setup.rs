@@ -6,7 +6,7 @@ use crate::utils::{
     },
 };
 use fuel_core_types::{
-    fuel_tx::{Bytes32, Input, Output, Receipt, TxPointer, UtxoId},
+    fuel_tx::{Bytes32, Input, Output, Receipt, TxPointer, UtxoId, TxId},
     fuel_types::Word,
 };
 use fuels::prelude::Transaction;
@@ -208,7 +208,7 @@ pub(crate) async fn setup_environment(
     }
 
     // Create a provider with the coins and messages
-    let (provider, _) = setup_test_provider(
+    let provider = setup_test_provider(
         all_coins.clone(),
         all_messages.clone(),
         Some(Config::local_node()),
@@ -220,7 +220,7 @@ pub(crate) async fn setup_environment(
 
     // Set up the bridge contract instance
     let load_configuration = match configurables {
-        Some(config) => LoadConfiguration::default().set_configurables(config),
+        Some(config) => LoadConfiguration::default().with_configurables(config),
         None => LoadConfiguration::default(),
     };
 
@@ -314,8 +314,8 @@ pub(crate) async fn relay_message_to_contract(
     message: Input,
     contracts: Vec<Input>,
     gas_coins: &[Input],
-) -> Vec<Receipt> {
-    let mut tx = builder::build_contract_message_tx(
+) -> TxId {
+    let tx = builder::build_contract_message_tx(
         message,
         contracts,
         gas_coins,
@@ -328,20 +328,7 @@ pub(crate) async fn relay_message_to_contract(
     )
     .await;
 
-    sign_and_call_tx(wallet, &mut tx).await
-}
-
-/// Relays a message-to-contract message
-pub(crate) async fn sign_and_call_tx(
-    wallet: &WalletUnlocked,
-    tx: &mut ScriptTransaction,
-) -> Vec<Receipt> {
-    let provider = wallet.provider().unwrap();
-
-    wallet.sign_transaction(tx).unwrap();
-    tx.estimate_predicates(&provider.consensus_parameters)
-        .unwrap();
-    provider.send_transaction(tx).await.unwrap()
+    wallet.provider().expect("Wallet has no provider").send_transaction(tx).await.expect("Transaction failed")
 }
 
 pub(crate) async fn precalculate_deposit_id() -> ContractId {
@@ -363,7 +350,7 @@ pub(crate) async fn prefix_contract_id(
     let compiled_contract = match config {
         Some(c) => Contract::load_from(
             BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-            LoadConfiguration::default().set_configurables(c),
+            LoadConfiguration::default().with_configurables(c),
         )
         .unwrap(),
         None => Contract::load_from(

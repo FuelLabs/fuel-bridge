@@ -83,6 +83,7 @@ mod success {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, test_contract, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2]).await;
+        let provider = wallet.provider().unwrap();
 
         let (mut tx, _, _) = builder::build_contract_message_tx(
             message_inputs[0].clone(),
@@ -93,11 +94,12 @@ mod success {
             ],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet),
         )
         .await;
 
-        // Note: tx inputs[message1, message2, message3, contract, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _txId = provider.send_transaction(tx).await.expect("Transaction failed");
 
         // Verify test contract received the message with the correct data
         let test_contract_id: ContractId = test_contract.contract_id().into();
@@ -114,7 +116,6 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message values were received by the test contract
-        let provider = wallet.provider().unwrap();
         let test_contract_balance = provider
             .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
             .await
@@ -126,7 +127,7 @@ mod success {
 // Test the cases where the transaction should panic due to the
 // predicate script failing to validate the transaction requirements
 mod fail {
-    use std::str::FromStr;
+    use std::{str::FromStr, borrow::BorrowMut};
 
     use crate::utils::{builder, environment as env};
 
@@ -159,11 +160,12 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, _) =
             env::setup_environment(vec![coin], vec![]).await;
+            let provider = wallet.provider().unwrap();
 
         // Transfer coins to a coin with the predicate as an owner
         let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
 
-        let cparams = wallet.provider().unwrap().consensus_parameters;
+        let cparams = provider.consensus_parameters();
         let predicate_root =
             Address::from(fuel_contract_message_predicate::predicate_root(&cparams));
         let _receipt = wallet
@@ -201,11 +203,12 @@ mod fail {
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet)
         )
         .await;
 
-        // Note: tx inputs[coin_message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _txId = provider.send_transaction(tx).await.expect("Transaction failed");
     }
 
     #[tokio::test]
@@ -216,17 +219,19 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, _, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
         let (mut tx, _, _) = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &vec![coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet)
         )
         .await;
 
-        // Note: tx inputs[message, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _txId = provider.send_transaction(tx).await.expect("Transaction failed");
     }
 
     #[tokio::test]
@@ -237,17 +242,19 @@ mod fail {
         let coin = (1_000_000, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
         let (mut tx, _, _) = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet),
         )
         .await;
 
-        // Note: tx inputs[message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _txId = provider.send_transaction(tx).await.expect("Transaction failed");
     }
 
     #[tokio::test]
@@ -262,6 +269,7 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2, message3]).await;
+        let provider = wallet.provider().clone().unwrap(); 
 
         let (mut tx, _, _) = builder::build_contract_message_tx(
             message_inputs[0].clone(),
@@ -273,11 +281,12 @@ mod fail {
             ],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet)
         )
         .await;
 
-        // Note: tx inputs[message1, message2, message3, contract, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _txId = provider.send_transaction(tx).await.unwrap();
     }
 
     #[tokio::test]
@@ -288,27 +297,18 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (_tx, tx_inputs, tx_outputs) = builder::build_contract_message_tx(
+        let (tx,_,_) = builder::build_invalid_contract_message_tx(
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            Some(&wallet),
         )
         .await;
 
-        // Modify the script bytecode
-        let mut modified_tx = ScriptTransactionBuilder::prepare_transfer(
-            tx_inputs,
-            tx_outputs,
-            TxParameters::default(),
-        )
-        .set_script(vec![0u8, 1u8, 2u8, 3u8])
-        .set_consensus_parameters(ConsensusParameters::default())
-        .build()
-        .unwrap();
-
-        // Note: tx inputs[message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut modified_tx).await;
+        let _txId = provider.send_transaction(tx).await.unwrap();
     }
 }

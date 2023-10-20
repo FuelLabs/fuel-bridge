@@ -1,22 +1,20 @@
-use crate::builder;
-
 use std::{mem::size_of, num::ParseIntError, str::FromStr, vec};
 
 use fuels::{
     accounts::{fuel_crypto::SecretKey, wallet::WalletUnlocked, Signer},
     prelude::{
         abigen, setup_custom_assets_coins, Address, AssetConfig, AssetId, Contract,
-        LoadConfiguration, Provider, ScriptTransaction, TxParameters,
+        LoadConfiguration, TxParameters,
     },
-    test_helpers::{setup_single_message, setup_test_client},
-    tx::{Bytes32, Receipt},
+    test_helpers::{setup_single_message, setup_test_provider},
+    tx::Bytes32,
     types::{
         coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
-        TxPointer, UtxoId,
+        TxPointer, UtxoId, transaction_builders::{TransactionBuilder, ScriptTransactionBuilder},
     },
 };
 
-use fuel_tx::{ConsensusParameters, Word};
+use fuel_tx::{ConsensusParameters, Word, TxId, Output};
 
 abigen!(Contract(
     name = "TestContract",
@@ -83,13 +81,12 @@ pub async fn setup_environment(
         })
         .collect();
 
-    // Create the client and provider
-    let (client, _, consensus_params) =
-        setup_test_client(all_coins.clone(), all_messages.clone(), None, None).await;
-    let provider = Provider::new(client, consensus_params);
+    // Create the provider
+    let provider = setup_test_provider(all_coins.clone(), all_messages.clone(), None, None).await;
 
     // Add provider to wallet
-    wallet.set_provider(provider);
+    wallet.set_provider(provider.clone());
+    
 
     // Deploy the target contract used for testing processing messages
     let test_contract_id =
@@ -104,7 +101,7 @@ pub async fn setup_environment(
     // Build inputs for provided coins
     let coin_inputs: Vec<Input> = all_coins
         .into_iter()
-        .map(|coin| Input::resource_signed(CoinType::Coin(coin), 0))
+        .map(|coin| Input::resource_signed(CoinType::Coin(coin)))
         .collect();
 
     // Build inputs for provided messages
@@ -143,28 +140,39 @@ pub async fn relay_message_to_contract(
     message: Input,
     contract: Input,
     gas_coin: Input,
-) -> Vec<Receipt> {
-    // Build transaction
-    let (mut tx, _, _) = builder::build_contract_message_tx(
-        message,
-        &vec![contract, gas_coin],
-        &[],
-        TxParameters::default(),
-    )
-    .await;
-
+) -> TxId {
     // Sign transaction and call
-    sign_and_call_tx(wallet, &mut tx).await
+    sign_and_call_tx(
+        wallet, 
+        vec![contract, gas_coin], 
+        vec![],
+        Default::default()).await
 }
 
 /// Relays a message-to-contract message
-pub async fn sign_and_call_tx(wallet: &WalletUnlocked, tx: &mut ScriptTransaction) -> Vec<Receipt> {
+pub async fn sign_and_call_tx(
+    wallet: &WalletUnlocked, 
+    inputs: Vec<Input>,
+    outputs: Vec<Output>,
+    params: TxParameters,
+) -> TxId {
     // Get provider and client
     let provider = wallet.provider().unwrap();
 
+    let network_info = provider.network_info().await.unwrap();
+
+    let mut tb = ScriptTransactionBuilder::prepare_transfer(
+        inputs,
+        outputs,
+        params,
+        network_info,
+    );
+
     // Sign transaction and call
-    wallet.sign_transaction(tx).unwrap();
+    wallet.sign_transaction(&mut tb);
+    let tx = tb.build().expect("Could not build transaction");
     provider.send_transaction(tx).await.unwrap()
+
 }
 
 /// Prefixes the given bytes with the test contract ID

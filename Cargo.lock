@@ -490,17 +490,16 @@ checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
 
 [[package]]
 name = "chrono"
-version = "0.4.26"
+version = "0.4.31"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ec837a71355b28f6556dbd569b37b3f363091c0bd4b2e735674521b4c5fd9bc5"
+checksum = "7f2c685bad3eb3d45a01354cedb7d5faa66194d1d58ba6e267a8de788f79db38"
 dependencies = [
  "android-tzdata",
  "iana-time-zone",
  "js-sys",
  "num-traits",
- "time 0.1.45",
  "wasm-bindgen",
- "winapi",
+ "windows-targets 0.48.3",
 ]
 
 [[package]]
@@ -666,7 +665,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
  "percent-encoding",
- "time 0.3.25",
+ "time",
  "version_check",
 ]
 
@@ -683,7 +682,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time 0.3.25",
+ "time",
  "url",
 ]
 
@@ -1258,7 +1257,7 @@ checksum = "77ac38b692cf1d259c4576e96969ddc1b21880f3059744a730d1677b6f9fd4df"
 dependencies = [
  "bitflags 1.3.2",
  "serde",
- "strum 0.24.1",
+ "strum",
 ]
 
 [[package]]
@@ -1269,7 +1268,7 @@ checksum = "73bc3c43b0b6e55857fcdc135333e9199ca8baf257aeba64ada0b91a33dac19a"
 dependencies = [
  "bitflags 1.3.2",
  "serde",
- "strum 0.24.1",
+ "strum",
 ]
 
 [[package]]
@@ -1319,8 +1318,8 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
+ "strum",
+ "strum_macros",
  "thiserror",
  "tokio",
  "tokio-stream",
@@ -1591,8 +1590,8 @@ dependencies = [
  "rand",
  "serde",
  "serde_json",
- "strum 0.24.1",
- "strum_macros 0.24.3",
+ "strum",
+ "strum_macros",
 ]
 
 [[package]]
@@ -1634,9 +1633,9 @@ dependencies = [
 
 [[package]]
 name = "fuels"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71ee1f9244ce01bd8fae9122a16bf6f8ddad3dbf38aa6269c23e9c90f6b60522"
+checksum = "1e1f341432e0ee313e75c7f66befc2e12231fc5b77a33b7f2a4f2ba0074dfe03"
 dependencies = [
  "fuel-core",
  "fuel-core-client",
@@ -1650,12 +1649,11 @@ dependencies = [
 
 [[package]]
 name = "fuels-accounts"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "28317c4286794553f57bcc1ec8b84d25048f07a7cf65b067a36e564936e99fb8"
+checksum = "0540637b0744f447962020afd9aa27c7644f46b95275f3b9483f09a769abbc1a"
 dependencies = [
  "async-trait",
- "bytes",
  "chrono",
  "elliptic-curve",
  "eth-keystore",
@@ -1666,20 +1664,18 @@ dependencies = [
  "fuel-vm",
  "fuels-core",
  "hex",
- "itertools 0.11.0",
  "rand",
- "serde",
- "sha2 0.10.7",
  "tai64",
  "thiserror",
  "tokio",
+ "zeroize",
 ]
 
 [[package]]
 name = "fuels-code-gen"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2a32e15704cdc5db8253322735cb665af6ab7d0b189ca79341442c6034128182"
+checksum = "3afd5ba59c905adfae0e8afc09588e2a3acf451520053e5e2cefb58d38ac3253"
 dependencies = [
  "Inflector",
  "fuel-abi-types",
@@ -1693,9 +1689,9 @@ dependencies = [
 
 [[package]]
 name = "fuels-core"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "711a5940eec515cbcac468eb2630322f60d50333fe455ffee4e527019d4541d4"
+checksum = "e16971e154ed4faba1d548aae3767b56f70f6ba77d46b0b5567305334e876267"
 dependencies = [
  "bech32 0.9.1",
  "chrono",
@@ -1703,46 +1699,40 @@ dependencies = [
  "fuel-asm 0.35.4",
  "fuel-core-chain-config",
  "fuel-core-client",
+ "fuel-crypto",
  "fuel-tx",
  "fuel-types",
  "fuel-vm",
  "fuels-macros",
  "hex",
  "itertools 0.11.0",
- "proc-macro2",
- "regex",
  "serde",
  "serde_json",
  "sha2 0.10.7",
- "strum 0.25.0",
- "strum_macros 0.25.2",
  "thiserror",
  "uint",
+ "zeroize",
 ]
 
 [[package]]
 name = "fuels-macros"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "574c6c7292c19344fea36ff74e8c40c9bb62a1321a4f7a96300dd0a85312e9ab"
+checksum = "2c01910eb50f2781d57ca04bad11c43dce39d0490f33c9ce9c377cb1eaf890ed"
 dependencies = [
- "Inflector",
- "fuel-abi-types",
  "fuels-code-gen",
  "itertools 0.11.0",
  "proc-macro2",
  "quote",
  "rand",
- "regex",
- "serde_json",
  "syn 2.0.29",
 ]
 
 [[package]]
 name = "fuels-programs"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ba7f41efde4cad3b0122cacbfd1d7e64c1f40b21d746f40290d3224b2ed8eb75"
+checksum = "85408bdf8b703f5905a3bcd222e0e00a8e8d31305c61e565063002d539072966"
 dependencies = [
  "async-trait",
  "bytes",
@@ -1752,30 +1742,21 @@ dependencies = [
  "fuel-types",
  "fuels-accounts",
  "fuels-core",
- "hex",
  "itertools 0.11.0",
- "proc-macro2",
  "rand",
- "regex",
- "serde",
  "serde_json",
- "sha2 0.10.7",
- "strum 0.25.0",
- "strum_macros 0.25.2",
- "thiserror",
  "tokio",
 ]
 
 [[package]]
 name = "fuels-test-helpers"
-version = "0.46.0"
+version = "0.49.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "977952ffd8871315cea844580b7e8ee61ccefad0dc376ad39de621c6b352a1a0"
+checksum = "779a0951ed75ef1c98021ccd67cf5598d9cc5071831310982cc16137ae44bf57"
 dependencies = [
  "fuel-core",
  "fuel-core-chain-config",
  "fuel-core-client",
- "fuel-core-types",
  "fuel-tx",
  "fuel-types",
  "fuels-accounts",
@@ -1907,7 +1888,7 @@ dependencies = [
  "cfg-if",
  "js-sys",
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "wasm-bindgen",
 ]
 
@@ -2426,7 +2407,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "927a765cd3fc26206e66b296465fa9d3e5ab003e651c1b3c060e7956d96b19d2"
 dependencies = [
  "libc",
- "wasi 0.11.0+wasi-snapshot-preview1",
+ "wasi",
  "windows-sys 0.48.0",
 ]
 
@@ -3435,14 +3416,8 @@ version = "0.24.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "063e6045c0e62079840579a7e47a355ae92f60eb74daaf156fb1e84ba164e63f"
 dependencies = [
- "strum_macros 0.24.3",
+ "strum_macros",
 ]
-
-[[package]]
-name = "strum"
-version = "0.25.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "290d54ea6f91c969195bdbcd7442c8c2a2ba87da8bf60a7ee86a235d4bc1e125"
 
 [[package]]
 name = "strum_macros"
@@ -3455,19 +3430,6 @@ dependencies = [
  "quote",
  "rustversion",
  "syn 1.0.109",
-]
-
-[[package]]
-name = "strum_macros"
-version = "0.25.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad8d03b598d3d0fff69bf533ee3ef19b8eeb342729596df84bcc7e1f96ec4059"
-dependencies = [
- "heck",
- "proc-macro2",
- "quote",
- "rustversion",
- "syn 2.0.29",
 ]
 
 [[package]]
@@ -3550,17 +3512,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 2.0.29",
-]
-
-[[package]]
-name = "time"
-version = "0.1.45"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1b797afad3f312d1c66a56d11d0316f916356d11bd158fbc6ca6389ff6bf805a"
-dependencies = [
- "libc",
- "wasi 0.10.0+wasi-snapshot-preview1",
- "winapi",
 ]
 
 [[package]]
@@ -3926,12 +3877,6 @@ checksum = "bfa7760aed19e106de2c7c0b581b509f2f25d3dacaf737cb82ac61bc6d760b0e"
 dependencies = [
  "try-lock",
 ]
-
-[[package]]
-name = "wasi"
-version = "0.10.0+wasi-snapshot-preview1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a143597ca7c7793eff794def352d41792a93c481eb1042423ff7ff72ba2c31f"
 
 [[package]]
 name = "wasi"
