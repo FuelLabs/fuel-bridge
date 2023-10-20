@@ -20,7 +20,6 @@ import {
   OutputType,
   Predicate,
   bn,
-  MAX_GAS_PER_TX,
 } from 'fuels';
 
 import { debug } from '../logs';
@@ -66,10 +65,11 @@ function getCommonRelayableMessages(provider: Provider) {
           throw new Error('cannot find contract ID in message data');
         const contractId = hexlify(data.slice(0, 32));
 
+        const { maxGasPerTx } = provider.getGasConfig();
         // build the transaction
         const transaction = new ScriptTransactionRequest({
           script,
-          gasLimit: MAX_GAS_PER_TX,
+          gasLimit: maxGasPerTx,
           ...txParams,
         });
         transaction.inputs.push({
