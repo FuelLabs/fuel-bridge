@@ -1,7 +1,5 @@
 library;
 
-use std::string::String;
-
 abi Bridge {
     /// Claim a refund for incorrectly bridged tokens if one has been registered.
     ///
@@ -44,6 +42,4 @@ abi Bridge {
     /// Sends a message to the L1 gateway to inform of capabilities to receive funds
     #[storage(read)]
     fn register_bridge();
-    #[storage(read)]
-    fn fake(asset_id: AssetId) -> String;
 }

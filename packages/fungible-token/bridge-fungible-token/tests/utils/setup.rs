@@ -315,6 +315,11 @@ pub(crate) async fn relay_message_to_contract(
     contracts: Vec<Input>,
     gas_coins: &[Input],
 ) -> TxId {
+
+    let provider = wallet.provider().expect("Wallet has no provider");
+    let gas_price = provider.network_info().await.unwrap().min_gas_price;
+    let params: TxParameters = TxParameters::new(Some(gas_price), Some(30_000), 0);
+
     let tx = builder::build_contract_message_tx(
         message,
         contracts,
@@ -324,11 +329,11 @@ pub(crate) async fn relay_message_to_contract(
             0,
             FuelsAssetId::default(),
         )],
-        TxParameters::default(),
+        params
     )
     .await;
 
-    wallet.provider().expect("Wallet has no provider").send_transaction(tx).await.expect("Transaction failed")
+    provider.send_transaction(tx).await.expect("Transaction failed")
 }
 
 pub(crate) async fn precalculate_deposit_id() -> ContractId {

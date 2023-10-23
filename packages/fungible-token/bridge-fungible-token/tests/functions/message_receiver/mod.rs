@@ -377,13 +377,15 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -444,13 +446,15 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -511,13 +515,15 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -578,13 +584,15 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -648,13 +656,15 @@ mod success {
         .await;
 
         // Relay the test message to the bride contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         // TODO: fails when conditional is removed
         if BRIDGED_TOKEN_DECIMALS > PROXY_TOKEN_DECIMALS + 19 {
@@ -720,13 +730,15 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -803,7 +815,7 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
@@ -811,14 +823,18 @@ mod success {
         )
         .await;
 
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
+
         // Relay the second test message to the bridge contract
-        let receipts_second = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts_second = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
