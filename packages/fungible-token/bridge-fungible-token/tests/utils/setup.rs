@@ -6,21 +6,19 @@ use crate::utils::{
     },
 };
 use fuel_core_types::{
-    fuel_tx::{Bytes32, Input, Output, Receipt, TxPointer, UtxoId, TxId},
+    fuel_tx::{Bytes32, Input, Output, TxPointer, UtxoId, TxId},
     fuel_types::Word,
 };
-use fuels::prelude::Transaction;
 use fuels::{
     accounts::{
         fuel_crypto::{fuel_types::Nonce, SecretKey},
         predicate::Predicate,
-        wallet::WalletUnlocked,
-        Signer, ViewOnlyAccount,
+        wallet::WalletUnlocked, ViewOnlyAccount,
     },
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId as FuelsAssetId, Bech32ContractId, Config, Contract,
-        ContractId, LoadConfiguration, Provider, ScriptTransaction, TxParameters,
+        ContractId, LoadConfiguration, Provider, TxParameters,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{message::Message, Bits256},

@@ -1,13 +1,11 @@
-use fuel_core_types::{fuel_tx::{input::{Input}, Bytes32, Output, Transaction}};
+use fuel_core_types::fuel_tx::{input::Input, Bytes32, Output};
 /**
  * TODO: This module contains functions that should eventually
  * be made part of the fuels-rs sdk repo as part of the Provider
  * implementation, similar to functions like 'build_transfer_tx'
  */
-use fuels::{prelude::*, types::{transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder}, coin::{Coin, CoinStatus}, tx_status::TxStatus, message::{MessageStatus, Message}}, accounts::predicate::Predicate};
+use fuels::{prelude::*, types::{transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder}, coin::{Coin, CoinStatus}, message::{MessageStatus, Message}}};
 use fuels::types::input::Input as FuelsInput;
-
-use super::constants::CONTRACT_MESSAGE_PREDICATE_BINARY;
 
 const CONTRACT_MESSAGE_MIN_GAS: u64 = 10_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
