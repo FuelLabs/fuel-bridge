@@ -928,6 +928,5 @@ mod revert {
 
         let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
 
-        dbg!(receipt);
     }
 }
