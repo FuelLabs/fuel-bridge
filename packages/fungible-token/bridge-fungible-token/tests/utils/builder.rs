@@ -51,14 +51,8 @@ pub async fn build_contract_message_tx(
         match gas_coins[0].clone() {
             Input::ResourceSigned {
                 resource: coin_type,
-            } => {
-                tx_outputs.push(Output::change(
-                    coin_type.owner().into(),
-                    0,
-                    AssetId::default(),
-                ));
             }
-            Input::ResourcePredicate {
+            | Input::ResourcePredicate {
                 resource: coin_type,
                 ..
             } => {
