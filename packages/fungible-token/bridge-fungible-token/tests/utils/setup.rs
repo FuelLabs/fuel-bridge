@@ -195,6 +195,7 @@ pub(crate) async fn setup_environment(
     let predicate = Predicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
     let predicate_root = predicate.address();
 
+    
     let mut all_messages: Vec<Message> = Vec::with_capacity(messages.len());
     for msg in messages {
         all_messages.push(setup_single_message(
@@ -317,7 +318,8 @@ pub(crate) async fn relay_message_to_contract(
 ) -> TxId {
 
     let provider = wallet.provider().expect("Wallet has no provider");
-    let gas_price = provider.network_info().await.unwrap().min_gas_price;
+    let network_info = provider.network_info().await.unwrap();
+    let gas_price = network_info.min_gas_price;
     let params: TxParameters = TxParameters::new(Some(gas_price), Some(30_000), 0);
 
     let tx = builder::build_contract_message_tx(
@@ -329,7 +331,9 @@ pub(crate) async fn relay_message_to_contract(
             0,
             FuelsAssetId::default(),
         )],
-        params
+        params,
+        network_info,
+        wallet
     )
     .await;
 

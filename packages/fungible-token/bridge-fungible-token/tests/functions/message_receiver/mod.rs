@@ -918,12 +918,17 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+
+        seems like reverts no longer panic, so we gotta check the reason in the receipt
+        dbg!(receipt);
     }
 }
