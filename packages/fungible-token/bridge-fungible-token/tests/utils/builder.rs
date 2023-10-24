@@ -48,25 +48,6 @@ pub async fn build_contract_message_tx(
 
     // Build a change output for the owner of the first provided coin input
     if !gas_coins.is_empty() {
-        match gas_coins[0].clone() {
-            Input::ResourceSigned {
-                resource: coin_type,
-            }
-            | Input::ResourcePredicate {
-                resource: coin_type,
-                ..
-            } => {
-                tx_outputs.push(Output::change(
-                    coin_type.owner().into(),
-                    0,
-                    AssetId::default(),
-                ));
-            }
-            _ => {
-                // do nothing
-            }
-        }
-
         // Append provided inputs
         tx_inputs.append(&mut gas_coins.to_vec());
     }
