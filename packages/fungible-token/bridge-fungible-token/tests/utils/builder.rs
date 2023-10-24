@@ -1,13 +1,17 @@
-use fuel_core_types::fuel_tx::{input::Input, Bytes32, Output};
+use fuel_core_types::fuel_tx::{Bytes32, Output};
 /**
  * TODO: This module contains functions that should eventually
  * be made part of the fuels-rs sdk repo as part of the Provider
  * implementation, similar to functions like 'build_transfer_tx'
  */
-use fuels::{prelude::*, types::{transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder}, coin::{Coin, CoinStatus}, message::{MessageStatus, Message}}};
-use fuels::types::input::Input as FuelsInput;
+use fuels::{
+    prelude::*,
+    types::{
+        input::Input,
+        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder},
+    },
+};
 
-const CONTRACT_MESSAGE_MIN_GAS: u64 = 10_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
     "../../message-predicates/contract-message-predicate/out/contract_message_script.bin";
 
@@ -20,7 +24,7 @@ pub async fn build_contract_message_tx(
     optional_outputs: &[Output],
     params: TxParameters,
     network_info: NetworkInfo,
-    wallet: &WalletUnlocked
+    wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     // Get the script and predicate for contract messages
     let script_bytecode = std::fs::read(CONTRACT_MESSAGE_SCRIPT_BINARY).unwrap();
@@ -45,11 +49,24 @@ pub async fn build_contract_message_tx(
     // Build a change output for the owner of the first provided coin input
     if !gas_coins.is_empty() {
         match gas_coins[0].clone() {
-            Input::CoinSigned(coin) => {
-                tx_outputs.push(Output::change(coin.owner, 0, AssetId::default()));
+            Input::ResourceSigned {
+                resource: coin_type,
+            } => {
+                tx_outputs.push(Output::change(
+                    coin_type.owner().into(),
+                    0,
+                    AssetId::default(),
+                ));
             }
-            Input::CoinPredicate(predicate) => {
-                tx_outputs.push(Output::change(predicate.owner, 0, AssetId::default()));
+            Input::ResourcePredicate {
+                resource: coin_type,
+                ..
+            } => {
+                tx_outputs.push(Output::change(
+                    coin_type.owner().into(),
+                    0,
+                    AssetId::default(),
+                ));
             }
             _ => {
                 // do nothing
@@ -62,28 +79,6 @@ pub async fn build_contract_message_tx(
 
     // Append provided outputs
     tx_outputs.append(&mut optional_outputs.to_vec());
-
-    let tx_inputs: Vec<FuelsInput> = tx_inputs.iter().map(|input| {
-        let fuel_input: FuelsInput = match input {
-            Input::CoinSigned(coin_signed) => {
-                let resource = Coin { amount: coin_signed.amount, block_created: 0, asset_id: coin_signed.asset_id, utxo_id: coin_signed.utxo_id, maturity: 0, owner: coin_signed.owner.into(), status: CoinStatus::Unspent };
-                FuelsInput::resource_signed(fuels::types::coin_type::CoinType::Coin(resource))
-            } 
-            Input::MessageDataPredicate(msg_predicate) => {
-                let resource = Message { amount: msg_predicate.amount, sender: msg_predicate.sender.into(), recipient: msg_predicate.recipient.into(), nonce: msg_predicate.nonce, data: msg_predicate.data.clone(), da_height: 0, status: MessageStatus::Unspent};
-                FuelsInput::resource_predicate(fuels::types::coin_type::CoinType::Message(resource), msg_predicate.predicate.clone(), Default::default())
-            },
-            Input::Contract(contract) => {
-                FuelsInput::contract(contract.utxo_id.clone(), contract.balance_root.clone(), contract.state_root.clone(), contract.tx_pointer.clone(), contract.contract_id.clone())
-            }, 
-            Input::CoinPredicate(_) => todo!(),
-            Input::MessageCoinSigned(_) => todo!(),
-            Input::MessageCoinPredicate(_) => todo!(),
-            Input::MessageDataSigned(_) => todo!(),
-        };
-
-        fuel_input
-    }).collect();
 
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())

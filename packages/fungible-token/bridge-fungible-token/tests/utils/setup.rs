@@ -6,14 +6,15 @@ use crate::utils::{
     },
 };
 use fuel_core_types::{
-    fuel_tx::{Bytes32, Input, Output, TxPointer, UtxoId, TxId},
+    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
     fuel_types::Word,
 };
 use fuels::{
     accounts::{
         fuel_crypto::{fuel_types::Nonce, SecretKey},
         predicate::Predicate,
-        wallet::WalletUnlocked, ViewOnlyAccount,
+        wallet::WalletUnlocked,
+        ViewOnlyAccount,
     },
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
@@ -21,7 +22,7 @@ use fuels::{
         ContractId, LoadConfiguration, Provider, TxParameters,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{message::Message, Bits256},
+    types::{input::Input, message::Message, Bits256},
 };
 use primitive_types::U256 as Unsigned256;
 use sha3::{Digest, Keccak256};
@@ -193,7 +194,6 @@ pub(crate) async fn setup_environment(
     let predicate = Predicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
     let predicate_root = predicate.address();
 
-    
     let mut all_messages: Vec<Message> = Vec::with_capacity(messages.len());
     for msg in messages {
         all_messages.push(setup_single_message(
@@ -235,45 +235,18 @@ pub(crate) async fn setup_environment(
     // Build inputs for provided coins
     let coin_inputs = all_coins
         .into_iter()
-        .map(|coin| {
-            Input::coin_signed(
-                coin.utxo_id,
-                coin.owner.into(),
-                coin.amount,
-                coin.asset_id,
-                Default::default(),
-                0,
-                coin.maturity.into(),
-            )
-        })
+        .map(|coin| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(coin)))
         .collect();
 
     // Build inputs for provided messages
     let message_inputs = all_messages
         .into_iter()
         .map(|message| {
-            if message.data.is_empty() {
-                Input::message_coin_predicate(
-                    message.sender.into(),
-                    message.recipient.into(),
-                    message.amount,
-                    message.nonce,
-                    0,
-                    predicate.code().to_vec(),
-                    vec![],
-                )
-            } else {
-                Input::message_data_predicate(
-                    message.sender.into(),
-                    message.recipient.into(),
-                    message.amount,
-                    message.nonce,
-                    0,
-                    message.data,
-                    predicate.code().to_vec(),
-                    vec![],
-                )
-            }
+            Input::resource_predicate(
+                fuels::types::coin_type::CoinType::Message(message),
+                predicate.code().clone(),
+                Default::default(),
+            )
         })
         .collect();
 
@@ -314,7 +287,6 @@ pub(crate) async fn relay_message_to_contract(
     contracts: Vec<Input>,
     gas_coins: &[Input],
 ) -> TxId {
-
     let provider = wallet.provider().expect("Wallet has no provider");
     let network_info = provider.network_info().await.unwrap();
     let gas_price = network_info.min_gas_price;
@@ -331,11 +303,14 @@ pub(crate) async fn relay_message_to_contract(
         )],
         params,
         network_info,
-        wallet
+        wallet,
     )
     .await;
 
-    provider.send_transaction(tx).await.expect("Transaction failed")
+    provider
+        .send_transaction(tx)
+        .await
+        .expect("Transaction failed")
 }
 
 pub(crate) async fn precalculate_deposit_id() -> ContractId {
