@@ -928,7 +928,6 @@ mod revert {
 
         let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
 
-        seems like reverts no longer panic, so we gotta check the reason in the receipt
         dbg!(receipt);
     }
 }
