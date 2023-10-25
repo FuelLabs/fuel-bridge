@@ -932,10 +932,11 @@ mod success {
 }
 
 mod revert {
+    use fuels::types::tx_status::TxStatus;
+
     use super::*;
 
     #[tokio::test]
-    #[should_panic(expected = "Revert(18446744073709486080)")]
     async fn verification_fails_with_incorrect_sender() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
@@ -974,6 +975,15 @@ mod revert {
         )
         .await;
 
-        let _receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+        let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+
+        match receipt {
+            TxStatus::Revert {reason, ..} => {
+                assert_eq!(reason, "Revert(18446744073709486080)");
+            },
+            _ => {assert!(false, "Transaction did not revert");}
+        }
+
+
     }
 }
