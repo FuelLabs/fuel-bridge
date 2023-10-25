@@ -32,11 +32,10 @@ pub(crate) async fn withdraw(
     let call_params = CallParameters::new(amount, asset_id, gas);
 
     // BUG? Hardcoded value in withdraw: 0xdeadbeef...
+    let arg: [u8; 32] = [255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255, 255];
     contract
         .methods()
-        .withdraw(Bits256::from_hex_str("0x000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef").unwrap())
-        // .withdraw()
-        // .takes_b256(Bits256::from_hex_str("0x000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef").unwrap())
+        .withdraw(Bits256(arg))
         .tx_params(tx_params)
         .call_params(call_params)
         .expect("Call param Error")
