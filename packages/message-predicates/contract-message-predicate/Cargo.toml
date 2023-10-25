@@ -18,7 +18,7 @@ sha2 = "0.10.6"
 
 [dev-dependencies]
 fuels = { workspace = true, features = ["fuel-core-lib"] }
-hex = "0.4.3"
+hex = { workspace = true }
 insta = "1.28"
 tokio = { workspace = true }
 

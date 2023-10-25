@@ -31,9 +31,12 @@ pub(crate) async fn withdraw(
     let asset_id = get_asset_id(contract_id);
     let call_params = CallParameters::new(amount, asset_id, gas);
 
+    // BUG? Hardcoded value in withdraw: 0xdeadbeef...
     contract
         .methods()
-        .withdraw(to)
+        .withdraw(Bits256::from_hex_str("0x000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef").unwrap())
+        // .withdraw()
+        // .takes_b256(Bits256::from_hex_str("0x000000000000000000000000deadbeefdeadbeefdeadbeefdeadbeefdeadbeef").unwrap())
         .tx_params(tx_params)
         .call_params(call_params)
         .expect("Call param Error")

@@ -311,13 +311,26 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status");
+
+        match tx_status.clone() {
+            fuels::types::tx_status::TxStatus::Success { .. } => {
+                    // Do nothing
+            },
+            _ => {assert!(false, "Transaction did not succeed")}
+        }
+
+        let receipts = tx_status.take_receipts();
+
+        
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
@@ -335,12 +348,23 @@ mod success {
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
+        dbg!(&call_response.receipts);
 
         let message_receipt = call_response
             .receipts
             .iter()
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
+
+        let event = call_response
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::LogData { .. }))
+            .unwrap();
+
+        dbg!(hex::encode(*wallet.address().hash()));
+        dbg!(hex::encode(message_receipt.data().unwrap()));
+        dbg!(hex::encode(event.data().unwrap()));
 
         let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
@@ -399,7 +423,7 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
@@ -532,7 +556,7 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,

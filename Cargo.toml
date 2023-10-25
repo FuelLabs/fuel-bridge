@@ -29,3 +29,4 @@ fuels = { version = "0.49", features = ["fuel-core-lib"] }
 
 # Third-party dependencies
 tokio = { version = "1.32.0", features = ["rt", "macros"] }
+hex = "0.4.3"

@@ -159,6 +159,7 @@ impl Bridge for Contract {
     #[payable]
     #[storage(read, write)]
     fn withdraw(to: b256) {
+        log(to);
         let amount = msg_amount();
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
@@ -172,11 +173,11 @@ impl Bridge for Contract {
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
         send_message(BRIDGED_TOKEN_GATEWAY, encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id), 0);
-        log(WithdrawalEvent {
-            to: to,
-            from: sender,
-            amount: amount,
-        });
+        // log(WithdrawalEvent {
+        //     to: to,
+        //     from: sender,
+        //     amount: amount,
+        // });
     }
 
     fn bridged_token() -> b256 {
