@@ -10,12 +10,14 @@ import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
-import { EMPTY, ZERO } from '../protocol/constants';
+import { EMPTY } from '../protocol/constants';
 import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 import type { MessageTester } from '../typechain/MessageTester.d';
+
+import { createBlock } from './utils/createBlock';
 
 const { expect } = chai;
 
@@ -34,27 +36,6 @@ declare class TreeNode {
 declare class MerkleProof {
   key: number;
   proof: string[];
-}
-
-// Create a simple block
-function createBlock(
-  prevRoot: string,
-  blockHeight: number,
-  timestamp?: string,
-  outputMessagesCount?: string,
-  outputMessagesRoot?: string
-): BlockHeader {
-  const header: BlockHeader = {
-    prevRoot: prevRoot ? prevRoot : ZERO,
-    height: blockHeight.toString(),
-    timestamp: timestamp ? timestamp : '0',
-    daHeight: '0',
-    txCount: '0',
-    outputMessagesCount: outputMessagesCount ? outputMessagesCount : '0',
-    txRoot: EMPTY,
-    outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
-  };
-  return header;
 }
 
 // Get proof for the leaf
