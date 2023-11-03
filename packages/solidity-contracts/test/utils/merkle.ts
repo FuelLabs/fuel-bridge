@@ -51,6 +51,7 @@ export function generateProof(
     prevBlockNodes,
     blockIds[messageBlockIndex]
   );
+
   const blockInHistoryProof = {
     key: messageBlockLeafIndexKey,
     proof: getProof(prevBlockNodes, messageBlockLeafIndexKey),

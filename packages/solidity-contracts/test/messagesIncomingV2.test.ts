@@ -1,8 +1,10 @@
 import type { Provider } from '@ethersproject/abstract-provider';
 import { calcRoot, constructTree, getProof } from '@fuel-ts/merkle';
+import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
+import { randomBytes } from 'crypto';
 import { BigNumber, constants } from 'ethers';
-import type { Contract } from 'ethers';
+import { parseEther } from 'ethers/lib/utils';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -37,6 +39,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
 
   let provider: Provider;
   let addresses: string[];
+  let signers: SignerWithAddress[];
   let fuelMessagePortal: FuelMessagePortalV2;
   let fuelChainState: FuelChainState;
 
@@ -63,22 +66,24 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
   let messageEOANoAmount: Message;
 
   // Arrays of committed block headers and their IDs
-  const blockHeaders: BlockHeader[] = [];
-  const blockIds: string[] = [];
+  let blockHeaders: BlockHeader[];
+  let blockIds: string[];
   let endOfCommitIntervalHeader: BlockHeader;
   let endOfCommitIntervalHeaderLite: BlockHeaderLite;
   let unfinalizedBlock: BlockHeader;
   let prevBlockNodes: TreeNode[];
 
   async function setupMessages(
-    fuelMessagePortal: Contract,
+    portalAddr: string,
     messageTester: MessageTester,
-    fuelChainState: Contract,
+    fuelChainState: FuelChainState,
     addresses: string[]
   ) {
+    blockIds = [];
+    blockHeaders = [];
     // get data for building messages
     messageTesterAddress = addressToB256(messageTester.address);
-    b256_fuelMessagePortalAddress = addressToB256(fuelMessagePortal.address);
+    b256_fuelMessagePortalAddress = addressToB256(portalAddr);
 
     trustedSenderAddress = await messageTester.getTrustedSender();
 
@@ -128,7 +133,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
     // message to bad recipient
     messageBadRecipient = new Message(
       trustedSenderAddress,
-      addressToB256(fuelMessagePortal.address),
+      addressToB256(portalAddr),
       BigNumber.from(0),
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
@@ -278,10 +283,145 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
     expect(await fuelMessagePortal.depositLimitGlobal()).to.be.equal(0);
   });
 
-  describe('Behaves like V2', () => {
-    it('should reduce per account deposited balance');
-    it('should nullify per account deposited balance');
-    it('should reduce global deposited amount');
+  describe('Behaves like V2 - Accounting', () => {
+    beforeEach('fixture', async () => {
+      const fixt = await fixture();
+      const { V2Implementation } = fixt;
+      ({
+        provider,
+        fuelMessagePortal,
+        fuelChainState,
+        messageTester,
+        addresses,
+        signers,
+      } = fixt);
+
+      await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
+        call: {
+          fn: 'initializeV2',
+          args: [constants.MaxUint256, constants.MaxUint256],
+        },
+      });
+
+      await setupMessages(
+        fuelMessagePortal.address,
+        messageTester,
+        fuelChainState,
+        addresses
+      );
+    });
+
+    // Simulates the case when withdrawn amount < initial deposited amount
+    it('should reduce per account deposited balance', async () => {
+      const recipient = b256ToAddress(messageEOA.recipient);
+      const txSender = signers.find((signer) => signer.address === recipient);
+      const withdrawnAmount = messageEOA.amount.mul(BASE_ASSET_CONVERSION);
+      const depositedAmount = withdrawnAmount.mul(2);
+
+      await fuelMessagePortal
+        .connect(txSender)
+        .depositETH(messageEOA.recipient, {
+          value: depositedAmount,
+        });
+      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
+        depositedAmount
+      );
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageEOA,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(false);
+
+      const relayTx = fuelMessagePortal.relayMessage(
+        messageEOA,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+      await expect(relayTx).to.not.be.reverted;
+      await expect(relayTx).to.changeEtherBalances(
+        [fuelMessagePortal.address, recipient],
+        [withdrawnAmount.mul(-1), withdrawnAmount]
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
+      const expectedDepositedAmount = depositedAmount.sub(withdrawnAmount);
+      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
+        expectedDepositedAmount
+      );
+      expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
+        expectedDepositedAmount
+      );
+    });
+
+    // Simulates the case when withdrawn amount > initial deposited amount
+    it('should nullify per account deposited balance', async () => {
+      const recipient = b256ToAddress(messageEOA.recipient);
+      const txSender = signers.find((signer) => signer.address === recipient);
+      const withdrawnAmount = messageEOA.amount.mul(BASE_ASSET_CONVERSION);
+      const depositedAmount = withdrawnAmount.div(2);
+      const otherDeposits = parseEther('10');
+
+      await fuelMessagePortal.depositETH(randomBytes(32), {
+        value: otherDeposits, // This fills the contract with ETH
+      });
+      await fuelMessagePortal
+        .connect(txSender) // Deposit some eth for the recipient
+        .depositETH(messageEOA.recipient, {
+          value: depositedAmount,
+        });
+      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
+        depositedAmount
+      );
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageEOA,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(false);
+
+      const relayTx = fuelMessagePortal.relayMessage(
+        messageEOA,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+      await expect(relayTx).to.not.be.reverted;
+      await expect(relayTx).to.changeEtherBalances(
+        [fuelMessagePortal.address, recipient],
+        [withdrawnAmount.mul(-1), withdrawnAmount]
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
+      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
+        0
+      );
+
+      const expectedTotalDeposited = otherDeposits
+        .add(depositedAmount)
+        .sub(withdrawnAmount);
+      const actualTotalDeposited = await fuelMessagePortal.totalDeposited();
+      expect(actualTotalDeposited).to.be.equal(expectedTotalDeposited);
+    });
   });
 
   // This is essentially a copy - paste from `messagesIncoming.ts`
@@ -305,7 +445,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
       });
 
       await setupMessages(
-        fuelMessagePortal,
+        fuelMessagePortal.address,
         messageTester,
         fuelChainState,
         addresses
@@ -327,8 +467,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        24
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -371,8 +510,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        67
+        messageNodes
       );
       blockInRoot.key = blockInRoot.key + 1;
       expect(
@@ -413,8 +551,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        22
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -447,8 +584,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        68
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -470,8 +606,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        11
+        messageNodes
       );
       const options = {
         gasLimit: 140000,
@@ -508,8 +643,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        33
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -542,8 +676,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        47
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -568,8 +701,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        69
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -594,8 +726,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        21
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -629,8 +760,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        19
+        messageNodes
       );
 
       expect(
@@ -663,8 +793,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        25
+        messageNodes
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -692,8 +821,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        68
+        messageNodes
       );
 
       const diffBlock = {
@@ -728,8 +856,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
         blockHeaders,
         prevBlockNodes,
         blockIds,
-        messageNodes,
-        1
+        messageNodes
       );
       const msgInBlock = {
         key: 0,
@@ -757,8 +884,7 @@ describe.only('FuelMessagePortalV2 - Incoming messages', () => {
           blockHeaders,
           prevBlockNodes,
           blockIds,
-          messageNodes,
-          5
+          messageNodes
         );
       const reentrantTestData = fuelMessagePortal.interface.encodeFunctionData(
         'relayMessage',
