@@ -32,11 +32,11 @@ import {
   getLeafIndexKey,
 } from './utils/merkle';
 
-describe.only('FuelMessagePortalV2 - Incoming messages', () => {
-  const ETH_DECIMALS = 18;
-  const FUEL_BASE_ASSET_DECIMALS = 9;
-  const BASE_ASSET_CONVERSION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
+const ETH_DECIMALS = 18;
+const FUEL_BASE_ASSET_DECIMALS = 9;
+const BASE_ASSET_CONVERSION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
+describe('FuelMessagePortalV2 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
   let signers: SignerWithAddress[];
