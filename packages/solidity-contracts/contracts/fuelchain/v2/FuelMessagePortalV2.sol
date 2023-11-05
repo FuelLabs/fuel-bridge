@@ -55,8 +55,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
                 revert AccountDepositLimit();
             }
 
-            depositedAmounts[msg.sender] = userDepositedAmount;
-
             // v2: increase global deposited ether
             uint256 globalDepositedAmount = totalDeposited += msg.value;
             if(globalDepositedAmount > depositLimitGlobal) {
@@ -70,6 +68,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
                 if (amount > type(uint64).max) revert AmountTooBig();
             }
 
+            depositedAmounts[msg.sender] = userDepositedAmount;
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
             uint nonce = _outgoingMessageNonce;
