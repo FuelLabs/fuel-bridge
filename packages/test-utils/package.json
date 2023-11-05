@@ -1,6 +1,6 @@
 {
   "name": "@fuel-bridge/test-utils",
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "The Fuel Messaging Bridge integration tests.",
   "license": "APACHE-2.0",
   "module": "dist/index.mjs",
@@ -15,7 +15,7 @@
     "build": "tsup"
   },
   "peerDependencies": {
-    "fuels": ">=0.58.0",
+    "fuels": ">=0.63.0",
     "ethers": ">=5.7.2"
   },
   "devDependencies": {
