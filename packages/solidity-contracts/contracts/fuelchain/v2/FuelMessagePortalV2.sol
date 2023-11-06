@@ -8,8 +8,8 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
     error AccountDepositLimit();
     error GlobalDepositLimit();
 
-    uint public depositLimitGlobal;
-    uint public depositLimitPerAccount;
+    uint256 public depositLimitGlobal;
+    uint256 public depositLimitPerAccount;
 
     uint public totalDeposited;
     mapping(address => uint) public depositedAmounts;
