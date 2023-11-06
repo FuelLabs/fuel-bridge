@@ -91,7 +91,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         // v2: update accounting if the message carries an amount 
         bool success;
         bytes memory result;
-        if(message.amount > 0) {
+        if (message.amount > 0) {
             uint256 withdrawnAmount = message.amount * PRECISION;
             address recipient = address(uint160(uint256(message.recipient)));
             uint256 depositedAmount = depositedAmounts[recipient];
