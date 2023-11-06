@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.9;
 
-import '../FuelERC721Gateway.sol';
-import './FuelBridgeBaseV2.sol';
+import "../FuelERC721Gateway.sol";
+import "./FuelBridgeBaseV2.sol";
 
 contract FuelERC721GatewayV2 is FuelERC721Gateway, FuelBridgeBaseV2 {
-    function registerAsReceiver(address tokenAddress) external payable virtual override onlyFromPortal() {
+    function registerAsReceiver(address tokenAddress) external payable virtual override onlyFromPortal {
         bytes32 sender = messageSender();
 
         isBridge[sender][tokenAddress] = true;
@@ -19,9 +19,9 @@ contract FuelERC721GatewayV2 is FuelERC721Gateway, FuelBridgeBaseV2 {
     /// @param tokenId tokenId to deposit
     /// @param messageData The data of the message to send for deposit
     function _deposit(
-        address tokenAddress, 
-        bytes32 fuelContractId, 
-        uint256 tokenId, 
+        address tokenAddress,
+        bytes32 fuelContractId,
+        uint256 tokenId,
         bytes memory messageData
     ) internal virtual override {
         // TODO: this check might be unnecessary. If the token is conformant to ERC721
