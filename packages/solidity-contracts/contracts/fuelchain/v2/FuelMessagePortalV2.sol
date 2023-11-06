@@ -1,37 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.9;
 
-import '../FuelMessagePortal.sol';
+import "../FuelMessagePortal.sol";
 
 contract FuelMessagePortalV2 is FuelMessagePortal {
-
     error AccountDepositLimit();
     error GlobalDepositLimit();
 
     uint256 public depositLimitGlobal;
     uint256 public depositLimitPerAccount;
 
-    uint public totalDeposited;
-    mapping(address => uint) public depositedAmounts;
+    uint256 public totalDeposited;
+    mapping(address => uint256) public depositedAmounts;
 
-
-    function initializeV2(
-        uint _depositLimitGlobal, 
-        uint _depositLimitPerAccount
-    ) public reinitializer(2) {
+    function initializeV2(uint256 _depositLimitGlobal, uint256 _depositLimitPerAccount) public reinitializer(2) {
         depositLimitGlobal = _depositLimitGlobal;
         depositLimitPerAccount = _depositLimitPerAccount;
     }
 
-    function setGlobalDepositLimit(uint limit) external virtual payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setGlobalDepositLimit(uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         depositLimitGlobal = limit;
     }
 
-    function setPerAccountDepositLimit(uint limit) external virtual payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPerAccountDepositLimit(uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         depositLimitPerAccount = limit;
     }
 
-    function rescueETH(uint amount) external virtual payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function rescueETH(uint256 amount) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         payable(msg.sender).transfer(amount);
     }
 
@@ -51,16 +46,16 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
             // v2: increase deposited amount for sender
             // Do not think this needs an overflow check, you cannot get that much ether
             uint256 userDepositedAmount = depositedAmounts[msg.sender] + msg.value;
-            if(userDepositedAmount > depositLimitPerAccount) {
+            if (userDepositedAmount > depositLimitPerAccount) {
                 revert AccountDepositLimit();
             }
 
             // v2: increase global deposited ether
             uint256 globalDepositedAmount = totalDeposited += msg.value;
-            if(globalDepositedAmount > depositLimitGlobal) {
+            if (globalDepositedAmount > depositLimitGlobal) {
                 revert GlobalDepositLimit();
             }
-            
+
             //make sure amount fits into the Fuel base asset decimal level
             uint256 amount = msg.value / PRECISION;
             if (msg.value > 0) {
@@ -71,7 +66,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
             depositedAmounts[msg.sender] = userDepositedAmount;
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            uint nonce = _outgoingMessageNonce;
+            uint256 nonce = _outgoingMessageNonce;
             emit MessageSent(sender, recipient, nonce, uint64(amount), data);
 
             // increment nonce for next message
@@ -88,7 +83,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         //set message sender for receiving contract to reference
         _incomingMessageSender = message.sender;
 
-        // v2: update accounting if the message carries an amount 
+        // v2: update accounting if the message carries an amount
         bool success;
         bytes memory result;
         if (message.amount > 0) {
@@ -96,11 +91,13 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
             address recipient = address(uint160(uint256(message.recipient)));
             uint256 depositedAmount = depositedAmounts[recipient];
 
-            if(depositedAmount < withdrawnAmount) {
+            if (depositedAmount < withdrawnAmount) {
                 depositedAmounts[recipient] = 0;
             } else {
                 // Underflow check already done
-                unchecked {depositedAmounts[recipient] = depositedAmount - withdrawnAmount;}
+                unchecked {
+                    depositedAmounts[recipient] = depositedAmount - withdrawnAmount;
+                }
             }
 
             // Underflow check enabled since the amount is coded in `message`
@@ -110,7 +107,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         } else {
             (success, result) = address(uint160(uint256(message.recipient))).call(message.data);
         }
-
 
         if (!success) {
             // Look for revert reason and bubble it up if present
@@ -134,7 +130,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         //emit event for successful message relay
         emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
     }
-    
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.

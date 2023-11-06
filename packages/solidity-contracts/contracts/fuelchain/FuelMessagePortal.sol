@@ -160,17 +160,17 @@ contract FuelMessagePortal is
 
     /// @notice Gets the number of decimals used in the Fuel base asset
     /// @return decimals of the Fuel base asset
-    function fuelBaseAssetDecimals() public virtual pure returns (uint8) {
+    function fuelBaseAssetDecimals() public pure virtual returns (uint8) {
         return uint8(FUEL_BASE_ASSET_DECIMALS);
     }
 
     /// @notice Gets the set Fuel chain state contract
     /// @return fuel chain state contract
-    function fuelChainStateContract() public virtual view returns (address) {
+    function fuelChainStateContract() public view virtual returns (address) {
         return address(_fuelChainState);
     }
 
-    function getNextOutgoingMessageNonce() public virtual view returns (uint256) {
+    function getNextOutgoingMessageNonce() public view virtual returns (uint256) {
         return _outgoingMessageNonce;
     }
 
@@ -191,7 +191,7 @@ contract FuelMessagePortal is
         FuelBlockHeader calldata blockHeader,
         MerkleProof calldata blockInHistoryProof,
         MerkleProof calldata messageInBlockProof
-    ) external virtual payable whenNotPaused {
+    ) external payable virtual whenNotPaused {
         //verify root block header
         if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
             revert UnfinalizedBlock();
@@ -228,13 +228,13 @@ contract FuelMessagePortal is
     /// @notice Gets if the given message ID has been relayed successfully
     /// @param messageId Message ID
     /// @return true if message has been relayed successfully
-    function incomingMessageSuccessful(bytes32 messageId) public virtual view returns (bool) {
+    function incomingMessageSuccessful(bytes32 messageId) public view virtual returns (bool) {
         return _incomingMessageSuccessful[messageId];
     }
 
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
     /// @return sender the address of the sender on Fuel
-    function messageSender() external virtual view returns (bytes32) {
+    function messageSender() external view virtual returns (bytes32) {
         if (_incomingMessageSender == NULL_MESSAGE_SENDER) revert CurrentMessageSenderNotSet();
         return _incomingMessageSender;
     }
@@ -246,13 +246,13 @@ contract FuelMessagePortal is
     /// @notice Send a message to a recipient on Fuel
     /// @param recipient The target message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
-    function sendMessage(bytes32 recipient, bytes calldata data) external virtual payable whenNotPaused {
+    function sendMessage(bytes32 recipient, bytes calldata data) external payable virtual whenNotPaused {
         _sendOutgoingMessage(recipient, data);
     }
 
     /// @notice Send only ETH to the given recipient
     /// @param recipient The target message receiver
-    function depositETH(bytes32 recipient) external virtual payable whenNotPaused {
+    function depositETH(bytes32 recipient) external payable virtual whenNotPaused {
         _sendOutgoingMessage(recipient, new bytes(0));
     }
 
