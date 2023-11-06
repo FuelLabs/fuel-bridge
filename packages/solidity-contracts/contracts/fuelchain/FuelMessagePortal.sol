@@ -193,11 +193,11 @@ contract FuelMessagePortal is
         MerkleProof calldata messageInBlockProof
     ) external payable whenNotPaused {
         //verify root block header
-         if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
+        if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
             revert UnfinalizedBlock();
 
         //verify block in history
-        if(
+        if (
             !verifyBinaryTree(
                 rootBlockHeader.prevRoot,
                 abi.encodePacked(blockHeader.computeConsensusHeaderHash()),
@@ -205,14 +205,13 @@ contract FuelMessagePortal is
                 blockInHistoryProof.key,
                 rootBlockHeader.height
             )
-            
         ) revert InvalidBlockInHistoryProof();
 
         //verify message in block
         bytes32 messageId = CryptographyLib.hash(
             abi.encodePacked(message.sender, message.recipient, message.nonce, message.amount, message.data)
         );
-        if(
+        if (
             !verifyBinaryTree(
                 blockHeader.outputMessagesRoot,
                 abi.encodePacked(messageId),

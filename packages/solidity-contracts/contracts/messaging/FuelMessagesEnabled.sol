@@ -12,7 +12,7 @@ abstract contract FuelMessagesEnabled {
 
     error CallerIsNotPortal();
     error InvalidMessageSender();
-    
+
     /////////////
     // Storage //
     /////////////

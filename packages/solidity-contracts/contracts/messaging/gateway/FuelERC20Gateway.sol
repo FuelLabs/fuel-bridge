@@ -116,7 +116,7 @@ contract FuelERC20Gateway is
         address tokenAddress,
         bytes32 fuelContractId,
         uint256 amount
-    ) external virtual payable whenNotPaused {
+    ) external payable virtual whenNotPaused {
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
@@ -141,17 +141,17 @@ contract FuelERC20Gateway is
         bytes32 fuelContractId,
         uint256 amount,
         bytes calldata data
-    ) external virtual payable whenNotPaused {
+    ) external payable virtual whenNotPaused {
         bytes memory messageData = abi.encodePacked(
-                fuelContractId,
-                bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-                bytes32(0), // OFFSET_TOKEN_ID = 64
-                bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
-                to, // OFFSET_TO = 128
-                amount, // OFFSET_AMOUNT = 160
-                DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
-                data
-            );
+            fuelContractId,
+            bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
+            bytes32(0), // OFFSET_TOKEN_ID = 64
+            bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
+            to, // OFFSET_TO = 128
+            amount, // OFFSET_AMOUNT = 160
+            DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
+            data
+        );
         _deposit(tokenAddress, fuelContractId, amount, messageData);
     }
 
@@ -181,7 +181,7 @@ contract FuelERC20Gateway is
 
     /// @notice Allows the admin to rescue ETH sent to this contract by accident
     /// @dev Made payable to reduce gas costs
-    function rescueETH() external virtual payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function rescueETH() external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
         require(success);
     }
@@ -195,7 +195,12 @@ contract FuelERC20Gateway is
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) internal virtual {
+    function _deposit(
+        address tokenAddress,
+        bytes32 fuelContractId,
+        uint256 amount,
+        bytes memory messageData
+    ) internal virtual {
         require(amount > 0, "Cannot deposit zero");
 
         //transfer tokens to this contract and update deposit balance

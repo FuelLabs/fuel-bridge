@@ -10,5 +10,13 @@
       "source.fixAll.eslint": true
     }
   },
-  "solidity.compileUsingRemoteVersion": "v0.8.9+commit.e5eed63a"
+  "[solidity]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "JuanBlanco.solidity"
+  },
+  "solidity.formatter": "forge",
+  "solidity.compileUsingRemoteVersion": "v0.8.9+commit.e5eed63a",
+  "solidity.packageDefaultDependenciesContractsDirectory": "packages/solidity-contracts/contracts",
+  "solidity.packageDefaultDependenciesDirectory": "packages/solidity-contracts/node_modules",
+  "prettier.documentSelectors": ["**/*.sol"]
 }
