@@ -978,12 +978,12 @@ mod revert {
         let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
 
         match receipt {
-            TxStatus::Revert {reason, ..} => {
+            TxStatus::Revert { reason, .. } => {
                 assert_eq!(reason, "Revert(18446744073709486080)");
-            },
-            _ => {assert!(false, "Transaction did not revert");}
+            }
+            _ => {
+                assert!(false, "Transaction did not revert");
+            }
         }
-
-
     }
 }
