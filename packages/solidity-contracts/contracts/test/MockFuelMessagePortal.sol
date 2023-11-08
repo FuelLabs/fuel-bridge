@@ -2,7 +2,6 @@
 pragma solidity ^0.8.9;
 
 contract MockFuelMessagePortal {
-
     bytes32 private _messageSender;
 
     function setMessageSender(bytes32 value) external {

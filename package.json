@@ -32,7 +32,6 @@
     "@fuels/ts-config": "0.0.10",
     "eslint": "^8.49.0",
     "prettier": "^2.7.1",
-    "prettier-plugin-solidity": "^v1.0.0-rc.1",
     "tsup": "^7.2.0",
     "turbo": "^1.10.7"
   },

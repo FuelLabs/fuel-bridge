@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.9;
 
-import '../FuelERC20Gateway.sol';
-import './FuelBridgeBaseV2.sol';
+import "../FuelERC20Gateway.sol";
+import "./FuelBridgeBaseV2.sol";
 
 contract FuelERC20GatewayV2 is FuelERC20Gateway, FuelBridgeBaseV2 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    function registerAsReceiver(address tokenAddress) external payable virtual override onlyFromPortal() {
+    function registerAsReceiver(address tokenAddress) external payable virtual override onlyFromPortal {
         bytes32 sender = messageSender();
 
         isBridge[sender][tokenAddress] = true;
@@ -20,7 +20,12 @@ contract FuelERC20GatewayV2 is FuelERC20Gateway, FuelBridgeBaseV2 {
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData) internal virtual override {
+    function _deposit(
+        address tokenAddress,
+        bytes32 fuelContractId,
+        uint256 amount,
+        bytes memory messageData
+    ) internal virtual override {
         require(amount > 0, "Cannot deposit zero");
         if (!isBridge[fuelContractId][tokenAddress]) revert FuelContractIsNotBridge();
 
