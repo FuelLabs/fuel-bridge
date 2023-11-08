@@ -3,27 +3,20 @@ pragma solidity 0.8.9;
 
 import "../FuelMessagePortal.sol";
 
+/// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
 contract FuelMessagePortalV2 is FuelMessagePortal {
     error AccountDepositLimit();
     error GlobalDepositLimit();
 
-    uint256 public depositLimitGlobal;
-    uint256 public depositLimitPerAccount;
+    uint256 public immutable depositLimitGlobal;
+    uint256 public immutable depositLimitPerAccount;
 
     uint256 public totalDeposited;
     mapping(address => uint256) public depositedAmounts;
 
-    function initializeV2(uint256 _depositLimitGlobal, uint256 _depositLimitPerAccount) public reinitializer(2) {
+    constructor(uint256 _depositLimitGlobal, uint256 _depositLimitPerAccount) {
         depositLimitGlobal = _depositLimitGlobal;
         depositLimitPerAccount = _depositLimitPerAccount;
-    }
-
-    function setGlobalDepositLimit(uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        depositLimitGlobal = limit;
-    }
-
-    function setPerAccountDepositLimit(uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        depositLimitPerAccount = limit;
     }
 
     function rescueETH(uint256 amount) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {

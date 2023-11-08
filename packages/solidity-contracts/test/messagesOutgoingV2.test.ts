@@ -1,6 +1,7 @@
 import type { Provider } from '@ethersproject/abstract-provider';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
+import type { BigNumber } from 'ethers';
 import { BigNumber as BN, constants } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
 import { deployments, ethers, upgrades } from 'hardhat';
@@ -10,6 +11,8 @@ import type { FuelChainState, FuelMessagePortalV2 } from '../typechain';
 import { FuelMessagePortalV2__factory } from '../typechain';
 import type { MessageTester } from '../typechain/MessageTester';
 
+import {} from '@openzeppelin/hardhat-upgrades';
+
 import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;
@@ -17,6 +20,9 @@ const { expect } = chai;
 const ETH_DECIMALS = 18;
 const FUEL_BASE_ASSET_DECIMALS = 9;
 const BASE_ASSET_CONVERSION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
+
+const ETH_GLOBAL_LIMIT = parseEther('20');
+const ETH_PER_ACCOUNT_LIMIT = parseEther('10');
 
 describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   const nonceList: string[] = [];
@@ -33,7 +39,10 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   let provider: Provider;
 
   const fixture = deployments.createFixture(
-    async ({ ethers, upgrades: { deployProxy } }) => {
+    async (
+      { ethers, upgrades: { deployProxy } },
+      options?: { globalEthLimit?: BigNumber; perAccountEthLimit?: BigNumber }
+    ) => {
       const provider = ethers.provider;
       const signers = await ethers.getSigners();
       const [deployer] = signers;
@@ -75,10 +84,11 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       });
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-        call: {
-          fn: 'initializeV2',
-          args: [constants.MaxUint256, constants.MaxUint256],
-        },
+        unsafeAllow: ['constructor'],
+        constructorArgs: [
+          options?.globalEthLimit || ETH_GLOBAL_LIMIT,
+          options?.perAccountEthLimit || ETH_PER_ACCOUNT_LIMIT,
+        ],
       });
 
       return {
@@ -111,61 +121,30 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       } = fixt);
     });
 
-    it('allows to set a global deposit limit', async () => {
-      const limit = parseEther(Math.random().toFixed(ETH_DECIMALS));
-      await fuelMessagePortal.connect(deployer).setGlobalDepositLimit(limit);
+    describe('rescueETH()', () => {
+      it('allows to rescue ETH', async () => {
+        const value = parseEther(
+          Math.random().toFixed(FUEL_BASE_ASSET_DECIMALS)
+        );
+        await fuelMessagePortal
+          .connect(signers[0])
+          .depositETH(randomBytes32(), { value });
 
-      expect(await fuelMessagePortal.depositLimitGlobal()).equal(limit);
-    });
-    it('allows to set a per account deposit limit', async () => {
-      const limit = parseEther(Math.random().toFixed(ETH_DECIMALS));
-      await fuelMessagePortal
-        .connect(deployer)
-        .setPerAccountDepositLimit(limit);
+        const tx = fuelMessagePortal.connect(deployer).rescueETH(value);
+        await expect(tx).not.to.be.reverted;
+        await expect(tx).to.changeEtherBalances(
+          [deployer.address, fuelMessagePortal.address],
+          [value, value.mul(-1)]
+        );
+      });
+      it('reverts on unauthorized call to rescueETH()', async () => {
+        const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
+        const mallory = signers[1];
+        const revertTx = fuelMessagePortal.connect(mallory).rescueETH(0);
 
-      expect(await fuelMessagePortal.depositLimitPerAccount()).equal(limit);
-    });
-    it('allows to rescue ETH', async () => {
-      const value = parseEther(Math.random().toFixed(FUEL_BASE_ASSET_DECIMALS));
-      await fuelMessagePortal
-        .connect(signers[0])
-        .depositETH(randomBytes32(), { value });
-
-      const tx = fuelMessagePortal.connect(deployer).rescueETH(value);
-      await expect(tx).not.to.be.reverted;
-      await expect(tx).to.changeEtherBalances(
-        [deployer.address, fuelMessagePortal.address],
-        [value, value.mul(-1)]
-      );
-    });
-
-    it('reverts on unauthorized call to setGlobalDepositLimit()', async () => {
-      const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
-      const mallory = signers[1];
-      const revertTx = fuelMessagePortal
-        .connect(mallory)
-        .setGlobalDepositLimit(0);
-
-      const expectedErrorMsg = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${defaultAdminRole}`;
-      await expect(revertTx).to.be.revertedWith(expectedErrorMsg);
-    });
-    it('reverts on unauthorized call to setPerAccountDepositLimit()', async () => {
-      const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
-      const mallory = signers[1];
-      const revertTx = fuelMessagePortal
-        .connect(mallory)
-        .setPerAccountDepositLimit(0);
-
-      const expectedErrorMsg = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${defaultAdminRole}`;
-      await expect(revertTx).to.be.revertedWith(expectedErrorMsg);
-    });
-    it('reverts on unauthorized call to rescueETH()', async () => {
-      const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
-      const mallory = signers[1];
-      const revertTx = fuelMessagePortal.connect(mallory).rescueETH(0);
-
-      const expectedErrorMsg = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${defaultAdminRole}`;
-      await expect(revertTx).to.be.revertedWith(expectedErrorMsg);
+        const expectedErrorMsg = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${defaultAdminRole}`;
+        await expect(revertTx).to.be.revertedWith(expectedErrorMsg);
+      });
     });
   });
 
@@ -222,17 +201,13 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         expect(await fuelMessagePortal.totalDeposited()).equal(value.mul(2));
       }
     });
-    it('should revert if the per account limit is reached', async () => {
-      const accountLimit = parseEther('1');
-      await fuelMessagePortal
-        .connect(deployer)
-        .setPerAccountDepositLimit(accountLimit);
 
+    it('should revert if the per account limit is reached', async () => {
       const recipient = randomBytes32();
       const sender = signers[1];
       await fuelMessagePortal
         .connect(sender)
-        .depositETH(recipient, { value: accountLimit });
+        .depositETH(recipient, { value: ETH_PER_ACCOUNT_LIMIT });
 
       const revertTx = fuelMessagePortal
         .connect(sender)
@@ -243,17 +218,17 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         'AccountDepositLimit'
       );
     });
-    it('should revert if the global limit is reached', async () => {
-      const globalLimit = parseEther('1');
-      await fuelMessagePortal
-        .connect(deployer)
-        .setGlobalDepositLimit(globalLimit);
 
+    it('should revert if the global limit is reached', async () => {
       const recipient = randomBytes32();
       const sender = signers[1];
       await fuelMessagePortal
-        .connect(sender)
-        .depositETH(recipient, { value: globalLimit });
+        .connect(signers[2])
+        .depositETH(recipient, { value: ETH_PER_ACCOUNT_LIMIT });
+
+      await fuelMessagePortal
+        .connect(signers[3])
+        .depositETH(recipient, { value: ETH_PER_ACCOUNT_LIMIT });
 
       const revertTx = fuelMessagePortal
         .connect(sender)
@@ -268,7 +243,10 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
   describe('Behaves like V1 - Send messages', async () => {
     before(async () => {
-      const fixt = await fixture();
+      const fixt = await fixture({
+        globalEthLimit: constants.MaxUint256,
+        perAccountEthLimit: constants.MaxUint256,
+      });
       ({
         messageTester,
         provider,

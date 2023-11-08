@@ -51,11 +51,7 @@ contract FuelMessagePortal is
 
     /// @dev Emitted when a message is sent from Ethereum to Fuel
     event MessageSent(
-        bytes32 indexed sender,
-        bytes32 indexed recipient,
-        uint256 indexed nonce,
-        uint64 amount,
-        bytes data
+        bytes32 indexed sender, bytes32 indexed recipient, uint256 indexed nonce, uint64 amount, bytes data
     );
 
     /// @dev Emitted when a message is successfully relayed to Ethereum from Fuel
@@ -193,8 +189,9 @@ contract FuelMessagePortal is
         MerkleProof calldata messageInBlockProof
     ) external payable virtual whenNotPaused {
         //verify root block header
-        if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
+        if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height)) {
             revert UnfinalizedBlock();
+        }
 
         //verify block in history
         if (
@@ -278,7 +275,7 @@ contract FuelMessagePortal is
             }
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            uint nonce = _outgoingMessageNonce;
+            uint256 nonce = _outgoingMessageNonce;
             emit MessageSent(sender, recipient, nonce, uint64(amount), data);
 
             // increment nonce for next message

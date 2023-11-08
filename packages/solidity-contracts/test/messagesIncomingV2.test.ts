@@ -277,7 +277,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     await expect(fuelMessagePortal.depositLimitGlobal()).to.be.reverted;
 
     await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-      call: { fn: 'initializeV2', args: [0, 0] },
+      unsafeAllow: ['constructor'],
+      constructorArgs: [0, 0],
     });
 
     expect(await fuelMessagePortal.depositLimitGlobal()).to.be.equal(0);
@@ -297,10 +298,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       } = fixt);
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-        call: {
-          fn: 'initializeV2',
-          args: [constants.MaxUint256, constants.MaxUint256],
-        },
+        unsafeAllow: ['constructor'],
+        constructorArgs: [constants.MaxUint256, constants.MaxUint256],
       });
 
       await setupMessages(
@@ -438,10 +437,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       } = fixt);
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-        call: {
-          fn: 'initializeV2',
-          args: [constants.MaxUint256, constants.MaxUint256],
-        },
+        unsafeAllow: ['constructor'],
+        constructorArgs: [constants.MaxUint256, constants.MaxUint256],
       });
 
       await setupMessages(
