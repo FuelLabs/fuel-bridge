@@ -347,7 +347,7 @@ mod success {
             }
         }
 
-        let receipts = tx_status.take_receipts();
+        let _receipts = tx_status.take_receipts();
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
@@ -431,7 +431,7 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let tx_id = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
@@ -564,7 +564,7 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let tx_id = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,

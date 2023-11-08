@@ -313,7 +313,7 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2, message3]).await;
-        let provider = wallet.provider().clone().unwrap();
+        let provider = wallet.provider().unwrap();
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
