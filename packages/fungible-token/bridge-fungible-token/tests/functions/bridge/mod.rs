@@ -66,7 +66,13 @@ mod success {
         )
         .await;
 
-        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -199,7 +205,13 @@ mod success {
         )
         .await;
 
-        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status").take_receipts();
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -319,18 +331,23 @@ mod success {
         )
         .await;
 
-        let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.expect("Could not obtain transaction status");
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
 
         match tx_status.clone() {
             fuels::types::tx_status::TxStatus::Success { .. } => {
-                    // Do nothing
-            },
-            _ => {assert!(false, "Transaction did not succeed")}
+                // Do nothing
+            }
+            _ => {
+                assert!(false, "Transaction did not succeed")
+            }
         }
 
         let receipts = tx_status.take_receipts();
-
-        
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
@@ -348,7 +365,6 @@ mod success {
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
-        dbg!(&call_response.receipts);
 
         let message_receipt = call_response
             .receipts
@@ -356,15 +372,7 @@ mod success {
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
 
-        let event = call_response
-            .receipts
-            .iter()
-            .find(|&r| matches!(r, Receipt::LogData { .. }))
-            .unwrap();
-
-        dbg!(hex::encode(*wallet.address().hash()));
         dbg!(hex::encode(message_receipt.data().unwrap()));
-        dbg!(hex::encode(event.data().unwrap()));
 
         let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
