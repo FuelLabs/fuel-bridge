@@ -2646,12 +2646,6 @@ packages:
       antlr4ts: 0.5.0-alpha.4
     dev: true
 
-  /@solidity-parser/parser@0.16.1:
-    resolution: {integrity: sha512-PdhRFNhbTtu3x8Axm0uYpqOy/lODYQK+MlYSgqIsq2L8SFYEHJPHNUiOTAJbDGzNjjr1/n9AcIayxafR/fWmYw==}
-    dependencies:
-      antlr4ts: 0.5.0-alpha.4
-    dev: true
-
   /@trufflesuite/bigint-buffer@1.1.9:
     resolution: {integrity: sha512-bdM5cEGCOhDSwminryHJbRmXc1x7dPKg6Pqns3qyTwFlxsqUgxE29lsERS3PlIW1HTjoIGMUqsk1zQQwST1Yxw==}
     engines: {node: '>= 10.0.0'}
