@@ -372,8 +372,6 @@ mod success {
             .find(|&r| matches!(r, Receipt::MessageOut { .. }))
             .unwrap();
 
-        dbg!(hex::encode(message_receipt.data().unwrap()));
-
         let (selector, to, token, amount, token_id) =
             parse_output_message_data(message_receipt.data().unwrap());
 
