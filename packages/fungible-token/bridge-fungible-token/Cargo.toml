@@ -18,7 +18,6 @@ fuels = { workspace = true, features = ["fuel-core-lib"] }
 primitive-types = "0.12.1"
 sha3 = "0.10.1"
 tokio = { workspace = true }
-hex = { workspace = true }
 
 [[test]]
 harness = true
