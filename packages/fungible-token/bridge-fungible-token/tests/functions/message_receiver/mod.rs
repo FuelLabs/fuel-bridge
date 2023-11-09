@@ -377,13 +377,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -444,13 +452,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -511,13 +527,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -578,13 +602,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -648,13 +680,21 @@ mod success {
         .await;
 
         // Relay the test message to the bride contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         // TODO: fails when conditional is removed
         if BRIDGED_TOKEN_DECIMALS > PROXY_TOKEN_DECIMALS + 19 {
@@ -720,13 +760,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -803,7 +851,7 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
@@ -811,14 +859,30 @@ mod success {
         )
         .await;
 
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
+
         // Relay the second test message to the bridge contract
-        let receipts_second = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts_second = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -868,10 +932,11 @@ mod success {
 }
 
 mod revert {
+    use fuels::types::tx_status::TxStatus;
+
     use super::*;
 
     #[tokio::test]
-    #[should_panic(expected = "Revert(18446744073709486080)")]
     async fn verification_fails_with_incorrect_sender() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
@@ -902,12 +967,23 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipt = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+
+        match receipt {
+            TxStatus::Revert { reason, .. } => {
+                assert_eq!(reason, "Revert(18446744073709486080)");
+            }
+            _ => {
+                assert!(false, "Transaction did not revert");
+            }
+        }
     }
 }

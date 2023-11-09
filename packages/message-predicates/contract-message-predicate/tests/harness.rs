@@ -2,7 +2,6 @@ mod utils {
     pub mod builder;
     pub mod environment;
 }
-use utils::builder;
 
 // Test that input messages can be relayed to a contract
 // and that the contract can successfully parse the message data
@@ -43,8 +42,8 @@ mod success {
         let _receipts = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
-            contract_input.clone(),
-            coin_inputs[0].clone(),
+            vec![contract_input.clone()],
+            &[coin_inputs[0].clone()],
         )
         .await;
 
@@ -83,8 +82,9 @@ mod success {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, test_contract, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (mut tx, _, _) = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &[
                 message_inputs[1].clone(),
@@ -93,11 +93,15 @@ mod success {
             ],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Note: tx inputs[message1, message2, message3, contract, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _tx_id = provider
+            .send_transaction(tx)
+            .await
+            .expect("Transaction failed");
 
         // Verify test contract received the message with the correct data
         let test_contract_id: ContractId = test_contract.contract_id().into();
@@ -114,7 +118,6 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message values were received by the test contract
-        let provider = wallet.provider().unwrap();
         let test_contract_balance = provider
             .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
             .await
@@ -130,7 +133,7 @@ mod fail {
 
     use crate::utils::{builder, environment as env};
 
-    use fuel_tx::ConsensusParameters;
+    use fuel_tx::{PanicReason, Receipt};
     use fuels::{
         accounts::Account,
         prelude::{Address, AssetId, Salt, TxParameters},
@@ -139,7 +142,6 @@ mod fail {
             coin::{Coin, CoinStatus::Unspent},
             coin_type::CoinType,
             input::Input,
-            transaction_builders::{ScriptTransactionBuilder, TransactionBuilder},
             unresolved_bytes::UnresolvedBytes,
         },
     };
@@ -154,16 +156,16 @@ mod fail {
         "0xd5f55c10bc830755278e6d2b9278b4177b8bca401a896eb0d3e7710eee293786";
 
     #[tokio::test]
-    #[should_panic(expected = "InputNotFound")]
     async fn relay_message_with_missing_message() {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, _) =
             env::setup_environment(vec![coin], vec![]).await;
+        let provider = wallet.provider().unwrap();
 
         // Transfer coins to a coin with the predicate as an owner
         let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
 
-        let cparams = wallet.provider().unwrap().consensus_parameters;
+        let cparams = provider.consensus_parameters();
         let predicate_root =
             Address::from(fuel_contract_message_predicate::predicate_root(&cparams));
         let _receipt = wallet
@@ -196,58 +198,107 @@ mod fail {
             data: UnresolvedBytes::new(vec![]),
         };
 
-        let (mut tx, _, _) = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             coin_as_message,
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Note: tx inputs[coin_message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let tx_id = provider
+            .send_transaction(tx)
+            .await
+            .expect("Transaction failed");
+
+        let receipts = provider.tx_status(&tx_id).await.unwrap().take_receipts();
+
+        let panic_receipt = receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::Panic { .. }))
+            .expect("Could not find failing receipt");
+
+        assert_eq!(
+            panic_receipt.reason().unwrap().reason().clone(),
+            PanicReason::InputNotFound
+        );
     }
 
     #[tokio::test]
-    #[should_panic(expected = "ContractNotInInputs")]
     async fn relay_message_with_missing_contract() {
         let message_data = env::prefix_contract_id(vec![]).await;
         let message = (100, message_data);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, _, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (mut tx, _, _) = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &vec![coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Note: tx inputs[message, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let tx_id = provider
+            .send_transaction(tx)
+            .await
+            .expect("Transaction failed");
+
+        let receipts = provider.tx_status(&tx_id).await.unwrap().take_receipts();
+        dbg!(&receipts);
+
+        let panic_receipt = receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::Panic { .. }))
+            .expect("Could not find failing receipt");
+
+        assert_eq!(
+            panic_receipt.reason().unwrap().reason().clone(),
+            PanicReason::ContractNotInInputs
+        );
     }
 
     #[tokio::test]
-    #[should_panic(expected = "ContractNotFound")]
     async fn relay_message_with_wrong_contract() {
         let message_data_bad = Salt::from_str(RANDOM_SALT).unwrap().to_vec();
         let message = (100, message_data_bad);
         let coin = (1_000_000, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (mut tx, _, _) = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Note: tx inputs[message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let tx_id = provider
+            .send_transaction(tx)
+            .await
+            .expect("Transaction failed");
+
+        let receipts = provider.tx_status(&tx_id).await.unwrap().take_receipts();
+
+        let panic_receipt = receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::Panic { .. }))
+            .expect("Could not find failing receipt");
+
+        assert_eq!(
+            panic_receipt.reason().unwrap().reason().clone(),
+            PanicReason::ContractNotFound
+        );
     }
 
     #[tokio::test]
@@ -262,8 +313,9 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2, message3]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (mut tx, _, _) = builder::build_contract_message_tx(
+        let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &vec![
                 message_inputs[1].clone(),
@@ -273,11 +325,12 @@ mod fail {
             ],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Note: tx inputs[message1, message2, message3, contract, coin], tx outputs[change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut tx).await;
+        let _tx_id = provider.send_transaction(tx).await.unwrap();
     }
 
     #[tokio::test]
@@ -288,27 +341,18 @@ mod fail {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, _, contract_input, coin_inputs, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
+        let provider = wallet.provider().unwrap();
 
-        let (_tx, tx_inputs, tx_outputs) = builder::build_contract_message_tx(
+        let tx = builder::build_invalid_contract_message_tx(
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
             TxParameters::default(),
+            provider.network_info().await.unwrap(),
+            &wallet,
         )
         .await;
 
-        // Modify the script bytecode
-        let mut modified_tx = ScriptTransactionBuilder::prepare_transfer(
-            tx_inputs,
-            tx_outputs,
-            TxParameters::default(),
-        )
-        .set_script(vec![0u8, 1u8, 2u8, 3u8])
-        .set_consensus_parameters(ConsensusParameters::default())
-        .build()
-        .unwrap();
-
-        // Note: tx inputs[message, contract, coin], tx outputs[contract, change, variable]
-        let _receipts = env::sign_and_call_tx(&wallet, &mut modified_tx).await;
+        let _tx_id = provider.send_transaction(tx).await.unwrap();
     }
 }

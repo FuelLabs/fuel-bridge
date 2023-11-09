@@ -58,13 +58,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -189,13 +197,21 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let refund_registered_event = bridge
             .log_decoder()
@@ -307,13 +323,31 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
+
+        match tx_status.clone() {
+            fuels::types::tx_status::TxStatus::Success { .. } => {
+                // Do nothing
+            }
+            _ => {
+                assert!(false, "Transaction did not succeed")
+            }
+        }
+
+        let _receipts = tx_status.take_receipts();
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
@@ -395,7 +429,7 @@ mod success {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
@@ -528,7 +562,7 @@ mod revert {
         .await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,

@@ -1,12 +1,17 @@
-use fuel_core_types::fuel_tx::{input::Input, Bytes32, Output, Transaction};
+use fuel_core_types::fuel_tx::{Bytes32, Output};
 /**
  * TODO: This module contains functions that should eventually
  * be made part of the fuels-rs sdk repo as part of the Provider
  * implementation, similar to functions like 'build_transfer_tx'
  */
-use fuels::prelude::*;
+use fuels::{
+    prelude::*,
+    types::{
+        input::Input,
+        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder},
+    },
+};
 
-const CONTRACT_MESSAGE_MIN_GAS: u64 = 10_000_000;
 const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
     "../../message-predicates/contract-message-predicate/out/contract_message_script.bin";
 
@@ -18,6 +23,8 @@ pub async fn build_contract_message_tx(
     gas_coins: &[Input],
     optional_outputs: &[Output],
     params: TxParameters,
+    network_info: NetworkInfo,
+    wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     // Get the script and predicate for contract messages
     let script_bytecode = std::fs::read(CONTRACT_MESSAGE_SCRIPT_BINARY).unwrap();
@@ -41,18 +48,6 @@ pub async fn build_contract_message_tx(
 
     // Build a change output for the owner of the first provided coin input
     if !gas_coins.is_empty() {
-        match gas_coins[0].clone() {
-            Input::CoinSigned(coin) => {
-                tx_outputs.push(Output::change(coin.owner, 0, AssetId::default()));
-            }
-            Input::CoinPredicate(predicate) => {
-                tx_outputs.push(Output::change(predicate.owner, 0, AssetId::default()));
-            }
-            _ => {
-                // do nothing
-            }
-        }
-
         // Append provided inputs
         tx_inputs.append(&mut gas_coins.to_vec());
     }
@@ -60,16 +55,13 @@ pub async fn build_contract_message_tx(
     // Append provided outputs
     tx_outputs.append(&mut optional_outputs.to_vec());
 
-    // Create a new transaction
-    Transaction::script(
-        params.gas_price(),
-        CONTRACT_MESSAGE_MIN_GAS * 10,
-        params.maturity().into(),
-        script_bytecode,
-        vec![],
-        tx_inputs,
-        tx_outputs,
-        vec![],
-    )
-    .into()
+    let mut builder = ScriptTransactionBuilder::new(network_info)
+        .with_inputs(tx_inputs.clone())
+        .with_outputs(tx_outputs.clone())
+        .with_tx_params(params)
+        .with_script(script_bytecode);
+
+    wallet.sign_transaction(&mut builder);
+
+    builder.build().unwrap()
 }
