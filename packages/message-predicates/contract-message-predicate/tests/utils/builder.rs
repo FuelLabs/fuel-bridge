@@ -73,8 +73,6 @@ pub async fn build_contract_message_tx(
 
 /// Build a message-to-contract transaction with the given input coins and outputs, but invalid script bytecode
 /// note: unspent gas is returned to the owner of the first given gas input
-/// Build a message-to-contract transaction with the given input coins and outputs
-/// note: unspent gas is returned to the owner of the first given gas input
 pub async fn build_invalid_contract_message_tx(
     message: Input,
     inputs: &[Input],
@@ -83,6 +81,7 @@ pub async fn build_invalid_contract_message_tx(
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
+    let invalid_script_bytecode = vec![0u8, 1u8, 2u8, 3u8];
     // Start building list of inputs and outputs
     let mut tx_outputs: Vec<Output> = outputs.to_vec();
     let mut tx_inputs: Vec<Input> = vec![message];
@@ -123,7 +122,7 @@ pub async fn build_invalid_contract_message_tx(
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
         .with_tx_params(params)
-        .with_script(vec![0u8, 1u8, 2u8, 3u8]);
+        .with_script(invalid_script_bytecode);
 
     wallet.sign_transaction(&mut builder);
 
