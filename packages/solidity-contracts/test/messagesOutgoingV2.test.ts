@@ -28,7 +28,6 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   const nonceList: string[] = [];
 
   let signers: SignerWithAddress[];
-  let deployer: SignerWithAddress;
   let addresses: string[];
 
   // Testing contracts
@@ -107,47 +106,6 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   // Intentionally skipped, since this is tested in `messagesIncomingV2.test.ts`
   // it('can upgrade from V1', async () => {});
 
-  describe('Behaves like V2 - Access control', () => {
-    beforeEach('fixture', async () => {
-      const fixt = await fixture();
-      ({
-        messageTester,
-        provider,
-        addresses,
-        fuelMessagePortal,
-        fuelChainState,
-        signers,
-        deployer,
-      } = fixt);
-    });
-
-    describe('rescueETH()', () => {
-      it('allows to rescue ETH', async () => {
-        const value = parseEther(
-          Math.random().toFixed(FUEL_BASE_ASSET_DECIMALS)
-        );
-        await fuelMessagePortal
-          .connect(signers[0])
-          .depositETH(randomBytes32(), { value });
-
-        const tx = fuelMessagePortal.connect(deployer).rescueETH(value);
-        await expect(tx).not.to.be.reverted;
-        await expect(tx).to.changeEtherBalances(
-          [deployer.address, fuelMessagePortal.address],
-          [value, value.mul(-1)]
-        );
-      });
-      it('reverts on unauthorized call to rescueETH()', async () => {
-        const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
-        const mallory = signers[1];
-        const revertTx = fuelMessagePortal.connect(mallory).rescueETH(0);
-
-        const expectedErrorMsg = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${defaultAdminRole}`;
-        await expect(revertTx).to.be.revertedWith(expectedErrorMsg);
-      });
-    });
-  });
-
   describe('Behaves like V2 - Accounting', () => {
     beforeEach('fixture', async () => {
       const fixt = await fixture();
@@ -158,7 +116,6 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         fuelMessagePortal,
         fuelChainState,
         signers,
-        deployer,
       } = fixt);
     });
 

@@ -19,10 +19,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         depositLimitPerAccount = _depositLimitPerAccount;
     }
 
-    function rescueETH(uint256 amount) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        payable(msg.sender).transfer(amount);
-    }
-
     ////////////////////////
     // Internal Functions //
     ////////////////////////
