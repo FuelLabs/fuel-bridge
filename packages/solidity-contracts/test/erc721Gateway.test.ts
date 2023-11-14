@@ -11,7 +11,6 @@ import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
-import { EMPTY, ZERO } from '../protocol/constants';
 import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import {
@@ -26,6 +25,8 @@ import type {
   FuelMessagePortal,
   NFT,
 } from '../typechain';
+
+import { createBlock } from './utils/createBlock';
 
 const CONTRACT_MESSAGE_PREDICATE =
   '0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815';
@@ -47,27 +48,6 @@ declare class TreeNode {
 declare class MerkleProof {
   key: number;
   proof: string[];
-}
-
-// Create a simple block
-function createBlock(
-  prevRoot: string,
-  blockHeight: number,
-  timestamp?: string,
-  outputMessagesCount?: string,
-  outputMessagesRoot?: string
-): BlockHeader {
-  const header: BlockHeader = {
-    prevRoot: prevRoot ? prevRoot : ZERO,
-    height: blockHeight.toString(),
-    timestamp: timestamp ? timestamp : '0',
-    daHeight: '0',
-    txCount: '0',
-    outputMessagesCount: outputMessagesCount ? outputMessagesCount : '0',
-    txRoot: EMPTY,
-    outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
-  };
-  return header;
 }
 
 // Get proof for the leaf

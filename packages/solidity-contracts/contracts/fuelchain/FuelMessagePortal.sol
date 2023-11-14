@@ -51,11 +51,7 @@ contract FuelMessagePortal is
 
     /// @dev Emitted when a message is sent from Ethereum to Fuel
     event MessageSent(
-        bytes32 indexed sender,
-        bytes32 indexed recipient,
-        uint256 indexed nonce,
-        uint64 amount,
-        bytes data
+        bytes32 indexed sender, bytes32 indexed recipient, uint256 indexed nonce, uint64 amount, bytes data
     );
 
     /// @dev Emitted when a message is successfully relayed to Ethereum from Fuel
@@ -103,10 +99,10 @@ contract FuelMessagePortal is
     FuelChainState private _fuelChainState;
 
     /// @notice Nonce for the next message to be sent
-    uint256 private _outgoingMessageNonce;
+    uint256 internal _outgoingMessageNonce;
 
     /// @notice Mapping of message hash to boolean success value
-    mapping(bytes32 => bool) private _incomingMessageSuccessful;
+    mapping(bytes32 => bool) internal _incomingMessageSuccessful;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -145,12 +141,12 @@ contract FuelMessagePortal is
     /////////////////////
 
     /// @notice Pause outbound messages
-    function pause() external onlyRole(PAUSER_ROLE) {
+    function pause() external virtual onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
     /// @notice Unpause outbound messages
-    function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function unpause() external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
 
@@ -160,17 +156,17 @@ contract FuelMessagePortal is
 
     /// @notice Gets the number of decimals used in the Fuel base asset
     /// @return decimals of the Fuel base asset
-    function fuelBaseAssetDecimals() public pure returns (uint8) {
+    function fuelBaseAssetDecimals() public pure virtual returns (uint8) {
         return uint8(FUEL_BASE_ASSET_DECIMALS);
     }
 
     /// @notice Gets the set Fuel chain state contract
     /// @return fuel chain state contract
-    function fuelChainStateContract() public view returns (address) {
+    function fuelChainStateContract() public view virtual returns (address) {
         return address(_fuelChainState);
     }
 
-    function getNextOutgoingMessageNonce() public view returns (uint256) {
+    function getNextOutgoingMessageNonce() public view virtual returns (uint256) {
         return _outgoingMessageNonce;
     }
 
@@ -191,10 +187,11 @@ contract FuelMessagePortal is
         FuelBlockHeader calldata blockHeader,
         MerkleProof calldata blockInHistoryProof,
         MerkleProof calldata messageInBlockProof
-    ) external payable whenNotPaused {
+    ) external payable virtual whenNotPaused {
         //verify root block header
-        if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height))
+        if (!_fuelChainState.finalized(rootBlockHeader.computeConsensusHeaderHash(), rootBlockHeader.height)) {
             revert UnfinalizedBlock();
+        }
 
         //verify block in history
         if (
@@ -228,13 +225,13 @@ contract FuelMessagePortal is
     /// @notice Gets if the given message ID has been relayed successfully
     /// @param messageId Message ID
     /// @return true if message has been relayed successfully
-    function incomingMessageSuccessful(bytes32 messageId) public view returns (bool) {
+    function incomingMessageSuccessful(bytes32 messageId) public view virtual returns (bool) {
         return _incomingMessageSuccessful[messageId];
     }
 
     /// @notice Used by message receiving contracts to get the address on Fuel that sent the message
     /// @return sender the address of the sender on Fuel
-    function messageSender() external view returns (bytes32) {
+    function messageSender() external view virtual returns (bytes32) {
         if (_incomingMessageSender == NULL_MESSAGE_SENDER) revert CurrentMessageSenderNotSet();
         return _incomingMessageSender;
     }
@@ -246,13 +243,13 @@ contract FuelMessagePortal is
     /// @notice Send a message to a recipient on Fuel
     /// @param recipient The target message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
-    function sendMessage(bytes32 recipient, bytes calldata data) external payable whenNotPaused {
+    function sendMessage(bytes32 recipient, bytes calldata data) external payable virtual whenNotPaused {
         _sendOutgoingMessage(recipient, data);
     }
 
     /// @notice Send only ETH to the given recipient
     /// @param recipient The target message receiver
-    function depositETH(bytes32 recipient) external payable whenNotPaused {
+    function depositETH(bytes32 recipient) external payable virtual whenNotPaused {
         _sendOutgoingMessage(recipient, new bytes(0));
     }
 
@@ -263,7 +260,7 @@ contract FuelMessagePortal is
     /// @notice Performs all necessary logic to send a message to a target on Fuel
     /// @param recipient The message receiver address or predicate root
     /// @param data The message data to be sent to the receiver
-    function _sendOutgoingMessage(bytes32 recipient, bytes memory data) private {
+    function _sendOutgoingMessage(bytes32 recipient, bytes memory data) internal virtual {
         bytes32 sender = bytes32(uint256(uint160(msg.sender)));
         unchecked {
             //make sure data size is not too large
@@ -278,7 +275,7 @@ contract FuelMessagePortal is
             }
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
-            uint nonce = _outgoingMessageNonce;
+            uint256 nonce = _outgoingMessageNonce;
             emit MessageSent(sender, recipient, nonce, uint64(amount), data);
 
             // increment nonce for next message
@@ -289,7 +286,7 @@ contract FuelMessagePortal is
     /// @notice Executes a message in the given header
     /// @param messageId The id of message to execute
     /// @param message The message to execute
-    function _executeMessage(bytes32 messageId, Message calldata message) private nonReentrant {
+    function _executeMessage(bytes32 messageId, Message calldata message) internal virtual nonReentrant {
         if (_incomingMessageSuccessful[messageId]) revert AlreadyRelayed();
 
         //set message sender for receiving contract to reference
@@ -327,4 +324,11 @@ contract FuelMessagePortal is
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
         //should revert if msg.sender is not authorized to upgrade the contract (currently only admin)
     }
+
+    /**
+     * @dev This empty reserved space is put in place to allow future versions to add new
+     * variables without shifting down storage in the inheritance chain.
+     * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
+     */
+    uint256[49] private __gap;
 }
