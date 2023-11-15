@@ -1,4 +1,4 @@
-use crate::utils::setup::BridgeFungibleTokenContract;
+use crate::utils::setup::{create_wallet, BridgeFungibleTokenContract};
 use fuels::{accounts::wallet::WalletUnlocked, types::AssetId};
 
 pub(crate) async fn total_supply(
