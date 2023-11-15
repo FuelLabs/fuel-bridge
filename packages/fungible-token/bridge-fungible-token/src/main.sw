@@ -196,11 +196,6 @@ impl Bridge for Contract {
     fn asset_to_sub_id(asset_id: b256) -> b256 {
         _asset_to_sub_id(AssetId::from(asset_id))
     }
-
-    // #[storage(read)]
-    // fn fake(_asset: AssetId) -> String {
-    //     String::from_ascii_str(from_str_array(NAME))
-    // }
 }
 
 impl SRC20 for Contract {
