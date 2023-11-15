@@ -3,7 +3,7 @@ mod success {
         constants::{
             BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
         },
-        interface::frc20::{decimals, name, symbol, total_supply},
+        interface::src20::{decimals, name, symbol, total_supply},
         setup::{
             create_msg_data, create_wallet, get_asset_id, relay_message_to_contract,
             setup_environment, BridgeFungibleTokenContract, BridgingConfig,
