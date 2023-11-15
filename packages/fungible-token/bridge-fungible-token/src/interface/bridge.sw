@@ -1,5 +1,7 @@
 library;
 
+use std::string::String;
+
 abi Bridge {
     /// Claim a refund for incorrectly bridged tokens if one has been registered.
     ///
