@@ -53,7 +53,7 @@ configurable {
 storage {
     asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
-    tokens_minted: u64 = 0,
+    tokens_minted: StorageMap<AssetId, U256> = StorageMap {},
     total_assets: u64 = 0,
 }
 
@@ -96,9 +96,9 @@ impl MessageReceiver for Contract {
 
                 // mint tokens & update storage
                 mint(sub_id, amount);
-                match storage.tokens_minted.try_read() {
-                    Option::Some(value) => storage.tokens_minted.write(value + amount),
-                    Option::None => storage.tokens_minted.write(amount),
+                match storage.tokens_minted.get(asset_id).try_read() {
+                    Option::Some(value) => storage.tokens_minted.insert(asset_id, value.add(U256::from((0,0,0,amount)))),
+                    Option::None => storage.tokens_minted.insert(asset_id, U256::from((0,0,0,amount))),
                 };
 
                 // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
@@ -167,9 +167,10 @@ impl Bridge for Contract {
         let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
+
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
-        storage.tokens_minted.write(storage.tokens_minted.read() - amount);
+        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0,0,0,amount))));
         burn(sub_id, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
@@ -207,24 +208,41 @@ impl SRC20 for Contract {
     }
 
     #[storage(read)]
-    fn total_supply(_asset: AssetId) -> Option<u64> {
-        Some(storage.tokens_minted.try_read().unwrap_or(0))
+    fn total_supply(asset: AssetId) -> Option<u64> {
+        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
+            return None;
+        }
+
+        // Reasoning: an extreme supply token such as SHIBA could overflow the
+        // total supply, which is defined by SRC20 as u64.
+        // .as_u64() will revert on overflow, in that case, it will return u64::max() 
+        Some(storage.tokens_minted.get(asset).read().as_u64().unwrap_or(u64::max()))
     }
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        _check_asset_is_minted_by_contract(asset);
+        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
+            return None;
+        }
+
         Some(String::from_ascii_str(from_str_array(NAME)))
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
-        _check_asset_is_minted_by_contract(asset);
+        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
+            return None;
+        }
+
         Some(String::from_ascii_str(from_str_array(SYMBOL)))
     }
 
     #[storage(read)]
-    fn decimals(_asset: AssetId) -> Option<u8> {
+    fn decimals(asset: AssetId) -> Option<u8> {
+        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
+            return None;
+        }
+
         Some(DECIMALS)
     }
 }
@@ -264,9 +282,4 @@ fn _asset_to_sub_id(asset_id: AssetId) -> b256 {
     let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
     require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     sub_id.unwrap()
-}
-
-#[storage(read)]
-fn _check_asset_is_minted_by_contract(asset_id: AssetId) {
-    require(storage.asset_to_sub_id.get(asset_id).try_read().is_some(), BridgeFungibleTokenError::AssetNotFound);
 }

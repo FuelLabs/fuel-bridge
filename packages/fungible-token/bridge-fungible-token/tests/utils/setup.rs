@@ -456,7 +456,7 @@ pub(crate) fn parse_output_message_data(
 }
 
 pub(crate) async fn contract_balance(
-    provider: Provider,
+    provider: &Provider,
     contract_id: &Bech32ContractId,
     asset: AssetId,
 ) -> u64 {

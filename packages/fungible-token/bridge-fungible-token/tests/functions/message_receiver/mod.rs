@@ -13,6 +13,7 @@ use std::str::FromStr;
 mod success {
     use super::*;
 
+    use crate::utils::interface::src20::total_supply;
     use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::MESSAGE_AMOUNT,
@@ -62,7 +63,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge
@@ -110,7 +111,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -121,18 +122,217 @@ mod success {
     }
 
     #[tokio::test]
+    async fn deposit_to_wallet_multiple_times() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+
+        let deposit_amount = config.amount.min;
+        let fuel_deposit_amount = config.fuel_equivalent_amount(deposit_amount);
+
+        let (first_deposit_message, coin, deposit_contract) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            deposit_amount,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (second_deposit_message, _, _) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            deposit_amount,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs, provider) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![first_deposit_message, second_deposit_message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let asset_id = get_asset_id(bridge.contract_id());
+
+        // Get the balance for the deposit contract before
+        assert!(total_supply(&bridge, asset_id).await.is_none());
+
+        ////////////////////
+        // First deposit  //
+        ////////////////////
+
+        // Relay the test message to the bridge contract
+        let _receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract.clone(),
+            &utxo_inputs.coin[..],
+        )
+        .await;
+
+        let asset_balance =
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &asset_id).await;
+
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, fuel_deposit_amount);
+
+        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        assert_eq!(supply, fuel_deposit_amount);
+
+        ////////////////////
+        // Second deposit //
+        ////////////////////
+
+        // Relay the test message to the bridge contract
+        let _receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[1].clone(),
+            utxo_inputs.contract.clone(),
+            &utxo_inputs.coin[..],
+        )
+        .await;
+
+        let balance = wallet_balance(&wallet, &asset_id).await;
+        assert_eq!(balance, fuel_deposit_amount * 2);
+
+        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        assert_eq!(supply, fuel_deposit_amount * 2);
+    }
+
+    #[tokio::test]
+    async fn deposit_to_wallet_total_supply_overflow() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+
+        let max_deposit_amount = config.amount.max;
+        let max_fuel_deposit_amount = config.fuel_equivalent_amount(max_deposit_amount);
+
+        let (first_deposit_message, coin, deposit_contract) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            max_deposit_amount,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (second_deposit_message, _, _) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            max_deposit_amount,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs, provider) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![first_deposit_message, second_deposit_message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let asset_id = get_asset_id(bridge.contract_id());
+
+        // Get the balance for the deposit contract before
+        assert!(total_supply(&bridge, asset_id).await.is_none());
+
+        ////////////////////
+        // First deposit  //
+        ////////////////////
+
+        // Relay the test message to the bridge contract
+        let _receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract.clone(),
+            &utxo_inputs.coin[..],
+        )
+        .await;
+
+        let asset_balance =
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &asset_id).await;
+
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, max_fuel_deposit_amount);
+
+        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        assert_eq!(supply, max_fuel_deposit_amount);
+
+        ////////////////////
+        // Second deposit //
+        ////////////////////
+
+        // Relay the test message to the bridge contract
+        let _receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[1].clone(),
+            utxo_inputs.contract.clone(),
+            &utxo_inputs.coin[..],
+        )
+        .await;
+
+        let utxos = wallet
+            .provider()
+            .unwrap()
+            .get_coins(wallet.address(), asset_id)
+            .await
+            .unwrap();
+
+        assert_eq!(utxos.len(), 2);
+        assert_eq!(utxos[0].amount, max_fuel_deposit_amount);
+        assert_eq!(utxos[1].amount, max_fuel_deposit_amount);
+
+        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        assert_eq!(supply, max_fuel_deposit_amount);
+    }
+
+    #[tokio::test]
     async fn deposit_to_contract() {
         let mut wallet = create_wallet();
         let deposit_contract_id = precalculate_deposit_id().await;
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
+        let deposit_amount = config.amount.test;
+        let fuel_deposit_amount = config.fuel_equivalent_amount(deposit_amount);
+
         let (message, coin, deposit_contract) = create_msg_data(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
             *deposit_contract_id,
-            config.amount.test,
+            deposit_amount,
             configurables.clone(),
             true,
             None,
@@ -154,7 +354,7 @@ mod success {
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
-            contract_balance(provider.clone(), deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -167,11 +367,11 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
-            deposit_contract_balance_before + config.fuel_equivalent_amount(config.amount.test)
+            deposit_contract_balance_before + fuel_deposit_amount
         );
     }
 
@@ -209,7 +409,7 @@ mod success {
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
-            contract_balance(provider.clone(), deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider.clone(), deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -222,7 +422,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -264,7 +464,7 @@ mod success {
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
-            contract_balance(provider.clone(), deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider.clone(), deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -277,7 +477,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -319,7 +519,7 @@ mod success {
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
-            contract_balance(provider.clone(), deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider.clone(), deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -332,7 +532,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -399,7 +599,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -474,7 +674,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -549,7 +749,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -624,7 +824,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -704,7 +904,7 @@ mod success {
                 .unwrap();
 
             let token_balance =
-                contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+                contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
             let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
             // Verify the message value was received by the bridge contract
@@ -782,7 +982,7 @@ mod success {
             .unwrap();
 
         let token_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -894,7 +1094,7 @@ mod success {
             .unwrap();
 
         let token_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value were received by the bridge contract
