@@ -1,6 +1,5 @@
 library;
 
-
 abi Bridge {
     /// Claim a refund for incorrectly bridged tokens if one has been registered.
     ///

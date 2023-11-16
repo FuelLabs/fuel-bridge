@@ -10,7 +10,7 @@ mod success {
     #[tokio::test]
     async fn check_total_supply() {
         let (contract, config) = setup_test().await;
-        let asset_id = get_asset_id(&contract.contract_id());
+        let asset_id = get_asset_id(contract.contract_id());
 
         let expected_total_supply: u64 = config.amount.test.div(PRECISION).as_u64();
 
@@ -30,7 +30,7 @@ mod success {
     #[tokio::test]
     async fn check_name() {
         let (contract, _config) = setup_test().await;
-        let asset_id = get_asset_id(&contract.contract_id());
+        let asset_id = get_asset_id(contract.contract_id());
 
         let response = name(&contract, asset_id).await.unwrap();
 
@@ -43,7 +43,7 @@ mod success {
     #[tokio::test]
     async fn check_symbol() {
         let (contract, _config) = setup_test().await;
-        let asset_id = get_asset_id(&contract.contract_id());
+        let asset_id = get_asset_id(contract.contract_id());
 
         let response = symbol(&contract, asset_id).await.unwrap();
 
@@ -53,7 +53,7 @@ mod success {
     #[tokio::test]
     async fn check_decimals() {
         let (contract, _config) = setup_test().await;
-        let asset_id = get_asset_id(&contract.contract_id());
+        let asset_id = get_asset_id(contract.contract_id());
 
         let response = decimals(&contract, asset_id).await.unwrap();
 

@@ -97,8 +97,8 @@ impl MessageReceiver for Contract {
                 // mint tokens & update storage
                 mint(sub_id, amount);
                 match storage.tokens_minted.get(asset_id).try_read() {
-                    Option::Some(value) => storage.tokens_minted.insert(asset_id, value.add(U256::from((0,0,0,amount)))),
-                    Option::None => storage.tokens_minted.insert(asset_id, U256::from((0,0,0,amount))),
+                    Option::Some(value) => storage.tokens_minted.insert(asset_id, value.add(U256::from((0, 0, 0, amount)))),
+                    Option::None => storage.tokens_minted.insert(asset_id, U256::from((0, 0, 0, amount))),
                 };
 
                 // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
@@ -167,10 +167,9 @@ impl Bridge for Contract {
         let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
-
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
-        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0,0,0,amount))));
+        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0, 0, 0, amount))));
         burn(sub_id, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
