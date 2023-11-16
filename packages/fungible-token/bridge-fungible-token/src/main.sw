@@ -54,6 +54,7 @@ storage {
     asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
     tokens_minted: u64 = 0,
+    total_assets: u64 = 0,
 }
 
 // Implement the process_message function required to be a message receiver
@@ -70,14 +71,6 @@ impl MessageReceiver for Contract {
         let message_data = MessageData::parse(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        let sub_id = message_data.token_id;
-        let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
-
-        if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
-        {
-            storage.asset_to_sub_id.insert(asset_id, sub_id);
-        };
-
         // register a refund if tokens don't match
         if (message_data.token_address != BRIDGED_TOKEN) {
             register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
@@ -92,6 +85,15 @@ impl MessageReceiver for Contract {
                 register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
             },
             Result::Ok(amount) => {
+                let sub_id = message_data.token_id;
+                let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
+
+                if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
+                {
+                    storage.asset_to_sub_id.insert(asset_id, sub_id);
+                    storage.total_assets.write(storage.total_assets.try_read().unwrap_or(0) + 1);
+                };
+
                 // mint tokens & update storage
                 mint(sub_id, amount);
                 match storage.tokens_minted.try_read() {
@@ -201,12 +203,12 @@ impl Bridge for Contract {
 impl SRC20 for Contract {
     #[storage(read)]
     fn total_assets() -> u64 {
-        0u64
+        storage.total_assets.try_read().unwrap_or(0)
     }
 
     #[storage(read)]
     fn total_supply(_asset: AssetId) -> Option<u64> {
-        None
+        Some(storage.tokens_minted.try_read().unwrap_or(0))
     }
 
     #[storage(read)]

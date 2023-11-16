@@ -484,7 +484,7 @@ pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
 }
 
 /// This setup mints tokens so that they are registered as minted assets in the bridge
-pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> {
+pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>, BridgingConfig) {
     let mut wallet = create_wallet();
 
     let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
@@ -519,5 +519,5 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
-    contract
+    (contract, config)
 }

@@ -1,26 +1,35 @@
 mod success {
+    use std::ops::Div;
+
     use crate::utils::{
-        constants::PROXY_TOKEN_DECIMALS,
-        interface::src20::{decimals, name, symbol, total_supply},
+        constants::{PRECISION, PROXY_TOKEN_DECIMALS},
+        interface::src20::{decimals, name, symbol, total_assets, total_supply},
         setup::{get_asset_id, setup_test},
     };
 
-    #[ignore]
     #[tokio::test]
     async fn check_total_supply() {
-        // Lacking SDK support on version 0.43
-        let contract = setup_test().await;
+        let (contract, config) = setup_test().await;
         let asset_id = get_asset_id(&contract.contract_id());
 
-        let _response = total_supply(&contract, asset_id).await.unwrap();
+        let expected_total_supply: u64 = config.amount.test.div(PRECISION).as_u64();
 
-        // use crate::utils::setup::U256;
-        // assert_eq!(response, U256::new());
+        assert_eq!(
+            total_supply(&contract, asset_id).await.unwrap(),
+            expected_total_supply
+        );
+    }
+
+    #[tokio::test]
+    async fn check_total_assets() {
+        let (contract, _config) = setup_test().await;
+
+        assert_eq!(total_assets(&contract).await, 1);
     }
 
     #[tokio::test]
     async fn check_name() {
-        let contract = setup_test().await;
+        let (contract, _config) = setup_test().await;
         let asset_id = get_asset_id(&contract.contract_id());
 
         let response = name(&contract, asset_id).await.unwrap();
@@ -33,7 +42,7 @@ mod success {
 
     #[tokio::test]
     async fn check_symbol() {
-        let contract = setup_test().await;
+        let (contract, _config) = setup_test().await;
         let asset_id = get_asset_id(&contract.contract_id());
 
         let response = symbol(&contract, asset_id).await.unwrap();
@@ -43,7 +52,7 @@ mod success {
 
     #[tokio::test]
     async fn check_decimals() {
-        let contract = setup_test().await;
+        let (contract, _config) = setup_test().await;
         let asset_id = get_asset_id(&contract.contract_id());
 
         let response = decimals(&contract, asset_id).await.unwrap();
