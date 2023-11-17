@@ -55,7 +55,7 @@ configurable {
 }
 
 storage {
-    asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
+    asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     total_assets: u64 = 0,
@@ -209,8 +209,8 @@ impl Bridge for Contract {
     }
 
     #[storage(read)]
-    fn asset_to_sub_id(asset_id: b256) -> b256 {
-        _asset_to_sub_id(AssetId::from(asset_id))
+    fn asset_to_sub_id(asset_id: AssetId) -> SubId {
+        _asset_to_sub_id(asset_id)
     }
 }
 
@@ -283,7 +283,7 @@ fn register_refund(
 }
 
 #[storage(read)]
-fn _asset_to_sub_id(asset_id: AssetId) -> b256 {
+fn _asset_to_sub_id(asset_id: AssetId) -> SubId {
     let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
     require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     sub_id.unwrap()

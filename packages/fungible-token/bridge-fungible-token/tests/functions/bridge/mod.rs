@@ -533,6 +533,8 @@ mod success {
 }
 
 mod revert {
+    use std::str::FromStr;
+
     use super::*;
     use crate::utils::setup::get_asset_id;
 
@@ -633,10 +635,10 @@ mod revert {
             configurables,
         )
         .await;
-
+        
         bridge
             .methods()
-            .asset_to_sub_id(Bits256::from_hex_str(incorrect_asset_id).unwrap())
+            .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
             .call()
             .await
             .unwrap();
