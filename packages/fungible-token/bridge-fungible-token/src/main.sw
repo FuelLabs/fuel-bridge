@@ -21,6 +21,10 @@ use std::{
     },
     constants::ZERO_B256,
     context::msg_amount,
+    flags::{
+        disable_panic_on_overflow,
+        enable_panic_on_overflow,
+    },
     hash::Hash,
     hash::sha256,
     inputs::input_message_sender,
@@ -53,7 +57,7 @@ configurable {
 storage {
     asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
-    tokens_minted: StorageMap<AssetId, U256> = StorageMap {},
+    tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     total_assets: u64 = 0,
 }
 
@@ -88,6 +92,20 @@ impl MessageReceiver for Contract {
                 let sub_id = message_data.token_id;
                 let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
 
+                disable_panic_on_overflow();
+
+                let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
+                let new_total_supply = current_total_supply + amount;
+
+                if new_total_supply < current_total_supply {
+                    register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
+                    return;
+                }
+
+                enable_panic_on_overflow();
+
+                storage.tokens_minted.insert(asset_id, new_total_supply);
+
                 if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
                 {
                     storage.asset_to_sub_id.insert(asset_id, sub_id);
@@ -96,10 +114,6 @@ impl MessageReceiver for Contract {
 
                 // mint tokens & update storage
                 mint(sub_id, amount);
-                match storage.tokens_minted.get(asset_id).try_read() {
-                    Option::Some(value) => storage.tokens_minted.insert(asset_id, value.add(U256::from((0, 0, 0, amount)))),
-                    Option::None => storage.tokens_minted.insert(asset_id, U256::from((0, 0, 0, amount))),
-                };
 
                 // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
                 // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
@@ -169,7 +183,8 @@ impl Bridge for Contract {
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
-        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0, 0, 0, amount))));
+        // storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0, 0, 0, amount))));
+        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read() - amount);
         burn(sub_id, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
@@ -212,10 +227,7 @@ impl SRC20 for Contract {
             return None;
         }
 
-        // Reasoning: an extreme supply token such as SHIBA could overflow the
-        // total supply, which is defined by SRC20 as u64.
-        // .as_u64() will revert on overflow, in that case, it will return u64::max() 
-        Some(storage.tokens_minted.get(asset).read().as_u64().unwrap_or(u64::max()))
+        Some(storage.tokens_minted.get(asset).read())
     }
 
     #[storage(read)]

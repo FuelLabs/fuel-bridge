@@ -216,7 +216,7 @@ mod success {
     }
 
     #[tokio::test]
-    async fn deposit_to_wallet_total_supply_overflow() {
+    async fn deposit_to_wallet_total_supply_overflow_triggers_refunds() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
@@ -294,13 +294,21 @@ mod success {
         ////////////////////
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
             &utxo_inputs.coin[..],
         )
         .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
 
         let utxos = wallet
             .provider()
@@ -309,12 +317,30 @@ mod success {
             .await
             .unwrap();
 
-        assert_eq!(utxos.len(), 2);
+        assert_eq!(utxos.len(), 1);
         assert_eq!(utxos[0].amount, max_fuel_deposit_amount);
-        assert_eq!(utxos[1].amount, max_fuel_deposit_amount);
 
         let supply = total_supply(&bridge, asset_id).await.unwrap();
         assert_eq!(supply, max_fuel_deposit_amount);
+
+        let refund_registered_events = bridge
+            .log_decoder()
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        assert_eq!(refund_registered_events.len(), 1);
+
+        let RefundRegisteredEvent {
+            amount,
+            token_address,
+            from,
+            token_id: _,
+        } = refund_registered_events[0];
+
+        // Check logs
+        assert_eq!(amount, Bits256(encode_hex(max_deposit_amount)));
+        assert_eq!(token_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(from, Bits256::from_hex_str(FROM).unwrap());
     }
 
     #[tokio::test]
