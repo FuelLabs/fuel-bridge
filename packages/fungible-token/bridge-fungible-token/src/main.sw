@@ -222,9 +222,8 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn total_supply(asset: AssetId) -> Option<u64> {
-        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
-            return None;
-        }
+        storage.total_supply.get(asset).try_read()
+     }
 
         Some(storage.tokens_minted.get(asset).read())
     }
