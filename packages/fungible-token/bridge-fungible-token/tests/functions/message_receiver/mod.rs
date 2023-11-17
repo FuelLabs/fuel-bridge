@@ -334,13 +334,14 @@ mod success {
             amount,
             token_address,
             from,
-            token_id: _,
+            token_id,
         } = refund_registered_events[0];
 
         // Check logs
         assert_eq!(amount, Bits256(encode_hex(max_deposit_amount)));
         assert_eq!(token_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
         assert_eq!(from, Bits256::from_hex_str(FROM).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
     }
 
     #[tokio::test]
