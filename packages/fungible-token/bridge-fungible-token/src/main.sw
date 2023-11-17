@@ -90,7 +90,7 @@ impl MessageReceiver for Contract {
             },
             Result::Ok(amount) => {
                 let sub_id = message_data.token_id;
-                let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
+                let asset_id = AssetId::new(contract_id(), sub_id);
 
                 disable_panic_on_overflow();
 
