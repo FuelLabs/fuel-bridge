@@ -231,11 +231,10 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
-            return None;
-        }
-
-        Some(String::from_ascii_str(from_str_array(NAME)))
+        match storage.total_supply.get(asset).try_read() {
+            Some(v) => Some(String::from_ascii_str(from_str_array(NAME))),
+            None => None,
+        }        
     }
 
     #[storage(read)]
