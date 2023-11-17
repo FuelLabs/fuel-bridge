@@ -222,18 +222,15 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn total_supply(asset: AssetId) -> Option<u64> {
-        storage.total_supply.get(asset).try_read()
-     }
-
-        Some(storage.tokens_minted.get(asset).read())
+        storage.tokens_minted.get(asset).try_read()
     }
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        match storage.total_supply.get(asset).try_read() {
+        match storage.tokens_minted.get(asset).try_read() {
             Some(v) => Some(String::from_ascii_str(from_str_array(NAME))),
             None => None,
-        }        
+        }
     }
 
     #[storage(read)]
