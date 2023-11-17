@@ -1208,7 +1208,7 @@ mod revert {
                 assert_eq!(reason, "Revert(18446744073709486080)");
             }
             _ => {
-                assert!(false, "Transaction did not revert");
+                panic!("Transaction did not revert");
             }
         }
     }

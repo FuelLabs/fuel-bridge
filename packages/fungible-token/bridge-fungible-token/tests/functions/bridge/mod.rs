@@ -16,14 +16,13 @@ mod success {
 
     use super::*;
 
-    use crate::utils::interface::src20::total_supply;
-    use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
-        interface::bridge::{
-            bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund,
+        interface::{
+            bridge::{bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund},
+            src20::total_supply,
         },
-        setup::{ClaimRefundEvent, RefundRegisteredEvent},
+        setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt};
     use std::str::FromStr;
@@ -344,7 +343,7 @@ mod success {
                 // Do nothing
             }
             _ => {
-                assert!(false, "Transaction did not succeed")
+                panic!("Transaction did not succeed")
             }
         }
 
