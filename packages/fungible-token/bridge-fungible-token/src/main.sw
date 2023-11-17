@@ -183,7 +183,6 @@ impl Bridge for Contract {
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
-        // storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read().subtract(U256::from((0, 0, 0, amount))));
         storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read() - amount);
         burn(sub_id, amount);
 
