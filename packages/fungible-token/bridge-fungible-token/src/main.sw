@@ -228,27 +228,25 @@ impl SRC20 for Contract {
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
         match storage.tokens_minted.get(asset).try_read() {
-            Some(v) => Some(String::from_ascii_str(from_str_array(NAME))),
+            Some(_) => Some(String::from_ascii_str(from_str_array(NAME))),
             None => None,
         }
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
-        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
-            return None;
+        match storage.tokens_minted.get(asset).try_read() {
+            Some(_) => Some(String::from_ascii_str(from_str_array(SYMBOL))),
+            None => None,
         }
-
-        Some(String::from_ascii_str(from_str_array(SYMBOL)))
     }
 
     #[storage(read)]
     fn decimals(asset: AssetId) -> Option<u8> {
-        if storage.asset_to_sub_id.get(asset).try_read().is_none() {
-            return None;
+        match storage.tokens_minted.get(asset).try_read() {
+            Some(_) => Some(DECIMALS),
+            None => None,
         }
-
-        Some(DECIMALS)
     }
 }
 
