@@ -12,7 +12,7 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::{bridge::Bridge, frc20::FRC20, src7::{Metadata, SRC7}};
+use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
@@ -21,6 +21,10 @@ use std::{
     },
     constants::ZERO_B256,
     context::msg_amount,
+    flags::{
+        disable_panic_on_overflow,
+        enable_panic_on_overflow,
+    },
     hash::Hash,
     hash::sha256,
     inputs::input_message_sender,
@@ -39,6 +43,7 @@ use utils::{
     encode_data,
     encode_register_calldata,
 };
+use src_20::SRC20;
 
 configurable {
     DECIMALS: u8 = 9u8,
@@ -50,9 +55,10 @@ configurable {
 }
 
 storage {
-    asset_to_sub_id: StorageMap<AssetId, b256> = StorageMap {},
+    asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
-    tokens_minted: u64 = 0,
+    tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
+    total_assets: u64 = 0,
 }
 
 // Implement the process_message function required to be a message receiver
@@ -69,14 +75,6 @@ impl MessageReceiver for Contract {
         let message_data = MessageData::parse(msg_idx);
         require(message_data.amount != ZERO_B256, BridgeFungibleTokenError::NoCoinsSent);
 
-        let sub_id = message_data.token_id;
-        let asset_id = AssetId::from(sha256((contract_id(), sub_id)));
-
-        if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
-        {
-            storage.asset_to_sub_id.insert(asset_id, sub_id);
-        };
-
         // register a refund if tokens don't match
         if (message_data.token_address != BRIDGED_TOKEN) {
             register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
@@ -91,12 +89,31 @@ impl MessageReceiver for Contract {
                 register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
             },
             Result::Ok(amount) => {
+                let sub_id = message_data.token_id;
+                let asset_id = AssetId::new(contract_id(), sub_id);
+
+                disable_panic_on_overflow();
+
+                let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
+                let new_total_supply = current_total_supply + amount;
+
+                if new_total_supply < current_total_supply {
+                    register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
+                    return;
+                }
+
+                enable_panic_on_overflow();
+
+                storage.tokens_minted.insert(asset_id, new_total_supply);
+
+                if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
+                {
+                    storage.asset_to_sub_id.insert(asset_id, sub_id);
+                    storage.total_assets.write(storage.total_assets.try_read().unwrap_or(0) + 1);
+                };
+
                 // mint tokens & update storage
                 mint(sub_id, amount);
-                match storage.tokens_minted.try_read() {
-                    Option::Some(value) => storage.tokens_minted.write(value + amount),
-                    Option::None => storage.tokens_minted.write(amount),
-                };
 
                 // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
                 // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
@@ -166,7 +183,7 @@ impl Bridge for Contract {
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
         let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
-        storage.tokens_minted.write(storage.tokens_minted.read() - amount);
+        storage.tokens_minted.insert(asset_id, storage.tokens_minted.get(asset_id).read() - amount);
         burn(sub_id, amount);
 
         // send a message to unlock this amount on the base layer gateway contract
@@ -192,32 +209,44 @@ impl Bridge for Contract {
     }
 
     #[storage(read)]
-    fn asset_to_sub_id(asset_id: b256) -> b256 {
-        _asset_to_sub_id(AssetId::from(asset_id))
+    fn asset_to_sub_id(asset_id: AssetId) -> SubId {
+        _asset_to_sub_id(asset_id)
     }
 }
 
-impl FRC20 for Contract {
+impl SRC20 for Contract {
     #[storage(read)]
-    fn total_supply() -> U256 {
-        let minted: u64 = storage.tokens_minted.try_read().unwrap_or(0);
-
-        U256::from((0, 0, 0, minted))
+    fn total_assets() -> u64 {
+        storage.total_assets.try_read().unwrap_or(0)
     }
 
     #[storage(read)]
-    fn name() -> str[64] {
-        NAME
+    fn total_supply(asset: AssetId) -> Option<u64> {
+        storage.tokens_minted.get(asset).try_read()
     }
 
     #[storage(read)]
-    fn symbol() -> str[32] {
-        SYMBOL
+    fn name(asset: AssetId) -> Option<String> {
+        match storage.tokens_minted.get(asset).try_read() {
+            Some(_) => Some(String::from_ascii_str(from_str_array(NAME))),
+            None => None,
+        }
     }
 
     #[storage(read)]
-    fn decimals() -> u8 {
-        DECIMALS
+    fn symbol(asset: AssetId) -> Option<String> {
+        match storage.tokens_minted.get(asset).try_read() {
+            Some(_) => Some(String::from_ascii_str(from_str_array(SYMBOL))),
+            None => None,
+        }
+    }
+
+    #[storage(read)]
+    fn decimals(asset: AssetId) -> Option<u8> {
+        match storage.tokens_minted.get(asset).try_read() {
+            Some(_) => Some(DECIMALS),
+            None => None,
+        }
     }
 }
 
@@ -252,7 +281,7 @@ fn register_refund(
 }
 
 #[storage(read)]
-fn _asset_to_sub_id(asset_id: AssetId) -> b256 {
+fn _asset_to_sub_id(asset_id: AssetId) -> SubId {
     let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
     require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     sub_id.unwrap()

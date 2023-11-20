@@ -28,6 +28,10 @@ use primitive_types::U256 as Unsigned256;
 use sha3::{Digest, Keccak256};
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
+use super::constants::{
+    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
+};
+
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
@@ -452,7 +456,7 @@ pub(crate) fn parse_output_message_data(
 }
 
 pub(crate) async fn contract_balance(
-    provider: Provider,
+    provider: &Provider,
     contract_id: &Bech32ContractId,
     asset: AssetId,
 ) -> u64 {
@@ -477,4 +481,43 @@ where
 
 pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
     contract_id.asset_id(&Bits256::zeroed())
+}
+
+/// This setup mints tokens so that they are registered as minted assets in the bridge
+pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>, BridgingConfig) {
+    let mut wallet = create_wallet();
+
+    let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+
+    let (message, coin, deposit_contract) = create_msg_data(
+        BRIDGED_TOKEN,
+        BRIDGED_TOKEN_ID,
+        FROM,
+        *wallet.address().hash(),
+        config.amount.test,
+        None,
+        false,
+        None,
+    )
+    .await;
+
+    let (contract, utxo_inputs, _) = setup_environment(
+        &mut wallet,
+        vec![coin],
+        vec![message],
+        deposit_contract,
+        None,
+        None,
+    )
+    .await;
+
+    let _receipts = relay_message_to_contract(
+        &wallet,
+        utxo_inputs.message[0].clone(),
+        utxo_inputs.contract,
+        &utxo_inputs.coin[..],
+    )
+    .await;
+
+    (contract, config)
 }

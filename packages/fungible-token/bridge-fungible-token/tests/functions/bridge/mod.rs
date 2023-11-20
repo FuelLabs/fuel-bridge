@@ -16,13 +16,13 @@ mod success {
 
     use super::*;
 
-    use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
-        interface::bridge::{
-            bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund,
+        interface::{
+            bridge::{bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund},
+            src20::total_supply,
         },
-        setup::{ClaimRefundEvent, RefundRegisteredEvent},
+        setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt};
     use std::str::FromStr;
@@ -80,7 +80,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -219,7 +219,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -343,21 +343,21 @@ mod success {
                 // Do nothing
             }
             _ => {
-                assert!(false, "Transaction did not succeed")
+                panic!("Transaction did not succeed")
             }
         }
 
-        let _receipts = tx_status.take_receipts();
-
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        let expected_deposited_amount = config.fuel_equivalent_amount(config.amount.max);
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Check that wallet now has bridged coins
-        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.max));
+        assert_eq!(balance, expected_deposited_amount);
 
         // Now try to withdraw
         let withdrawal_amount = config.fuel_equivalent_amount(config.amount.test);
@@ -392,6 +392,12 @@ mod success {
         assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
         assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
         assert_eq!(amount, config.amount.test);
+
+        // Check that supply has decreased by withdrawal_amount
+        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id()))
+            .await
+            .unwrap();
+        assert_eq!(supply, expected_deposited_amount - withdrawal_amount);
     }
 
     #[tokio::test]
@@ -438,7 +444,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -484,6 +490,12 @@ mod success {
 
         // now verify that the initial amount == the final amount
         assert_eq!(msg_data_amount, config.amount.min);
+
+        // Verify that total_supply is zero after withdrawing the funds
+        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id()))
+            .await
+            .unwrap();
+        assert_eq!(supply, 0u64);
     }
 
     #[tokio::test]
@@ -521,6 +533,8 @@ mod success {
 }
 
 mod revert {
+    use std::str::FromStr;
+
     use super::*;
     use crate::utils::setup::get_asset_id;
 
@@ -571,7 +585,7 @@ mod revert {
         .await;
 
         let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -621,10 +635,10 @@ mod revert {
             configurables,
         )
         .await;
-
+        
         bridge
             .methods()
-            .asset_to_sub_id(Bits256::from_hex_str(incorrect_asset_id).unwrap())
+            .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
             .call()
             .await
             .unwrap();

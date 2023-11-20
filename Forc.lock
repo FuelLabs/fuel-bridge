@@ -4,6 +4,7 @@ source = "member"
 dependencies = [
     "contract_message_receiver",
     "reentrancy",
+    "src_20",
     "std",
 ]
 
@@ -27,6 +28,11 @@ source = "path+from-root-AD80769CAE44474A"
 [[package]]
 name = "reentrancy"
 source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.12.0#063f118a3104adb6a04207ca877993b5ad03a492"
+dependencies = ["std"]
+
+[[package]]
+name = "src_20"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.1.2#a3744aa3dcb8c950a433d1fc16645ef9a83dc583"
 dependencies = ["std"]
 
 [[package]]
