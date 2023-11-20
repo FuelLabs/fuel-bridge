@@ -12,7 +12,7 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
+use interface::bridge::Bridge;
 use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
@@ -44,6 +44,7 @@ use utils::{
     encode_register_calldata,
 };
 use src_20::SRC20;
+use src_7::{Metadata, SRC7};
 
 configurable {
     DECIMALS: u8 = 9u8,

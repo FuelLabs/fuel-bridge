@@ -5,6 +5,7 @@ dependencies = [
     "contract_message_receiver",
     "reentrancy",
     "src_20",
+    "src_7",
     "std",
 ]
 
@@ -32,7 +33,12 @@ dependencies = ["std"]
 
 [[package]]
 name = "src_20"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.1.2#a3744aa3dcb8c950a433d1fc16645ef9a83dc583"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.2.0#29cb3a4ad318d847b17936c245b525c1bee3382d"
+dependencies = ["std"]
+
+[[package]]
+name = "src_7"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.2.0#29cb3a4ad318d847b17936c245b525c1bee3382d"
 dependencies = ["std"]
 
 [[package]]
