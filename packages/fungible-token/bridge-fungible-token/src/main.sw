@@ -12,7 +12,7 @@ use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::bridge::Bridge;
+use interface::{src8::BRIDGED_CHAIN_KEY, bridge::Bridge};
 use reentrancy::reentrancy_guard;
 use std::{
     call_frames::{
@@ -252,10 +252,21 @@ impl SRC20 for Contract {
 }
 
 impl SRC7 for Contract {
-    // TODO: implement SRC-8
     #[storage(read)]
-    fn metadata(_asset: AssetId, _key: String) -> Option<Metadata> {
-        None
+    fn metadata(asset: AssetId, key: String) -> Option<Metadata> {
+        let sub_id = storage.asset_to_sub_id.get(asset).try_read();
+
+        if(sub_id.is_none()) {
+            return None;
+        }
+
+        let key_hash = sha256(key);
+
+        Some(Metadata::String(String::from_ascii_str("test")))
+        // match key_hash {
+        //     BRIDGED_CHAIN_KEY => Some(Metadata::String(String::from_ascii_str("1"))),
+        //     _ => None,
+        // }
     }
 }
 
