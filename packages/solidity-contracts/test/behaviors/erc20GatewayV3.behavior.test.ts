@@ -1,9 +1,10 @@
 import { hexZeroPad } from '@ethersproject/bytes';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { constants, type ContractFactory } from 'ethers';
+import { utils, constants, type ContractFactory, BigNumber } from 'ethers';
 import hre from 'hardhat';
 
+import { CONTRACT_MESSAGE_PREDICATE } from '../../protocol/constants';
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   type MockFuelMessagePortal,
@@ -61,11 +62,141 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
     });
 
     describe('deposit()', () => {
-      it('works if deposited amount is equal the global limit');
-      it('works if deposited amount is equal to the account limit');
+      beforeEach('reset fixture', async () => {
+        env = await fixture();
+      });
+
+      it('reverts if deposited amount is 0', async () => {
+        const {
+          token: _token,
+          erc20Gateway,
+          signers: [, user],
+        } = env;
+        const token = _token.connect(user);
+
+        const amount = BigNumber.from(0);
+        const recipient = randomBytes32();
+        const fuelBridge = randomBytes32();
+
+        await token.mint(user.address, amount);
+        await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+        const depositTx = erc20Gateway
+          .connect(user)
+          .deposit(recipient, token.address, fuelBridge, amount);
+
+        await expect(depositTx).to.be.revertedWithCustomError(
+          erc20Gateway,
+          'CannotDepositZero'
+        );
+      });
+
+      it('works if deposited amount is equal the global limit', async () => {
+        const {
+          token: _token,
+          erc20Gateway,
+          fuelMessagePortal,
+          signers: [deployer, user],
+        } = env;
+        const token = _token.connect(user);
+
+        const amount = utils.parseEther(Math.random().toFixed(2));
+        const recipient = randomBytes32();
+        const fuelBridge = randomBytes32();
+
+        await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
+        const impersonatedPortal = await impersonateAccount(
+          fuelMessagePortal.address,
+          hre
+        );
+        await erc20Gateway
+          .connect(impersonatedPortal)
+          .registerAsReceiver(token.address);
+
+        await token.mint(user.address, amount);
+        await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+        const depositTx = erc20Gateway
+          .connect(user)
+          .deposit(recipient, token.address, fuelBridge, amount);
+
+        await expect(depositTx).to.changeTokenBalances(
+          token,
+          [user.address, erc20Gateway.address],
+          [amount.mul(-1), amount]
+        );
+
+        await expect(depositTx)
+          .to.emit(erc20Gateway, 'Deposit')
+          .withArgs(
+            hexZeroPad(user.address, 32).toLowerCase(),
+            token.address,
+            fuelBridge,
+            amount
+          );
+
+        await expect(depositTx)
+          .to.emit(fuelMessagePortal, 'SendMessageCalled')
+          .withArgs(CONTRACT_MESSAGE_PREDICATE, []);
+      });
+
+      it.skip('allows to deposit tokens with data', async () => {
+        const {
+          token: _token,
+          erc20Gateway,
+          fuelMessagePortal,
+          signers: [deployer, user],
+        } = env;
+        const token = _token.connect(user);
+
+        const amount = utils.parseEther(Math.random().toFixed(2));
+        const depositData = [0, 1, 2, 3, 4];
+        const recipient = randomBytes32();
+        const fuelBridge = randomBytes32();
+
+        await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
+        const impersonatedPortal = await impersonateAccount(
+          fuelMessagePortal.address,
+          hre
+        );
+        await erc20Gateway
+          .connect(impersonatedPortal)
+          .registerAsReceiver(token.address);
+
+        await token.mint(user.address, amount);
+        await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+        const depositTx = erc20Gateway
+          .connect(user)
+          .depositWithData(
+            recipient,
+            token.address,
+            fuelBridge,
+            amount,
+            depositData
+          );
+
+        await expect(depositTx).to.changeTokenBalances(
+          token,
+          [user.address, erc20Gateway.address],
+          [amount.mul(-1), amount]
+        );
+
+        await expect(depositTx)
+          .to.emit(erc20Gateway, 'Deposit')
+          .withArgs(
+            hexZeroPad(user.address, 32).toLowerCase(),
+            token.address,
+            fuelBridge,
+            amount
+          );
+
+        await expect(depositTx)
+          .to.emit(fuelMessagePortal, 'SendMessageCalled')
+          .withArgs(fuelBridge, []);
+      });
+      it('allows to deposit tokens with empty data');
       it('reverts if deposited amount is over the global limit');
-      it('reverts if deposited amount is over the account limit');
-      it('reverts if deposited amount is 0');
     });
 
     describe('finalizeWithdrawal', () => {

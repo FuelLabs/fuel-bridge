@@ -6,17 +6,13 @@ import "../v2/FuelERC20GatewayV2.sol";
 contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
-    error AccountDepositLimit();
     error GlobalDepositLimit();
     error CannotDepositZero();
     error CannotWithdrawZero();
     error TokenIdNotAllowed();
 
     mapping(address => uint256) public depositLimitGlobal;
-    mapping(address => uint256) public depositLimitPerAccount;
-
-    // user => token => amount
-    mapping(address => mapping(address => uint256)) userDeposits;
+    mapping(address => uint256) public depositTotals;
 
     function setGlobalDepositLimit(address token, uint256 limit)
         external
@@ -25,15 +21,6 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
         depositLimitGlobal[token] = limit;
-    }
-
-    function setPerAccountDepositLimit(address token, uint256 limit)
-        external
-        payable
-        virtual
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        depositLimitPerAccount[token] = limit;
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
@@ -52,17 +39,14 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
         if (amount == 0) revert CannotDepositZero();
         if (!isBridge[fuelContractId][tokenAddress]) revert FuelContractIsNotBridge();
 
-        uint256 updatedGlobalDeposit = _deposits[tokenAddress][fuelContractId] + amount;
-        if (updatedGlobalDeposit > depositLimitGlobal[tokenAddress]) revert GlobalDepositLimit();
-
-        uint256 updatedAccountDeposit = userDeposits[tokenAddress][msg.sender] + amount;
-        if (updatedAccountDeposit > depositLimitPerAccount[tokenAddress]) revert AccountDepositLimit();
+        uint256 updatedDepositTotals = depositTotals[tokenAddress] + amount;
+        if (updatedDepositTotals > depositLimitGlobal[tokenAddress]) revert GlobalDepositLimit();
 
         /////////////
         // Effects //
         /////////////
-        _deposits[tokenAddress][fuelContractId] = updatedGlobalDeposit;
-        userDeposits[msg.sender][tokenAddress] = updatedAccountDeposit;
+        _deposits[tokenAddress][fuelContractId] += amount;
+        depositTotals[tokenAddress] = updatedDepositTotals;
 
         /////////////
         // Actions //
@@ -102,18 +86,8 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
         bytes32 fuelContractId = messageSender();
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] - amount;
-
-        // reduce user deposit balance
-        uint256 userDeposit = userDeposits[msg.sender][tokenAddress];
-        if (userDeposit < amount) {
-            userDeposits[msg.sender][tokenAddress] = 0;
-        } else {
-            // Underflow already checked by previous condition
-            unchecked {
-                userDeposits[msg.sender][tokenAddress] = userDeposit - amount;
-            }
-        }
+        _deposits[tokenAddress][fuelContractId] -= amount;
+        depositTotals[tokenAddress] -= amount;
 
         /////////////
         // Actions //

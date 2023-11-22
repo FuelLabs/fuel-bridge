@@ -43,10 +43,6 @@ describe.only('erc20GatewayV3', () => {
       token.address,
       constants.MaxUint256
     );
-    await erc20Gateway.setPerAccountDepositLimit(
-      token.address,
-      constants.MaxUint256
-    );
 
     return {
       fuelMessagePortal,
