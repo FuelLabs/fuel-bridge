@@ -5,17 +5,16 @@ import "../FuelMessagePortal.sol";
 
 /// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
 contract FuelMessagePortalV2 is FuelMessagePortal {
-    error AccountDepositLimit();
     error GlobalDepositLimit();
 
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint256 public immutable depositLimitGlobal;
-    uint256 public immutable depositRateLimit;
 
     uint256 public totalDeposited;
 
-    constructor(uint256 _depositLimitGlobal, uint256 _depositRateLimit) {
+    constructor(uint256 _depositLimitGlobal) {
+        /// @custom:oz-upgrades-unsafe-allow state-variable-assignment
         depositLimitGlobal = _depositLimitGlobal;
-        depositRateLimit = _depositRateLimit;
     }
 
     ////////////////////////
@@ -30,11 +29,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         unchecked {
             //make sure data size is not too large
             if (data.length >= MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
-
-            // v2: increase deposited amount for sender
-            if (msg.value > depositRateLimit) {
-                revert AccountDepositLimit();
-            }
 
             // v2: increase global deposited ether
             uint256 globalDepositedAmount = totalDeposited += msg.value;
