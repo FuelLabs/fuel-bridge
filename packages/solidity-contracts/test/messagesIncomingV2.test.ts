@@ -2,9 +2,7 @@ import type { Provider } from '@ethersproject/abstract-provider';
 import { calcRoot, constructTree, getProof } from '@fuel-ts/merkle';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { randomBytes } from 'crypto';
 import { BigNumber, constants } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -278,7 +276,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
     await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
       unsafeAllow: ['constructor'],
-      constructorArgs: [0, 0],
+      constructorArgs: [0],
     });
 
     expect(await fuelMessagePortal.depositLimitGlobal()).to.be.equal(0);
@@ -299,7 +297,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [constants.MaxUint256, constants.MaxUint256],
+        constructorArgs: [constants.MaxUint256],
       });
 
       await setupMessages(
@@ -311,7 +309,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     });
 
     // Simulates the case when withdrawn amount < initial deposited amount
-    it('should reduce per account deposited balance', async () => {
+    it('should update the amount of deposited ether', async () => {
       const recipient = b256ToAddress(messageEOA.recipient);
       const txSender = signers.find((signer) => signer.address === recipient);
       const withdrawnAmount = messageEOA.amount.mul(BASE_ASSET_CONVERSION);
@@ -322,9 +320,6 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
         .depositETH(messageEOA.recipient, {
           value: depositedAmount,
         });
-      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
-        depositedAmount
-      );
 
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageEOA,
@@ -354,72 +349,11 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(true);
+
       const expectedDepositedAmount = depositedAmount.sub(withdrawnAmount);
-      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
-        expectedDepositedAmount
-      );
       expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
         expectedDepositedAmount
       );
-    });
-
-    // Simulates the case when withdrawn amount > initial deposited amount
-    it('should nullify per account deposited balance', async () => {
-      const recipient = b256ToAddress(messageEOA.recipient);
-      const txSender = signers.find((signer) => signer.address === recipient);
-      const withdrawnAmount = messageEOA.amount.mul(BASE_ASSET_CONVERSION);
-      const depositedAmount = withdrawnAmount.div(2);
-      const otherDeposits = parseEther('10');
-
-      await fuelMessagePortal.depositETH(randomBytes(32), {
-        value: otherDeposits, // This fills the contract with ETH
-      });
-      await fuelMessagePortal
-        .connect(txSender) // Deposit some eth for the recipient
-        .depositETH(messageEOA.recipient, {
-          value: depositedAmount,
-        });
-      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
-        depositedAmount
-      );
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageEOA,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-
-      const relayTx = fuelMessagePortal.relayMessage(
-        messageEOA,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-      await expect(relayTx).to.not.be.reverted;
-      await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal.address, recipient],
-        [withdrawnAmount.mul(-1), withdrawnAmount]
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-      expect(await fuelMessagePortal.depositedAmounts(recipient)).to.be.equal(
-        0
-      );
-
-      const expectedTotalDeposited = otherDeposits
-        .add(depositedAmount)
-        .sub(withdrawnAmount);
-      const actualTotalDeposited = await fuelMessagePortal.totalDeposited();
-      expect(actualTotalDeposited).to.be.equal(expectedTotalDeposited);
     });
   });
 
@@ -438,7 +372,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [constants.MaxUint256, constants.MaxUint256],
+        constructorArgs: [constants.MaxUint256],
       });
 
       await setupMessages(

@@ -12,9 +12,9 @@
   },
   "[solidity]": {
     "editor.formatOnSave": true,
-    "editor.defaultFormatter": "JuanBlanco.solidity"
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
-  "solidity.formatter": "forge",
+  "solidity.formatter": "prettier",
   "solidity.compileUsingRemoteVersion": "v0.8.9+commit.e5eed63a",
   "solidity.packageDefaultDependenciesContractsDirectory": "packages/solidity-contracts/contracts",
   "solidity.packageDefaultDependenciesDirectory": "packages/solidity-contracts/node_modules",

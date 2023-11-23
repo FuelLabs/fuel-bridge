@@ -5,18 +5,16 @@ import "../FuelMessagePortal.sol";
 
 /// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
 contract FuelMessagePortalV2 is FuelMessagePortal {
-    error AccountDepositLimit();
     error GlobalDepositLimit();
 
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint256 public immutable depositLimitGlobal;
-    uint256 public immutable depositLimitPerAccount;
 
     uint256 public totalDeposited;
-    mapping(address => uint256) public depositedAmounts;
 
-    constructor(uint256 _depositLimitGlobal, uint256 _depositLimitPerAccount) {
+    constructor(uint256 _depositLimitGlobal) {
+        /// @custom:oz-upgrades-unsafe-allow state-variable-assignment
         depositLimitGlobal = _depositLimitGlobal;
-        depositLimitPerAccount = _depositLimitPerAccount;
     }
 
     ////////////////////////
@@ -32,13 +30,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
             //make sure data size is not too large
             if (data.length >= MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
 
-            // v2: increase deposited amount for sender
-            // Do not think this needs an overflow check, you cannot get that much ether
-            uint256 userDepositedAmount = depositedAmounts[msg.sender] + msg.value;
-            if (userDepositedAmount > depositLimitPerAccount) {
-                revert AccountDepositLimit();
-            }
-
             // v2: increase global deposited ether
             uint256 globalDepositedAmount = totalDeposited += msg.value;
             if (globalDepositedAmount > depositLimitGlobal) {
@@ -51,8 +42,6 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
                 if (amount * PRECISION != msg.value) revert AmountPrecisionIncompatibility();
                 if (amount > type(uint64).max) revert AmountTooBig();
             }
-
-            depositedAmounts[msg.sender] = userDepositedAmount;
 
             //emit message for Fuel clients to pickup (messageID calculated offchain)
             uint256 nonce = _outgoingMessageNonce;
@@ -77,22 +66,11 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
         bytes memory result;
         if (message.amount > 0) {
             uint256 withdrawnAmount = message.amount * PRECISION;
-            address recipient = address(uint160(uint256(message.recipient)));
-            uint256 depositedAmount = depositedAmounts[recipient];
-
-            if (depositedAmount < withdrawnAmount) {
-                depositedAmounts[recipient] = 0;
-            } else {
-                // Underflow check already done
-                unchecked {
-                    depositedAmounts[recipient] = depositedAmount - withdrawnAmount;
-                }
-            }
 
             // Underflow check enabled since the amount is coded in `message`
             totalDeposited -= withdrawnAmount;
 
-            (success, result) = recipient.call{value: withdrawnAmount}(message.data);
+            (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
         } else {
             (success, result) = address(uint160(uint256(message.recipient))).call(message.data);
         }

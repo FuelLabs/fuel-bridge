@@ -84,10 +84,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [
-          options?.globalEthLimit || ETH_GLOBAL_LIMIT,
-          options?.perAccountEthLimit || ETH_PER_ACCOUNT_LIMIT,
-        ],
+        constructorArgs: [options?.globalEthLimit || ETH_GLOBAL_LIMIT],
       });
 
       return {
@@ -134,9 +131,6 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
           [value.mul(-1), value]
         );
 
-        expect(await fuelMessagePortal.depositedAmounts(sender.address)).equal(
-          value
-        );
         expect(await fuelMessagePortal.totalDeposited()).equal(value);
       }
 
@@ -152,28 +146,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
           [value.mul(-1), value]
         );
 
-        expect(await fuelMessagePortal.depositedAmounts(sender.address)).equal(
-          value
-        );
         expect(await fuelMessagePortal.totalDeposited()).equal(value.mul(2));
       }
-    });
-
-    it('should revert if the per account limit is reached', async () => {
-      const recipient = randomBytes32();
-      const sender = signers[1];
-      await fuelMessagePortal
-        .connect(sender)
-        .depositETH(recipient, { value: ETH_PER_ACCOUNT_LIMIT });
-
-      const revertTx = fuelMessagePortal
-        .connect(sender)
-        .depositETH(recipient, { value: 1 });
-
-      await expect(revertTx).to.be.revertedWithCustomError(
-        fuelMessagePortal,
-        'AccountDepositLimit'
-      );
     });
 
     it('should revert if the global limit is reached', async () => {
