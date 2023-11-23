@@ -9,7 +9,7 @@ import {
   behavesLikeErc20GatewayV3,
 } from './behaviors';
 
-describe.only('erc20GatewayV3', () => {
+describe('erc20GatewayV3', () => {
   const fixture = deployments.createFixture(async ({ ethers, upgrades }) => {
     const { getContractFactory } = ethers;
     const signers = await hre.ethers.getSigners();
