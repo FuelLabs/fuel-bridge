@@ -91,7 +91,36 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         );
       });
 
-      it.only('works if deposited amount is equal the global limit', async () => {
+      it('reverts if deposited amount is over the global limit', async () => {
+        const {
+          token: _token,
+          erc20Gateway,
+          signers: [deployer, user],
+        } = env;
+        const token = _token.connect(user);
+
+        const amount = utils.parseEther(Math.random().toFixed(2));
+        const recipient = randomBytes32();
+        const fuelBridge = randomBytes32();
+
+        await token.mint(user.address, amount);
+        await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+        await erc20Gateway
+          .connect(deployer)
+          .setGlobalDepositLimit(token.address, amount.sub(1));
+
+        const depositTx = erc20Gateway
+          .connect(user)
+          .deposit(recipient, token.address, fuelBridge, amount);
+
+        await expect(depositTx).to.be.revertedWithCustomError(
+          erc20Gateway,
+          'GlobalDepositLimit'
+        );
+      });
+
+      it('works if deposited amount is equal the global limit', async () => {
         const {
           token: _token,
           erc20Gateway,
@@ -103,6 +132,10 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         const amount = utils.parseEther(Math.random().toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
+
+        await erc20Gateway
+          .connect(deployer)
+          .setGlobalDepositLimit(token.address, amount);
 
         await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
@@ -135,30 +168,28 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             amount
           );
 
-        const logs = fuelMessagePortal.queryFilter(
-          fuelMessagePortal.filters.SendMessageCalled(fuelBridge, null)
+        const expectedMessageData = encodeErc20DepositMessage(
+          fuelBridge,
+          token,
+          user,
+          recipient,
+          amount
         );
-        console.log(logs);
-        console.log(
-          encodeErc20DepositMessage(fuelBridge, token, user, recipient, amount)
+        const logs = await fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.SendMessageCalled(
+            CONTRACT_MESSAGE_PREDICATE,
+            null
+          ),
+          await depositTx
+            .then((tx) => tx.wait())
+            .then((receipt) => receipt.blockHash)
         );
-        // const logs = await depositTx
-        //   .then((tx) => tx.wait())
-        //   .then(({ logs }) =>
-        //     logs.filter(
-        //       (log) =>
-        //         log.topics[0] ===
-        //         fuelMessagePortal.filters.SendMessageCalled(null, null)
-        //           .topics[0]
-        //     )
-        //   );
 
-        // expect(logs.length).to.be.equal(1);
-        // const [log] =
-        // expect(SendMessageCalledLog.)
+        expect(logs).to.have.length(1);
+        expect(logs[0].args.data).to.be.equal(expectedMessageData);
       });
 
-      it.skip('allows to deposit tokens with data', async () => {
+      it('allows to deposit tokens with data', async () => {
         const {
           token: _token,
           erc20Gateway,
@@ -209,12 +240,342 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             amount
           );
 
-        await expect(depositTx)
-          .to.emit(fuelMessagePortal, 'SendMessageCalled')
-          .withArgs(fuelBridge, []);
+        const expectedMessageData = encodeErc20DepositMessage(
+          fuelBridge,
+          token,
+          user,
+          recipient,
+          amount,
+          depositData
+        );
+        const logs = await fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.SendMessageCalled(
+            CONTRACT_MESSAGE_PREDICATE,
+            null
+          ),
+          await depositTx
+            .then((tx) => tx.wait())
+            .then((receipt) => receipt.blockHash)
+        );
+
+        expect(logs).to.have.length(1);
+        expect(logs[0].args.data).to.be.equal(expectedMessageData);
       });
-      it('allows to deposit tokens with empty data');
-      it('reverts if deposited amount is over the global limit');
+
+      it('allows to deposit tokens with empty data', async () => {
+        const {
+          token: _token,
+          erc20Gateway,
+          fuelMessagePortal,
+          signers: [deployer, user],
+        } = env;
+        const token = _token.connect(user);
+
+        const amount = utils.parseEther(Math.random().toFixed(2));
+        const depositData = [];
+        const recipient = randomBytes32();
+        const fuelBridge = randomBytes32();
+
+        await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
+        const impersonatedPortal = await impersonateAccount(
+          fuelMessagePortal.address,
+          hre
+        );
+        await erc20Gateway
+          .connect(impersonatedPortal)
+          .registerAsReceiver(token.address);
+
+        await token.mint(user.address, amount);
+        await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+        const depositTx = erc20Gateway
+          .connect(user)
+          .depositWithData(
+            recipient,
+            token.address,
+            fuelBridge,
+            amount,
+            depositData
+          );
+
+        await expect(depositTx).to.changeTokenBalances(
+          token,
+          [user.address, erc20Gateway.address],
+          [amount.mul(-1), amount]
+        );
+
+        await expect(depositTx)
+          .to.emit(erc20Gateway, 'Deposit')
+          .withArgs(
+            hexZeroPad(user.address, 32).toLowerCase(),
+            token.address,
+            fuelBridge,
+            amount
+          );
+
+        const expectedMessageData = encodeErc20DepositMessage(
+          fuelBridge,
+          token,
+          user,
+          recipient,
+          amount,
+          depositData
+        );
+        const logs = await fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.SendMessageCalled(
+            CONTRACT_MESSAGE_PREDICATE,
+            null
+          ),
+          await depositTx
+            .then((tx) => tx.wait())
+            .then((receipt) => receipt.blockHash)
+        );
+
+        expect(logs).to.have.length(1);
+        expect(logs[0].args.data).to.be.equal(expectedMessageData);
+      });
+
+      describe.only('when there is a previous existing deposit', async () => {
+        let fuelBridge1: string;
+        let fuelBridge2: string;
+        let preExistingAmount: BigNumber;
+
+        beforeEach('make a deposit', async () => {
+          const {
+            token: _token,
+            erc20Gateway,
+            fuelMessagePortal,
+            signers: [deployer, ...signers],
+          } = env;
+
+          fuelBridge1 = randomBytes32();
+          fuelBridge2 = randomBytes32();
+
+          const [user] = signers;
+          const token = _token.connect(user);
+          preExistingAmount = utils.parseEther(Math.random().toFixed(2));
+          const recipient = randomBytes32();
+          const fuelBridge = fuelBridge1;
+
+          await fuelMessagePortal
+            .connect(deployer)
+            .setMessageSender(fuelBridge1);
+          const impersonatedPortal = await impersonateAccount(
+            fuelMessagePortal.address,
+            hre
+          );
+          await erc20Gateway
+            .connect(impersonatedPortal)
+            .registerAsReceiver(token.address);
+
+          await fuelMessagePortal
+            .connect(deployer)
+            .setMessageSender(fuelBridge2);
+          await erc20Gateway
+            .connect(impersonatedPortal)
+            .registerAsReceiver(token.address);
+
+          await token.mint(user.address, preExistingAmount);
+          await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+          await erc20Gateway
+            .connect(user)
+            .deposit(recipient, token.address, fuelBridge, preExistingAmount);
+        });
+
+        it('correctly updates global deposits', async () => {
+          const {
+            token: _token,
+            erc20Gateway,
+            fuelMessagePortal,
+            signers: [deployer, ...signers],
+          } = env;
+
+          const [user] = signers;
+          const token = _token.connect(user);
+          const amount = utils.parseEther(Math.random().toFixed(2));
+          const recipient = randomBytes32();
+          const fuelBridge = fuelBridge1;
+
+          await token.mint(user.address, amount);
+          await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+          const depositTx = erc20Gateway
+            .connect(user)
+            .deposit(recipient, token.address, fuelBridge, amount);
+
+          await expect(depositTx).to.changeTokenBalances(
+            token,
+            [user.address, erc20Gateway.address],
+            [amount.mul(-1), amount]
+          );
+
+          await expect(depositTx)
+            .to.emit(erc20Gateway, 'Deposit')
+            .withArgs(
+              hexZeroPad(user.address, 32).toLowerCase(),
+              token.address,
+              fuelBridge,
+              amount
+            );
+
+          const expectedMessageData = encodeErc20DepositMessage(
+            fuelBridge,
+            token,
+            user,
+            recipient,
+            amount
+          );
+          const logs = await fuelMessagePortal.queryFilter(
+            fuelMessagePortal.filters.SendMessageCalled(
+              CONTRACT_MESSAGE_PREDICATE,
+              null
+            ),
+            await depositTx
+              .then((tx) => tx.wait())
+              .then((receipt) => receipt.blockHash)
+          );
+
+          expect(logs).to.have.length(1);
+          expect(logs[0].args.data).to.be.equal(expectedMessageData);
+
+          const actualDepositTotals = await erc20Gateway.depositTotals(
+            token.address
+          );
+          const expectedDepositTotals = amount.add(preExistingAmount);
+
+          expect(actualDepositTotals).to.be.equal(expectedDepositTotals);
+        });
+
+        it('correctly updates deposits of the fuel side contract', async () => {
+          const {
+            token: _token,
+            erc20Gateway,
+            fuelMessagePortal,
+            signers: [deployer, ...signers],
+          } = env;
+
+          const [user] = signers;
+          const token = _token.connect(user);
+          const amount = utils.parseEther(Math.random().toFixed(2));
+          const recipient = randomBytes32();
+          const fuelBridge = fuelBridge1;
+
+          await token.mint(user.address, amount);
+          await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+          const depositTx = erc20Gateway
+            .connect(user)
+            .deposit(recipient, token.address, fuelBridge, amount);
+
+          await expect(depositTx).to.changeTokenBalances(
+            token,
+            [user.address, erc20Gateway.address],
+            [amount.mul(-1), amount]
+          );
+
+          await expect(depositTx)
+            .to.emit(erc20Gateway, 'Deposit')
+            .withArgs(
+              hexZeroPad(user.address, 32).toLowerCase(),
+              token.address,
+              fuelBridge,
+              amount
+            );
+
+          const expectedMessageData = encodeErc20DepositMessage(
+            fuelBridge,
+            token,
+            user,
+            recipient,
+            amount
+          );
+          const logs = await fuelMessagePortal.queryFilter(
+            fuelMessagePortal.filters.SendMessageCalled(
+              CONTRACT_MESSAGE_PREDICATE,
+              null
+            ),
+            await depositTx
+              .then((tx) => tx.wait())
+              .then((receipt) => receipt.blockHash)
+          );
+
+          expect(logs).to.have.length(1);
+          expect(logs[0].args.data).to.be.equal(expectedMessageData);
+
+          const actualTokenDeposits = await erc20Gateway.tokensDeposited(
+            token.address,
+            fuelBridge
+          );
+          const expectedTokenDeposits = amount.add(preExistingAmount);
+
+          expect(actualTokenDeposits).to.be.equal(expectedTokenDeposits);
+        });
+
+        it('correctly updates deposits of different fuel side contracts', async () => {
+          const {
+            token: _token,
+            erc20Gateway,
+            fuelMessagePortal,
+            signers: [deployer, ...signers],
+          } = env;
+
+          const [user] = signers;
+          const token = _token.connect(user);
+          const amount = utils.parseEther(Math.random().toFixed(2));
+          const recipient = randomBytes32();
+          const fuelBridge = fuelBridge2;
+
+          await token.mint(user.address, amount);
+          await token.approve(erc20Gateway.address, constants.MaxUint256);
+
+          const depositTx = erc20Gateway
+            .connect(user)
+            .deposit(recipient, token.address, fuelBridge, amount);
+
+          await expect(depositTx).to.changeTokenBalances(
+            token,
+            [user.address, erc20Gateway.address],
+            [amount.mul(-1), amount]
+          );
+
+          await expect(depositTx)
+            .to.emit(erc20Gateway, 'Deposit')
+            .withArgs(
+              hexZeroPad(user.address, 32).toLowerCase(),
+              token.address,
+              fuelBridge,
+              amount
+            );
+
+          const expectedMessageData = encodeErc20DepositMessage(
+            fuelBridge,
+            token,
+            user,
+            recipient,
+            amount
+          );
+          const logs = await fuelMessagePortal.queryFilter(
+            fuelMessagePortal.filters.SendMessageCalled(
+              CONTRACT_MESSAGE_PREDICATE,
+              null
+            ),
+            await depositTx
+              .then((tx) => tx.wait())
+              .then((receipt) => receipt.blockHash)
+          );
+
+          expect(logs).to.have.length(1);
+          expect(logs[0].args.data).to.be.equal(expectedMessageData);
+
+          const actualTokenDeposits = await erc20Gateway.tokensDeposited(
+            token.address,
+            fuelBridge2
+          );
+
+          expect(actualTokenDeposits).to.be.equal(amount);
+        });
+      });
     });
 
     describe('finalizeWithdrawal', () => {

@@ -37,10 +37,11 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
         // Checks //
         ////////////
         if (amount == 0) revert CannotDepositZero();
-        if (!isBridge[fuelContractId][tokenAddress]) revert FuelContractIsNotBridge();
 
         uint256 updatedDepositTotals = depositTotals[tokenAddress] + amount;
         if (updatedDepositTotals > depositLimitGlobal[tokenAddress]) revert GlobalDepositLimit();
+
+        if (!isBridge[fuelContractId][tokenAddress]) revert FuelContractIsNotBridge();
 
         /////////////
         // Effects //

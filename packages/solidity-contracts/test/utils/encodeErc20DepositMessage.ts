@@ -9,7 +9,8 @@
 // );
 
 import { BigNumberish, BigNumber, utils, BytesLike } from 'ethers';
-const { solidityPack, hexZeroPad } = utils;
+import { computeMessageData } from '../../protocol/utils';
+const { hexZeroPad } = utils;
 
 /**
  * @description Encodes an erc20 deposit message the same way the FuelERC20Gateway contract does
@@ -22,28 +23,13 @@ export function encodeErc20DepositMessage(
   amount: BigNumberish,
   data?: BytesLike
 ) {
-  const types = [
-    'bytes32',
-    'bytes32',
-    'bytes32',
-    'bytes32',
-    'bytes32',
-    'uint256',
-  ];
-
-  const values = [
+  return computeMessageData(
     fuelContractId,
     hexZeroPad(typeof token === 'string' ? token : token.address, 32),
     hexZeroPad(BigNumber.from(0).toHexString(), 32),
     hexZeroPad(typeof sender === 'string' ? sender : sender.address, 32),
     to,
     amount,
-  ];
-
-  if (data) {
-    types.push('bytes');
-    values.push(data);
-  }
-
-  return solidityPack(types, values);
+    data
+  );
 }

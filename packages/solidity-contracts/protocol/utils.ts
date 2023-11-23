@@ -64,7 +64,7 @@ export function computeMessageData(
   tokenId: BigNumberish,
   from: string,
   to: string,
-  amount: number,
+  amount: BigNumberish,
   data?: BytesLike
 ): string {
   const typings = [
@@ -75,7 +75,7 @@ export function computeMessageData(
     'bytes32',
     'uint256',
   ];
-  const values: (string | number | BN | BytesLike)[] = [
+  const values: (string | number | BN | BytesLike | BigNumberish)[] = [
     fuelContractId,
     tokenAddress,
     BigNumber.from(tokenId),
