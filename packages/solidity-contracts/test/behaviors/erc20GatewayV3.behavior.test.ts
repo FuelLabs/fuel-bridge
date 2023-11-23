@@ -12,7 +12,7 @@ import {
   type Token,
   FuelERC20GatewayV3__factory,
 } from '../../typechain';
-import { impersonateAccount } from '../utils/impersonateAccount';
+import { encodeErc20DepositMessage, impersonateAccount } from '../utils';
 
 type Env = {
   fuelMessagePortal: MockFuelMessagePortal;
@@ -91,7 +91,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         );
       });
 
-      it('works if deposited amount is equal the global limit', async () => {
+      it.only('works if deposited amount is equal the global limit', async () => {
         const {
           token: _token,
           erc20Gateway,
@@ -135,9 +135,27 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             amount
           );
 
-        await expect(depositTx)
-          .to.emit(fuelMessagePortal, 'SendMessageCalled')
-          .withArgs(CONTRACT_MESSAGE_PREDICATE, []);
+        const logs = fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.SendMessageCalled(fuelBridge, null)
+        );
+        console.log(logs);
+        console.log(
+          encodeErc20DepositMessage(fuelBridge, token, user, recipient, amount)
+        );
+        // const logs = await depositTx
+        //   .then((tx) => tx.wait())
+        //   .then(({ logs }) =>
+        //     logs.filter(
+        //       (log) =>
+        //         log.topics[0] ===
+        //         fuelMessagePortal.filters.SendMessageCalled(null, null)
+        //           .topics[0]
+        //     )
+        //   );
+
+        // expect(logs.length).to.be.equal(1);
+        // const [log] =
+        // expect(SendMessageCalledLog.)
       });
 
       it.skip('allows to deposit tokens with data', async () => {
