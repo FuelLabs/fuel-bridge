@@ -1,14 +1,6 @@
-// This is the messageData encoding, for reference:
-// bytes memory messageData = abi.encodePacked(
-//     fuelContractId,
-//     bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-//     bytes32(0), // OFFSET_TOKEN_ID = 64
-//     bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
-//     to, // OFFSET_TO = 128
-//     amount // OFFSET_AMOUNT = 160
-// );
+import type { BigNumberish, BytesLike } from 'ethers';
+import { BigNumber, utils } from 'ethers';
 
-import { BigNumberish, BigNumber, utils, BytesLike } from 'ethers';
 import { computeMessageData } from '../../protocol/utils';
 const { hexZeroPad } = utils;
 
