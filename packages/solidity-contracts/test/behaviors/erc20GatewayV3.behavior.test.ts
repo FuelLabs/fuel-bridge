@@ -3,6 +3,7 @@ import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { utils, constants, type ContractFactory, BigNumber } from 'ethers';
 import hre from 'hardhat';
+import { random } from 'lodash';
 
 import { CONTRACT_MESSAGE_PREDICATE } from '../../protocol/constants';
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
@@ -117,7 +118,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(Math.random().toFixed(2));
+        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
@@ -147,7 +148,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(Math.random().toFixed(2));
+        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
@@ -216,7 +217,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(Math.random().toFixed(2));
+        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
         const depositData = [0, 1, 2, 3, 4];
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
@@ -289,7 +290,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(Math.random().toFixed(2));
+        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
         const depositData = [];
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
@@ -371,7 +372,9 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          preExistingAmount = utils.parseEther(Math.random().toFixed(2));
+          preExistingAmount = utils.parseEther(
+            random(0.01, 1, true).toFixed(2)
+          );
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
@@ -411,7 +414,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(Math.random().toFixed(2));
+          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
@@ -475,7 +478,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(Math.random().toFixed(2));
+          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
@@ -540,7 +543,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(Math.random().toFixed(2));
+          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge2;
 
@@ -606,7 +609,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(Math.random().toFixed(2));
+        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 

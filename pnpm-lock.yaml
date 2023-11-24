@@ -163,6 +163,9 @@ importers:
       '@types/express':
         specifier: ^4.17.14
         version: 4.17.14
+      '@types/lodash':
+        specifier: ^4.14.202
+        version: 4.14.202
       '@types/mocha':
         specifier: ^10.0.0
         version: 10.0.0
@@ -199,6 +202,9 @@ importers:
       hardhat-typechain:
         specifier: ^0.3.5
         version: 0.3.5(hardhat@2.17.4)(ts-generator@0.1.1)(typechain@4.0.3)
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
       markdownlint:
         specifier: ^0.26.2
         version: 0.26.2
@@ -2796,6 +2802,10 @@ packages:
       '@types/abstract-leveldown': 7.2.1
       '@types/level-errors': 3.0.0
       '@types/node': 18.16.19
+    dev: true
+
+  /@types/lodash@4.14.202:
+    resolution: {integrity: sha512-OvlIYQK9tNneDlS0VN54LLd5uiPCBOp7gS5Z0f1mjoJYBrtStzgmJBxONW3U6OZqdtNzZPmn9BS/7WI7BFFcFQ==}
     dev: true
 
   /@types/long@4.0.0:
