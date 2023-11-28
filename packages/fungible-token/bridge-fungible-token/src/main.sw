@@ -92,7 +92,7 @@ impl MessageReceiver for Contract {
                 let sub_id = message_data.token_id;
                 let asset_id = AssetId::new(contract_id(), sub_id);
 
-                disable_panic_on_overflow();
+                let _ = disable_panic_on_overflow();
 
                 let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
                 let new_total_supply = current_total_supply + amount;
@@ -102,7 +102,7 @@ impl MessageReceiver for Contract {
                     return;
                 }
 
-                enable_panic_on_overflow();
+                let _ = enable_panic_on_overflow();
 
                 storage.tokens_minted.insert(asset_id, new_total_supply);
 
@@ -148,7 +148,6 @@ impl MessageReceiver for Contract {
 }
 
 impl Bridge for Contract {
-    #[storage(read)]
     fn register_bridge() {
         send_message(BRIDGED_TOKEN_GATEWAY, encode_register_calldata(BRIDGED_TOKEN), 0);
     }
@@ -253,7 +252,8 @@ impl SRC20 for Contract {
 impl SRC7 for Contract {
     // TODO: implement SRC-8
     #[storage(read)]
-    fn metadata(_asset: AssetId, _key: String) -> Option<Metadata> {
+    fn metadata(asset: AssetId, _key: String) -> Option<Metadata> {
+        let _todo = _asset_to_sub_id(asset);
         None
     }
 }
@@ -268,8 +268,8 @@ fn register_refund(
 ) {
     let asset = sha256((token_address, token_id));
 
-    let previous_amount = U256::from(storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256));
-    let new_amount: b256 = U256::from(amount).add(previous_amount).into(); // U256 has overflow checks built in;
+    let previous_amount: u256 = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256).as_u256();
+    let new_amount: b256 = (amount.as_u256() + previous_amount).into();
 
     storage.refund_amounts.get(from).insert(asset, new_amount);
     log(RefundRegisteredEvent {
