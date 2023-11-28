@@ -23,3 +23,5 @@ runs:
       with:
         name: fuel-bridge
         components: ${{ inputs.forc-components }}
+        toolchain: latest
+        date: 2023-09-29
