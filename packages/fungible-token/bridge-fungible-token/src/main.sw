@@ -35,7 +35,6 @@ use std::{
         mint,
         transfer,
     },
-    u256::U256,
 };
 use utils::{
     adjust_deposit_decimals,

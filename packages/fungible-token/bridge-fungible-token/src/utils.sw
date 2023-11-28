@@ -15,7 +15,6 @@ use std::{
         input_message_data_length,
     },
     math::*,
-    u256::U256,
 };
 
 const TEN: u256 = 10;

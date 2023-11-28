@@ -1,7 +1,5 @@
 library;
 
-use std::u256::U256;
-
 pub struct RefundRegisteredEvent {
     amount: b256,
     token_address: b256,
