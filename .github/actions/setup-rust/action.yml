@@ -19,5 +19,5 @@ runs:
     - name: Install Fuel toolchain
       uses: FuelLabs/action-fuel-toolchain@v0.6.0
       with:
-        toolchain: latest
-        date: 2023-11-24
+        name: custom
+        components: forc@0.47.0, fuel-core@0.20.8
