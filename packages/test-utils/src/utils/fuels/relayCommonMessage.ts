@@ -7,9 +7,9 @@ import {
 import type {
   Message,
   WalletUnlocked as FuelWallet,
-  TransactionRequestLike,
   TransactionResponse,
   Provider,
+  ScriptTransactionRequestLike,
 } from 'fuels';
 import {
   ZeroBytes32,
@@ -43,7 +43,7 @@ function getCommonRelayableMessages(provider: Provider) {
         message: Message,
         details: CommonMessageDetails,
         txParams: Pick<
-          TransactionRequestLike,
+          ScriptTransactionRequestLike,
           'gasLimit' | 'gasPrice' | 'maturity'
         >
       ): Promise<ScriptTransactionRequest> => {
@@ -133,7 +133,7 @@ type CommonMessageDetails = {
     relayer: FuelWallet,
     message: Message,
     details: CommonMessageDetails,
-    txParams: Pick<TransactionRequestLike, 'gasLimit' | 'gasPrice' | 'maturity'>
+    txParams: Pick<ScriptTransactionRequestLike, 'gasLimit' | 'gasPrice' | 'maturity'>
   ) => Promise<ScriptTransactionRequest>;
 };
 
@@ -142,7 +142,7 @@ export async function relayCommonMessage(
   relayer: FuelWallet,
   message: Message,
   txParams: Pick<
-    TransactionRequestLike,
+    ScriptTransactionRequestLike,
     'gasLimit' | 'gasPrice' | 'maturity'
   > = {}
 ): Promise<TransactionResponse> {

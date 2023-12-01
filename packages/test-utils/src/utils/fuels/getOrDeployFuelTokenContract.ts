@@ -90,7 +90,9 @@ export async function getOrDeployFuelTokenContract(
     // The current fund method only accounts for a static gas fee that is not
     // enough for deploying a contract
     transactionRequest.gasPrice = bn(100_000);
-    await fuelAcct.fund(transactionRequest);
+    const { maxFee, requiredQuantities } =
+      await fuelAcct.provider.getTransactionCost(transactionRequest);
+    await fuelAcct.fund(transactionRequest, requiredQuantities, maxFee);
     // Chnage gas price back to the original value provided via params
     transactionRequest.gasPrice = bn(fuelTxParams.gasPrice);
     // send transaction
@@ -111,8 +113,10 @@ export async function getOrDeployFuelTokenContract(
 
     await fuelTestToken.functions
       .register_bridge()
-      .callParams({})
-      .fundWithRequiredCoins()
+      .callParams({
+        gasLimit: bn(10_000)
+      })
+      .fundWithRequiredCoins(maxFee)
       .then((scope) => scope.getTransactionRequest())
       .then((txRequest) => {
         txRequest.inputs = txRequest.inputs.filter(
@@ -134,16 +138,15 @@ export async function getOrDeployFuelTokenContract(
         Promise.all([txResult, waitForBlockCommit(env, block.header.height)])
       )
       .then(([txResult, commitHash]) => {
-        const { messageId } = getMessageOutReceipt(txResult.receipts);
+        const { nonce } = getMessageOutReceipt(txResult.receipts);
 
         return env.fuel.provider.getMessageProof(
           txResult.id!,
-          messageId,
+          nonce,
           commitHash
         );
       })
-      .then((messageProof) =>
-        Promise.all([
+      .then((messageProof) => Promise.all([
           createRelayMessageParams(messageProof),
           waitForBlockFinalization(env, messageProof),
         ])

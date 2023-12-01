@@ -20,4 +20,4 @@ runs:
       uses: FuelLabs/action-fuel-toolchain@v0.6.0
       with:
         name: custom
-        components: forc@0.47.0, fuel-core@0.20.8
+        components: forc@0.47.0, fuel-core@0.21.0
