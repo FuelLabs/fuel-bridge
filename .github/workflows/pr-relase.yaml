@@ -23,6 +23,9 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
       - uses: ./.github/actions/setup-rust
 
+      - name: Build Contracts
+        run: forc build
+
       - name: Build
         run: pnpm build
 
