@@ -24,6 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await deployTransaction.wait();
   const implementation = await erc1967.getImplementationAddress(address);
 
+  console.log('Deployed FuelERC721GatewayV2 at', address);
   await save('FuelERC721GatewayV2', {
     address,
     abi: [],

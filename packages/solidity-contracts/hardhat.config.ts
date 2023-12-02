@@ -15,6 +15,7 @@ const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 const INFURA_API_KEY = process.env.INFURA_API_KEY || '';
 const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:8545';
 
+console.log(RPC_URL);
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
   solidity: {
@@ -50,6 +51,7 @@ const config: HardhatUserConfig = {
       accounts: CONTRACTS_DEPLOYER_KEY ? [CONTRACTS_DEPLOYER_KEY] : [],
     },
     beta5: {
+      chainId: 11155111,
       url: RPC_URL,
       accounts: CONTRACTS_DEPLOYER_KEY
         ? [CONTRACTS_DEPLOYER_KEY]
