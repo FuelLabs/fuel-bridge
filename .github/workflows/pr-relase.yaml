@@ -24,7 +24,7 @@ jobs:
       - uses: ./.github/actions/setup-rust
 
       - name: Build Contracts
-        run: forc build
+        run: pnpm fuels forc build
 
       - name: Build
         run: pnpm build
