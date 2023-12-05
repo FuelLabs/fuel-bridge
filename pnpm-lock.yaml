@@ -45,9 +45,9 @@ importers:
 
   packages/esbuild-bin-loader:
     dependencies:
-      fuels:
+      '@fuel-ts/utils':
         specifier: pr-1407
-        version: 0.0.0-pr-1407-20231205134430
+        version: 0.0.0-pr-1407-20231205162111
 
   packages/fungible-token:
     devDependencies:
@@ -2021,6 +2021,18 @@ packages:
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
+
+  /@fuel-ts/utils@0.0.0-pr-1407-20231205162111:
+    resolution: {integrity: sha512-eQLhYQVDawR+glqaM0Fu1e1ObgScuHmJntYBRzxj2gjMI6HegwKnN0VL+YLx62V5qladymCanEO1RbELY5bxpQ==}
+    engines: {node: ^18.14.1}
+    dependencies:
+      ethers: 6.8.0
+      ramda: 0.29.0
+      rimraf: 3.0.2
+    transitivePeerDependencies:
+      - bufferutil
+      - utf-8-validate
+    dev: false
 
   /@fuel-ts/versions@0.0.0-pr-1407-20231205134430:
     resolution: {integrity: sha512-sf5Zk+Agu9ck3m0oCFj5aVXL1WD1eCD1oZB8T9URXcYw/ACArSqpIIEoLaqnAnpOMHbYZvBdsgoVyqhaP8mR+g==}

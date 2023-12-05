@@ -10,6 +10,6 @@
     "build": "tsup"
   },
   "dependencies": {
-    "fuels": "pr-1407"
+    "@fuel-ts/utils": "pr-1407"
   }
 }
