@@ -32,6 +32,9 @@ importers:
       tsup:
         specifier: ^7.2.0
         version: 7.2.0(typescript@5.2.2)
+      tsx:
+        specifier: ^3.12.7
+        version: 3.14.0
       turbo:
         specifier: ^1.10.7
         version: 1.10.7
@@ -6548,6 +6551,14 @@ packages:
     requiresBuild: true
     optional: true
 
+  /fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
   /fuels@0.0.0-pr-1407-20231205134430:
     resolution: {integrity: sha512-tOeyWEXcOtbbZNq9kNys7DTLIMjYFkf4Jt1E6/56uenO9sv3rGTJJ+8xRa3rJUR9Vc5VYcaml17yz1AL8bJnAA==}
     engines: {node: ^18.14.1}
@@ -6731,6 +6742,12 @@ packages:
 
   /get-tsconfig@4.7.0:
     resolution: {integrity: sha512-pmjiZ7xtB8URYm74PlGJozDNyhvsVLUcpBa8DZBG3bWHwaHa9bPiRpiSfovw+fjhwONSCWKRyk+JQHEGZmMrzw==}
+    dependencies:
+      resolve-pkg-maps: 1.0.0
+    dev: false
+
+  /get-tsconfig@4.7.2:
+    resolution: {integrity: sha512-wuMsz4leaj5hbGgg4IvDU0bqJagpftG5l5cXIAvo8uZrqn0NJqwtfupTN00VnkQJPcIRrxYrm1Ue24btpCha2A==}
     dependencies:
       resolve-pkg-maps: 1.0.0
     dev: false
@@ -10645,6 +10662,17 @@ packages:
     dependencies:
       tslib: 1.14.1
       typescript: 5.2.2
+    dev: false
+
+  /tsx@3.14.0:
+    resolution: {integrity: sha512-xHtFaKtHxM9LOklMmJdI3BEnQq/D5F73Of2E1GDrITi9sgoVkvIsrQUTY1G8FlmGtA+awCI4EBlTRRYxkL2sRg==}
+    hasBin: true
+    dependencies:
+      esbuild: 0.18.20
+      get-tsconfig: 4.7.2
+      source-map-support: 0.5.21
+    optionalDependencies:
+      fsevents: 2.3.3
     dev: false
 
   /tty-table@4.2.1:
