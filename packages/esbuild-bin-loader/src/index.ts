@@ -1,4 +1,4 @@
-import { hexlify } from '@fuel-ts/utils';
+import { hexlify } from 'fuels';
 import { readFileSync } from 'fs';
 
 export const esbuildBinLoader = {
