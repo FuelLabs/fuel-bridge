@@ -7,6 +7,7 @@
     "check": "sh ./scripts/check.sh",
     "changeset": "changeset",
     "changeset:check": "changeset status --since=origin/main",
+    "changeset:next": "tsx ./scripts/changeset-next",
     "changeset:release": "changeset publish --no-git-tag",
     "changeset:version": "changeset version",
     "build": "sh ./scripts/build.sh",
@@ -33,6 +34,7 @@
     "eslint": "^8.49.0",
     "prettier": "^2.7.1",
     "tsup": "^7.2.0",
+    "tsx": "^3.12.7",
     "turbo": "^1.10.7"
   },
   "pnpm": {
