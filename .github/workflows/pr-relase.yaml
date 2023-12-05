@@ -21,7 +21,7 @@ jobs:
       - uses: FuelLabs/github-actions/setups/npm@master
         with:
           npm-token: ${{ secrets.NPM_TOKEN }}
-      - uses: ./.github/actions/setup-rust
+      # - uses: ./.github/actions/setup-rust
 
       - name: Build Contracts
         run: pnpm fuels forc build
