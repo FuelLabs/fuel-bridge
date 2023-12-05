@@ -15,7 +15,7 @@
     "build": "tsup"
   },
   "peerDependencies": {
-    "fuels": ">=0.63.0",
+    "fuels": "pr-1407",
     "ethers": ">=5.7.2"
   },
   "devDependencies": {

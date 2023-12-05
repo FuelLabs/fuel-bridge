@@ -146,7 +146,8 @@ export async function getOrDeployFuelTokenContract(
           commitHash
         );
       })
-      .then((messageProof) => Promise.all([
+      .then((messageProof) => 
+        Promise.all([
           createRelayMessageParams(messageProof),
           waitForBlockFinalization(env, messageProof),
         ])
