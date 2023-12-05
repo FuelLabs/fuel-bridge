@@ -5,21 +5,25 @@ dependencies = [
     "contract_message_receiver",
     "reentrancy",
     "src_20",
-    "std",
+    "std git+https://github.com/fuellabs/sway?branch=feat/transaction-policies#e3ef7732aff53be0bb56deb84881586695b22c0e",
 ]
 
 [[package]]
 name = "contract_message_receiver"
 source = "member"
-dependencies = ["std"]
+dependencies = ["std git+https://github.com/fuellabs/sway?tag=v0.47.0#34265301c6037d51444899a99df1cfc563df6016"]
 
 [[package]]
 name = "contract_message_test"
 source = "member"
 dependencies = [
     "contract_message_receiver",
-    "std",
+    "std git+https://github.com/fuellabs/sway?tag=v0.47.0#34265301c6037d51444899a99df1cfc563df6016",
 ]
+
+[[package]]
+name = "core"
+source = "path+from-root-3F0B325F69DCDC1F"
 
 [[package]]
 name = "core"
@@ -27,23 +31,28 @@ source = "path+from-root-AC247AEA3D39B916"
 
 [[package]]
 name = "reentrancy"
-source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.12.0#063f118a3104adb6a04207ca877993b5ad03a492"
-dependencies = ["std"]
+source = "git+https://github.com/FuelLabs/sway-libs?branch=ls/feat/std-policies-branch#2cb5cc2ccb1e26d99568530e84e42ffcc0e6f338"
+dependencies = ["std git+https://github.com/fuellabs/sway?branch=feat/transaction-policies#e3ef7732aff53be0bb56deb84881586695b22c0e"]
 
 [[package]]
 name = "src_20"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.1.2#a3744aa3dcb8c950a433d1fc16645ef9a83dc583"
-dependencies = ["std"]
+source = "git+https://github.com/FuelLabs/sway-standards?branch=ls/feat/std-policies-branch#8a7843052c93887a1bb341bceafdf370d66b18d6"
+dependencies = ["std git+https://github.com/fuellabs/sway?branch=feat/transaction-policies#e3ef7732aff53be0bb56deb84881586695b22c0e"]
+
+[[package]]
+name = "std"
+source = "git+https://github.com/fuellabs/sway?branch=feat/transaction-policies#e3ef7732aff53be0bb56deb84881586695b22c0e"
+dependencies = ["core path+from-root-3F0B325F69DCDC1F"]
 
 [[package]]
 name = "std"
 source = "git+https://github.com/fuellabs/sway?tag=v0.47.0#34265301c6037d51444899a99df1cfc563df6016"
-dependencies = ["core"]
+dependencies = ["core path+from-root-AC247AEA3D39B916"]
 
 [[package]]
 name = "test_deposit_recipient_contract"
 source = "member"
 dependencies = [
     "contract_message_receiver",
-    "std",
+    "std git+https://github.com/fuellabs/sway?branch=feat/transaction-policies#e3ef7732aff53be0bb56deb84881586695b22c0e",
 ]
