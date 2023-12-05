@@ -6,7 +6,7 @@ on:
 jobs:
   release-pr:
     name: "Release PR to npm"
-    runs-on: ubuntu-latest
+    runs-on: buildjet-4vcpu-ubuntu-2204
     # comment out if:false to enable release PR to npm
     # if: false
     permissions: write-all
