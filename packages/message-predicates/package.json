@@ -9,7 +9,8 @@
     "./dist"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "build2": "tsup"
   },
   "devDependencies": {
     "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader"
