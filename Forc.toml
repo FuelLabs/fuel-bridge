@@ -5,6 +5,3 @@ members = [
   "packages/message-predicates/contract-message-predicate",
   "packages/message-predicates/contract-message-receiver",
 ]
-
-[patch.'https://github.com/fuellabs/sway']
-std = { git = "https://github.com/fuellabs/sway", branch = "feat/transaction-policies" }

@@ -1,9 +1,9 @@
 <p align="center">
-    <a href="https://crates.io/crates/forc/0.47.0" alt="forc">
-        <img src="https://img.shields.io/badge/forc-v0.47.0-orange" />
+    <a href="https://crates.io/crates/forc/0.48.0" alt="forc">
+        <img src="https://img.shields.io/badge/forc-v0.48.0-orange" />
     </a>
-    <a href="https://crates.io/crates/fuel-core/0.20.7" alt="fuel-core">
-        <img src="https://img.shields.io/badge/fuel--core-v0.20.7-blue" />
+    <a href="https://crates.io/crates/fuel-core/0.21.0" alt="fuel-core">
+        <img src="https://img.shields.io/badge/fuel--core-v0.21.0-blue" />
     </a>
 </p>
 

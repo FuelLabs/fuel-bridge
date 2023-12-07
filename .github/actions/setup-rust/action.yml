@@ -15,9 +15,3 @@ runs:
 
     - name: Init cache
       uses: Swatinem/rust-cache@v2
-
-    # - name: Install Fuel toolchain
-    #   uses: FuelLabs/action-fuel-toolchain@v0.6.0
-    #   with:
-    #     name: custom
-    #     components: forc@0.47.0, fuel-core@0.21.0
