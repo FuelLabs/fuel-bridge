@@ -47,7 +47,7 @@
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
     "@openzeppelin/contracts": "^4.8.0",
     "@openzeppelin/contracts-upgradeable": "^4.8.0",
-    "@openzeppelin/hardhat-upgrades": "^1.21.0"
+    "@openzeppelin/hardhat-upgrades": "1.26.0"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.7.0",
@@ -69,7 +69,7 @@
     "ethers": "^5.7.2",
     "express": "^4.18.2",
     "hardhat": "^2.17.4",
-    "hardhat-deploy": "^0.11.37",
+    "hardhat-deploy": "^0.11.44",
     "hardhat-gas-reporter": "^1.0.9",
     "hardhat-typechain": "^0.3.5",
     "lodash": "^4.17.21",

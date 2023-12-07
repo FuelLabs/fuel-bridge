@@ -7,6 +7,6 @@
     "resolveJsonModule": true,
     "lib": ["ES2021"]
   },
-  "include": ["./scripts", "./protocol", "./test", "./typechain"],
+  "include": ["./scripts", "./protocol", "./test", "./typechain", "./deploy"],
   "files": ["./hardhat.config.ts"]
 }
