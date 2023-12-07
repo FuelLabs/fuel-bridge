@@ -154,7 +154,7 @@ describe('Transferring ETH', async function () {
       );
       withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
         fWithdrawTx.id,
-        messageOutReceipt.messageId,
+        messageOutReceipt.nonce,
         commitHashAtL1
       );
 

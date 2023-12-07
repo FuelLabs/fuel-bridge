@@ -65,11 +65,9 @@ function getCommonRelayableMessages(provider: Provider) {
           throw new Error('cannot find contract ID in message data');
         const contractId = hexlify(data.slice(0, 32));
 
-        const { maxGasPerTx } = provider.getGasConfig();
         // build the transaction
         const transaction = new ScriptTransactionRequest({
           script,
-          gasLimit: maxGasPerTx,
           ...txParams,
         });
         transaction.inputs.push({
@@ -103,6 +101,12 @@ function getCommonRelayableMessages(provider: Provider) {
         });
 
         transaction.witnesses.push('0x');
+
+        const { gasUsed } = await relayer.provider.getTransactionCost(
+          transaction
+        );
+
+        transaction.gasLimit = gasUsed.mul(1.2);
 
         debug(
           '-------------------------------------------------------------------'

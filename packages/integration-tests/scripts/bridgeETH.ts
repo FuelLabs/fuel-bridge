@@ -107,7 +107,7 @@ const ETH_AMOUNT = '0.1';
   console.log('Get message proof on Fuel...');
   const withdrawMessageProof = await fuelAccount.provider.getMessageProof(
     fWithdrawTxResult.id,
-    messageOutReceipt.messageId,
+    messageOutReceipt.nonce,
     commitHashAtL1
   );
 

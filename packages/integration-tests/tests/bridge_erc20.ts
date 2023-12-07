@@ -233,7 +233,7 @@ describe('Bridging ERC20 tokens', async function () {
       );
       withdrawMessageProof = await fuelTokenSender.provider.getMessageProof(
         tx.id,
-        messageOutReceipt.messageId,
+        messageOutReceipt.nonce,
         commitHashAtL1
       );
 

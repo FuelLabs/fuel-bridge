@@ -174,7 +174,7 @@ const TOKEN_AMOUNT = '10';
   console.log('Get message proof on Fuel...');
   const withdrawMessageProof = await fuelAcct.provider.getMessageProof(
     fWithdrawTxResult.id,
-    messageOutReceipt.messageId,
+    messageOutReceipt.nonce,
     commitHashAtL1
   );
 

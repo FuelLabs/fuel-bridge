@@ -30,7 +30,7 @@ Each Sway project uses a `fuel-toolchain.toml` file with pinned versions so `for
 In the root of the repository run the following command to build all the Sway programs.
 
 ```bash
-forc build
+pnpm fuels-forc build
 ```
 
 ### Running Rust Tests
