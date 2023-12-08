@@ -1,7 +1,7 @@
 node_modules
 .env
 .vscode
-.openzeppelin
+.openzeppelin/unknown*
 
 # local deployments
 deployments/deployments.local.json
