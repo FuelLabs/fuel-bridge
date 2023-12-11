@@ -25,8 +25,6 @@ This project uses the general contract message relaying script/predicate from th
 
 ### Building Sway
 
-Each Sway project uses a `fuel-toolchain.toml` file with pinned versions so `forc` will install the correct versions for you if you do not have them installed.
-
 In the root of the repository run the following command to build all the Sway programs.
 
 ```bash
