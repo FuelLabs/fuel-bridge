@@ -10,7 +10,7 @@ mod success {
 
     use crate::utils::{builder, environment as env};
     use fuels::{
-        prelude::{Address, AssetId, ContractId, TxParameters},
+        prelude::{Address, AssetId, ContractId, TxPolicies},
         test_helpers::DEFAULT_COIN_AMOUNT,
         tx::Bytes32,
         types::Bits256,
@@ -92,7 +92,7 @@ mod success {
                 coin_inputs[0].clone(),
             ],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -136,7 +136,7 @@ mod fail {
     use fuel_tx::{PanicReason, Receipt};
     use fuels::{
         accounts::Account,
-        prelude::{Address, AssetId, Salt, TxParameters},
+        prelude::{Address, AssetId, Salt, TxPolicies},
         test_helpers::DEFAULT_COIN_AMOUNT,
         types::{
             coin::{Coin, CoinStatus::Unspent},
@@ -165,15 +165,14 @@ mod fail {
         // Transfer coins to a coin with the predicate as an owner
         let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
 
-        let cparams = provider.consensus_parameters();
         let predicate_root =
-            Address::from(fuel_contract_message_predicate::predicate_root(&cparams));
+            Address::from(fuel_contract_message_predicate::predicate_root());
         let _receipt = wallet
             .transfer(
                 &predicate_root.into(),
                 100,
                 AssetId::default(),
-                TxParameters::default(),
+                TxPolicies::default(),
             )
             .await
             .unwrap();
@@ -202,7 +201,7 @@ mod fail {
             coin_as_message,
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -239,7 +238,7 @@ mod fail {
             message_inputs[0].clone(),
             &vec![coin_inputs[0].clone()],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -277,7 +276,7 @@ mod fail {
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -324,7 +323,7 @@ mod fail {
                 coin_inputs[0].clone(),
             ],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -347,7 +346,7 @@ mod fail {
             message_inputs[0].clone(),
             &vec![contract_input.clone(), coin_inputs[0].clone()],
             &[],
-            TxParameters::default(),
+            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )

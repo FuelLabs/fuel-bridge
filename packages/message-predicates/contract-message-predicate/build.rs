@@ -1,4 +1,4 @@
-use fuel_tx::{ConsensusParameters, Input};
+use fuel_tx::Input;
 use sha2::{Digest, Sha256};
 use std::{env, fs, path::Path};
 
@@ -19,9 +19,9 @@ pub fn script_hash() -> [u8; 32] {
 }
 
 // Gets the root of the message-to-contract predicate
-pub fn predicate_root(cparams: &ConsensusParameters) -> [u8; 32] {
+pub fn predicate_root() -> [u8; 32] {
     let predicate = predicate_asm::bytecode();
-    let root = Input::predicate_owner(predicate, &cparams.chain_id);
+    let root = Input::predicate_owner(predicate);
     root.into()
 }
 
@@ -34,7 +34,7 @@ fn main() {
 
     // output to console and build files
     let script_hash = script_hash();
-    let predicate_root = predicate_root(&ConsensusParameters::default());
+    let predicate_root = predicate_root();
 
     let script_build_path = out_dir.join(SCRIPT_BUILD_PATH);
     let script_hash_path = out_dir.join(SCRIPT_HASH_PATH);

@@ -43,7 +43,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -53,12 +53,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -91,7 +92,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -101,12 +102,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -154,7 +156,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![first_deposit_message, second_deposit_message],
@@ -163,6 +165,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let asset_id = get_asset_id(bridge.contract_id());
 
@@ -178,7 +182,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -204,7 +207,6 @@ mod success {
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -248,7 +250,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![first_deposit_message, second_deposit_message],
@@ -257,6 +259,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let asset_id = get_asset_id(bridge.contract_id());
 
@@ -272,7 +276,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -298,7 +301,6 @@ mod success {
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -366,7 +368,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -375,6 +377,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
         let asset_id = get_asset_id(bridge.contract_id());
@@ -388,7 +392,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -421,7 +424,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -430,6 +433,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
         let asset_id = get_asset_id(bridge.contract_id());
@@ -443,7 +448,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -476,7 +480,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -485,6 +489,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
         let asset_id = get_asset_id(bridge.contract_id());
@@ -498,7 +504,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -531,7 +536,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -540,6 +545,8 @@ mod success {
             configurables,
         )
         .await;
+
+        let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
         let asset_id = get_asset_id(bridge.contract_id());
@@ -553,7 +560,6 @@ mod success {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -593,7 +599,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -603,12 +609,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -668,7 +675,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -678,12 +685,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -743,7 +751,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -753,12 +761,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -818,7 +827,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -828,12 +837,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -896,7 +906,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -906,12 +916,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bride contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -976,7 +987,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -986,12 +997,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -1067,7 +1079,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message, message2],
@@ -1077,12 +1089,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -1099,7 +1112,6 @@ mod success {
             &wallet,
             utxo_inputs.message[1].clone(),
             utxo_inputs.contract.clone(),
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -1183,7 +1195,7 @@ mod revert {
         )
         .await;
 
-        let (_test_contract, utxo_inputs, _provider) = setup_environment(
+        let (_test_contract, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -1198,7 +1210,6 @@ mod revert {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 

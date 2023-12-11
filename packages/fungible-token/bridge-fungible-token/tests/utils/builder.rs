@@ -22,7 +22,7 @@ pub async fn build_contract_message_tx(
     contracts: Vec<Input>,
     gas_coins: &[Input],
     optional_outputs: &[Output],
-    params: TxParameters,
+    tx_policies: TxPolicies,
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
@@ -31,7 +31,9 @@ pub async fn build_contract_message_tx(
     let number_of_contracts = contracts.len();
     let mut tx_inputs: Vec<Input> = Vec::with_capacity(1 + number_of_contracts + gas_coins.len());
     let mut tx_outputs: Vec<Output> = Vec::new();
+    let provider = wallet.provider().expect("Need to attach a provider to the wallet");
 
+    
     // Start building tx list of inputs
     tx_inputs.push(message);
     for contract in contracts {
@@ -58,10 +60,9 @@ pub async fn build_contract_message_tx(
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
-        .with_tx_params(params)
+        .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
     wallet.sign_transaction(&mut builder);
-
-    builder.build().unwrap()
+    builder.build(provider).await.unwrap()
 }

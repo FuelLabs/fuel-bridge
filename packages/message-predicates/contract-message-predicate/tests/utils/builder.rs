@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
-use fuel_tx::{Address, AssetId, Output};
+// use fuel_tx::{Address, AssetId, Output};
+use fuel_core_types::{fuel_tx::Output, fuel_types::{Address, AssetId, Bytes32}};
+
+use fuel_tx::output::contract::Contract;
 use fuels::{
     accounts::{fuel_crypto::fuel_types::Word, wallet::WalletUnlocked, Signer},
-    prelude::{ScriptTransaction, TxParameters},
-    tx::Bytes32,
+    prelude::{ScriptTransaction, TxPolicies},
     types::{
         coin_type::CoinType,
         input::Input,
-        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder},
+        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder, BuildableTransaction},
     },
 };
 
@@ -18,7 +20,7 @@ pub async fn build_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    params: TxParameters,
+    tx_policies: TxPolicies,
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
@@ -37,11 +39,13 @@ pub async fn build_contract_message_tx(
                 }
             }
             Input::Contract { .. } => {
-                tx_outputs.push(Output::Contract {
+                let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
-                    state_root: Bytes32::zeroed(),
-                });
+                    state_root: Bytes32::zeroed(), 
+                };
+                
+                tx_outputs.push(Output::Contract(contract_output));
             }
         }
         tx_inputs.push(input.clone());
@@ -63,12 +67,13 @@ pub async fn build_contract_message_tx(
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
-        .with_tx_params(params)
+        .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
     wallet.sign_transaction(&mut builder);
 
-    builder.build().unwrap()
+    let provider = wallet.provider().expect("Needs provider");
+    builder.build(provider).await.unwrap()
 }
 
 /// Build a message-to-contract transaction with the given input coins and outputs, but invalid script bytecode
@@ -77,7 +82,7 @@ pub async fn build_invalid_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    params: TxParameters,
+    tx_policies: TxPolicies,
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
@@ -95,11 +100,13 @@ pub async fn build_invalid_contract_message_tx(
                 }
             }
             Input::Contract { .. } => {
-                tx_outputs.push(Output::Contract {
+                let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
-                    state_root: Bytes32::zeroed(),
-                });
+                    state_root: Bytes32::zeroed(), 
+                };
+                
+                tx_outputs.push(Output::Contract(contract_output));
             }
         }
         tx_inputs.push(input.clone());
@@ -121,10 +128,11 @@ pub async fn build_invalid_contract_message_tx(
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
-        .with_tx_params(params)
+        .with_tx_policies(tx_policies)
         .with_script(invalid_script_bytecode);
 
     wallet.sign_transaction(&mut builder);
 
-    builder.build().unwrap()
+    let provider = wallet.provider().expect("Needs provider");
+    builder.build(provider).await.unwrap()
 }

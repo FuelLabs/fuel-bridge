@@ -4,7 +4,7 @@ use fuels::{
     accounts::{fuel_crypto::SecretKey, wallet::WalletUnlocked},
     prelude::{
         abigen, setup_custom_assets_coins, Address, AssetConfig, AssetId, Contract,
-        LoadConfiguration, TxParameters,
+        LoadConfiguration, TxPolicies,
     },
     test_helpers::{setup_single_message, setup_test_provider},
     tx::Bytes32,
@@ -14,7 +14,7 @@ use fuels::{
     },
 };
 
-use fuel_tx::{ConsensusParameters, TxId, Word};
+use fuel_tx::{TxId, Word};
 
 use super::builder;
 
@@ -65,9 +65,7 @@ pub async fn setup_environment(
     // Generate messages
     let message_sender = Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap();
     let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
-    let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root(
-        &ConsensusParameters::default(),
-    ));
+    let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
 
     let all_messages: Vec<Message> = messages
         .iter()
@@ -95,7 +93,7 @@ pub async fn setup_environment(
     let test_contract_id =
         Contract::load_from(TEST_RECEIVER_CONTRACT_BINARY, LoadConfiguration::default())
             .unwrap()
-            .deploy(&wallet, TxParameters::default())
+            .deploy(&wallet, TxPolicies::default())
             .await
             .unwrap();
 
@@ -147,7 +145,7 @@ pub async fn relay_message_to_contract(
     let provider = wallet.provider().expect("Wallet has no provider");
     let network_info = provider.network_info().await.unwrap();
     let gas_price = network_info.min_gas_price;
-    let params: TxParameters = TxParameters::new(Some(gas_price), Some(30_000), 0);
+    let tx_policies: TxPolicies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
     let inputs = [gas_coins, contracts.as_slice()].concat();
 
@@ -155,7 +153,7 @@ pub async fn relay_message_to_contract(
         message,
         inputs.as_slice(),
         &[],
-        params,
+        tx_policies,
         network_info,
         wallet,
     )

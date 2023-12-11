@@ -18,8 +18,8 @@ use fuels::{
     },
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
-        Address, AssetConfig, AssetId, Bech32ContractId, Config, Contract, ContractId,
-        LoadConfiguration, Provider, TxParameters,
+        Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId,
+        LoadConfiguration, Provider, TxPolicies,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{input::Input, message::Message, Bits256},
@@ -175,7 +175,6 @@ pub(crate) async fn setup_environment(
 ) -> (
     BridgeFungibleTokenContract<WalletUnlocked>,
     UTXOInputs,
-    Provider,
 ) {
     // Generate coins for wallet
     let asset_configs: Vec<AssetConfig> = coins
@@ -214,13 +213,13 @@ pub(crate) async fn setup_environment(
     let provider = setup_test_provider(
         all_coins.clone(),
         all_messages.clone(),
-        Some(Config::local_node()),
         None,
+        None
     )
     .await
     .unwrap();
 
-    wallet.set_provider(provider.clone());
+    wallet.set_provider(provider);
 
     // Set up the bridge contract instance
     let load_configuration = match configurables {
@@ -231,7 +230,7 @@ pub(crate) async fn setup_environment(
     let test_contract_id =
         Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, load_configuration)
             .unwrap()
-            .deploy(&wallet.clone(), TxParameters::default())
+            .deploy(&wallet.clone(), TxPolicies::default())
             .await
             .unwrap();
 
@@ -280,8 +279,7 @@ pub(crate) async fn setup_environment(
             contract: contract_inputs,
             coin: coin_inputs,
             message: message_inputs,
-        },
-        provider,
+        }
     )
 }
 
@@ -290,19 +288,26 @@ pub(crate) async fn relay_message_to_contract(
     wallet: &WalletUnlocked,
     message: Input,
     contracts: Vec<Input>,
-    gas_coins: &[Input],
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
     let network_info = provider.network_info().await.unwrap();
     let gas_price = network_info.min_gas_price;
-    let params: TxParameters = TxParameters::new(Some(gas_price), Some(30_000), 0);
+    let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
+
+    let fetched_gas_coins: Vec<Input> = provider.get_coins(wallet.address(), Default::default())
+        .await
+        .unwrap()
+        .iter()
+        .map(|el| { Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())) })
+        .collect();
+
 
     let tx = builder::build_contract_message_tx(
         message,
         contracts,
-        gas_coins,
+        &fetched_gas_coins,
         &[Output::variable(Address::zeroed(), 0, AssetId::default())],
-        params,
+        tx_policies,
         network_info,
         wallet,
     )
@@ -360,7 +365,7 @@ pub(crate) async fn create_token() -> BridgeFungibleTokenContract<WalletUnlocked
         LoadConfiguration::default(),
     )
     .unwrap()
-    .deploy(&wallet, TxParameters::default())
+    .deploy(&wallet, TxPolicies::default())
     .await
     .unwrap();
 
@@ -375,7 +380,7 @@ pub(crate) async fn create_recipient_contract(
         LoadConfiguration::default(),
     )
     .unwrap()
-    .deploy(&wallet, TxParameters::default())
+    .deploy(&wallet, TxPolicies::default())
     .await
     .unwrap();
 
@@ -501,7 +506,7 @@ pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>
     )
     .await;
 
-    let (contract, utxo_inputs, _) = setup_environment(
+    let (contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
         vec![message],
@@ -515,7 +520,6 @@ pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>
         &wallet,
         utxo_inputs.message[0].clone(),
         utxo_inputs.contract,
-        &utxo_inputs.coin[..],
     )
     .await;
 
