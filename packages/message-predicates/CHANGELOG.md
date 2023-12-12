@@ -1,5 +1,11 @@
 # @fuel-bridge/message-predicates
 
+## 0.4.0
+
+### Minor Changes
+
+- Bumped fuels to 0.50.1, by [@DefiCake](https://github.com/DefiCake) (See [#95](https://github.com/FuelLabs/fuel-bridge/pull/95))
+
 ## 0.3.0
 
 ## 0.2.2

@@ -1,5 +1,19 @@
 # @fuel-bridge/solidity-contracts
 
+## 0.4.0
+
+### Minor Changes
+
+- ERC20 gateway with training wheels, by [@DefiCake](https://github.com/DefiCake) (See [#100](https://github.com/FuelLabs/fuel-bridge/pull/100))
+- Added deposit caps for native base asset (eth), by [@DefiCake](https://github.com/DefiCake) (See [#97](https://github.com/FuelLabs/fuel-bridge/pull/97))
+
+### Patch Changes
+
+- 🐞 Fix prettier and apply it to current files, by [@DefiCake](https://github.com/DefiCake) (See [#98](https://github.com/FuelLabs/fuel-bridge/pull/98))
+- Remove deposit limitations on ether, by [@DefiCake](https://github.com/DefiCake) (See [#101](https://github.com/FuelLabs/fuel-bridge/pull/101))
+- Add deploy scripts, by [@DefiCake](https://github.com/DefiCake) (See [#107](https://github.com/FuelLabs/fuel-bridge/pull/107))
+- Add beta 5 deployment artifacts, by [@DefiCake](https://github.com/DefiCake) (See [#110](https://github.com/FuelLabs/fuel-bridge/pull/110))
+
 ## 0.3.0
 
 ### Minor Changes
