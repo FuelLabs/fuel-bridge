@@ -1,5 +1,12 @@
 # @fuel-bridge/fungible-token
 
+## 0.4.0
+
+### Minor Changes
+
+- Replace FRC20 with SRC20, by [@DefiCake](https://github.com/DefiCake) (See [#102](https://github.com/FuelLabs/fuel-bridge/pull/102))
+- Bumped fuels to 0.50.1, by [@DefiCake](https://github.com/DefiCake) (See [#95](https://github.com/FuelLabs/fuel-bridge/pull/95))
+
 ## 0.3.0
 
 ### Minor Changes
