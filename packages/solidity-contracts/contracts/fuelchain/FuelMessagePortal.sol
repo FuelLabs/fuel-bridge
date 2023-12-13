@@ -30,7 +30,7 @@ struct Message {
 /// @notice Common predicates for Fuel inputs
 library CommonPredicates {
     bytes32 public constant CONTRACT_MESSAGE_PREDICATE =
-        0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815;
+        0xb12658c759d8bae2cdc523ebd7aa8637912f32b1763d242ad3618448057b79cd;
 }
 
 /// @title FuelMessagePortal
@@ -51,7 +51,11 @@ contract FuelMessagePortal is
 
     /// @dev Emitted when a message is sent from Ethereum to Fuel
     event MessageSent(
-        bytes32 indexed sender, bytes32 indexed recipient, uint256 indexed nonce, uint64 amount, bytes data
+        bytes32 indexed sender,
+        bytes32 indexed recipient,
+        uint256 indexed nonce,
+        uint64 amount,
+        bytes data
     );
 
     /// @dev Emitted when a message is successfully relayed to Ethereum from Fuel
