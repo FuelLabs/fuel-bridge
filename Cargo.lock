@@ -436,6 +436,7 @@ version = "0.3.0"
 dependencies = [
  "fuel-core-types",
  "fuels",
+ "hex",
  "primitive-types",
  "sha3",
  "tokio",

@@ -10,7 +10,7 @@ mod success {
 
     use crate::utils::{builder, environment as env};
     use fuels::{
-        prelude::{Address, AssetId, ContractId, TxPolicies},
+        prelude::{Address, AssetId, ContractId},
         test_helpers::DEFAULT_COIN_AMOUNT,
         tx::Bytes32,
         types::Bits256,
@@ -36,14 +36,14 @@ mod success {
         let message = (100, message_data);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
 
-        let (wallet, test_contract, contract_input, coin_inputs, message_inputs) =
+        let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
         let _receipts = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
             vec![contract_input.clone()],
-            &[coin_inputs[0].clone()],
+            &[],
         )
         .await;
 
@@ -77,22 +77,17 @@ mod success {
         let data_address = Address::from_str(RANDOM_SALT3).unwrap();
 
         let message_data1 = env::message_data(RANDOM_WORD2, RANDOM_SALT2, RANDOM_SALT3).await;
-        let message1 = (100, message_data1);
-        let message2 = (200, vec![]);
+        let message1: (u64, Vec<u8>) = (100, message_data1);
+        let message2: (u64, Vec<u8>) = (200, vec![]);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, test_contract, contract_input, coin_inputs, message_inputs) =
+        let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2]).await;
         let provider = wallet.provider().unwrap();
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &[
-                message_inputs[1].clone(),
-                contract_input.clone(),
-                coin_inputs[0].clone(),
-            ],
+            &[message_inputs[1].clone(), contract_input.clone()],
             &[],
-            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -158,21 +153,19 @@ mod fail {
     #[tokio::test]
     async fn relay_message_with_missing_message() {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, _, contract_input, coin_inputs, _) =
-            env::setup_environment(vec![coin], vec![]).await;
+        let (wallet, _, contract_input, _, _) = env::setup_environment(vec![coin], vec![]).await;
         let provider = wallet.provider().unwrap();
 
         // Transfer coins to a coin with the predicate as an owner
         let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
 
-        let predicate_root =
-            Address::from(fuel_contract_message_predicate::predicate_root());
+        let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
         let _receipt = wallet
             .transfer(
                 &predicate_root.into(),
                 100,
                 AssetId::default(),
-                TxPolicies::default(),
+                TxPolicies::new(Some(0), None, None, None, Some(30_000)),
             )
             .await
             .unwrap();
@@ -199,9 +192,8 @@ mod fail {
 
         let tx = builder::build_contract_message_tx(
             coin_as_message,
-            &vec![contract_input.clone(), coin_inputs[0].clone()],
+            &vec![contract_input.clone()],
             &[],
-            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -230,15 +222,14 @@ mod fail {
         let message_data = env::prefix_contract_id(vec![]).await;
         let message = (100, message_data);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, _, _, coin_inputs, message_inputs) =
+        let (wallet, _, _, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
         let provider = wallet.provider().unwrap();
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![coin_inputs[0].clone()],
             &[],
-            TxPolicies::default(),
+            &[],
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -268,15 +259,14 @@ mod fail {
         let message_data_bad = Salt::from_str(RANDOM_SALT).unwrap().to_vec();
         let message = (100, message_data_bad);
         let coin = (1_000_000, AssetId::default());
-        let (wallet, _, contract_input, coin_inputs, message_inputs) =
+        let (wallet, _, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
         let provider = wallet.provider().unwrap();
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![contract_input.clone(), coin_inputs[0].clone()],
+            &vec![contract_input.clone()],
             &[],
-            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
@@ -301,7 +291,6 @@ mod fail {
     }
 
     #[tokio::test]
-    #[should_panic(expected = "The transaction contains a predicate which failed to validate")]
     async fn relay_multiple_messages() {
         let message_data1 = env::message_data(RANDOM_WORD, RANDOM_SALT3, RANDOM_SALT).await;
         let message1 = (100, message_data1);
@@ -310,7 +299,7 @@ mod fail {
         let message_data3 = env::message_data(RANDOM_WORD, RANDOM_SALT, RANDOM_SALT2).await;
         let message3 = (200, message_data3);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, _, contract_input, coin_inputs, message_inputs) =
+        let (wallet, _, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2, message3]).await;
         let provider = wallet.provider().unwrap();
 
@@ -320,38 +309,52 @@ mod fail {
                 message_inputs[1].clone(),
                 message_inputs[2].clone(),
                 contract_input.clone(),
-                coin_inputs[0].clone(),
             ],
             &[],
-            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
 
-        let _tx_id = provider.send_transaction(tx).await.unwrap();
+        match provider.send_transaction(tx).await.unwrap_err() {
+            fuels::types::errors::Error::IOError(error) => {
+                let stringified_error = error.to_string();
+                let expected_error = String::from(
+                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                );
+                assert_eq!(stringified_error, expected_error);
+            }
+            _ => unreachable!("Test threw an unexpected error"),
+        }
     }
 
     #[tokio::test]
-    #[should_panic(expected = "The transaction contains a predicate which failed to validate")]
     async fn relay_message_with_invalid_script() {
         let message_data = env::prefix_contract_id(vec![]).await;
         let message = (100, message_data);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, _, contract_input, coin_inputs, message_inputs) =
+        let (wallet, _, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
         let provider = wallet.provider().unwrap();
 
         let tx = builder::build_invalid_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![contract_input.clone(), coin_inputs[0].clone()],
+            &vec![contract_input.clone()],
             &[],
-            TxPolicies::default(),
             provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
 
-        let _tx_id = provider.send_transaction(tx).await.unwrap();
+        match provider.send_transaction(tx).await.unwrap_err() {
+            fuels::types::errors::Error::IOError(error) => {
+                let stringified_error = error.to_string();
+                let expected_error = String::from(
+                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                );
+                assert_eq!(stringified_error, expected_error);
+            }
+            _ => unreachable!("Test threw an unexpected error"),
+        }
     }
 }

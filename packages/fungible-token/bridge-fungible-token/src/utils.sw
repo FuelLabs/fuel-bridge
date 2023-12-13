@@ -151,12 +151,14 @@ fn shift_decimals_right(bn: u256, decimals: u8) -> Result<u256, BridgeFungibleTo
         return Result::Err(BridgeFungibleTokenError::UnderflowError);
     }
 
-    let remainder = bn_clone % (TEN.pow(decimals_to_shift));
+    let base = TEN.pow(decimals_to_shift);
+    let adjusted = bn_clone / (TEN.pow(decimals_to_shift));
+    let check = (bn_clone + base - 0x01_u256) / base;
 
-    if remainder != ZERO_B256.as_u256() {
+    // TODO: Convoluted way of checking modulo, workaround for modulo issues around u256
+    if check != adjusted {
         return Result::Err(BridgeFungibleTokenError::UnderflowError);
     }
-    let adjusted = bn_clone / (TEN.pow(decimals_to_shift));
 
     return Result::Ok(adjusted)
 }

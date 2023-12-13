@@ -18,8 +18,8 @@ use fuels::{
     },
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
-        Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId,
-        LoadConfiguration, Provider, TxPolicies,
+        Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
+        Provider, TxPolicies,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{input::Input, message::Message, Bits256},
@@ -172,10 +172,7 @@ pub(crate) async fn setup_environment(
     deposit_contract: Option<ContractId>,
     sender: Option<&str>,
     configurables: Option<BridgeFungibleTokenContractConfigurables>,
-) -> (
-    BridgeFungibleTokenContract<WalletUnlocked>,
-    UTXOInputs,
-) {
+) -> (BridgeFungibleTokenContract<WalletUnlocked>, UTXOInputs) {
     // Generate coins for wallet
     let asset_configs: Vec<AssetConfig> = coins
         .iter()
@@ -210,14 +207,9 @@ pub(crate) async fn setup_environment(
     }
 
     // Create a provider with the coins and messages
-    let provider = setup_test_provider(
-        all_coins.clone(),
-        all_messages.clone(),
-        None,
-        None
-    )
-    .await
-    .unwrap();
+    let provider = setup_test_provider(all_coins.clone(), all_messages.clone(), None, None)
+        .await
+        .unwrap();
 
     wallet.set_provider(provider);
 
@@ -279,7 +271,7 @@ pub(crate) async fn setup_environment(
             contract: contract_inputs,
             coin: coin_inputs,
             message: message_inputs,
-        }
+        },
     )
 }
 
@@ -294,13 +286,13 @@ pub(crate) async fn relay_message_to_contract(
     let gas_price = network_info.min_gas_price;
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
-    let fetched_gas_coins: Vec<Input> = provider.get_coins(wallet.address(), Default::default())
+    let fetched_gas_coins: Vec<Input> = provider
+        .get_coins(wallet.address(), Default::default())
         .await
         .unwrap()
         .iter()
-        .map(|el| { Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())) })
+        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
         .collect();
-
 
     let tx = builder::build_contract_message_tx(
         message,

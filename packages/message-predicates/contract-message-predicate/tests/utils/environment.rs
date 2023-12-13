@@ -144,20 +144,12 @@ pub async fn relay_message_to_contract(
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
     let network_info = provider.network_info().await.unwrap();
-    let gas_price = network_info.min_gas_price;
-    let tx_policies: TxPolicies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
     let inputs = [gas_coins, contracts.as_slice()].concat();
 
-    let tx = builder::build_contract_message_tx(
-        message,
-        inputs.as_slice(),
-        &[],
-        tx_policies,
-        network_info,
-        wallet,
-    )
-    .await;
+    let tx =
+        builder::build_contract_message_tx(message, inputs.as_slice(), &[], network_info, wallet)
+            .await;
 
     provider
         .send_transaction(tx)

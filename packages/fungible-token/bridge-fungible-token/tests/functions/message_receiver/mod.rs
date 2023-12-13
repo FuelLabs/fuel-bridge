@@ -64,7 +64,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge
@@ -113,7 +113,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -186,7 +186,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &asset_id).await;
 
         // Verify the message value was received by the bridge
@@ -280,7 +280,7 @@ mod success {
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &asset_id).await;
 
         // Verify the message value was received by the bridge
@@ -385,7 +385,7 @@ mod success {
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
-            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
         let _receipts = relay_message_to_contract(
@@ -397,7 +397,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -453,7 +453,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -509,7 +509,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -565,7 +565,7 @@ mod success {
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
-            contract_balance(&provider, deposit_contract.contract_id(), asset_id).await;
+            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
         assert_eq!(
             deposit_contract_balance_after,
@@ -633,7 +633,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -709,7 +709,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -785,7 +785,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -861,7 +861,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -942,7 +942,7 @@ mod success {
                 .unwrap();
 
             let token_balance =
-                contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+                contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
             let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
             // Verify the message value was received by the bridge contract
@@ -1021,7 +1021,7 @@ mod success {
             .unwrap();
 
         let token_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -1133,7 +1133,7 @@ mod success {
             .unwrap();
 
         let token_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value were received by the bridge contract
