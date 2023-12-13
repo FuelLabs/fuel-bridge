@@ -19,7 +19,7 @@ mod success {
         constants::MESSAGE_AMOUNT,
         setup::{
             contract_balance, create_recipient_contract, encode_hex, precalculate_deposit_id,
-            wallet_balance, RefundRegisteredEvent,
+            wallet_balance, RefundRegisteredEvent
         },
     };
     use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};

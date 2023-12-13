@@ -33,7 +33,6 @@ pub async fn build_contract_message_tx(
     let mut tx_outputs: Vec<Output> = Vec::new();
     let provider = wallet.provider().expect("Need to attach a provider to the wallet");
 
-    
     // Start building tx list of inputs
     tx_inputs.push(message);
     for contract in contracts {
@@ -52,6 +51,16 @@ pub async fn build_contract_message_tx(
     if !gas_coins.is_empty() {
         // Append provided inputs
         tx_inputs.append(&mut gas_coins.to_vec());
+    }
+
+    // When funding the transaction with gas_coins, we need return the change of the UTXO
+    // back to the wallet
+    for gas_coin in gas_coins {
+        if let Input::ResourceSigned { resource } = gas_coin {
+            tx_outputs.push(
+                Output::Change { to: wallet.address().into(), amount: 0, asset_id: resource.asset_id() }
+            );
+        }
     }
 
     // Append provided outputs
