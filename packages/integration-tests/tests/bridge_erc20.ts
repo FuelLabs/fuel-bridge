@@ -203,9 +203,15 @@ describe('Bridging ERC20 tokens', async function () {
             amount: fuelTokenSenderBalance,
             assetId: fuel_testAssetId,
           },
-        })
-        .fundWithRequiredCoins();
-      const transactionRequest = await scope.getTransactionRequest();
+        });
+
+      const txRequestNotFunded = await scope.getTransactionRequest();
+
+      const { maxFee } =
+        await fuelTokenSender.provider.getTransactionCost(txRequestNotFunded);
+
+      const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
+      const transactionRequest = await scopeFunded.getTransactionRequest();
 
       // Remove input messages form the trasaction
       // This is a issue with the current Sway implementation

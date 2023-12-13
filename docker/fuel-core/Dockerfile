@@ -1,4 +1,4 @@
-FROM ghcr.io/fuellabs/fuel-core:sha-1a8970b
+FROM ghcr.io/fuellabs/fuel-core:v0.22.0
 
 ARG FUEL_IP=0.0.0.0
 ARG FUEL_PORT=4001
