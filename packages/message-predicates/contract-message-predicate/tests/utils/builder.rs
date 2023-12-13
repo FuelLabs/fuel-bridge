@@ -1,7 +1,10 @@
 use std::collections::HashMap;
 
 // use fuel_tx::{Address, AssetId, Output};
-use fuel_core_types::{fuel_tx::Output, fuel_types::{Address, AssetId, Bytes32}};
+use fuel_core_types::{
+    fuel_tx::Output,
+    fuel_types::{Address, AssetId, Bytes32},
+};
 
 use fuel_tx::output::contract::Contract;
 use fuels::{
@@ -10,7 +13,9 @@ use fuels::{
     types::{
         coin_type::CoinType,
         input::Input,
-        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder, BuildableTransaction},
+        transaction_builders::{
+            BuildableTransaction, NetworkInfo, ScriptTransactionBuilder, TransactionBuilder,
+        },
     },
 };
 
@@ -32,11 +37,12 @@ pub async fn build_contract_message_tx(
     // Loop through inputs and add to lists
     let mut change = HashMap::new();
 
-    let fetched_gas_coins: Vec<Input> = provider.get_coins(wallet.address(), Default::default())
+    let fetched_gas_coins: Vec<Input> = provider
+        .get_coins(wallet.address(), Default::default())
         .await
         .unwrap()
         .iter()
-        .map(|el| { Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())) })
+        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
         .collect();
 
     let funding_utx0 = fetched_gas_coins.first().unwrap().to_owned();
@@ -54,17 +60,17 @@ pub async fn build_contract_message_tx(
                 if let CoinType::Coin(coin) = resource {
                     change.insert(coin.asset_id, coin.owner.clone());
                 }
-            },
+            }
             Input::Contract { .. } => {
                 let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
-                    state_root: Bytes32::zeroed(), 
+                    state_root: Bytes32::zeroed(),
                 };
-                
+
                 tx_outputs.push(Output::Contract(contract_output));
-            },
-            _ => {},
+            }
+            _ => {}
         }
         tx_inputs.push(input.clone());
     }
@@ -82,9 +88,7 @@ pub async fn build_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
-    let tx_policies = TxPolicies::new(
-        Some(0), 
-        None, None, None, Some(30_000));
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
 
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
@@ -114,11 +118,12 @@ pub async fn build_invalid_contract_message_tx(
     // Loop through inputs and add to lists
     let mut change = HashMap::new();
 
-    let mut fetched_gas_coins: Vec<Input> = provider.get_coins(wallet.address(), Default::default())
+    let mut fetched_gas_coins: Vec<Input> = provider
+        .get_coins(wallet.address(), Default::default())
         .await
         .unwrap()
         .iter()
-        .map(|el| { Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())) })
+        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
         .collect();
 
     tx_inputs.append(&mut fetched_gas_coins);
@@ -134,9 +139,9 @@ pub async fn build_invalid_contract_message_tx(
                 let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
-                    state_root: Bytes32::zeroed(), 
+                    state_root: Bytes32::zeroed(),
                 };
-                
+
                 tx_outputs.push(Output::Contract(contract_output));
             }
         }
@@ -156,9 +161,7 @@ pub async fn build_invalid_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
-    let tx_policies = TxPolicies::new(
-        Some(0), 
-        None, None, None, Some(30_000));
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())

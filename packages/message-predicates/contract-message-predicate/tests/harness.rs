@@ -86,10 +86,7 @@ mod success {
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &[
-                message_inputs[1].clone(),
-                contract_input.clone()
-            ],
+            &[message_inputs[1].clone(), contract_input.clone()],
             &[],
             provider.network_info().await.unwrap(),
             &wallet,
@@ -156,15 +153,13 @@ mod fail {
     #[tokio::test]
     async fn relay_message_with_missing_message() {
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-        let (wallet, _, contract_input, _, _) =
-            env::setup_environment(vec![coin], vec![]).await;
+        let (wallet, _, contract_input, _, _) = env::setup_environment(vec![coin], vec![]).await;
         let provider = wallet.provider().unwrap();
 
         // Transfer coins to a coin with the predicate as an owner
         let predicate_bytecode = fuel_contract_message_predicate::predicate_bytecode();
 
-        let predicate_root =
-            Address::from(fuel_contract_message_predicate::predicate_root());
+        let predicate_root = Address::from(fuel_contract_message_predicate::predicate_root());
         let _receipt = wallet
             .transfer(
                 &predicate_root.into(),
@@ -197,7 +192,7 @@ mod fail {
 
         let tx = builder::build_contract_message_tx(
             coin_as_message,
-            &vec![contract_input.clone(), ],
+            &vec![contract_input.clone()],
             &[],
             provider.network_info().await.unwrap(),
             &wallet,
@@ -270,7 +265,7 @@ mod fail {
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![contract_input.clone(), ],
+            &vec![contract_input.clone()],
             &[],
             provider.network_info().await.unwrap(),
             &wallet,
@@ -313,7 +308,7 @@ mod fail {
             &vec![
                 message_inputs[1].clone(),
                 message_inputs[2].clone(),
-                contract_input.clone()
+                contract_input.clone(),
             ],
             &[],
             provider.network_info().await.unwrap(),
@@ -324,10 +319,12 @@ mod fail {
         match provider.send_transaction(tx).await.unwrap_err() {
             fuels::types::errors::Error::IOError(error) => {
                 let stringified_error = error.to_string();
-                let expected_error = String::from("Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))");
+                let expected_error = String::from(
+                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                );
                 assert_eq!(stringified_error, expected_error);
-            },
-            _ => unreachable!("Test threw an unexpected error")
+            }
+            _ => unreachable!("Test threw an unexpected error"),
         }
     }
 
@@ -342,7 +339,7 @@ mod fail {
 
         let tx = builder::build_invalid_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![contract_input.clone(), ],
+            &vec![contract_input.clone()],
             &[],
             provider.network_info().await.unwrap(),
             &wallet,
@@ -352,10 +349,12 @@ mod fail {
         match provider.send_transaction(tx).await.unwrap_err() {
             fuels::types::errors::Error::IOError(error) => {
                 let stringified_error = error.to_string();
-                let expected_error = String::from("Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))");
+                let expected_error = String::from(
+                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                );
                 assert_eq!(stringified_error, expected_error);
-            },
-            _ => unreachable!("Test threw an unexpected error")
+            }
+            _ => unreachable!("Test threw an unexpected error"),
         }
     }
 }

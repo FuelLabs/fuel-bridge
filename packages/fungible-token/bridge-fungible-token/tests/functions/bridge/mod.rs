@@ -448,13 +448,13 @@ mod success {
             utxo_inputs.contract,
         )
         .await;
-    
+
         let receipts = provider.tx_status(&_tx_id).await.unwrap().take_receipts();
 
         dbg!(&receipts);
 
         for receipt in receipts {
-            if let Receipt::LogData { data, ..} = receipt {
+            if let Receipt::LogData { data, .. } = receipt {
                 dbg!(hex::encode(data.unwrap()));
             }
         }
@@ -652,7 +652,7 @@ mod revert {
             configurables,
         )
         .await;
-        
+
         bridge
             .methods()
             .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
