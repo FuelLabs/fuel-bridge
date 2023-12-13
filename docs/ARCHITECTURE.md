@@ -16,7 +16,7 @@ Before delving into the details, let's understand a few key concepts that will b
 - Fuel sequencers: Entities that process L2 transactions and keep the ledger updated.
 - L1 Commits: Transactions on the L1 that start the finalization process of a Fuel epoch.
 - Finality: State of commits by which the commit cannot be changed, it is considered honest and immutable - final. When an epoch is committed, a clock starts. If the commit is correct, time will pass and the epoch will be final - it cannot be reverted or changed. If the commit is not correct, an honest party can challenge it.
-- Block comitter: entity responsible for listening to finished epochs from the Fuel Blockchain and comitting these epochs to the `FuelChainState` contract.
+- Block comitter: entity responsible for listening to finished epochs from the Fuel Blockchain and committing these epochs to the `FuelChainState` contract.
 - `FuelChainState` contract: L1 Smart contract that holds epoch information.
 - `FuelMessagePortal` contract: L1 Smart contract that is able to validate relay messages from Fuel Blocks that have been committed to the state contract, and relays those messages to the corresponding entities in L1
 - Layer 1 Bridge smart contract: L1 smart contract that holds L1 tokens. Upon user deposits, it generates an message for the L2 counterpart to mint the associated L2 token.
@@ -64,7 +64,7 @@ The mechanism that implements messaging from L2 to L1 can be more convoluted; be
 
 Any user on the L2 can trigger transactions that generate a message. This message is included as part of the Fuel block, and its inclusion can be proven by verifying a `Merkle root` in the block header that commits to a `Merkle tree` containing the message. The block hash is derived, among other fields, from this root.
 
-Fuel blocks are packed and committed together by the mechanism described two sections above, `block comitting`. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
+Fuel blocks are packed and committed together by the mechanism described two sections above, `block committing`. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
 
 Once the committed epoch has finalized, an user in the L1 blockchain can prove that the original message was included in the finalized epoch:
 
