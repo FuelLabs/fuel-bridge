@@ -81,7 +81,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -223,7 +223,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -353,7 +353,7 @@ mod success {
         }
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         let expected_deposited_amount = config.fuel_equivalent_amount(config.amount.max);
@@ -460,7 +460,7 @@ mod success {
         }
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -602,7 +602,7 @@ mod revert {
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract

@@ -77,8 +77,8 @@ mod success {
         let data_address = Address::from_str(RANDOM_SALT3).unwrap();
 
         let message_data1 = env::message_data(RANDOM_WORD2, RANDOM_SALT2, RANDOM_SALT3).await;
-        let message1 = (100, message_data1);
-        let message2 = (200, vec![]);
+        let message1: (u64, Vec<u8>) = (100, message_data1);
+        let message2: (u64, Vec<u8>) = (200, vec![]);
         let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2]).await;
@@ -228,7 +228,7 @@ mod fail {
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
-            &vec![],
+            &[],
             &[],
             provider.network_info().await.unwrap(),
             &wallet,
