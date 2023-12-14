@@ -13,7 +13,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  audit-deps:
+    name: Audit Dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+      - run: pnpm audit --prod
+
   check-packages-changed:
+    needs: audit-deps
     name: Check if packages have change
     runs-on: ubuntu-latest
     outputs:
@@ -29,7 +38,7 @@ jobs:
 
   changesets:
     name: Changeset Checks
-    needs: check-packages-changed
+    needs: [audit-deps, check-packages-changed]
     if: ${{ github.head_ref != 'changeset-release/main' && needs.check-packages-changed.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
@@ -42,6 +51,7 @@ jobs:
 
   validate:
     runs-on: buildjet-4vcpu-ubuntu-2204
+    needs: audit-deps
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master

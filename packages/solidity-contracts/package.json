@@ -42,11 +42,11 @@
     "@ethersproject/bytes": "^5.7.0",
     "@ethersproject/providers": "^5.7.0",
     "@fuel-contracts/merkle-sol": "^0.1.4",
-    "@nomicfoundation/hardhat-chai-matchers": "^1.0.6",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
     "@nomiclabs/hardhat-ethers": "^2.2.1",
     "@nomiclabs/hardhat-etherscan": "^3.1.2",
-    "@openzeppelin/contracts": "^4.8.0",
-    "@openzeppelin/contracts-upgradeable": "^4.8.0",
+    "@openzeppelin/contracts": "^4.8.3",
+    "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "1.26.0"
   },
   "devDependencies": {
