@@ -68,7 +68,6 @@ function getCommonRelayableMessages(provider: Provider) {
         // build the transaction
         const transaction = new ScriptTransactionRequest({
           script,
-          ...txParams,
         });
         transaction.inputs.push({
           type: InputType.Message,
@@ -102,11 +101,15 @@ function getCommonRelayableMessages(provider: Provider) {
 
         transaction.witnesses.push('0x');
 
-        const { gasUsed } = await relayer.provider.getTransactionCost(
-          transaction
-        );
+        transaction.gasPrice = bn(txParams.gasPrice);
+        console.log(`transaction`, transaction);
 
-        transaction.gasLimit = gasUsed.mul(1.2);
+        // const { gasUsed } = await relayer.provider.getTransactionCost(
+        //   transaction
+        // );
+
+        // transaction.gasLimit = gasUsed.mul(1.2);
+        transaction.gasLimit = bn(10_000);
 
         debug(
           '-------------------------------------------------------------------'
@@ -145,10 +148,10 @@ type CommonMessageDetails = {
 export async function relayCommonMessage(
   relayer: FuelWallet,
   message: Message,
-  txParams: Pick<
+  txParams?: Pick<
     ScriptTransactionRequestLike,
     'gasLimit' | 'gasPrice' | 'maturity'
-  > = {}
+  >
 ): Promise<TransactionResponse> {
   // find the relay details for the specified message
   let messageRelayDetails: CommonMessageDetails = null;

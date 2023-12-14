@@ -86,15 +86,9 @@ export async function getOrDeployFuelTokenContract(
         storageSlots: [],
       }
     );
-    // This for avoiding transaction for failing because of insufficient funds
-    // The current fund method only accounts for a static gas fee that is not
-    // enough for deploying a contract
-    transactionRequest.gasPrice = bn(100_000);
     const { maxFee, requiredQuantities } =
       await fuelAcct.provider.getTransactionCost(transactionRequest);
     await fuelAcct.fund(transactionRequest, requiredQuantities, maxFee);
-    // Chnage gas price back to the original value provided via params
-    transactionRequest.gasPrice = bn(fuelTxParams.gasPrice);
     // send transaction
     const response = await fuelAcct.sendTransaction(transactionRequest);
     await response.wait();
@@ -113,6 +107,10 @@ export async function getOrDeployFuelTokenContract(
 
     await fuelTestToken.functions
       .register_bridge()
+      .txParams({
+        gasPrice: bn(fuelTxParams.gasPrice),
+        gasLimit: bn(10_000)
+      })
       .callParams({
         gasLimit: bn(10_000)
       })
@@ -152,8 +150,8 @@ export async function getOrDeployFuelTokenContract(
           waitForBlockFinalization(env, messageProof),
         ])
       )
-      .then(([relayMessageParams]) =>
-        env.eth.fuelMessagePortal.relayMessage(
+      .then(([relayMessageParams]) => 
+      env.eth.fuelMessagePortal.relayMessage(
           relayMessageParams.message,
           relayMessageParams.rootBlockHeader,
           relayMessageParams.blockHeader,

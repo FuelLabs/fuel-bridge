@@ -12,7 +12,8 @@
     "./dist"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "build:watch": "tsup --watch"
   },
   "peerDependencies": {
     "fuels": "next",

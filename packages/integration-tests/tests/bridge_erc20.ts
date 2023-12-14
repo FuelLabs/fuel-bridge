@@ -18,7 +18,7 @@ import {
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
-import { Address, BN, InputType } from 'fuels';
+import { Address, BN, InputType, bn } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -58,11 +58,20 @@ describe('Bridging ERC20 tokens', async function () {
     );
     fuel_testContractId = fuel_testToken.id.toHexString();
     fuel_testAssetId = getTokenId(fuel_testToken);
+
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
+      .txParams({
+        gasLimit: bn(1_000),
+        gasPrice: FUEL_TX_PARAMS.gasPrice,
+      })
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
+      .txParams({
+        gasLimit: bn(1_000),
+        gasPrice: FUEL_TX_PARAMS.gasPrice,
+      })
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -144,7 +153,6 @@ describe('Bridging ERC20 tokens', async function () {
     it('Relay message from Ethereum on Fuel', async function () {
       // override the default test timeout from 2000ms
       this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
-
       // relay the message ourselves
       const message = await waitForMessage(
         env.fuel.provider,
@@ -153,7 +161,7 @@ describe('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-      const tx = await relayCommonMessage(env.fuel.deployer, message);
+      const tx = await relayCommonMessage(env.fuel.deployer, message, { ...FUEL_TX_PARAMS, maturity: undefined });
       expect((await tx.waitForResult()).status).to.equal('success');
     });
 
