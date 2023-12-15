@@ -171,7 +171,7 @@ export async function relayCommonMessage(
     relayer,
     message,
     messageRelayDetails,
-    txParams
+    txParams || {}
   );
 
   return relayer.sendTransaction(transaction);

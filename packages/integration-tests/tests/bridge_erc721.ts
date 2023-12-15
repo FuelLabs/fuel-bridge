@@ -19,7 +19,7 @@ import {
 import chai from 'chai';
 import type { Wallet } from 'ethers';
 import { BigNumber, utils } from 'ethers';
-import { Address, BN, InputType } from 'fuels';
+import { Address, BN, InputType, bn } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -30,6 +30,11 @@ import type {
 LOG_CONFIG.debug = false;
 
 const { expect } = chai;
+
+const callsTxParams = {
+  gasLimit: bn(10_000),
+  gasPrice: FUEL_TX_PARAMS.gasPrice,
+};
 
 const signerToHexTokenId = (signer: { address: string }) => {
   return utils.hexZeroPad(BigNumber.from(signer.address).toHexString(), 32);
@@ -66,9 +71,11 @@ describe('Bridging ERC721 tokens', async function () {
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
+      .txParams(callsTxParams)
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
+      .txParams(callsTxParams)
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -168,7 +175,7 @@ describe('Bridging ERC721 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-      const tx = await relayCommonMessage(env.fuel.deployer, message);
+      const tx = await relayCommonMessage(env.fuel.deployer, message, { ...FUEL_TX_PARAMS, maturity: undefined });
       const result = await tx.waitForResult();
 
       expect(result.status).to.equal('success');
@@ -200,6 +207,7 @@ describe('Bridging ERC721 tokens', async function () {
         '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
       const scope = await fuel_testToken.functions
         .withdraw(paddedAddress)
+        .txParams(callsTxParams)
         .callParams({
           forward: {
             amount: 1,

@@ -30,6 +30,11 @@ LOG_CONFIG.debug = false;
 
 const { expect } = chai;
 
+const callsTxParams = {
+  gasLimit: bn(10_000),
+  gasPrice: FUEL_TX_PARAMS.gasPrice,
+};
+
 describe('Bridging ERC20 tokens', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
@@ -61,17 +66,11 @@ describe('Bridging ERC20 tokens', async function () {
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
-      .txParams({
-        gasLimit: bn(1_000),
-        gasPrice: FUEL_TX_PARAMS.gasPrice,
-      })
+      .txParams(callsTxParams)
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
-      .txParams({
-        gasLimit: bn(1_000),
-        gasPrice: FUEL_TX_PARAMS.gasPrice,
-      })
+      .txParams(callsTxParams)
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -206,6 +205,7 @@ describe('Bridging ERC20 tokens', async function () {
       );
       const scope = await fuel_testToken.functions
         .withdraw(paddedAddress)
+        .txParams(callsTxParams)
         .callParams({
           forward: {
             amount: fuelTokenSenderBalance,
