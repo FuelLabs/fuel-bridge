@@ -39,6 +39,6 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.26.2",
-    "@fuel-ts/forc": "next"
+    "@fuel-ts/forc": "pr-1528"
   }
 }
