@@ -4,4 +4,4 @@
 '@fuel-bridge/test-utils': minor
 ---
 
-Update to fuel-core 0.21.0 (beta-5)
+Update to fuel-core 0.22.0 (beta-5)

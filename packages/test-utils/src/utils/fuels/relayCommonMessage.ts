@@ -102,13 +102,6 @@ function getCommonRelayableMessages(provider: Provider) {
         transaction.witnesses.push('0x');
 
         transaction.gasPrice = bn(txParams.gasPrice);
-        console.log(`transaction`, transaction);
-
-        // const { gasUsed } = await relayer.provider.getTransactionCost(
-        //   transaction
-        // );
-
-        // transaction.gasLimit = gasUsed.mul(1.2);
         transaction.gasLimit = bn(10_000);
 
         debug(
