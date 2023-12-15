@@ -24,7 +24,7 @@ pnpm run build
 echo "\n\nCargo test..."
 cargo test
 echo "\n\nForc test..."
-pnpm fuels-forc forc test
+pnpm fuels-forc test
 
 # Start the docker compose file with L1 and Fuel Node
 echo "\n\nStarting docker..."
