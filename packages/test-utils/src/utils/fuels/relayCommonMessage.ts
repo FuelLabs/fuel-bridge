@@ -140,7 +140,10 @@ type CommonMessageDetails = {
     relayer: FuelWallet,
     message: Message,
     details: CommonMessageDetails,
-    txParams: Pick<ScriptTransactionRequestLike, 'gasLimit' | 'gasPrice' | 'maturity'>
+    txParams: Pick<
+      ScriptTransactionRequestLike,
+      'gasLimit' | 'gasPrice' | 'maturity'
+    >
   ) => Promise<ScriptTransactionRequest>;
 };
 

@@ -160,7 +160,10 @@ describe('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-      const tx = await relayCommonMessage(env.fuel.deployer, message, { ...FUEL_TX_PARAMS, maturity: undefined });
+      const tx = await relayCommonMessage(env.fuel.deployer, message, {
+        ...FUEL_TX_PARAMS,
+        maturity: undefined,
+      });
       expect((await tx.waitForResult()).status).to.equal('success');
     });
 
@@ -215,8 +218,9 @@ describe('Bridging ERC20 tokens', async function () {
 
       const txRequestNotFunded = await scope.getTransactionRequest();
 
-      const { maxFee } =
-        await fuelTokenSender.provider.getTransactionCost(txRequestNotFunded);
+      const { maxFee } = await fuelTokenSender.provider.getTransactionCost(
+        txRequestNotFunded
+      );
 
       const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
       const transactionRequest = await scopeFunded.getTransactionRequest();

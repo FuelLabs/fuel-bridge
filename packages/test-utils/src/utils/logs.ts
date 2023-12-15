@@ -56,7 +56,7 @@ export async function logTokenBalances(
 }
 
 export function debug(...args: any) {
-  // if (LOG_CONFIG.debug) {
+  if (LOG_CONFIG.debug) {
     console.log(...args);
-  // }
+  }
 }

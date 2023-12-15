@@ -13,7 +13,13 @@ import {
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress, bn } from 'fuels';
+import {
+  Address,
+  BN,
+  BaseAssetId,
+  padFirst12BytesOfEvmAddress,
+  bn,
+} from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
@@ -136,7 +142,9 @@ describe('Transferring ETH', async function () {
     it('Send ETH via OutputMessage', async () => {
       // withdraw ETH back to the base chain
       const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)),
+        Address.fromString(
+          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
+        ),
         fuels_parseEther(NUM_ETH),
         callsTxParams
       );

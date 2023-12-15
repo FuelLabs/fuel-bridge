@@ -109,10 +109,10 @@ export async function getOrDeployFuelTokenContract(
       .register_bridge()
       .txParams({
         gasPrice: bn(fuelTxParams.gasPrice),
-        gasLimit: bn(10_000)
+        gasLimit: bn(10_000),
       })
       .callParams({
-        gasLimit: bn(10_000)
+        gasLimit: bn(10_000),
       })
       .fundWithRequiredCoins(maxFee)
       .then((scope) => scope.getTransactionRequest())
@@ -144,14 +144,14 @@ export async function getOrDeployFuelTokenContract(
           commitHash
         );
       })
-      .then((messageProof) => 
+      .then((messageProof) =>
         Promise.all([
           createRelayMessageParams(messageProof),
           waitForBlockFinalization(env, messageProof),
         ])
       )
-      .then(([relayMessageParams]) => 
-      env.eth.fuelMessagePortal.relayMessage(
+      .then(([relayMessageParams]) =>
+        env.eth.fuelMessagePortal.relayMessage(
           relayMessageParams.message,
           relayMessageParams.rootBlockHeader,
           relayMessageParams.blockHeader,
