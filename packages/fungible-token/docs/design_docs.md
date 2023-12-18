@@ -16,7 +16,7 @@ The ETH bridge facilitates the transfer of ETH from Ethereum to be represented a
 
 ### ETH Bridge Deposit
 
-1. User starts a deposit by calling `depositETH()` on `FuelMessagePortal` which accepts an amount of ETH that gets custodied while bridged
+1. User starts a deposit by calling `depositETH()` on `FuelMessagePortal` which accepts an amount of ETH that gets custody while bridged
 1. The Fuel client sees an outgoing message event emitted on the `FuelMessagePortal` and adds a corresponding `InputMessage` to the UTXO set with the designated recipient
 1. The recipient can now spend the amount value in the input message like any other input
 

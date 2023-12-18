@@ -16,7 +16,7 @@ To allocate more memory, go to Settings > Resources in the Docker UI and use the
 
 ### Starting containers
 
-To start all containers and build it, use;
+To start all containers and build them, use;
 
 ```
 make up

@@ -52,7 +52,7 @@ There are several provided scripts to help with contract management. Before runn
 npm run script-deploy --network <name of the network>
 ```
 
-Deploys ALL contracts including proxy contracts. This is most useful when running a local network that you wish to deploy the full contract set to for testing.
+Deploys ALL contracts including proxy contracts. This is most useful when running a local network if you wish to deploy the full contract set for testing.
 
 ### Upgrade All
 
