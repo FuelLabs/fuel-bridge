@@ -4,12 +4,7 @@ import {
 } from '@fuel-bridge/fungible-token';
 import type { ethers } from 'ethers';
 import type { TxParams } from 'fuels';
-import {
-  ContractFactory,
-  bn,
-  Contract,
-  TransactionStatus,
-} from 'fuels';
+import { ContractFactory, bn, Contract, TransactionStatus } from 'fuels';
 
 import {
   createRelayMessageParams,

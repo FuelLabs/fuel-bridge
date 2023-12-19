@@ -13,12 +13,7 @@ import {
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import {
-  Address,
-  BN,
-  BaseAssetId,
-  padFirst12BytesOfEvmAddress,
-} from 'fuels';
+import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
