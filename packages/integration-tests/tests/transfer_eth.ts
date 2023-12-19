@@ -5,10 +5,10 @@ import {
   createRelayMessageParams,
   getMessageOutReceipt,
   waitForMessage,
-  FUEL_TX_PARAMS,
   waitForBlockCommit,
   waitForBlockFinalization,
   getBlock,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
@@ -18,7 +18,6 @@ import {
   BN,
   BaseAssetId,
   padFirst12BytesOfEvmAddress,
-  bn,
 } from 'fuels';
 import type {
   AbstractAddress,
@@ -27,11 +26,6 @@ import type {
 } from 'fuels';
 
 const { expect } = chai;
-
-const callsTxParams = {
-  gasLimit: bn(10_000),
-  gasPrice: FUEL_TX_PARAMS.gasPrice,
-};
 
 describe('Transferring ETH', async function () {
   // Timeout 6 minutes
@@ -146,7 +140,7 @@ describe('Transferring ETH', async function () {
           padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
         ),
         fuels_parseEther(NUM_ETH),
-        callsTxParams
+        FUEL_CALL_TX_PARAMS
       );
       const fWithdrawTxResult = await fWithdrawTx.waitForResult();
       expect(fWithdrawTxResult.status).to.equal('success');

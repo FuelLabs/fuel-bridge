@@ -15,11 +15,12 @@ import {
   getTokenId,
   getBlock,
   getOrDeployERC721Contract,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Wallet } from 'ethers';
 import { BigNumber, utils } from 'ethers';
-import { Address, BN, InputType, bn } from 'fuels';
+import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -30,11 +31,6 @@ import type {
 LOG_CONFIG.debug = false;
 
 const { expect } = chai;
-
-const callsTxParams = {
-  gasLimit: bn(10_000),
-  gasPrice: FUEL_TX_PARAMS.gasPrice,
-};
 
 const signerToHexTokenId = (signer: { address: string }) => {
   return utils.hexZeroPad(BigNumber.from(signer.address).toHexString(), 32);
@@ -71,11 +67,11 @@ describe('Bridging ERC721 tokens', async function () {
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
-      .txParams(callsTxParams)
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
-      .txParams(callsTxParams)
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -210,7 +206,7 @@ describe('Bridging ERC721 tokens', async function () {
         '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
       const scope = await fuel_testToken.functions
         .withdraw(paddedAddress)
-        .txParams(callsTxParams)
+        .txParams(FUEL_CALL_TX_PARAMS)
         .callParams({
           forward: {
             amount: 1,
@@ -225,14 +221,6 @@ describe('Bridging ERC721 tokens', async function () {
 
       const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
       const transactionRequest = await scopeFunded.getTransactionRequest();
-
-      // Remove input messages form the trasaction
-      // This is a issue with the current Sway implementation
-      // msg_sender().unwrap();
-      transactionRequest.inputs = transactionRequest.inputs.filter(
-        (i) => i.type !== InputType.Message
-      );
-
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
 
       const fWithdrawTxResult = await tx.waitForResult();

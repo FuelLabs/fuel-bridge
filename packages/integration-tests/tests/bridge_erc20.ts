@@ -15,10 +15,11 @@ import {
   waitForBlockFinalization,
   getTokenId,
   getBlock,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
-import { Address, BN, InputType, bn } from 'fuels';
+import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -29,11 +30,6 @@ import type {
 LOG_CONFIG.debug = false;
 
 const { expect } = chai;
-
-const callsTxParams = {
-  gasLimit: bn(10_000),
-  gasPrice: FUEL_TX_PARAMS.gasPrice,
-};
 
 describe('Bridging ERC20 tokens', async function () {
   // Timeout 6 minutes
@@ -66,11 +62,11 @@ describe('Bridging ERC20 tokens', async function () {
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
-      .txParams(callsTxParams)
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
-      .txParams(callsTxParams)
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -208,7 +204,7 @@ describe('Bridging ERC20 tokens', async function () {
       );
       const scope = await fuel_testToken.functions
         .withdraw(paddedAddress)
-        .txParams(callsTxParams)
+        .txParams(FUEL_CALL_TX_PARAMS)
         .callParams({
           forward: {
             amount: fuelTokenSenderBalance,
@@ -224,13 +220,6 @@ describe('Bridging ERC20 tokens', async function () {
 
       const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
       const transactionRequest = await scopeFunded.getTransactionRequest();
-
-      // Remove input messages form the trasaction
-      // This is a issue with the current Sway implementation
-      // msg_sender().unwrap();
-      transactionRequest.inputs = transactionRequest.inputs.filter(
-        (i) => i.type !== InputType.Message
-      );
 
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
       const fWithdrawTxResult = await tx.waitForResult();

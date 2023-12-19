@@ -9,7 +9,6 @@ import {
   bn,
   Contract,
   TransactionStatus,
-  InputType,
 } from 'fuels';
 
 import {
@@ -116,12 +115,6 @@ export async function getOrDeployFuelTokenContract(
       })
       .fundWithRequiredCoins(maxFee)
       .then((scope) => scope.getTransactionRequest())
-      .then((txRequest) => {
-        txRequest.inputs = txRequest.inputs.filter(
-          (i) => i.type !== InputType.Message
-        );
-        return txRequest;
-      })
       .then((txRequest) => fuelTestToken.account.sendTransaction(txRequest))
       .then((txResponse) => txResponse.waitForResult())
       .then((txResult) =>
