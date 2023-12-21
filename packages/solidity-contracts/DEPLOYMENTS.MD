@@ -7,8 +7,8 @@ Check the folder `/deployments` for up to date values!
 ```
 Deployed FuelChainState at 0x395B125343ADebCcB05dd70e117774E3AB08a8a7
 Deployed FuelMessagePortal at 0x557c5cE22F877d975C2cB13D0a961a182d740fD5
-Deployed FuelERC20GatewayV2 at 0x341F28a65Ab45D62421CE383883404339d562c6c
-Deployed FuelERC721GatewayV2 at 0x6AF2aE0606C8BAea345590259633f0F5b2686Ad3
+Deployed FuelERC20GatewayV2 at 0xE52af7c9A2F6b243CEE9F0C423E06BAb6E5c6E3b
+Deployed FuelERC721GatewayV2 at 0xc094fC648101920B1C37C733AF022942eF4042D3
 ```
 
 ## Beta 5 Devnet
