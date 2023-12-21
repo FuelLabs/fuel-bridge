@@ -22,7 +22,7 @@ fuel-asm = "0.43.1"
 fuel-tx = "0.43.1"
 
 # Dependencies from fuel-core repository:
-fuel-core-types = { version = "0.21.0", default-features = false }
+fuel-core-types = { version = "0.22.0", default-features = false }
 
 # Dependencies from fuels-rs repository:    
 fuels = { version = "0.53.0", features = ["fuel-core-lib"] }
