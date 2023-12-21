@@ -3,7 +3,6 @@ version: '3.4'
 services:
   l1_chain:
     image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
-    platform: linux/amd64
     build:
       dockerfile: ./docker/l1-chain/Dockerfile
       # Use build context of the root directory

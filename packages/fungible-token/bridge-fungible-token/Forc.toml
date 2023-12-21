@@ -6,6 +6,5 @@ name = "bridge_fungible_token"
 
 [dependencies]
 contract_message_receiver = { path = "../../message-predicates/contract-message-receiver" }
-reentrancy = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.12.0" }
-src_20 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.1.2" }
-
+reentrancy = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.17.2" }
+src_20 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.2.2" }

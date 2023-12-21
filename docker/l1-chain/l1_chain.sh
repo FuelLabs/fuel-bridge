@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euo
 
-RETRIES=${RETRIES:-20}
+RETRIES=${RETRIES:-120}
 JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
 L1_CHAIN_HTTP="http://127.0.0.1:$L1_PORT"
 

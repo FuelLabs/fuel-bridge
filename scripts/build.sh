@@ -1,5 +1,5 @@
 #!/bin/bash
 
-forc build
+pnpm fuels-forc build
 cargo run
 turbo run build

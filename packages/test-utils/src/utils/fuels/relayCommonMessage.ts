@@ -7,9 +7,9 @@ import {
 import type {
   Message,
   WalletUnlocked as FuelWallet,
-  TransactionRequestLike,
   TransactionResponse,
   Provider,
+  ScriptTransactionRequestLike,
 } from 'fuels';
 import {
   ZeroBytes32,
@@ -43,7 +43,7 @@ function getCommonRelayableMessages(provider: Provider) {
         message: Message,
         details: CommonMessageDetails,
         txParams: Pick<
-          TransactionRequestLike,
+          ScriptTransactionRequestLike,
           'gasLimit' | 'gasPrice' | 'maturity'
         >
       ): Promise<ScriptTransactionRequest> => {
@@ -65,12 +65,9 @@ function getCommonRelayableMessages(provider: Provider) {
           throw new Error('cannot find contract ID in message data');
         const contractId = hexlify(data.slice(0, 32));
 
-        const { maxGasPerTx } = provider.getGasConfig();
         // build the transaction
         const transaction = new ScriptTransactionRequest({
           script,
-          gasLimit: maxGasPerTx,
-          ...txParams,
         });
         transaction.inputs.push({
           type: InputType.Message,
@@ -104,6 +101,9 @@ function getCommonRelayableMessages(provider: Provider) {
 
         transaction.witnesses.push('0x');
 
+        transaction.gasPrice = bn(txParams.gasPrice);
+        transaction.gasLimit = bn(10_000);
+
         debug(
           '-------------------------------------------------------------------'
         );
@@ -133,7 +133,10 @@ type CommonMessageDetails = {
     relayer: FuelWallet,
     message: Message,
     details: CommonMessageDetails,
-    txParams: Pick<TransactionRequestLike, 'gasLimit' | 'gasPrice' | 'maturity'>
+    txParams: Pick<
+      ScriptTransactionRequestLike,
+      'gasLimit' | 'gasPrice' | 'maturity'
+    >
   ) => Promise<ScriptTransactionRequest>;
 };
 
@@ -141,10 +144,10 @@ type CommonMessageDetails = {
 export async function relayCommonMessage(
   relayer: FuelWallet,
   message: Message,
-  txParams: Pick<
-    TransactionRequestLike,
+  txParams?: Pick<
+    ScriptTransactionRequestLike,
     'gasLimit' | 'gasPrice' | 'maturity'
-  > = {}
+  >
 ): Promise<TransactionResponse> {
   // find the relay details for the specified message
   let messageRelayDetails: CommonMessageDetails = null;
@@ -164,7 +167,7 @@ export async function relayCommonMessage(
     relayer,
     message,
     messageRelayDetails,
-    txParams
+    txParams || {}
   );
 
   return relayer.sendTransaction(transaction);

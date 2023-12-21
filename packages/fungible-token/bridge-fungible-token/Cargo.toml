@@ -14,6 +14,7 @@ publish = false
 fuel-core-types = { workspace = true }
 # Dependencies from fuels-rs repository:
 fuels = { workspace = true, features = ["fuel-core-lib"] }
+hex = "0.4.3"
 
 primitive-types = "0.12.1"
 sha3 = "0.10.1"

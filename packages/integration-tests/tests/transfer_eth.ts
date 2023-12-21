@@ -5,15 +5,15 @@ import {
   createRelayMessageParams,
   getMessageOutReceipt,
   waitForMessage,
-  FUEL_TX_PARAMS,
   waitForBlockCommit,
   waitForBlockFinalization,
   getBlock,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, BaseAssetId } from 'fuels';
+import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
@@ -131,9 +131,11 @@ describe('Transferring ETH', async function () {
     it('Send ETH via OutputMessage', async () => {
       // withdraw ETH back to the base chain
       const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(ethereumETHReceiverAddress),
+        Address.fromString(
+          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
+        ),
         fuels_parseEther(NUM_ETH),
-        FUEL_TX_PARAMS
+        FUEL_CALL_TX_PARAMS
       );
       const fWithdrawTxResult = await fWithdrawTx.waitForResult();
       expect(fWithdrawTxResult.status).to.equal('success');
@@ -154,7 +156,7 @@ describe('Transferring ETH', async function () {
       );
       withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
         fWithdrawTx.id,
-        messageOutReceipt.messageId,
+        messageOutReceipt.nonce,
         commitHashAtL1
       );
 

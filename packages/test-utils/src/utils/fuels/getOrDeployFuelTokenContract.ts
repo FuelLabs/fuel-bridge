@@ -4,13 +4,7 @@ import {
 } from '@fuel-bridge/fungible-token';
 import type { ethers } from 'ethers';
 import type { TxParams } from 'fuels';
-import {
-  ContractFactory,
-  bn,
-  Contract,
-  TransactionStatus,
-  InputType,
-} from 'fuels';
+import { ContractFactory, bn, Contract, TransactionStatus } from 'fuels';
 
 import {
   createRelayMessageParams,
@@ -86,13 +80,9 @@ export async function getOrDeployFuelTokenContract(
         storageSlots: [],
       }
     );
-    // This for avoiding transaction for failing because of insufficient funds
-    // The current fund method only accounts for a static gas fee that is not
-    // enough for deploying a contract
-    transactionRequest.gasPrice = bn(100_000);
-    await fuelAcct.fund(transactionRequest);
-    // Chnage gas price back to the original value provided via params
-    transactionRequest.gasPrice = bn(fuelTxParams.gasPrice);
+    const { maxFee, requiredQuantities } =
+      await fuelAcct.provider.getTransactionCost(transactionRequest);
+    await fuelAcct.fund(transactionRequest, requiredQuantities, maxFee);
     // send transaction
     const response = await fuelAcct.sendTransaction(transactionRequest);
     await response.wait();
@@ -111,15 +101,15 @@ export async function getOrDeployFuelTokenContract(
 
     await fuelTestToken.functions
       .register_bridge()
-      .callParams({})
-      .fundWithRequiredCoins()
-      .then((scope) => scope.getTransactionRequest())
-      .then((txRequest) => {
-        txRequest.inputs = txRequest.inputs.filter(
-          (i) => i.type !== InputType.Message
-        );
-        return txRequest;
+      .txParams({
+        gasPrice: bn(fuelTxParams.gasPrice),
+        gasLimit: bn(10_000),
       })
+      .callParams({
+        gasLimit: bn(10_000),
+      })
+      .fundWithRequiredCoins(maxFee)
+      .then((scope) => scope.getTransactionRequest())
       .then((txRequest) => fuelTestToken.account.sendTransaction(txRequest))
       .then((txResponse) => txResponse.waitForResult())
       .then((txResult) =>
@@ -134,11 +124,11 @@ export async function getOrDeployFuelTokenContract(
         Promise.all([txResult, waitForBlockCommit(env, block.header.height)])
       )
       .then(([txResult, commitHash]) => {
-        const { messageId } = getMessageOutReceipt(txResult.receipts);
+        const { nonce } = getMessageOutReceipt(txResult.receipts);
 
         return env.fuel.provider.getMessageProof(
           txResult.id!,
-          messageId,
+          nonce,
           commitHash
         );
       })

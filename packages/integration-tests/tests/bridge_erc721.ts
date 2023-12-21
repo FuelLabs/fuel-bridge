@@ -15,11 +15,12 @@ import {
   getTokenId,
   getBlock,
   getOrDeployERC721Contract,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Wallet } from 'ethers';
 import { BigNumber, utils } from 'ethers';
-import { Address, BN, InputType } from 'fuels';
+import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -66,9 +67,11 @@ describe('Bridging ERC721 tokens', async function () {
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
       .bridged_token()
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
+      .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
 
     // check that values for the test token and gateway contract match what
@@ -168,7 +171,10 @@ describe('Bridging ERC721 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-      const tx = await relayCommonMessage(env.fuel.deployer, message);
+      const tx = await relayCommonMessage(env.fuel.deployer, message, {
+        ...FUEL_TX_PARAMS,
+        maturity: undefined,
+      });
       const result = await tx.waitForResult();
 
       expect(result.status).to.equal('success');
@@ -200,23 +206,21 @@ describe('Bridging ERC721 tokens', async function () {
         '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
       const scope = await fuel_testToken.functions
         .withdraw(paddedAddress)
+        .txParams(FUEL_CALL_TX_PARAMS)
         .callParams({
           forward: {
             amount: 1,
             assetId: fuel_testAssetId,
           },
-        })
-        .fundWithRequiredCoins();
+        });
 
-      const transactionRequest = await scope.getTransactionRequest();
-
-      // Remove input messages form the trasaction
-      // This is a issue with the current Sway implementation
-      // msg_sender().unwrap();
-      transactionRequest.inputs = transactionRequest.inputs.filter(
-        (i) => i.type !== InputType.Message
+      const txRequestNotFunded = await scope.getTransactionRequest();
+      const { maxFee } = await fuelTokenSender.provider.getTransactionCost(
+        txRequestNotFunded
       );
 
+      const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
+      const transactionRequest = await scopeFunded.getTransactionRequest();
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
 
       const fWithdrawTxResult = await tx.waitForResult();
@@ -237,7 +241,7 @@ describe('Bridging ERC721 tokens', async function () {
       );
       withdrawMessageProof = await fuelTokenSender.provider.getMessageProof(
         tx.id,
-        messageOutReceipt.messageId,
+        messageOutReceipt.nonce,
         commitHashAtL1
       );
 

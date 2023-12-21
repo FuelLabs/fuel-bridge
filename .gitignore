@@ -21,3 +21,6 @@ target
 
 # Genearal dist folders
 dist
+
+# fuel toolchain file (not needed as we use from ts-sdk)
+fuel-toolchain.toml

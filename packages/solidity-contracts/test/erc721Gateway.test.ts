@@ -29,7 +29,7 @@ import type {
 import { createBlock } from './utils/createBlock';
 
 const CONTRACT_MESSAGE_PREDICATE =
-  '0x86a8f7487cb0d3faca1895173d5ff35c1e839bd2ab88657eede9933ea8988815';
+  '0xb12658c759d8bae2cdc523ebd7aa8637912f32b1763d242ad3618448057b79cd';
 
 const { expect } = chai;
 
