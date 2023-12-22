@@ -1,7 +1,9 @@
 import { writeFileSync, existsSync, readFileSync } from 'fs';
 import { join } from 'path';
 
-export const dataPath = join(__dirname, './save.json');
+import { bridgeFungibleToken } from '../types/contract-ids.json';
+
+export const dataPath = join(__dirname, `./files/${bridgeFungibleToken}.json`);
 
 export const getData = () => {
   if (existsSync(dataPath)) {

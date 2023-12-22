@@ -13,8 +13,8 @@ const {
 } = process.env;
 
 export default createConfig({
-  output: './.types',
-  contracts: ['./bridge-fungible-token'],
+  output: './scripts/types',
+  contracts: ['../fungible-token/bridge-fungible-token'],
   useBuiltinForc: true,
   useBuiltinFuelCore: false,
   privateKey: FUEL_PRIVATE_KEY,
