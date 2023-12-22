@@ -5,7 +5,8 @@
   "fixed": [["@fuel-bridge/*"]],
   "ignore": [
     "@fuel-bridge/integration-tests",
-    "@fuel-bridge/esbuild-bin-loader"
+    "@fuel-bridge/esbuild-bin-loader",
+    "@fuel-bridge/token-deployer"
   ],
   "linked": [],
   "access": "public",

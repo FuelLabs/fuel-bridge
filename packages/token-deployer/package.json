@@ -1,0 +1,27 @@
+{
+  "name": "@fuel-bridge/token-deployer",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Script to help deploy token contracts to fuel.",
+  "license": "APACHE-2.0",
+  "scripts": {
+    "deploy": "fuels deploy",
+    "register": "ts-node scripts/register-bridge.ts",
+    "relay": "ts-node scripts/relay-bridge-registration.ts"
+  },
+  "peerDependencies": {
+    "ethers": ">=5.7.2",
+    "fuels": "next"
+  },
+  "devDependencies": {
+    "@ethersproject/abi": "^5.7.0",
+    "@ethersproject/bytes": "^5.7.0",
+    "@ethersproject/providers": "^5.7.0",
+    "@fuel-bridge/fungible-token": "workspace:*",
+    "@fuel-bridge/solidity-contracts": "workspace:*",
+    "@fuel-bridge/test-utils": "workspace:*",
+    "dotenv": "^16.0.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
+  }
+}
