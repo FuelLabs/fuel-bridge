@@ -59,6 +59,16 @@ const config: HardhatUserConfig = {
           },
       deploy: ['deploy/beta5'],
     },
+    beta5devnet: {
+      url: RPC_URL,
+      accounts: CONTRACTS_DEPLOYER_KEY
+        ? [CONTRACTS_DEPLOYER_KEY]
+        : {
+            mnemonic:
+              'test test test test test test test test test test test junk',
+          },
+      deploy: ['deploy/beta5devnet'],
+    },
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
