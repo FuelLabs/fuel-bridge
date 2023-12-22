@@ -2,7 +2,7 @@ import { config as dotEnvConfig } from 'dotenv';
 import { providers, Wallet as ETHWallet } from 'ethers';
 import { Provider, Wallet } from 'fuels';
 
-import { FuelChainState__factory, FuelMessagePortalV2__factory } from '../../solidity-contracts/typechain';
+import { FuelChainState__factory, FuelMessagePortal__factory } from '../../solidity-contracts/typechain';
 
 import { BridgeFungibleTokenAbi__factory } from './types'
 import { bridgeFungibleToken } from './types/contract-ids.json'
@@ -27,7 +27,7 @@ export const getConfigs = async () => {
     const tknContract = BridgeFungibleTokenAbi__factory.connect(bridgeFungibleToken, wallet);
     const ethWallet = new ETHWallet(ETH_PRIVATE_KEY, ethProvider);
     const ethFuelChainState = FuelChainState__factory.connect(FUEL_CHAIN_ADDRESS, ethProvider);
-    const ethFuelMessagePortal = FuelMessagePortalV2__factory.connect(FUEL_MESSAGE_PORTAL_ADDRESS, ethWallet);
+    const ethFuelMessagePortal = FuelMessagePortal__factory.connect(FUEL_MESSAGE_PORTAL_ADDRESS, ethWallet);
     return {
         ethFuelChainState,
         ethFuelMessagePortal,

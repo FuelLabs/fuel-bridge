@@ -16,8 +16,8 @@ async function registerBridge() {
     const result = await tknContract.functions
         .register_bridge()
         .txParams({
-        gasPrice: minGasPrice,
-        gasLimit: bn(100_000),
+            gasPrice: minGasPrice,
+            gasLimit: bn(100_000),
         })
         .call();
     
