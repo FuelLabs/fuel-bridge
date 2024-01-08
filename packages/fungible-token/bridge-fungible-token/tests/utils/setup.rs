@@ -521,3 +521,25 @@ pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>
 
     (contract, config)
 }
+
+
+pub(crate) async fn get_bridged_asset_chain(
+    contract: &BridgeFungibleTokenContract<WalletUnlocked>,
+    asset_id: AssetId,
+) -> Option<String> {
+    let metadata = contract
+        .methods()
+        .metadata(asset_id, "bridged:chain".to_owned())
+        .call()
+        .await
+        .unwrap()
+        .value;
+
+    match metadata {
+        None => None,
+        Some(Metadata::String(metadata)) => {
+            Some(metadata)
+        },
+        _ => panic!("Unreachable")
+    }
+}
