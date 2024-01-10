@@ -58,6 +58,7 @@ const config: HardhatUserConfig = {
               'test test test test test test test test test test test junk',
           },
       deploy: ['deploy/beta5'],
+      chainId: 11155111,
     },
     beta5devnet: {
       url: RPC_URL,
@@ -68,6 +69,7 @@ const config: HardhatUserConfig = {
               'test test test test test test test test test test test junk',
           },
       deploy: ['deploy/beta5devnet'],
+      chainId: 11155111,
     },
   },
   etherscan: {
