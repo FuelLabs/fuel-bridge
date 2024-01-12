@@ -2,5 +2,8 @@
   "chain_state": 1702323171,
   "fuel_message_portal": 1702323195,
   "fuel_erc20_gateway_v2": 1703189978,
-  "fuel_erc721_gateway_v2": 1703189989
+  "fuel_erc721_gateway_v2": 1703189989,
+  "fuel_message_portal_v2_upgrade": 1704906890,
+  "fuel_erc20_gateway_V1": 1704906914,
+  "token": 1704906928
 }
