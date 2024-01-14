@@ -56,9 +56,12 @@ pub async fn build_contract_message_tx(
 
     for input in inputs {
         match input {
-            Input::ResourcePredicate { resource: CoinType::Coin(coin), .. } => {
+            Input::ResourcePredicate {
+                resource: CoinType::Coin(coin),
+                ..
+            } => {
                 change.insert(coin.asset_id, coin.owner.clone());
-            },
+            }
             Input::Contract { .. } => {
                 let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,

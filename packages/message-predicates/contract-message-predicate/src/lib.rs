@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn snapshot_predicate_bytecode() {
         let bytecode = predicate_bytecode();
-        let serialized = hex::encode(&bytecode);
+        let serialized = hex::encode(bytecode);
         insta::assert_snapshot!(serialized);
     }
 
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn snapshot_script_bytecode() {
         let bytecode = script_bytecode();
-        let serialized = hex::encode(&bytecode);
+        let serialized = hex::encode(bytecode);
         insta::assert_snapshot!(serialized);
     }
 }
