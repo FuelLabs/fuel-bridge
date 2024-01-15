@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 
-// use fuel_tx::{Address, AssetId, Output};
 use fuel_core_types::{
     fuel_tx::Output,
     fuel_types::{Address, AssetId, Bytes32},
