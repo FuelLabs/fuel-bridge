@@ -22,10 +22,12 @@ fn test_b256_from() {
 
     // Alternatively, compare each field of the U256
     assert_eq(u256::from(min), u256::min());
-    assert_eq(u256::from(middle), 0x000000000000000000000000000000000000000000000000000000000000000a_u256);
+    assert_eq(
+        u256::from(middle),
+        0x000000000000000000000000000000000000000000000000000000000000000a_u256,
+    );
     assert_eq(u256::from(max), u256::max());
 }
-
 
 #[test]
 fn test_b256_into() {
