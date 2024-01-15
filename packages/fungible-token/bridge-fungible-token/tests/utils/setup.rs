@@ -291,7 +291,7 @@ pub(crate) async fn relay_message_to_contract(
         .await
         .unwrap()
         .iter()
-        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
+        .map(|coin| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(coin.clone())))
         .collect();
 
     let tx = builder::build_contract_message_tx(
