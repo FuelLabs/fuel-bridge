@@ -43,6 +43,8 @@ fn test_b256_into() {
     let max_into_b256: b256 = max.into();
 
     assert(min_into_b256 == b256::min());
-    assert(middle_into_b256 == 0x000000000000000000000000000000000000000000000000000000000000000a);
+    assert(
+        middle_into_b256 == 0x000000000000000000000000000000000000000000000000000000000000000a,
+    );
     assert(max_into_b256 == b256::max());
 }
