@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euo
 
-RETRIES=${RETRIES:-160}
+RETRIES=${RETRIES:-90}
 JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
 FUEL_DB_PATH=./mnt/db/
 
