@@ -2,7 +2,7 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
-    default: 1.74.1
+    default: 1.75.0
 
 runs:
   using: 'composite'
