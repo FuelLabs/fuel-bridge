@@ -13,22 +13,18 @@ impl From<b256> for u256 {
     }
 }
 
-// Weird sway / rust sdk bug does not allow to compile the contract, when enabling this test,
-// with error <<missing u256 type>>, 
-// Disabling for now as it is not too important, it is just a wrapper for b256.as_u256()
+#[test]
+fn test_b256_from() {
+    // Test the boundary conditions: min, middle, max
+    let min = b256::min();
+    let middle = 0x000000000000000000000000000000000000000000000000000000000000000a;
+    let max = b256::max();
 
-// #[test]
-// fn test_b256_from() {
-//     // Test the boundary conditions: min, middle, max
-//     let min = b256::min();
-//     let middle = 0x000000000000000000000000000000000000000000000000000000000000000a;
-//     let max = b256::max();
-
-//     // Alternatively, compare each field of the U256
-//     assert_eq(u256::from(min), u256::min());
-//     assert_eq(u256::from(middle), 0x000000000000000000000000000000000000000000000000000000000000000a_u256);
-//     assert_eq(u256::from(max), u256::max());
-// }
+    // Alternatively, compare each field of the U256
+    assert_eq(u256::from(min), u256::min());
+    assert_eq(u256::from(middle), 0x000000000000000000000000000000000000000000000000000000000000000a_u256);
+    assert_eq(u256::from(max), u256::max());
+}
 
 
 #[test]
