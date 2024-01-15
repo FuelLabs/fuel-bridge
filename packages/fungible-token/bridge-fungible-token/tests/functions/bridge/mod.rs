@@ -215,8 +215,6 @@ mod success {
             .expect("Could not obtain transaction status")
             .take_receipts();
 
-        dbg!(&receipts);
-
         let refund_registered_event = bridge
             .log_decoder()
             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
@@ -448,16 +446,6 @@ mod success {
             utxo_inputs.contract,
         )
         .await;
-
-        let receipts = provider.tx_status(&_tx_id).await.unwrap().take_receipts();
-
-        dbg!(&receipts);
-
-        for receipt in receipts {
-            if let Receipt::LogData { data, .. } = receipt {
-                dbg!(hex::encode(data.unwrap()));
-            }
-        }
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;

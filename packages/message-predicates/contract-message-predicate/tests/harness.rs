@@ -241,7 +241,6 @@ mod fail {
             .expect("Transaction failed");
 
         let receipts = provider.tx_status(&tx_id).await.unwrap().take_receipts();
-        dbg!(&receipts);
 
         let panic_receipt = receipts
             .iter()
