@@ -32,7 +32,7 @@ const TOKEN_AMOUNT = '10';
   // on the Ethereum chain for interacting with the Fuel chain
   console.log('Setting up environment...');
   const env: TestEnvironment = await setupEnvironment({});
-  const ethAcct = env.eth.signers[1];
+  const ethAcct = env.eth.signers[0];
   const ethAcctAddr = await ethAcct.getAddress();
   const fuelAcct = env.fuel.signers[1];
   const fuelAcctAddr = fuelAcct.address.toHexString();
