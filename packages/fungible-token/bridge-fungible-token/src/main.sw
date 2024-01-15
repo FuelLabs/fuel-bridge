@@ -331,7 +331,7 @@ fn register_refund(
 ) {
     let asset = sha256((token_address, token_id));
 
-    let previous_amount: u256 = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256).as_u256();
+    let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256).as_u256();
     let new_amount: b256 = (amount.as_u256() + previous_amount).into();
 
     storage.refund_amounts.get(from).insert(asset, new_amount);
