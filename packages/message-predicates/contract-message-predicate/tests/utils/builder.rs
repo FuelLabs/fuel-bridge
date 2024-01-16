@@ -1,14 +1,20 @@
 use std::collections::HashMap;
 
-use fuel_tx::{Address, AssetId, Output};
+use fuel_core_types::{
+    fuel_tx::Output,
+    fuel_types::{Address, AssetId, Bytes32},
+};
+
+use fuel_tx::output::contract::Contract;
 use fuels::{
-    accounts::{fuel_crypto::fuel_types::Word, wallet::WalletUnlocked, Signer},
-    prelude::{ScriptTransaction, TxParameters},
-    tx::Bytes32,
+    accounts::{fuel_crypto::fuel_types::Word, wallet::WalletUnlocked, Signer, ViewOnlyAccount},
+    prelude::{ScriptTransaction, TxPolicies},
     types::{
         coin_type::CoinType,
         input::Input,
-        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder},
+        transaction_builders::{
+            BuildableTransaction, NetworkInfo, ScriptTransactionBuilder, TransactionBuilder,
+        },
     },
 };
 
@@ -18,31 +24,53 @@ pub async fn build_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    params: TxParameters,
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     // Get the script and predicate for contract messages
     let script_bytecode = fuel_contract_message_predicate::script_bytecode();
+    let provider = wallet.provider().expect("Needs provider");
     // Start building list of inputs and outputs
     let mut tx_outputs: Vec<Output> = outputs.to_vec();
     let mut tx_inputs: Vec<Input> = vec![message];
     // Loop through inputs and add to lists
     let mut change = HashMap::new();
+
+    let fetched_gas_coins: Vec<Input> = provider
+        .get_coins(wallet.address(), Default::default())
+        .await
+        .unwrap()
+        .iter()
+        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
+        .collect();
+
+    let funding_utx0 = fetched_gas_coins.first().unwrap().to_owned();
+
+    tx_inputs.push(funding_utx0.clone());
+    tx_outputs.push(Output::Change {
+        to: wallet.address().into(),
+        amount: funding_utx0.amount().unwrap_or_default(),
+        asset_id: funding_utx0.asset_id().unwrap_or_default(),
+    });
+
     for input in inputs {
         match input {
-            Input::ResourceSigned { resource, .. } | Input::ResourcePredicate { resource, .. } => {
-                if let CoinType::Coin(coin) = resource {
-                    change.insert(coin.asset_id, coin.owner.clone());
-                }
+            Input::ResourcePredicate {
+                resource: CoinType::Coin(coin),
+                ..
+            } => {
+                change.insert(coin.asset_id, coin.owner.clone());
             }
             Input::Contract { .. } => {
-                tx_outputs.push(Output::Contract {
+                let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
                     state_root: Bytes32::zeroed(),
-                });
+                };
+
+                tx_outputs.push(Output::Contract(contract_output));
             }
+            _ => {}
         }
         tx_inputs.push(input.clone());
     }
@@ -60,15 +88,17 @@ pub async fn build_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
+
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
-        .with_tx_params(params)
+        .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
     wallet.sign_transaction(&mut builder);
 
-    builder.build().unwrap()
+    builder.build(provider).await.unwrap()
 }
 
 /// Build a message-to-contract transaction with the given input coins and outputs, but invalid script bytecode
@@ -77,16 +107,27 @@ pub async fn build_invalid_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    params: TxParameters,
     network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     let invalid_script_bytecode = vec![0u8, 1u8, 2u8, 3u8];
+    let provider = wallet.provider().expect("Needs provider");
     // Start building list of inputs and outputs
     let mut tx_outputs: Vec<Output> = outputs.to_vec();
     let mut tx_inputs: Vec<Input> = vec![message];
     // Loop through inputs and add to lists
     let mut change = HashMap::new();
+
+    let mut fetched_gas_coins: Vec<Input> = provider
+        .get_coins(wallet.address(), Default::default())
+        .await
+        .unwrap()
+        .iter()
+        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
+        .collect();
+
+    tx_inputs.append(&mut fetched_gas_coins);
+
     for input in inputs {
         match input {
             Input::ResourceSigned { resource, .. } | Input::ResourcePredicate { resource, .. } => {
@@ -95,11 +136,13 @@ pub async fn build_invalid_contract_message_tx(
                 }
             }
             Input::Contract { .. } => {
-                tx_outputs.push(Output::Contract {
+                let contract_output = Contract {
                     input_index: tx_inputs.len() as u8,
                     balance_root: Bytes32::zeroed(),
                     state_root: Bytes32::zeroed(),
-                });
+                };
+
+                tx_outputs.push(Output::Contract(contract_output));
             }
         }
         tx_inputs.push(input.clone());
@@ -118,13 +161,14 @@ pub async fn build_invalid_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
     let mut builder = ScriptTransactionBuilder::new(network_info)
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
-        .with_tx_params(params)
+        .with_tx_policies(tx_policies)
         .with_script(invalid_script_bytecode);
 
     wallet.sign_transaction(&mut builder);
 
-    builder.build().unwrap()
+    builder.build(provider).await.unwrap()
 }

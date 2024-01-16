@@ -18,6 +18,7 @@ import {
   waitForBlockFinalization,
   getTokenId,
   getBlock,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import { Address, BN, TransactionStatus } from 'fuels';
@@ -31,7 +32,7 @@ const TOKEN_AMOUNT = '10';
   // on the Ethereum chain for interacting with the Fuel chain
   console.log('Setting up environment...');
   const env: TestEnvironment = await setupEnvironment({});
-  const ethAcct = env.eth.signers[1];
+  const ethAcct = env.eth.signers[0];
   const ethAcctAddr = await ethAcct.getAddress();
   const fuelAcct = env.fuel.signers[1];
   const fuelAcctAddr = fuelAcct.address.toHexString();
@@ -143,13 +144,13 @@ const TOKEN_AMOUNT = '10';
   const paddedAddress = '0x' + ethAcctAddr.slice(2).padStart(64, '0');
   const scope = fuelTestToken.functions
     .withdraw(paddedAddress)
+    .txParams(FUEL_CALL_TX_PARAMS)
     .callParams({
       forward: {
         amount: fuels_parseToken(TOKEN_AMOUNT, 9),
         assetId: fuelTestTokenId,
       },
-    })
-    .txParams(FUEL_TX_PARAMS);
+    });
   const fWithdrawTx = await scope.call();
   const fWithdrawTxResult = fWithdrawTx.transactionResult;
   if (fWithdrawTxResult.status !== TransactionStatus.success) {
@@ -174,7 +175,7 @@ const TOKEN_AMOUNT = '10';
   console.log('Get message proof on Fuel...');
   const withdrawMessageProof = await fuelAcct.provider.getMessageProof(
     fWithdrawTxResult.id,
-    messageOutReceipt.messageId,
+    messageOutReceipt.nonce,
     commitHashAtL1
   );
 

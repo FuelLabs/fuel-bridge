@@ -1,7 +1,7 @@
 use crate::utils::setup::{get_asset_id, BridgeFungibleTokenContract};
 use fuels::{
     accounts::wallet::WalletUnlocked,
-    prelude::{CallParameters, TxParameters},
+    prelude::{CallParameters, TxPolicies},
     programs::call_response::FuelCallResponse,
     types::Bits256,
 };
@@ -26,7 +26,7 @@ pub(crate) async fn withdraw(
     amount: u64,
     gas: u64,
 ) -> FuelCallResponse<()> {
-    let tx_params = TxParameters::new(Some(0), Some(gas), 0);
+    let tx_policies = TxPolicies::new(Some(0), None, Some(0), None, Some(gas));
     let contract_id = contract.contract_id();
     let asset_id = get_asset_id(contract_id);
     let call_params = CallParameters::new(amount, asset_id, gas);
@@ -34,7 +34,7 @@ pub(crate) async fn withdraw(
     contract
         .methods()
         .withdraw(to)
-        .tx_params(tx_params)
+        .with_tx_policies(tx_policies)
         .call_params(call_params)
         .expect("Call param Error")
         .call()

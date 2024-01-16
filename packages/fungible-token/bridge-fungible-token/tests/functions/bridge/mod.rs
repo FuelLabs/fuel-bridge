@@ -47,7 +47,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -57,12 +57,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -80,7 +81,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -186,7 +187,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -196,12 +197,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -219,7 +221,7 @@ mod success {
             .unwrap();
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -312,7 +314,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -322,12 +324,13 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
@@ -348,7 +351,7 @@ mod success {
         }
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         let expected_deposited_amount = config.fuel_equivalent_amount(config.amount.max);
@@ -424,7 +427,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -434,17 +437,18 @@ mod success {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -565,7 +569,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, utxo_inputs, provider) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -575,17 +579,18 @@ mod revert {
         )
         .await;
 
+        let provider = wallet.provider().expect("Needs provider");
+
         // Relay the test message to the bridge contract
         let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 
         let asset_balance =
-            contract_balance(&provider, bridge.contract_id(), AssetId::default()).await;
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
 
         // Verify the message value was received by the bridge contract
@@ -626,7 +631,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, _, _) = setup_environment(
+        let (bridge, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -635,7 +640,7 @@ mod revert {
             configurables,
         )
         .await;
-        
+
         bridge
             .methods()
             .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
@@ -670,7 +675,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, utxo_inputs, _) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -685,7 +690,6 @@ mod revert {
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
-            &utxo_inputs.coin[..],
         )
         .await;
 

@@ -1,4 +1,4 @@
-use fuel_tx::{ConsensusParameters, Input};
+use fuel_tx::Input;
 
 pub const SCRIPT_HASH: &[u8] = include_bytes!(concat!(
     env!("CARGO_MANIFEST_DIR"),
@@ -35,8 +35,8 @@ pub fn script_hash() -> [u8; 32] {
 }
 
 // Gets the root of the message-to-contract predicate
-pub fn predicate_root(cparams: &ConsensusParameters) -> [u8; 32] {
-    let root = Input::predicate_owner(PREDICATE_BYTECODE, &cparams.chain_id);
+pub fn predicate_root() -> [u8; 32] {
+    let root = Input::predicate_owner(PREDICATE_BYTECODE);
     root.into()
 }
 
@@ -48,7 +48,7 @@ mod tests {
     #[test]
     fn snapshot_predicate_bytecode() {
         let bytecode = predicate_bytecode();
-        let serialized = hex::encode(&bytecode);
+        let serialized = hex::encode(bytecode);
         insta::assert_snapshot!(serialized);
     }
 
@@ -56,7 +56,7 @@ mod tests {
     #[test]
     fn snapshot_script_bytecode() {
         let bytecode = script_bytecode();
-        let serialized = hex::encode(&bytecode);
+        let serialized = hex::encode(bytecode);
         insta::assert_snapshot!(serialized);
     }
 }

@@ -7,13 +7,18 @@ import {
   fuels_parseEther,
   getMessageOutReceipt,
   FUEL_MESSAGE_TIMEOUT_MS,
-  FUEL_TX_PARAMS,
   waitForBlockCommit,
   waitForBlockFinalization,
   getBlock,
+  FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import { parseEther } from 'ethers/lib/utils';
-import { Address, BN, TransactionStatus } from 'fuels';
+import {
+  Address,
+  BN,
+  TransactionStatus,
+  padFirst12BytesOfEvmAddress,
+} from 'fuels';
 
 const ETH_AMOUNT = '0.1';
 
@@ -80,9 +85,9 @@ const ETH_AMOUNT = '0.1';
   // withdraw ETH back to the base chain
   console.log(`Sending ${ETH_AMOUNT} ETH from Fuel...`);
   const fWithdrawTx = await fuelAccount.withdrawToBaseLayer(
-    Address.fromString(ethereumAccountAddress),
+    Address.fromString(padFirst12BytesOfEvmAddress(ethereumAccountAddress)),
     fuels_parseEther(ETH_AMOUNT),
-    FUEL_TX_PARAMS
+    FUEL_CALL_TX_PARAMS
   );
   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
   if (fWithdrawTxResult.status !== TransactionStatus.success) {
@@ -107,7 +112,7 @@ const ETH_AMOUNT = '0.1';
   console.log('Get message proof on Fuel...');
   const withdrawMessageProof = await fuelAccount.provider.getMessageProof(
     fWithdrawTxResult.id,
-    messageOutReceipt.messageId,
+    messageOutReceipt.nonce,
     commitHashAtL1
   );
 

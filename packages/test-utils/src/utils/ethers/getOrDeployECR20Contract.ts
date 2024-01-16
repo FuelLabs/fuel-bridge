@@ -11,7 +11,7 @@ export async function getOrDeployECR20Contract(env: TestEnvironment) {
   debug('Setting up environment...');
   const ethDeployer = env.eth.deployer;
   const ethDeployerAddr = await ethDeployer.getAddress();
-  const ethAcct = env.eth.signers[1];
+  const ethAcct = env.eth.signers[0];
 
   // load ERC20 contract
   let ethTestToken: Token = null;

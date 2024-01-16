@@ -12,10 +12,11 @@
     "./dist"
   ],
   "scripts": {
-    "build": "tsup"
+    "build": "tsup",
+    "build:watch": "tsup --watch"
   },
   "peerDependencies": {
-    "fuels": ">=0.63.0",
+    "fuels": "0.70.1",
     "ethers": ">=5.7.2"
   },
   "devDependencies": {

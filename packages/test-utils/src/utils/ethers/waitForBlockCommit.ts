@@ -37,6 +37,15 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
 
   // If not commited, wait for TIMOUT_RETRY seconds and try again
   if (!isCommited) {
+    const { name } = await env.fuel.provider.fetchChain();
+
+    // If the chain is a local testnet, speed up the process
+    // by trying to produce blocks and reach the desired height quickly
+    if (name === 'local_testnet') {
+      await env.fuel.provider
+        .produceBlocks(Number(blocksPerCommitInterval))
+        .catch(); // If the request fails it is probably because --debug was not enabled
+    }
     debug(`Block is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`);
     await delay(RETRY_DELAY);
     return waitForBlockCommit(env, height);

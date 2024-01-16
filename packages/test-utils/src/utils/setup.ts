@@ -162,7 +162,7 @@ export async function setupEnvironment(
   }
   const eth_deployer = new ethers.Wallet(pk_eth_deployer, eth_provider);
   const eth_deployerBalance = await eth_deployer.getBalance();
-  if (eth_deployerBalance < ethers.utils.parseEther('5')) {
+  if (eth_deployerBalance.lt(ethers.utils.parseEther('5'))) {
     throw new Error(
       'Ethereum deployer balance is very low (' +
         ethers.utils.formatEther(eth_deployerBalance) +
@@ -171,7 +171,7 @@ export async function setupEnvironment(
   }
   const eth_signer1 = new ethers.Wallet(pk_eth_signer1, eth_provider);
   const eth_signer1Balance = await eth_signer1.getBalance();
-  if (eth_signer1Balance < ethers.utils.parseEther('1')) {
+  if (eth_signer1Balance.lt(ethers.utils.parseEther('1'))) {
     const tx = await eth_deployer.sendTransaction({
       to: await eth_signer1.getAddress(),
       value: ethers.utils.parseEther('1'),
@@ -180,7 +180,7 @@ export async function setupEnvironment(
   }
   const eth_signer2 = new ethers.Wallet(pk_eth_signer2, eth_provider);
   const eth_signer2Balance = await eth_signer2.getBalance();
-  if (eth_signer2Balance < ethers.utils.parseEther('1')) {
+  if (eth_signer2Balance.lt(ethers.utils.parseEther('1'))) {
     const tx = await eth_deployer.sendTransaction({
       to: await eth_signer2.getAddress(),
       value: ethers.utils.parseEther('1'),

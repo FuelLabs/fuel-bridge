@@ -1,6 +1,7 @@
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { Contract } from 'fuels';
 
+import { FUEL_CALL_TX_PARAMS } from './constants';
 import type { TestEnvironment } from './setup';
 
 export async function validateFundgibleContracts(
@@ -11,7 +12,12 @@ export async function validateFundgibleContracts(
   const ethTestTokenAddress = ethTestToken.address;
 
   const l1Decimals = parseInt(
-    (await fuelTestToken.functions.bridged_token_decimals().dryRun()).value
+    (
+      await fuelTestToken.functions
+        .bridged_token_decimals()
+        .txParams(FUEL_CALL_TX_PARAMS)
+        .dryRun()
+    ).value
   );
   const expectedL1Decimals = parseInt(String(await ethTestToken.decimals()));
   if (l1Decimals != expectedL1Decimals) {
@@ -24,9 +30,12 @@ export async function validateFundgibleContracts(
   }
   const l1Token =
     '0x' +
-    (await fuelTestToken.functions.bridged_token().dryRun()).value.substring(
-      26
-    );
+    (
+      await fuelTestToken.functions
+        .bridged_token()
+        .txParams(FUEL_CALL_TX_PARAMS)
+        .dryRun()
+    ).value.substring(26);
   if (l1Token.toLowerCase() != ethTestTokenAddress.toLowerCase()) {
     throw new Error(
       [
@@ -38,7 +47,10 @@ export async function validateFundgibleContracts(
   const l1Gateway =
     '0x' +
     (
-      await fuelTestToken.functions.bridged_token_gateway().dryRun()
+      await fuelTestToken.functions
+        .bridged_token_gateway()
+        .txParams(FUEL_CALL_TX_PARAMS)
+        .dryRun()
     ).value.substring(26);
   if (
     l1Gateway.toLowerCase() != env.eth.fuelERC20Gateway.address.toLowerCase()

@@ -8,8 +8,8 @@ This project includes both frontend and contracts. To begin, install dependencie
 - [PNPM v8.6.6 or latest stable](https://pnpm.io/installation/)
 - [Docker v20.0.21 or latest stable](https://docs.docker.com/get-docker/)
 - [Docker Compose v2.15.1 or latest stable](https://docs.docker.com/get-docker/)
-- [Rust v1.72.0 or latest `stable`](https://www.rust-lang.org/tools/install)
-- [Forc v0.44.1 with latest toolchain](https://install.fuel.network/latest)
+- [Rust v1.74.1 or latest `stable`](https://www.rust-lang.org/tools/install)
+- [Forc v0.48.1 with latest toolchain](https://install.fuel.network/latest)
 
 ## Running Project Locally
 
