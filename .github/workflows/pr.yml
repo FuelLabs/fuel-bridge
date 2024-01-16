@@ -60,6 +60,9 @@ jobs:
       - name: Test projects
         run: pnpm test
 
+      - name: Run Clippy
+        run: cargo clippy --all-features --all-targets -- -D warnings
+        
       # TODO issue 115: https://github.com/FuelLabs/fuel-bridge/issues/115
       # Run test again to ensure it works with node that already has transactions/messages
       # - name: Test projects Again
