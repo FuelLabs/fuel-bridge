@@ -1,7 +1,5 @@
 # List of current deployments
 
-Cross check with the folder `/deployments` for up to date values!
-
 ## Beta 5 Production
 
 ```
