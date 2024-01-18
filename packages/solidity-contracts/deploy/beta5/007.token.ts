@@ -2,7 +2,7 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 /**
- * @description Deployed just for testing purposes
+ * @description Deployed for testing purposes
  */
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
