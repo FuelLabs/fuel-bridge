@@ -4,7 +4,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import { FuelERC20Gateway__factory as FuelERC20GatewayV1 } from '../../typechain';
 
 /**
- * @description this is deployed just for testing purposes, V1 is a version that
+ * @description this is deployed for testing purposes, V1 is a version that
  * does not validate the correctness of the target fuel contract for deposits
  */
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
