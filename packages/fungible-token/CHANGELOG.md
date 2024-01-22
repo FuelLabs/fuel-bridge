@@ -1,5 +1,14 @@
 # @fuel-bridge/fungible-token
 
+## 0.4.0
+
+### Minor Changes
+
+- Update to fuel-core 0.22.0 (beta-5), by [@LuizAsFight](https://github.com/LuizAsFight) (See [#106](https://github.com/FuelLabs/fuel-bridge/pull/106))
+- Replace FRC20 with SRC20, by [@DefiCake](https://github.com/DefiCake) (See [#102](https://github.com/FuelLabs/fuel-bridge/pull/102))
+- Use sway 0.48.1 and migrate from U256 to u256, by [@LuizAsFight](https://github.com/LuizAsFight) (See [#106](https://github.com/FuelLabs/fuel-bridge/pull/106))
+- Bumped fuels to 0.50.1, by [@DefiCake](https://github.com/DefiCake) (See [#95](https://github.com/FuelLabs/fuel-bridge/pull/95))
+
 ## 0.3.0
 
 ### Minor Changes
