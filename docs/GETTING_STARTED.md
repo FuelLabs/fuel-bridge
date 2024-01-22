@@ -9,7 +9,7 @@ This project includes both frontend and contracts. To begin, install dependencie
 - [Docker v20.0.21 or latest stable](https://docs.docker.com/get-docker/)
 - [Docker Compose v2.15.1 or latest stable](https://docs.docker.com/get-docker/)
 - [Rust v1.74.1 or latest `stable`](https://www.rust-lang.org/tools/install)
-- [Forc v0.48.1 with latest toolchain](https://install.fuel.network/latest)
+- [Forc v0.49.1 with latest toolchain](https://install.fuel.network/latest)
 
 ## Running Project Locally
 

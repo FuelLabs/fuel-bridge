@@ -30,7 +30,7 @@ use std::{
     inputs::input_message_sender,
     message::send_message,
     string::String,
-    token::{
+    asset::{
         burn,
         mint,
         transfer,
