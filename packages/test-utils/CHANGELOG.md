@@ -1,5 +1,15 @@
 # @fuel-bridge/test-utils
 
+## 0.4.0
+
+### Minor Changes
+
+- Update to fuel-core 0.22.0 (beta-5), by [@LuizAsFight](https://github.com/LuizAsFight) (See [#106](https://github.com/FuelLabs/fuel-bridge/pull/106))
+
+### Patch Changes
+
+- ✨ feat: update fuels-ts to 0.71.1, by [@LuizAsFight](https://github.com/LuizAsFight) (See [#118](https://github.com/FuelLabs/fuel-bridge/pull/118))
+
 ## 0.3.0
 
 ### Minor Changes
