@@ -1,6 +1,6 @@
 #!/bin/bash
 
-pnpm fuels-forc fmt
+pnpm forc fmt
 cargo fmt
 pnpm lint:fix
 pnpm prettier:format
