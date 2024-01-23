@@ -31,7 +31,7 @@ abi VerifyMessageData {
 // TODO: remove once an [into(self) -> u64] is added for the Bytes type
 fn into_u64(b: Bytes) -> u64 {
     asm(ptr: b.buf.ptr, r0) {
-        lw   r0 ptr i0;
+        lw r0 ptr i0;
         r0: u64
     }
 }

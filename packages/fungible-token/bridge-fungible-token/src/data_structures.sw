@@ -38,12 +38,9 @@ impl MessageData {
         };
 
         // TODO: Bug, have to mutate this struct for these values or tests fail
-        msg_data.amount = input_message_data(msg_idx, OFFSET_AMOUNT)
-            .into();
-        msg_data.from = input_message_data(msg_idx, OFFSET_FROM)
-            .into();
-        msg_data.token_id = input_message_data(msg_idx, OFFSET_TOKEN_ID)
-            .into();
+        msg_data.amount = input_message_data(msg_idx, OFFSET_AMOUNT).into();
+        msg_data.from = input_message_data(msg_idx, OFFSET_FROM).into();
+        msg_data.token_id = input_message_data(msg_idx, OFFSET_TOKEN_ID).into();
         let to: b256 = input_message_data(msg_idx, OFFSET_TO).into();
 
         if msg_data.len > ADDRESS_DEPOSIT_DATA_LEN {

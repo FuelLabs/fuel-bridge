@@ -15,6 +15,11 @@ use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEv
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
+    asset::{
+        burn,
+        mint,
+        transfer,
+    },
     call_frames::{
         contract_id,
         msg_asset_id,
@@ -30,11 +35,6 @@ use std::{
     inputs::input_message_sender,
     message::send_message,
     string::String,
-    asset::{
-        burn,
-        mint,
-        transfer,
-    },
 };
 use utils::{
     adjust_deposit_decimals,
@@ -49,9 +49,7 @@ configurable {
     BRIDGED_TOKEN_DECIMALS: u8 = 18u8,
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
     BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
-    NAME: str[64] = __to_str_array(
-        "MY_TOKEN                                                        ",
-    ),
+    NAME: str[64] = __to_str_array("MY_TOKEN                                                        "),
     SYMBOL: str[32] = __to_str_array("MYTKN                           "),
 }
 
@@ -157,8 +155,7 @@ impl MessageReceiver for Contract {
                 // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
                 // If msg_data.len is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, 
                 // we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
-                match message_data
-                    .len {
+                match message_data.len {
                     ADDRESS_DEPOSIT_DATA_LEN => {
                         transfer(message_data.to, asset_id, amount);
                     },
