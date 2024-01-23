@@ -3,6 +3,8 @@ name: 'Rust & Forc Setup'
 inputs:
   rust-version:
     default: 1.75.0
+  forc-components:
+    default: 'forc@0.49.1, fuel-core@0.22.0'
 
 runs:
   using: 'composite'
@@ -15,3 +17,9 @@ runs:
 
     - name: Init cache
       uses: Swatinem/rust-cache@v2
+    
+    - name: Install Fuel toolchain
+      uses: FuelLabs/action-fuel-toolchain@v0.6.0
+      with:
+        name: fuel-bridge
+        components: ${{ inputs.forc-components }}
