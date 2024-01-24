@@ -1,0 +1,69 @@
+[package]
+name = "prover-core"
+version = { workspace = true }
+authors = { workspace = true }
+edition = { workspace = true }
+homepage = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+rust-version = { workspace = true }
+publish = false
+
+[dependencies]
+anyhow = "1.0.75"
+bech32 = "0.9.0"
+bonsai-sdk = { workspace = true }
+bonsai-ethereum-relay = { workspace = true }
+derive_more = { version = "0.99" }
+enum-iterator = "1.2"
+ethabi = { workspace = true }
+fuel-core = { version = "0.22.0", default-features = false }
+fuel-core-chain-config = { version = "0.22.0", default-features = false }
+fuel-core-database = { version = "0.22.0", default-features = false }
+fuel-core-executor = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-importer = { version = "0.22.0", default-features = false }
+fuel-core-poa = { version = "0.22.0", default-features = false }
+fuel-core-services = { version = "0.22.0", default-features = false }
+fuel-core-storage = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-types = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-txpool = { version = "0.22.0", default-features = false }
+fuel-crypto = { version = "0.43.1",  default-features = false}
+fuel-storage = { version = "0.43.1",  default-features = false}
+fuel-tx = { version = "0.43.1", default-features = false, features = ["builder"]}
+fuel-types = { version = "0.43.1",  default-features = false}
+fuel-vm = { version = "0.43.1",  default-features = false, features = ["serde", "alloc"]}
+itertools = "0.10"
+primitive-types = "0.12"
+risc0-build = { workspace = true }
+risc0-zkvm = { workspace = true, default-features = false }
+parking_lot = "0.12"
+postcard = "1.0"
+serde = {version = "1.0.188", default-features = false}
+serde_json = "1.0.104"
+serde_with = "1.11"
+sha2 = { workspace = true }
+strum = "0.24"
+strum_macros = "0.24"
+thiserror = "1.0"
+tokio = { version = "1.19", features = ["full", "sync"] }
+
+[patch.crates-io]
+
+# Fuel core patches
+fuel-core = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-chain-config = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-database = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-executor = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-importer = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-poa = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-services = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-storage = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-types = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+fuel-core-txpool = { git = "https://github.com/FuelLabs/fuel-core", rev="88ede4261047d771b279665dde3811adb09f8bcf" }
+
+# Fuel VM patches
+fuel-crypto = { git = "https://github.com/FuelLabs/fuel-vm", rev = "917ea7c38e5dc34e735295a7e47af3308011be26" }
+fuel-storage = { git = "https://github.com/FuelLabs/fuel-vm", rev = "917ea7c38e5dc34e735295a7e47af3308011be26" }
+fuel-tx = { git = "https://github.com/FuelLabs/fuel-vm", rev = "917ea7c38e5dc34e735295a7e47af3308011be26" }
+fuel-types = { git = "https://github.com/FuelLabs/fuel-vm", rev = "917ea7c38e5dc34e735295a7e47af3308011be26" }
+fuel-vm = { git = "https://github.com/FuelLabs/fuel-vm", rev = "917ea7c38e5dc34e735295a7e47af3308011be26" }
