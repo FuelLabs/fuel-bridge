@@ -19,7 +19,7 @@ The message to contract predicate relies on a script that performs only the foll
 Build:
 
 ```sh
-pnpm fuels-forc build
+pnpm forc build
 cargo run
 ```
 
@@ -34,7 +34,7 @@ cargo test
 Code must be formatted.
 
 ```sh
-pnpm fuels-forc fmt
+pnpm forc fmt
 cargo fmt
 ```
 

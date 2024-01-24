@@ -1,5 +1,5 @@
-import { hexlify } from 'fuels';
 import { readFileSync } from 'fs';
+import { hexlify } from 'fuels';
 
 export const esbuildBinLoader = {
   name: 'bin-loader',

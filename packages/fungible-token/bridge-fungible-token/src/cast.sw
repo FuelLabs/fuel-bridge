@@ -8,7 +8,9 @@ impl From<b256> for u256 {
     }
 
     fn into(self) -> b256 {
-        let result: b256 = asm(r1: self) { r1: b256 };
+        let result: b256 = asm(r1: self) {
+            r1: b256
+        };
         result
     }
 }

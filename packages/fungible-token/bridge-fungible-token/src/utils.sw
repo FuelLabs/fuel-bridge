@@ -42,7 +42,9 @@ pub fn adjust_withdrawal_decimals(
         value
     };
 
-    let result: b256 = asm(r1: adjusted) { r1: b256 };
+    let result: b256 = asm(r1: adjusted) {
+        r1: b256
+    };
     Result::Ok(result)
 }
 
@@ -71,7 +73,9 @@ pub fn adjust_deposit_decimals(
         value
     };
 
-    let (word1, word2, word3, word4) = asm(r1: adjusted.as_b256()) { r1: (u64, u64, u64, u64) };
+    let (word1, word2, word3, word4) = asm(r1: adjusted.as_b256()) {
+        r1: (u64, u64, u64, u64)
+    };
 
     if word1 == 0 && word2 == 0 && word3 == 0 {
         Result::Ok(word4)
@@ -138,7 +142,9 @@ fn shift_decimals_left(bn: u256, decimals: u8) -> Result<u256, BridgeFungibleTok
 
 fn shift_decimals_right(bn: u256, decimals: u8) -> Result<u256, BridgeFungibleTokenError> {
     let mut bn_clone = bn;
-    let mut decimals_to_shift: u32 = asm(r1: decimals) { r1: u32 };
+    let mut decimals_to_shift: u32 = asm(r1: decimals) {
+        r1: u32
+    };
 
     // the zero case
     if (decimals_to_shift == 0u32) {
