@@ -5,6 +5,7 @@ members = [
     "packages/fungible-token/bridge-fungible-token",
     "packages/risc0/core",
     "packages/risc0/host",
+    "packages/risc0/test",
     "packages/risc0/methods/guest"
 ]
 
@@ -34,11 +35,13 @@ fuel-core-types = { version = "0.22.0", default-features = false }
 fuels = { version = "0.54.0", features = ["fuel-core-lib"] }
 
 # Third-party dependencies
+anyhow = "1.0.75"
 tokio = { version = "1.32.0", features = ["rt", "macros", "full", "sync"] }
 hex = "0.4.3"
+serde = {version = "1.0.188", default-features = false}
+serde_json = "1.0.104"
 
 # Dependendencies from risc0
-
 bonsai-sdk = { git = "https://github.com/risc0/risc0", rev = "1742ef8098d246871055501a0559811c9a8fece4" }
 bonsai-ethereum-relay = { git = "https://github.com/risc0/risc0", rev = "1742ef8098d246871055501a0559811c9a8fece4" }
 risc0-build = { git = "https://github.com/risc0/risc0", rev = "1742ef8098d246871055501a0559811c9a8fece4" }

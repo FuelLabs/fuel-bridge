@@ -4,4 +4,5 @@ members = [
   "packages/fungible-token/bridge-fungible-token",
   "packages/message-predicates/contract-message-predicate",
   "packages/message-predicates/contract-message-receiver",
+  "packages/risc0/test/contracts/wallet"
 ]

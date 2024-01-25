@@ -47,3 +47,8 @@ dependencies = [
     "contract_message_receiver",
     "std",
 ]
+
+[[package]]
+name = "wallet"
+source = "member"
+dependencies = ["std"]

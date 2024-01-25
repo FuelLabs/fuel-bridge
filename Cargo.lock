@@ -2473,6 +2473,7 @@ dependencies = [
  "fuel-core-metrics",
  "fuel-core-poa",
  "fuel-core-producer",
+ "fuel-core-relayer",
  "fuel-core-services",
  "fuel-core-storage",
  "fuel-core-txpool",
@@ -2639,6 +2640,27 @@ dependencies = [
  "tokio",
  "tokio-rayon",
  "tracing",
+]
+
+[[package]]
+name = "fuel-core-relayer"
+version = "0.22.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3874be91fccf5eadec6daab71aa6bf5eff3644d709bbcf386cff7ef3480b1ba5"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "ethers-contract",
+ "ethers-core",
+ "ethers-providers",
+ "fuel-core-services",
+ "fuel-core-storage",
+ "fuel-core-types",
+ "futures",
+ "once_cell",
+ "tokio",
+ "tracing",
+ "url",
 ]
 
 [[package]]
@@ -6387,6 +6409,33 @@ name = "termtree"
 version = "0.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3369f5ac52d5eb6ab48c6b4ffdc8efbcad6b89c765749064ba298f2c68a16a76"
+
+[[package]]
+name = "test"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "fuel-core",
+ "fuel-core-chain-config",
+ "fuel-core-database",
+ "fuel-core-executor",
+ "fuel-core-importer",
+ "fuel-core-poa",
+ "fuel-core-services",
+ "fuel-core-storage",
+ "fuel-core-txpool",
+ "fuel-core-types",
+ "fuel-crypto",
+ "fuel-storage",
+ "fuel-tx",
+ "fuel-types",
+ "fuel-vm",
+ "fuels",
+ "prover-core",
+ "serde",
+ "serde_json",
+ "tokio",
+]
 
 [[package]]
 name = "thiserror"

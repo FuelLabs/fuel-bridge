@@ -10,7 +10,7 @@ rust-version = { workspace = true }
 publish = false
 
 [dependencies]
-anyhow = "1.0.75"
+anyhow = { workspace = true }
 bech32 = "0.9.0"
 bonsai-sdk = { workspace = true }
 bonsai-ethereum-relay = { workspace = true }
@@ -38,8 +38,8 @@ risc0-build = { workspace = true }
 risc0-zkvm = { workspace = true, default-features = false }
 parking_lot = "0.12"
 postcard = "1.0"
-serde = {version = "1.0.188", default-features = false}
-serde_json = "1.0.104"
+serde = { workspace = true, default-features = false}
+serde_json = { workspace = true }
 serde_with = "1.11"
 sha2 = { workspace = true }
 strum = "0.24"
