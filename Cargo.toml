@@ -25,7 +25,7 @@ fuel-tx = "0.43.1"
 fuel-core-types = { version = "0.22.0", default-features = false }
 
 # Dependencies from fuels-rs repository:    
-fuels = { version = "0.54.0", features = ["fuel-core-lib"] }
+fuels = { version = "0.55.0", features = ["fuel-core-lib"] }
 
 # Third-party dependencies
 tokio = { version = "1.32.0", features = ["rt", "macros"] }

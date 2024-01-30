@@ -10,7 +10,7 @@ use crate::utils::{
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
-use fuels::{accounts::ViewOnlyAccount, prelude::AssetId, types::Bits256};
+use fuels::{prelude::AssetId, types::Bits256};
 
 mod success {
 
