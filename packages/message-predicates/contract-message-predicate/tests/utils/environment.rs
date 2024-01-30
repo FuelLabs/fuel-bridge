@@ -1,7 +1,8 @@
 use std::{mem::size_of, num::ParseIntError, str::FromStr, vec};
 
+use fuel_core_types::fuel_vm::SecretKey;
 use fuels::{
-    accounts::{fuel_crypto::SecretKey, wallet::WalletUnlocked},
+    accounts::wallet::WalletUnlocked,
     prelude::{
         abigen, setup_custom_assets_coins, Address, AssetConfig, AssetId, Contract,
         LoadConfiguration, TxPolicies,
@@ -143,12 +144,11 @@ pub async fn relay_message_to_contract(
     gas_coins: &[Input],
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
-    let network_info = provider.network_info().await.unwrap();
 
     let inputs = [gas_coins, contracts.as_slice()].concat();
 
     let tx =
-        builder::build_contract_message_tx(message, inputs.as_slice(), &[], network_info, wallet)
+        builder::build_contract_message_tx(message, inputs.as_slice(), &[], wallet)
             .await;
 
     provider

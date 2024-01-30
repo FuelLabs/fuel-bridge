@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use fuel_asm::Word;
 use fuel_core_types::{
     fuel_tx::Output,
     fuel_types::{Address, AssetId, Bytes32},
@@ -7,15 +8,13 @@ use fuel_core_types::{
 
 use fuel_tx::output::contract::Contract;
 use fuels::{
-    accounts::{fuel_crypto::fuel_types::Word, wallet::WalletUnlocked, Signer, ViewOnlyAccount},
-    prelude::{ScriptTransaction, TxPolicies},
-    types::{
+    accounts::wallet::WalletUnlocked, prelude::{ScriptTransaction, TxPolicies}, types::{
         coin_type::CoinType,
         input::Input,
         transaction_builders::{
-            BuildableTransaction, NetworkInfo, ScriptTransactionBuilder, TransactionBuilder,
+            BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder,
         },
-    },
+    }
 };
 
 /// Build a message-to-contract transaction with the given input coins and outputs
@@ -24,7 +23,6 @@ pub async fn build_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     // Get the script and predicate for contract messages
@@ -90,13 +88,13 @@ pub async fn build_contract_message_tx(
 
     let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
 
-    let mut builder = ScriptTransactionBuilder::new(network_info)
+    let mut builder = ScriptTransactionBuilder::default()
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
         .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
-    wallet.sign_transaction(&mut builder);
+    builder.add_signer(wallet.clone()).expect("Could not add signer");
 
     builder.build(provider).await.unwrap()
 }
@@ -107,7 +105,6 @@ pub async fn build_invalid_contract_message_tx(
     message: Input,
     inputs: &[Input],
     outputs: &[Output],
-    network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     let invalid_script_bytecode = vec![0u8, 1u8, 2u8, 3u8];
@@ -162,13 +159,13 @@ pub async fn build_invalid_contract_message_tx(
     });
 
     let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
-    let mut builder = ScriptTransactionBuilder::new(network_info)
+    let mut builder = ScriptTransactionBuilder::default()
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
         .with_tx_policies(tx_policies)
         .with_script(invalid_script_bytecode);
 
-    wallet.sign_transaction(&mut builder);
+    builder.add_signer(wallet.clone()).expect("Could not add signer");
 
     builder.build(provider).await.unwrap()
 }
