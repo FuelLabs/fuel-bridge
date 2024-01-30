@@ -8,13 +8,15 @@ use fuel_core_types::{
 
 use fuel_tx::output::contract::Contract;
 use fuels::{
-    accounts::wallet::WalletUnlocked, prelude::{ScriptTransaction, TxPolicies}, types::{
+    accounts::wallet::WalletUnlocked,
+    prelude::{ScriptTransaction, TxPolicies},
+    types::{
         coin_type::CoinType,
         input::Input,
         transaction_builders::{
             BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder,
         },
-    }
+    },
 };
 
 /// Build a message-to-contract transaction with the given input coins and outputs
@@ -94,7 +96,9 @@ pub async fn build_contract_message_tx(
         .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
-    builder.add_signer(wallet.clone()).expect("Could not add signer");
+    builder
+        .add_signer(wallet.clone())
+        .expect("Could not add signer");
 
     builder.build(provider).await.unwrap()
 }
@@ -165,7 +169,9 @@ pub async fn build_invalid_contract_message_tx(
         .with_tx_policies(tx_policies)
         .with_script(invalid_script_bytecode);
 
-    builder.add_signer(wallet.clone()).expect("Could not add signer");
+    builder
+        .add_signer(wallet.clone())
+        .expect("Could not add signer");
 
     builder.build(provider).await.unwrap()
 }

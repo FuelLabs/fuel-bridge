@@ -75,7 +75,9 @@ pub async fn build_contract_message_tx(
         .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
-    builder.add_signer(wallet.clone()).expect("Could not add signer");
+    builder
+        .add_signer(wallet.clone())
+        .expect("Could not add signer");
 
     builder.build(provider).await.unwrap()
 }

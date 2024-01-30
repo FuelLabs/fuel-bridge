@@ -6,14 +6,12 @@ use crate::utils::{
     },
 };
 use fuel_core_types::{
-    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId}, fuel_types::{Nonce, Word}, fuel_vm::SecretKey
+    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
+    fuel_types::{Nonce, Word},
+    fuel_vm::SecretKey,
 };
 use fuels::{
-    accounts::{
-        predicate::Predicate,
-        wallet::WalletUnlocked,
-        ViewOnlyAccount,
-    },
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
@@ -281,7 +279,11 @@ pub(crate) async fn relay_message_to_contract(
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
 
-    let gas_price = provider.node_info().await.expect("Could not get node info").min_gas_price;
+    let gas_price = provider
+        .node_info()
+        .await
+        .expect("Could not get node info")
+        .min_gas_price;
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
     let fetched_gas_coins: Vec<Input> = provider

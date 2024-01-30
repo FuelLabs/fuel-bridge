@@ -147,9 +147,7 @@ pub async fn relay_message_to_contract(
 
     let inputs = [gas_coins, contracts.as_slice()].concat();
 
-    let tx =
-        builder::build_contract_message_tx(message, inputs.as_slice(), &[], wallet)
-            .await;
+    let tx = builder::build_contract_message_tx(message, inputs.as_slice(), &[], wallet).await;
 
     provider
         .send_transaction(tx)
