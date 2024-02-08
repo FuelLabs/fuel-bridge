@@ -23,7 +23,7 @@ dependencies = [
 
 [[package]]
 name = "core"
-source = "path+from-root-C3992B43B72ADB8C"
+source = "path+from-root-CA4CC436CEE99A83"
 
 [[package]]
 name = "reentrancy"
@@ -37,7 +37,7 @@ dependencies = ["std"]
 
 [[package]]
 name = "std"
-source = "git+https://github.com/fuellabs/sway?tag=v0.49.1#2ac7030570f22510b0ac2a7b5ddf7baa20bdc0e1"
+source = "git+https://github.com/fuellabs/sway?tag=v0.50.0#11231184a073a3e9c179d1d2e68c90d205638d45"
 dependencies = ["core"]
 
 [[package]]
