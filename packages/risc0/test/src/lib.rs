@@ -56,7 +56,7 @@ async fn test_two_transfers() -> anyhow::Result<()> {
     let block = srv.shared.database.get_current_block()?.unwrap();
     let stringified_block = block_stringify(&block)?; // To be used at check_transition(_, block, _)
 
-    let block_height = block.header().height().deref().clone();
+    let block_height = *block.header().height().deref();
     let transactions = srv
         .shared
         .database
@@ -109,7 +109,7 @@ async fn test_intermediate_state_transfers() -> anyhow::Result<()> {
     let block = srv.shared.database.get_current_block()?.unwrap();
     let stringified_block = block_stringify(&block)?; // To be used at check_transition(_, block, _)
 
-    let block_height = block.header().height().deref().clone();
+    let block_height = *block.header().height().deref();
     let transactions = srv
         .shared
         .database
@@ -151,7 +151,7 @@ async fn test_deployment_transaction() -> anyhow::Result<()> {
     let block = srv.shared.database.get_current_block()?.unwrap();
     let stringified_block = block_stringify(&block)?; // To be used at check_transition(_, block, _)
 
-    let block_height = block.header().height().deref().clone();
+    let block_height = *block.header().height().deref();
     let transactions = srv
         .shared
         .database
@@ -202,7 +202,7 @@ async fn test_contract_interaction() -> anyhow::Result<()> {
     let block = srv.shared.database.get_current_block()?.unwrap();
     let stringified_block = block_stringify(&block)?; // To be used at check_transition(_, block, _)
 
-    let block_height = block.header().height().deref().clone();
+    let block_height = *block.header().height().deref();
     let transactions = srv
         .shared
         .database
@@ -240,7 +240,7 @@ async fn test_invalid_signature() -> anyhow::Result<()> {
     let block = srv.shared.database.get_current_block()?.unwrap();
     let stringified_block = block_stringify(&block)?; // To be used at check_transition(_, block, _)
 
-    let block_height = block.header().height().deref().clone();
+    let block_height = *block.header().height().deref();
 
     let transactions = srv
         .shared

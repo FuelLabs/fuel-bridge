@@ -90,7 +90,7 @@ pub fn check_transition(
     let time = block.header().time();
 
     let height: fuel_crypto::fuel_types::BlockHeight = (u32::from(initial_height) + 1u32).into();
-    let prev_root = block.header().prev_root().clone();
+    let prev_root = *block.header().prev_root();
 
     let transactions: Transactions = serde_json::from_str(transactions_json)?;
 

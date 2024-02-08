@@ -7,7 +7,7 @@ use fuel_core::{
 
 pub fn get_current_block_with_txs(database: &Database) -> anyhow::Result<Block> {
     let block = database.get_current_block()?.unwrap();
-    let start = block.header().height().deref().clone();
+    let start = *block.header().height().deref();
     let end = start + 1;
     let transactions = match database.get_transactions_on_blocks(start..end)? {
         Some(value) => {

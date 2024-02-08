@@ -69,7 +69,7 @@ fn import_genesis_block(
             generated: Empty,
         },
         consensus: ConsensusHeader::<Empty> {
-            prev_root: initial_block.header().prev_root().clone(),
+            prev_root: *initial_block.header().prev_root(),
             // The initial height is defined by the `ChainConfig`.
             // If it is `None` then it will be zero.
             height: chain_conf
@@ -86,7 +86,7 @@ fn import_genesis_block(
         header,
         transactions: initial_block.transactions().to_vec(),
     }
-    .generate(&vec![]);
+    .generate(&[]);
 
     let block_id = block.id();
     database.storage::<FuelBlocks>().insert(
@@ -127,7 +127,7 @@ fn import_genesis_block(
 
     let db_after_execution = database_transaction.as_mut();
 
-    db_after_execution.seal_block(&block_id, &sealed_block.consensus)?;
+    db_after_execution.seal_block(block_id, &sealed_block.consensus)?;
 
     // Update the total tx count in chain metadata
     db_after_execution

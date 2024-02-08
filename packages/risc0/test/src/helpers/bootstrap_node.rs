@@ -40,7 +40,7 @@ pub async fn bootstrap1() -> anyhow::Result<(FuelService, Provider)> {
             let mut vec_tx_id = vec![0u8; 32];
             vec_tx_id[31] = index as u8;
             let tx_id_slice: &[u8; 32] = vec_tx_id.as_slice().try_into().expect("asd");
-            let tx_id = Bytes32::from_bytes_ref(tx_id_slice).clone();
+            let tx_id = *Bytes32::from_bytes_ref(tx_id_slice);
 
             CoinConfig {
                 tx_id: Some(tx_id),
