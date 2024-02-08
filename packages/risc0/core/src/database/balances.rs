@@ -1,45 +1,24 @@
 use crate::database::{
     storage::{
-        ContractsAssetsMerkleData,
-        ContractsAssetsMerkleMetadata,
-        DatabaseColumn,
+        ContractsAssetsMerkleData, ContractsAssetsMerkleMetadata, DatabaseColumn,
         SparseMerkleMetadata,
     },
-    Column,
-    Database,
+    Column, Database,
 };
 use fuel_core_storage::{
-    tables::ContractsAssets,
-    ContractsAssetKey,
-    Error as StorageError,
-    Mappable,
-    MerkleRoot,
-    MerkleRootStorage,
-    StorageAsMut,
-    StorageAsRef,
-    StorageInspect,
-    StorageMutate,
+    tables::ContractsAssets, ContractsAssetKey, Error as StorageError, Mappable, MerkleRoot,
+    MerkleRootStorage, StorageAsMut, StorageAsRef, StorageInspect, StorageMutate,
 };
 use fuel_core_types::{
     fuel_asm::Word,
     fuel_merkle::{
         sparse,
-        sparse::{
-            in_memory,
-            MerkleTree,
-            MerkleTreeKey,
-        },
+        sparse::{in_memory, MerkleTree, MerkleTreeKey},
     },
-    fuel_types::{
-        AssetId,
-        ContractId,
-    },
+    fuel_types::{AssetId, ContractId},
 };
 use itertools::Itertools;
-use std::borrow::{
-    BorrowMut,
-    Cow,
-};
+use std::borrow::{BorrowMut, Cow};
 
 impl StorageInspect<ContractsAssets> for Database {
     type Error = StorageError;
@@ -52,10 +31,7 @@ impl StorageInspect<ContractsAssets> for Database {
             .map_err(Into::into)
     }
 
-    fn contains_key(
-        &self,
-        key: &<ContractsAssets as Mappable>::Key,
-    ) -> Result<bool, Self::Error> {
+    fn contains_key(&self, key: &<ContractsAssets as Mappable>::Key) -> Result<bool, Self::Error> {
         self.contains_key(key.as_ref(), Column::ContractsAssets)
             .map_err(Into::into)
     }
@@ -100,8 +76,8 @@ impl StorageMutate<ContractsAssets> for Database {
         &mut self,
         key: &<ContractsAssets as Mappable>::Key,
     ) -> Result<Option<<ContractsAssets as Mappable>::OwnedValue>, Self::Error> {
-        let prev = Database::remove(self, key.as_ref(), Column::ContractsAssets)
-            .map_err(Into::into);
+        let prev =
+            Database::remove(self, key.as_ref(), Column::ContractsAssets).map_err(Into::into);
 
         // Get latest metadata entry for this contract id
         let prev_metadata = self
@@ -166,9 +142,7 @@ impl Database {
             .storage::<ContractsAssetsMerkleMetadata>()
             .contains_key(contract_id)?
         {
-            return Err(
-                anyhow::anyhow!("The contract balances is already initialized").into(),
-            )
+            return Err(anyhow::anyhow!("The contract balances is already initialized").into());
         }
 
         let balances = balances.collect_vec();
@@ -177,9 +151,10 @@ impl Database {
         // Key is `ContractId` ++ `AssetId`
         self.batch_insert(
             Column::ContractsAssets,
-            balances.clone().into_iter().map(|(asset, value)| {
-                (ContractsAssetKey::new(contract_id, &asset), value)
-            }),
+            balances
+                .clone()
+                .into_iter()
+                .map(|(asset, value)| (ContractsAssetKey::new(contract_id, &asset), value)),
         )?;
 
         // Merkle data:

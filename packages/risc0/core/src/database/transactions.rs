@@ -1,30 +1,12 @@
-use crate::database::{
-    storage::DatabaseColumn,
-    Column,
-    Database,
-    Result as DatabaseResult,
-};
-use fuel_core_storage::{
-    iter::IterDirection,
-    tables::Transactions,
-};
+use crate::database::{storage::DatabaseColumn, Column, Database, Result as DatabaseResult};
+use fuel_core_storage::{iter::IterDirection, tables::Transactions};
 use fuel_core_types::{
     self,
-    fuel_tx::{
-        Bytes32,
-        Transaction,
-        TxPointer,
-    },
-    fuel_types::{
-        Address,
-        BlockHeight,
-    },
+    fuel_tx::{Bytes32, Transaction, TxPointer},
+    fuel_types::{Address, BlockHeight},
     services::txpool::TransactionStatus,
 };
-use std::{
-    mem::size_of,
-    ops::Deref,
-};
+use std::{mem::size_of, ops::Deref};
 
 impl DatabaseColumn for Transactions {
     fn column() -> Column {
@@ -39,12 +21,8 @@ impl Database {
         direction: Option<IterDirection>,
     ) -> impl Iterator<Item = DatabaseResult<Transaction>> + '_ {
         let start = start.map(|b| b.as_ref().to_vec());
-        self.iter_all_by_start::<Vec<u8>, Transaction, _>(
-            Column::Transactions,
-            start,
-            direction,
-        )
-        .map(|res| res.map(|(_, tx)| tx))
+        self.iter_all_by_start::<Vec<u8>, Transaction, _>(Column::Transactions, start, direction)
+            .map(|res| res.map(|(_, tx)| tx))
     }
 
     /// Iterates over a KV mapping of `[address + block height + tx idx] => transaction id`. This
@@ -57,17 +35,15 @@ impl Database {
         start: Option<OwnedTransactionIndexCursor>,
         direction: Option<IterDirection>,
     ) -> impl Iterator<Item = DatabaseResult<(TxPointer, Bytes32)>> + '_ {
-        let start = start
-            .map(|cursor| owned_tx_index_key(&owner, cursor.block_height, cursor.tx_idx));
+        let start =
+            start.map(|cursor| owned_tx_index_key(&owner, cursor.block_height, cursor.tx_idx));
         self.iter_all_filtered::<OwnedTransactionIndexKey, Bytes32, _, _>(
             Column::TransactionsByOwnerBlockIdx,
             Some(owner),
             start,
             direction,
         )
-        .map(|res| {
-            res.map(|(key, tx_id)| (TxPointer::new(key.block_height, key.tx_idx), tx_id))
-        })
+        .map(|res| res.map(|(key, tx_id)| (TxPointer::new(key.block_height, key.tx_idx), tx_id)))
     }
 
     pub fn record_tx_id_owner(
@@ -92,10 +68,7 @@ impl Database {
         self.insert(id, Column::TransactionStatus, &status)
     }
 
-    pub fn get_tx_status(
-        &self,
-        id: &Bytes32,
-    ) -> DatabaseResult<Option<TransactionStatus>> {
+    pub fn get_tx_status(&self, id: &Bytes32) -> DatabaseResult<Option<TransactionStatus>> {
         self.get(&id.deref()[..], Column::TransactionStatus)
     }
 }
@@ -113,8 +86,7 @@ fn owned_tx_index_key(
     // generate prefix to enable sorted indexing of transactions by owner
     // owner + block_height + tx_idx
     default[0..Address::LEN].copy_from_slice(owner.as_ref());
-    default[Address::LEN..Address::LEN + BLOCK_HEIGHT]
-        .copy_from_slice(height.to_bytes().as_ref());
+    default[Address::LEN..Address::LEN + BLOCK_HEIGHT].copy_from_slice(height.to_bytes().as_ref());
     default[Address::LEN + BLOCK_HEIGHT..].copy_from_slice(tx_idx.to_be_bytes().as_ref());
     default
 }

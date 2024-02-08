@@ -1,32 +1,15 @@
-use crate::database::{
-    storage::ToDatabaseKey,
-    Column,
-    Database,
-    Result as DatabaseResult,
-};
+use crate::database::{storage::ToDatabaseKey, Column, Database, Result as DatabaseResult};
 use fuel_core_chain_config::MessageConfig;
 use fuel_core_storage::{
     iter::IterDirection,
-    tables::{
-        Messages,
-        SpentMessages,
-    },
-    Error as StorageError,
-    Result as StorageResult,
-    StorageInspect,
-    StorageMutate,
+    tables::{Messages, SpentMessages},
+    Error as StorageError, Result as StorageResult, StorageInspect, StorageMutate,
 };
 use fuel_core_types::{
     entities::message::Message,
-    fuel_types::{
-        Address,
-        Nonce,
-    },
+    fuel_types::{Address, Nonce},
 };
-use std::{
-    borrow::Cow,
-    ops::Deref,
-};
+use std::{borrow::Cow, ops::Deref};
 
 use super::storage::DatabaseColumn;
 
@@ -45,14 +28,9 @@ impl StorageInspect<Messages> for Database {
 }
 
 impl StorageMutate<Messages> for Database {
-    fn insert(
-        &mut self,
-        key: &Nonce,
-        value: &Message,
-    ) -> Result<Option<Message>, Self::Error> {
+    fn insert(&mut self, key: &Nonce, value: &Message) -> Result<Option<Message>, Self::Error> {
         // insert primary record
-        let result =
-            Database::insert(self, key.database_key().as_ref(), Column::Messages, value)?;
+        let result = Database::insert(self, key.database_key().as_ref(), Column::Messages, value)?;
 
         // insert secondary record by owner
         let _: Option<bool> = Database::insert(

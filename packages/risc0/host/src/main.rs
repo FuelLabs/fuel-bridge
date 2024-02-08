@@ -7,9 +7,7 @@ use std::{
     path::PathBuf,
 };
 
-const OUTPUT_PARAM_TYPES: [ParamType; 1] = [
-  ParamType::FixedBytes(32),
-];
+const OUTPUT_PARAM_TYPES: [ParamType; 1] = [ParamType::FixedBytes(32)];
 
 #[derive(Parser)]
 struct Args {
@@ -27,12 +25,11 @@ fn main() {
         initial_block_json: String::from(""), // TODO
     };
 
-    let env = 
-        ExecutorEnv::builder()
-            .write(&inputs)
-            .unwrap()
-            .build()
-            .unwrap();
+    let env = ExecutorEnv::builder()
+        .write(&inputs)
+        .unwrap()
+        .build()
+        .unwrap();
 
     // Obtain the default prover.
     let prover = default_prover();
@@ -45,10 +42,7 @@ fn main() {
     receipt.verify(PROVER_ID).unwrap();
 
     // We can extract the output of the journal
-    let out = ethabi::decode(
-        &OUTPUT_PARAM_TYPES,
-        &receipt.journal.bytes
-    ).unwrap();
+    let out = ethabi::decode(&OUTPUT_PARAM_TYPES, &receipt.journal.bytes).unwrap();
 
     println!(
         "Block ID: {:?}",

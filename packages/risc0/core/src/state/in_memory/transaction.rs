@@ -1,37 +1,18 @@
 use crate::{
-    database::{
-        Column,
-        Result as DatabaseResult,
-    },
+    database::{Column, Result as DatabaseResult},
     state::{
-        in_memory::memory_store::MemoryStore,
-        BatchOperations,
-        DataSource,
-        IterDirection,
-        KVItem,
-        KeyValueStore,
-        TransactableStorage,
-        Value,
-        WriteOperation,
+        in_memory::memory_store::MemoryStore, BatchOperations, DataSource, IterDirection, KVItem,
+        KeyValueStore, TransactableStorage, Value, WriteOperation,
     },
 };
-use fuel_core_storage::iter::{
-    BoxedIter,
-    IntoBoxedIter,
-};
-use itertools::{
-    EitherOrBoth,
-    Itertools,
-};
+use fuel_core_storage::iter::{BoxedIter, IntoBoxedIter};
+use itertools::{EitherOrBoth, Itertools};
 use std::{
     cmp::Ordering,
     collections::HashMap,
     fmt::Debug,
     ops::DerefMut,
-    sync::{
-        Arc,
-        Mutex,
-    },
+    sync::{Arc, Mutex},
 };
 
 #[derive(Debug)]
@@ -83,12 +64,7 @@ impl KeyValueStore for MemoryTransactionView {
         }
     }
 
-    fn put(
-        &self,
-        key: &[u8],
-        column: Column,
-        value: Value,
-    ) -> DatabaseResult<Option<Value>> {
+    fn put(&self, key: &[u8], column: Column, value: Value) -> DatabaseResult<Option<Value>> {
         let key_vec = key.to_vec();
         let contained_key = self.changes[column.as_usize()]
             .lock()
@@ -140,51 +116,50 @@ impl KeyValueStore for MemoryTransactionView {
     ) -> BoxedIter<KVItem> {
         // iterate over inmemory + db while also filtering deleted entries
         self.view_layer
-                // iter_all returns items in sorted order
-                .iter_all(column, prefix, start, direction)
-                // Merge two sorted iterators (our current view overlay + backing data source)
-                .merge_join_by(
-                    self.data_source.iter_all(column, prefix, start, direction),
-                    move |i, j| {
-                        if let (Ok(i), Ok(j)) = (i, j) {
-                            if IterDirection::Forward == direction {
-                                i.0.cmp(&j.0)
-                            } else {
-                                j.0.cmp(&i.0)
-                            }
+            // iter_all returns items in sorted order
+            .iter_all(column, prefix, start, direction)
+            // Merge two sorted iterators (our current view overlay + backing data source)
+            .merge_join_by(
+                self.data_source.iter_all(column, prefix, start, direction),
+                move |i, j| {
+                    if let (Ok(i), Ok(j)) = (i, j) {
+                        if IterDirection::Forward == direction {
+                            i.0.cmp(&j.0)
                         } else {
-                            // prioritize errors from db result first
-                            if j.is_err() {
-                                Ordering::Greater
-                            } else {
-                                Ordering::Less
-                            }
+                            j.0.cmp(&i.0)
                         }
-                    },
-                )
-                .map(|either_both| {
-                    match either_both {
-                        // in the case of overlap, choose the left-side (our view overlay)
-                        EitherOrBoth::Both(v, _)
-                        | EitherOrBoth::Left(v)
-                        | EitherOrBoth::Right(v) => v,
-                    }
-                })
-                // filter entries which have been deleted over the course of this transaction
-                .filter(move |item| {
-                    if let Ok((key, _)) = item {
-                        !matches!(
-                            self.changes[column.as_usize()]
-                                .lock()
-                                .expect("poisoned")
-                                .get(key),
-                            Some(WriteOperation::Remove)
-                        )
                     } else {
-                        // ensure errors are propagated
-                        true
+                        // prioritize errors from db result first
+                        if j.is_err() {
+                            Ordering::Greater
+                        } else {
+                            Ordering::Less
+                        }
                     }
-                }).into_boxed()
+                },
+            )
+            .map(|either_both| {
+                match either_both {
+                    // in the case of overlap, choose the left-side (our view overlay)
+                    EitherOrBoth::Both(v, _) | EitherOrBoth::Left(v) | EitherOrBoth::Right(v) => v,
+                }
+            })
+            // filter entries which have been deleted over the course of this transaction
+            .filter(move |item| {
+                if let Ok((key, _)) = item {
+                    !matches!(
+                        self.changes[column.as_usize()]
+                            .lock()
+                            .expect("poisoned")
+                            .get(key),
+                        Some(WriteOperation::Remove)
+                    )
+                } else {
+                    // ensure errors are propagated
+                    true
+                }
+            })
+            .into_boxed()
     }
 
     fn size_of_value(&self, key: &[u8], column: Column) -> DatabaseResult<Option<usize>> {
@@ -201,12 +176,7 @@ impl KeyValueStore for MemoryTransactionView {
         }
     }
 
-    fn read(
-        &self,
-        key: &[u8],
-        column: Column,
-        buf: &mut [u8],
-    ) -> DatabaseResult<Option<usize>> {
+    fn read(&self, key: &[u8], column: Column, buf: &mut [u8]) -> DatabaseResult<Option<usize>> {
         // try to fetch data from View layer if any changes to the key
         if self.changes[column.as_usize()]
             .lock()

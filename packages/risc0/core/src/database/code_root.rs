@@ -1,7 +1,4 @@
-use crate::database::{
-    storage::DatabaseColumn,
-    Column,
-};
+use crate::database::{storage::DatabaseColumn, Column};
 use fuel_core_storage::tables::ContractsInfo;
 
 impl DatabaseColumn for ContractsInfo {

@@ -1,30 +1,14 @@
 use crate::database::{
-    storage::DatabaseColumn,
-    Column,
-    Database,
-    Error as DatabaseError,
-    Result as DatabaseResult,
+    storage::DatabaseColumn, Column, Database, Error as DatabaseError, Result as DatabaseResult,
 };
 use fuel_core_chain_config::CoinConfig;
 use fuel_core_storage::{
-    iter::IterDirection,
-    not_found,
-    tables::Coins,
-    Error as StorageError,
-    Mappable,
-    Result as StorageResult,
-    StorageAsMut,
-    StorageAsRef,
-    StorageInspect,
-    StorageMutate,
+    iter::IterDirection, not_found, tables::Coins, Error as StorageError, Mappable,
+    Result as StorageResult, StorageAsMut, StorageAsRef, StorageInspect, StorageMutate,
 };
 use fuel_core_types::{
     entities::coins::coin::CompressedCoin,
-    fuel_tx::{
-        Address,
-        Bytes32,
-        UtxoId,
-    },
+    fuel_tx::{Address, Bytes32, UtxoId},
 };
 use std::borrow::Cow;
 
@@ -71,8 +55,7 @@ impl StorageInspect<Coins> for Database {
     }
 
     fn contains_key(&self, key: &UtxoId) -> Result<bool, Self::Error> {
-        Database::contains_key(self, &utxo_id_to_bytes(key), Column::Coins)
-            .map_err(Into::into)
+        Database::contains_key(self, &utxo_id_to_bytes(key), Column::Coins).map_err(Into::into)
     }
 }
 
@@ -145,8 +128,7 @@ impl Database {
             .map(|raw_coin| -> DatabaseResult<CoinConfig> {
                 let coin = raw_coin?;
 
-                let byte_id =
-                    Bytes32::new(coin.0[..32].try_into().map_err(DatabaseError::from)?);
+                let byte_id = Bytes32::new(coin.0[..32].try_into().map_err(DatabaseError::from)?);
                 let output_index = coin.0[32];
 
                 Ok(CoinConfig {

@@ -3,12 +3,15 @@ use fuel_core_types::services::txpool::TransactionStatus;
 
 use crate::database::Database;
 
-use fuel_core_storage::{Error as StorageError, vm_storage::VmStorageRequirements};
+use fuel_core_storage::{vm_storage::VmStorageRequirements, Error as StorageError};
 
 impl MessageIsSpent for Database {
     type Error = StorageError;
 
-    fn message_is_spent(&self, nonce: &fuel_types::Nonce) -> Result<bool, fuel_core_storage::Error> {
+    fn message_is_spent(
+        &self,
+        nonce: &fuel_types::Nonce,
+    ) -> Result<bool, fuel_core_storage::Error> {
         self.message_is_spent(nonce)
     }
 }
@@ -16,11 +19,17 @@ impl MessageIsSpent for Database {
 impl VmStorageRequirements for Database {
     type Error = StorageError;
 
-    fn block_time(&self, height: &fuel_types::BlockHeight) -> Result<fuel_core_types::tai64::Tai64, Self::Error> {
+    fn block_time(
+        &self,
+        height: &fuel_types::BlockHeight,
+    ) -> Result<fuel_core_types::tai64::Tai64, Self::Error> {
         self.block_time(height)
     }
 
-    fn get_block_id(&self, height: &fuel_types::BlockHeight) -> Result<Option<fuel_core_types::blockchain::primitives::BlockId>, Self::Error> {
+    fn get_block_id(
+        &self,
+        height: &fuel_types::BlockHeight,
+    ) -> Result<Option<fuel_core_types::blockchain::primitives::BlockId>, Self::Error> {
         self.get_block_id(height)
     }
 
@@ -43,9 +52,8 @@ impl TxIdOwnerRecorder for Database {
         tx_idx: u16,
         tx_id: &fuel_types::Bytes32,
     ) -> Result<Option<fuel_types::Bytes32>, Self::Error> {
-        self.record_tx_id_owner(owner, block_height, tx_idx, tx_id).map_err(|db_error| {
-            StorageError::Other(db_error.into())
-        })
+        self.record_tx_id_owner(owner, block_height, tx_idx, tx_id)
+            .map_err(|db_error| StorageError::Other(db_error.into()))
     }
 
     fn update_tx_status(
@@ -53,8 +61,7 @@ impl TxIdOwnerRecorder for Database {
         id: &fuel_types::Bytes32,
         status: TransactionStatus,
     ) -> Result<Option<TransactionStatus>, Self::Error> {
-        self.update_tx_status(id, status).map_err(|db_error| {
-            StorageError::Other(db_error.into())
-        })
+        self.update_tx_status(id, status)
+            .map_err(|db_error| StorageError::Other(db_error.into()))
     }
 }

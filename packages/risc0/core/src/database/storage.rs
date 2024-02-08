@@ -1,36 +1,16 @@
-use crate::database::{
-    Column,
-    Database,
-};
+use crate::database::{Column, Database};
 use fuel_core_storage::{
-    Error as StorageError,
-    Mappable,
-    MerkleRoot,
-    Result as StorageResult,
-    StorageInspect,
+    Error as StorageError, Mappable, MerkleRoot, Result as StorageResult, StorageInspect,
     StorageMutate,
 };
 use fuel_core_types::{
     blockchain::primitives::BlockId,
-    fuel_merkle::{
-        binary,
-        sparse,
-    },
+    fuel_merkle::{binary, sparse},
     fuel_tx::TxId,
-    fuel_types::{
-        BlockHeight,
-        ContractId,
-        Nonce,
-    },
+    fuel_types::{BlockHeight, ContractId, Nonce},
 };
-use serde::{
-    de::DeserializeOwned,
-    Serialize,
-};
-use std::{
-    borrow::Cow,
-    ops::Deref,
-};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{borrow::Cow, ops::Deref};
 
 /// Metadata for dense Merkle trees
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
@@ -222,18 +202,12 @@ where
     T::Value: Serialize,
     T::OwnedValue: DeserializeOwned,
 {
-    fn insert(
-        &mut self,
-        key: &T::Key,
-        value: &T::Value,
-    ) -> StorageResult<Option<T::OwnedValue>> {
-        Database::insert(self, key.database_key().as_ref(), T::column(), &value)
-            .map_err(Into::into)
+    fn insert(&mut self, key: &T::Key, value: &T::Value) -> StorageResult<Option<T::OwnedValue>> {
+        Database::insert(self, key.database_key().as_ref(), T::column(), &value).map_err(Into::into)
     }
 
     fn remove(&mut self, key: &T::Key) -> StorageResult<Option<T::OwnedValue>> {
-        Database::remove(self, key.database_key().as_ref(), T::column())
-            .map_err(Into::into)
+        Database::remove(self, key.database_key().as_ref(), T::column()).map_err(Into::into)
     }
 }
 

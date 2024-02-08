@@ -1,44 +1,23 @@
 use crate::database::{
     storage::{
-        ContractsStateMerkleData,
-        ContractsStateMerkleMetadata,
-        DatabaseColumn,
+        ContractsStateMerkleData, ContractsStateMerkleMetadata, DatabaseColumn,
         SparseMerkleMetadata,
     },
-    Column,
-    Database,
+    Column, Database,
 };
 use fuel_core_storage::{
-    tables::ContractsState,
-    ContractsStateKey,
-    Error as StorageError,
-    Mappable,
-    MerkleRoot,
-    MerkleRootStorage,
-    StorageAsMut,
-    StorageAsRef,
-    StorageInspect,
-    StorageMutate,
+    tables::ContractsState, ContractsStateKey, Error as StorageError, Mappable, MerkleRoot,
+    MerkleRootStorage, StorageAsMut, StorageAsRef, StorageInspect, StorageMutate,
 };
 use fuel_core_types::{
     fuel_merkle::{
         sparse,
-        sparse::{
-            in_memory,
-            MerkleTree,
-            MerkleTreeKey,
-        },
+        sparse::{in_memory, MerkleTree, MerkleTreeKey},
     },
-    fuel_types::{
-        Bytes32,
-        ContractId,
-    },
+    fuel_types::{Bytes32, ContractId},
 };
 use itertools::Itertools;
-use std::borrow::{
-    BorrowMut,
-    Cow,
-};
+use std::borrow::{BorrowMut, Cow};
 
 impl StorageInspect<ContractsState> for Database {
     type Error = StorageError;
@@ -51,10 +30,7 @@ impl StorageInspect<ContractsState> for Database {
             .map_err(Into::into)
     }
 
-    fn contains_key(
-        &self,
-        key: &<ContractsState as Mappable>::Key,
-    ) -> Result<bool, Self::Error> {
+    fn contains_key(&self, key: &<ContractsState as Mappable>::Key) -> Result<bool, Self::Error> {
         self.contains_key(key.as_ref(), Column::ContractsState)
             .map_err(Into::into)
     }
@@ -66,8 +42,8 @@ impl StorageMutate<ContractsState> for Database {
         key: &<ContractsState as Mappable>::Key,
         value: &<ContractsState as Mappable>::Value,
     ) -> Result<Option<<ContractsState as Mappable>::OwnedValue>, Self::Error> {
-        let prev = Database::insert(self, key.as_ref(), Column::ContractsState, value)
-            .map_err(Into::into);
+        let prev =
+            Database::insert(self, key.as_ref(), Column::ContractsState, value).map_err(Into::into);
 
         // Get latest metadata entry for this contract id
         let prev_metadata = self
@@ -77,9 +53,8 @@ impl StorageMutate<ContractsState> for Database {
 
         let root = prev_metadata.root;
         let storage = self.borrow_mut();
-        let mut tree: MerkleTree<ContractsStateMerkleData, _> =
-            MerkleTree::load(storage, &root)
-                .map_err(|err| StorageError::Other(anyhow::anyhow!("{err:?}")))?;
+        let mut tree: MerkleTree<ContractsStateMerkleData, _> = MerkleTree::load(storage, &root)
+            .map_err(|err| StorageError::Other(anyhow::anyhow!("{err:?}")))?;
 
         // Update the contract's key-value dataset. The key is the state key and
         // the value is the 32 bytes
@@ -99,8 +74,7 @@ impl StorageMutate<ContractsState> for Database {
         &mut self,
         key: &<ContractsState as Mappable>::Key,
     ) -> Result<Option<<ContractsState as Mappable>::OwnedValue>, Self::Error> {
-        let prev = Database::remove(self, key.as_ref(), Column::ContractsState)
-            .map_err(Into::into);
+        let prev = Database::remove(self, key.as_ref(), Column::ContractsState).map_err(Into::into);
 
         // Get latest metadata entry for this contract id
         let prev_metadata = self
@@ -162,14 +136,14 @@ impl Database {
         let slots = slots.collect_vec();
 
         if slots.is_empty() {
-            return Ok(())
+            return Ok(());
         }
 
         if self
             .storage::<ContractsStateMerkleMetadata>()
             .contains_key(contract_id)?
         {
-            return Err(anyhow::anyhow!("The contract state is already initialized").into())
+            return Err(anyhow::anyhow!("The contract state is already initialized").into());
         }
 
         // Keys and values should be original without any modifications.

@@ -1,16 +1,7 @@
-use crate::{
-    database::Database,
-    state::in_memory::transaction::MemoryTransactionView,
-};
-use fuel_core_storage::{
-    transactional::Transaction,
-    Result as StorageResult,
-};
+use crate::{database::Database, state::in_memory::transaction::MemoryTransactionView};
+use fuel_core_storage::{transactional::Transaction, Result as StorageResult};
 use std::{
-    ops::{
-        Deref,
-        DerefMut,
-    },
+    ops::{Deref, DerefMut},
     sync::Arc,
 };
 
@@ -66,9 +57,7 @@ impl From<&Database> for DatabaseTransaction {
         let data = Arc::new(MemoryTransactionView::new(source.data.clone()));
         Self {
             changes: data.clone(),
-            database: Database {
-                data,
-            },
+            database: Database { data },
         }
     }
 }

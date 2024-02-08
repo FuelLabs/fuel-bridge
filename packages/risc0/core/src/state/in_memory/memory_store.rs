@@ -1,29 +1,12 @@
 use crate::{
-    database::{
-        Column,
-        Error as DatabaseError,
-        Result as DatabaseResult,
-    },
-    state::{
-        BatchOperations,
-        IterDirection,
-        KVItem,
-        KeyValueStore,
-        TransactableStorage,
-        Value,
-    },
+    database::{Column, Error as DatabaseError, Result as DatabaseResult},
+    state::{BatchOperations, IterDirection, KVItem, KeyValueStore, TransactableStorage, Value},
 };
-use fuel_core_storage::iter::{
-    BoxedIter,
-    IntoBoxedIter,
-};
+use fuel_core_storage::iter::{BoxedIter, IntoBoxedIter};
 use std::{
     collections::BTreeMap,
     fmt::Debug,
-    sync::{
-        Arc,
-        Mutex,
-    },
+    sync::{Arc, Mutex},
 };
 
 #[derive(Default, Debug)]
@@ -108,12 +91,7 @@ impl KeyValueStore for MemoryStore {
             .cloned())
     }
 
-    fn put(
-        &self,
-        key: &[u8],
-        column: Column,
-        value: Value,
-    ) -> DatabaseResult<Option<Value>> {
+    fn put(&self, key: &[u8], column: Column, value: Value) -> DatabaseResult<Option<Value>> {
         Ok(self.inner[column.as_usize()]
             .lock()
             .expect("poisoned")

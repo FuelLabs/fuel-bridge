@@ -1,9 +1,4 @@
-use crate::database::{
-    Column,
-    Database,
-    Error as DatabaseError,
-    Result as DatabaseResult,
-};
+use crate::database::{Column, Database, Error as DatabaseError, Result as DatabaseResult};
 use fuel_core_chain_config::ChainConfig;
 
 pub(crate) const DB_VERSION_KEY: &[u8] = b"version";
@@ -36,11 +31,10 @@ impl Database {
                 return Err(DatabaseError::InvalidDatabaseVersion {
                     found: version,
                     expected: DB_VERSION,
-                })?
+                })?;
             }
         } else {
-            let _: Option<u32> =
-                self.insert(DB_VERSION_KEY, Column::Metadata, &DB_VERSION)?;
+            let _: Option<u32> = self.insert(DB_VERSION_KEY, Column::Metadata, &DB_VERSION)?;
         }
         Ok(())
     }
@@ -51,8 +45,7 @@ impl Database {
 
     pub fn increase_tx_count(&self, new_txs: u64) -> DatabaseResult<u64> {
         // TODO: how should tx count be initialized after regenesis?
-        let current_tx_count: u64 =
-            self.get(TX_COUNT, Column::Metadata)?.unwrap_or_default();
+        let current_tx_count: u64 = self.get(TX_COUNT, Column::Metadata)?.unwrap_or_default();
         // Using saturating_add because this value doesn't significantly impact the correctness of execution.
         let new_tx_count = current_tx_count.saturating_add(new_txs);
         self.insert::<_, _, u64>(TX_COUNT, Column::Metadata, &new_tx_count)?;

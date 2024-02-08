@@ -50,15 +50,12 @@ risc0-zkvm = { git = "https://github.com/risc0/risc0", rev = "1742ef8098d2468710
 
 # Risc0 configurations
 # Always optimize; building and running the guest takes much longer without optimization.
-[profile.dev]
-opt-level = 3
-
-[profile.dev.build-override]
-opt-level = 3
-
-[profile.release]
-debug = 1
-lto = true
-
-[profile.release.build-override]
-opt-level = 3
+# [profile.dev]
+# opt-level = 3
+# [profile.dev.build-override]
+# opt-level = 3
+# [profile.release]
+# debug = 1
+# lto = true
+# [profile.release.build-override]
+# opt-level = 3

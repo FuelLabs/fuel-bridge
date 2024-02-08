@@ -1,36 +1,14 @@
-use crate::database::{
-    Database,
-    Error as DatabaseError,
-};
+use crate::database::{Database, Error as DatabaseError};
 use anyhow::anyhow;
 use fuel_core_storage::{
-    not_found,
-    tables::ContractsState,
-    ContractsAssetsStorage,
-    ContractsStateKey,
-    Error as StorageError,
-    Mappable,
-    MerkleRoot,
-    MerkleRootStorage,
-    StorageAsMut,
-    StorageInspect,
-    StorageMutate,
-    StorageRead,
-    StorageSize,
+    not_found, tables::ContractsState, ContractsAssetsStorage, ContractsStateKey,
+    Error as StorageError, Mappable, MerkleRoot, MerkleRootStorage, StorageAsMut, StorageInspect,
+    StorageMutate, StorageRead, StorageSize,
 };
 use fuel_core_types::{
     blockchain::header::ConsensusHeader,
-    fuel_tx::{
-        Contract,
-        StorageSlot,
-    },
-    fuel_types::{
-        BlockHeight,
-        Bytes32,
-        ContractId,
-        Salt,
-        Word,
-    },
+    fuel_tx::{Contract, StorageSlot},
+    fuel_types::{BlockHeight, Bytes32, ContractId, Salt, Word},
     fuel_vm::InterpreterStorage,
     tai64::Tai64,
 };
@@ -71,11 +49,7 @@ impl Default for VmDatabase {
 }
 
 impl VmDatabase {
-    pub fn new<T>(
-        database: Database,
-        header: &ConsensusHeader<T>,
-        coinbase: ContractId,
-    ) -> Self {
+    pub fn new<T>(database: Database, header: &ConsensusHeader<T>, coinbase: ContractId) -> Self {
         Self {
             current_block_height: header.height,
             current_timestamp: header.time,
@@ -145,10 +119,7 @@ where
         StorageRead::<M>::read(&self.database, key, buf)
     }
 
-    fn read_alloc(
-        &self,
-        key: &<M as Mappable>::Key,
-    ) -> Result<Option<Vec<u8>>, Self::Error> {
+    fn read_alloc(&self, key: &<M as Mappable>::Key) -> Result<Option<Vec<u8>>, Self::Error> {
         StorageRead::<M>::read_alloc(&self.database, key)
     }
 }
@@ -186,8 +157,7 @@ impl InterpreterStorage for VmDatabase {
     fn block_hash(&self, block_height: BlockHeight) -> Result<Bytes32, Self::DataError> {
         // Block header hashes for blocks with height greater than or equal to current block height are zero (0x00**32).
         // https://github.com/FuelLabs/fuel-specs/blob/master/specs/vm/instruction_set.md#bhsh-block-hash
-        if block_height >= self.current_block_height || block_height == Default::default()
-        {
+        if block_height >= self.current_block_height || block_height == Default::default() {
             Ok(Bytes32::zeroed())
         } else {
             // this will return 0x00**32 for block height 0 as well
@@ -213,10 +183,8 @@ impl InterpreterStorage for VmDatabase {
         self.storage_contract_insert(id, contract)?;
         self.storage_contract_root_insert(id, salt, root)?;
 
-        self.database.init_contract_state(
-            id,
-            slots.iter().map(|slot| (*slot.key(), *slot.value())),
-        )
+        self.database
+            .init_contract_state(id, slots.iter().map(|slot| (*slot.key(), *slot.value())))
     }
 
     fn merkle_contract_state_range(
@@ -250,9 +218,7 @@ impl InterpreterStorage for VmDatabase {
         // verify key is in range
         current_key
             .checked_add(U256::from(values.len()))
-            .ok_or_else(|| {
-                DatabaseError::Other(anyhow!("range op exceeded available keyspace"))
-            })?;
+            .ok_or_else(|| DatabaseError::Other(anyhow!("range op exceeded available keyspace")))?;
 
         let mut key_bytes = Bytes32::zeroed();
         let mut found_unset = 0u32;

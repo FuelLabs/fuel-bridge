@@ -1,38 +1,17 @@
 use crate::database::{
-    storage::DatabaseColumn,
-    Column,
-    Database,
-    Error as DatabaseError,
-    Result as DatabaseResult,
+    storage::DatabaseColumn, Column, Database, Error as DatabaseError, Result as DatabaseResult,
 };
 use fuel_core_chain_config::ContractConfig;
 use fuel_core_storage::{
     iter::IterDirection,
-    tables::{
-        ContractsInfo,
-        ContractsLatestUtxo,
-        ContractsRawCode,
-    },
-    ContractsAssetKey,
-    Error as StorageError,
-    Mappable,
-    Result as StorageResult,
-    StorageAsRef,
-    StorageInspect,
-    StorageMutate,
-    StorageRead,
-    StorageSize,
-    StorageWrite,
+    tables::{ContractsInfo, ContractsLatestUtxo, ContractsRawCode},
+    ContractsAssetKey, Error as StorageError, Mappable, Result as StorageResult, StorageAsRef,
+    StorageInspect, StorageMutate, StorageRead, StorageSize, StorageWrite,
 };
 use fuel_core_types::{
     entities::contract::ContractUtxoInfo,
     fuel_tx::Contract,
-    fuel_types::{
-        AssetId,
-        Bytes32,
-        ContractId,
-        Word,
-    },
+    fuel_types::{AssetId, Bytes32, ContractId, Word},
 };
 use std::borrow::Cow;
 
@@ -48,17 +27,13 @@ impl StorageInspect<ContractsRawCode> for Database {
     fn get(
         &self,
         key: &<ContractsRawCode as Mappable>::Key,
-    ) -> Result<Option<Cow<<ContractsRawCode as Mappable>::OwnedValue>>, Self::Error>
-    {
+    ) -> Result<Option<Cow<<ContractsRawCode as Mappable>::OwnedValue>>, Self::Error> {
         Ok(self
             .read_alloc(key.as_ref(), Column::ContractsRawCode)?
             .map(|v| Cow::Owned(Contract::from(v))))
     }
 
-    fn contains_key(
-        &self,
-        key: &<ContractsRawCode as Mappable>::Key,
-    ) -> Result<bool, Self::Error> {
+    fn contains_key(&self, key: &<ContractsRawCode as Mappable>::Key) -> Result<bool, Self::Error> {
         self.contains_key(key.as_ref(), Column::ContractsRawCode)
             .map_err(Into::into)
     }
@@ -74,8 +49,7 @@ impl StorageMutate<ContractsRawCode> for Database {
         key: &<ContractsRawCode as Mappable>::Key,
         value: &<ContractsRawCode as Mappable>::Value,
     ) -> Result<Option<<ContractsRawCode as Mappable>::OwnedValue>, Self::Error> {
-        let existing =
-            Database::replace(self, key.as_ref(), Column::ContractsRawCode, value)?;
+        let existing = Database::replace(self, key.as_ref(), Column::ContractsRawCode, value)?;
         Ok(existing.1.map(Contract::from))
     }
 
@@ -83,10 +57,7 @@ impl StorageMutate<ContractsRawCode> for Database {
         &mut self,
         key: &<ContractsRawCode as Mappable>::Key,
     ) -> Result<Option<<ContractsRawCode as Mappable>::OwnedValue>, Self::Error> {
-        Ok(
-            <Self as StorageWrite<ContractsRawCode>>::take(self, key)?
-                .map(Contract::from),
-        )
+        Ok(<Self as StorageWrite<ContractsRawCode>>::take(self, key)?.map(Contract::from))
     }
 }
 
@@ -97,11 +68,7 @@ impl StorageSize<ContractsRawCode> for Database {
 }
 
 impl StorageRead<ContractsRawCode> for Database {
-    fn read(
-        &self,
-        key: &ContractId,
-        buf: &mut [u8],
-    ) -> Result<Option<usize>, Self::Error> {
+    fn read(&self, key: &ContractId, buf: &mut [u8]) -> Result<Option<usize>, Self::Error> {
         Ok(self.read(key.as_ref(), Column::ContractsRawCode, buf)?)
     }
 
@@ -203,9 +170,8 @@ impl Database {
             .map(|res| {
                 let safe_res = res?;
 
-                let asset_id = AssetId::new(
-                    safe_res.0[32..].try_into().map_err(DatabaseError::from)?,
-                );
+                let asset_id =
+                    AssetId::new(safe_res.0[32..].try_into().map_err(DatabaseError::from)?);
 
                 Ok((asset_id, safe_res.1))
             })
@@ -238,11 +204,7 @@ impl Database {
             start_asset.map(|asset_id| ContractsAssetKey::new(&contract, &asset_id)),
             direction,
         )
-        .map(|res| {
-            res.map(|(key, balance)| {
-                (AssetId::new(key[32..].try_into().unwrap()), balance)
-            })
-        })
+        .map(|res| res.map(|(key, balance)| (AssetId::new(key[32..].try_into().unwrap()), balance)))
     }
 
     pub fn get_contract_config(&self) -> StorageResult<Option<Vec<ContractConfig>>> {

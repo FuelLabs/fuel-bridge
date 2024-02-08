@@ -1,38 +1,20 @@
 use crate::{
     database::transaction::DatabaseTransaction,
-    state::{
-        in_memory::memory_store::MemoryStore,
-        DataSource,
-        WriteOperation,
-    },
+    state::{in_memory::memory_store::MemoryStore, DataSource, WriteOperation},
 };
-use fuel_core_chain_config::{
-    ChainConfigDb,
-    CoinConfig,
-    ContractConfig,
-    MessageConfig,
-};
+use fuel_core_chain_config::{ChainConfigDb, CoinConfig, ContractConfig, MessageConfig};
 
 use fuel_core_executor::ports::ExecutorDatabaseTrait;
 use fuel_core_storage::{
     iter::IterDirection,
-    transactional::{
-        StorageTransaction,
-        Transactional,
-    },
+    transactional::{StorageTransaction, Transactional},
     Result as StorageResult,
 };
 use fuel_core_types::fuel_types::BlockHeight;
 
 use itertools::Itertools;
-use serde::{
-    de::DeserializeOwned,
-    Serialize,
-};
-use std::{
-    ops::Deref,
-    sync::Arc,
-};
+use serde::{de::DeserializeOwned, Serialize};
+use std::{ops::Deref, sync::Arc};
 
 pub use fuel_core_database::Error;
 pub type Result<T> = core::result::Result<T, Error>;
@@ -48,11 +30,11 @@ use strum::EnumCount;
 pub mod block;
 pub mod code_root;
 pub mod contracts;
+pub mod execution;
 pub mod message;
 pub mod receipts;
 pub mod sealed_block;
 pub mod state;
-pub mod execution;
 
 pub(crate) mod coin;
 
@@ -65,9 +47,7 @@ pub mod vm_database;
 
 /// Database tables column ids to the corresponding [`fuel_core_storage::Mappable`] table.
 #[repr(u32)]
-#[derive(
-    Copy, Clone, Debug, strum_macros::EnumCount, PartialEq, Eq, enum_iterator::Sequence,
-)]
+#[derive(Copy, Clone, Debug, strum_macros::EnumCount, PartialEq, Eq, enum_iterator::Sequence)]
 pub enum Column {
     /// The column id of metadata about the blockchain
     Metadata = 0,
@@ -141,9 +121,7 @@ pub struct Database {
 
 impl Database {
     pub fn new(data_source: DataSource) -> Self {
-        Self {
-            data: data_source,
-        }
+        Self { data: data_source }
     }
 
     pub fn in_memory() -> Self {
@@ -195,11 +173,10 @@ impl Database {
     ) -> DatabaseResult<()>
     where
         S: Iterator<Item = (K, V)>,
-    {   
+    {
         let set: Vec<_> = set
             .map(|(key, value)| {
-                let value =
-                    postcard::to_stdvec(&value).map_err(|_| DatabaseError::Codec)?;
+                let value = postcard::to_stdvec(&value).map_err(|_| DatabaseError::Codec)?;
 
                 let tuple = (
                     key.as_ref().to_vec(),
@@ -214,11 +191,7 @@ impl Database {
         self.data.batch_write(&mut set.into_iter())
     }
 
-    fn remove<V: DeserializeOwned>(
-        &self,
-        key: &[u8],
-        column: Column,
-    ) -> DatabaseResult<Option<V>> {
+    fn remove<V: DeserializeOwned>(&self, key: &[u8], column: Column) -> DatabaseResult<Option<V>> {
         self.data
             .delete(key, column)?
             .map(|val| postcard::from_bytes(&val).map_err(|_| DatabaseError::Codec))
@@ -257,12 +230,7 @@ impl Database {
         self.data.size_of_value(key, column)
     }
 
-    fn read(
-        &self,
-        key: &[u8],
-        column: Column,
-        buf: &mut [u8],
-    ) -> DatabaseResult<Option<usize>> {
+    fn read(&self, key: &[u8], column: Column, buf: &mut [u8]) -> DatabaseResult<Option<usize>> {
         self.data.read(key, column, buf)
     }
 
@@ -272,11 +240,7 @@ impl Database {
             .map(|value| value.map(|value| value.deref().clone()))
     }
 
-    fn get<V: DeserializeOwned>(
-        &self,
-        key: &[u8],
-        column: Column,
-    ) -> DatabaseResult<Option<V>> {
+    fn get<V: DeserializeOwned>(&self, key: &[u8], column: Column) -> DatabaseResult<Option<V>> {
         self.data
             .get(key, column)?
             .map(|val| postcard::from_bytes(&val).map_err(|_| DatabaseError::Codec))

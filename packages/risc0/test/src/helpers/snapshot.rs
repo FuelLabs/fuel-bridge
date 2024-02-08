@@ -1,4 +1,8 @@
-use fuel_core::{service::FuelService, chain_config::{StateConfig, ChainConfig, CoinConfig}, types::{blockchain::block::Block, services::p2p::Transactions}};
+use fuel_core::{
+    chain_config::{ChainConfig, CoinConfig, StateConfig},
+    service::FuelService,
+    types::{blockchain::block::Block, services::p2p::Transactions},
+};
 use fuel_crypto::fuel_types::Bytes32;
 
 pub fn snapshot(fuel_service: &FuelService) -> anyhow::Result<ChainConfig> {
@@ -11,15 +15,22 @@ pub fn snapshot(fuel_service: &FuelService) -> anyhow::Result<ChainConfig> {
     // state that we are snapshotting (so that we later validate a block transition)
     // then we must disable the by-default behaviour of generate_state_config, which
     // saves this info so that forks started from a snapshot do not get replay-attacked.
-    let coins: Vec<CoinConfig> = state_conf.clone().coins.unwrap().iter().map(|coin| {
-        CoinConfig {
+    let coins: Vec<CoinConfig> = state_conf
+        .clone()
+        .coins
+        .unwrap()
+        .iter()
+        .map(|coin| CoinConfig {
             tx_pointer_block_height: None,
             ..coin.clone()
-        }
-    }).collect();
-    
+        })
+        .collect();
+
     let chain_conf = ChainConfig {
-        initial_state: Some(StateConfig { coins: Some(coins), ..state_conf}),
+        initial_state: Some(StateConfig {
+            coins: Some(coins),
+            ..state_conf
+        }),
         ..config.clone()
     };
 
@@ -34,14 +45,14 @@ impl SnapshotStringify for ChainConfig {
     fn stringify(self) -> anyhow::Result<String> {
         let stringified = serde_json::to_string_pretty(&self)?;
 
-        Ok(stringified)    
+        Ok(stringified)
     }
 }
 
 pub fn block_stringify(block: &Block<Bytes32>) -> anyhow::Result<String> {
     let stringified = serde_json::to_string_pretty(block)?;
 
-    Ok(stringified)    
+    Ok(stringified)
 }
 
 pub fn block_stringify_with_txs(block: &Block) -> anyhow::Result<String> {

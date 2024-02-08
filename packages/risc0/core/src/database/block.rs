@@ -1,37 +1,20 @@
 use crate::database::{
     storage::{
-        DenseMerkleMetadata,
-        FuelBlockMerkleData,
-        FuelBlockMerkleMetadata,
-        FuelBlockSecondaryKeyBlockHeights,
-        ToDatabaseKey,
+        DenseMerkleMetadata, FuelBlockMerkleData, FuelBlockMerkleMetadata,
+        FuelBlockSecondaryKeyBlockHeights, ToDatabaseKey,
     },
-    Column,
-    Database,
-    Error as DatabaseError,
-    Result as DatabaseResult,
+    Column, Database, Error as DatabaseError, Result as DatabaseResult,
 };
 use fuel_core_storage::{
     iter::IterDirection,
     not_found,
-    tables::{
-        FuelBlocks,
-        Transactions,
-    },
-    Error as StorageError,
-    MerkleRootStorage,
-    Result as StorageResult,
-    StorageAsMut,
-    StorageAsRef,
-    StorageInspect,
-    StorageMutate,
+    tables::{FuelBlocks, Transactions},
+    Error as StorageError, MerkleRootStorage, Result as StorageResult, StorageAsMut, StorageAsRef,
+    StorageInspect, StorageMutate,
 };
 use fuel_core_types::{
     blockchain::{
-        block::{
-            Block,
-            CompressedBlock,
-        },
+        block::{Block, CompressedBlock},
         primitives::BlockId,
     },
     entities::message::MerkleProof,
@@ -41,14 +24,8 @@ use fuel_core_types::{
 };
 use itertools::Itertools;
 use std::{
-    borrow::{
-        BorrowMut,
-        Cow,
-    },
-    convert::{
-        TryFrom,
-        TryInto,
-    },
+    borrow::{BorrowMut, Cow},
+    convert::{TryFrom, TryInto},
 };
 
 impl StorageInspect<FuelBlocks> for Database {
@@ -59,8 +36,7 @@ impl StorageInspect<FuelBlocks> for Database {
     }
 
     fn contains_key(&self, key: &BlockId) -> Result<bool, Self::Error> {
-        Database::contains_key(self, key.as_slice(), Column::FuelBlocks)
-            .map_err(Into::into)
+        Database::contains_key(self, key.as_slice(), Column::FuelBlocks).map_err(Into::into)
     }
 }
 
@@ -210,10 +186,7 @@ impl Database {
     }
 
     /// Retrieve the full block and all associated transactions
-    pub(crate) fn get_full_block(
-        &self,
-        block_id: &BlockId,
-    ) -> StorageResult<Option<Block>> {
+    pub(crate) fn get_full_block(&self, block_id: &BlockId) -> StorageResult<Option<Block>> {
         let db_block = self.storage::<FuelBlocks>().get(block_id)?;
         if let Some(block) = db_block {
             // fetch all the transactions
@@ -236,10 +209,7 @@ impl Database {
 }
 
 impl MerkleRootStorage<BlockHeight, FuelBlocks> for Database {
-    fn root(
-        &self,
-        key: &BlockHeight,
-    ) -> Result<fuel_core_storage::MerkleRoot, Self::Error> {
+    fn root(&self, key: &BlockHeight) -> Result<fuel_core_storage::MerkleRoot, Self::Error> {
         let metadata = self
             .storage::<FuelBlockMerkleMetadata>()
             .get(key)?

@@ -1,30 +1,14 @@
-use crate::database::{
-    Column,
-    Database,
-    Error as DatabaseError,
-    Result as DatabaseResult,
-};
+use crate::database::{Column, Database, Error as DatabaseError, Result as DatabaseResult};
 
-use fuel_core_storage::iter::{
-    BoxedIter,
-    IterDirection,
-};
-use std::{
-    fmt::Debug,
-    sync::Arc,
-};
+use fuel_core_storage::iter::{BoxedIter, IterDirection};
+use std::{fmt::Debug, sync::Arc};
 
 pub type DataSource = Arc<dyn TransactableStorage>;
 pub type Value = Arc<Vec<u8>>;
 pub type KVItem = DatabaseResult<(Vec<u8>, Value)>;
 
 pub trait KeyValueStore {
-    fn put(
-        &self,
-        key: &[u8],
-        column: Column,
-        value: Value,
-    ) -> DatabaseResult<Option<Value>>;
+    fn put(&self, key: &[u8], column: Column, value: Value) -> DatabaseResult<Option<Value>>;
 
     fn write(&self, key: &[u8], column: Column, buf: &[u8]) -> DatabaseResult<usize>;
 
@@ -45,12 +29,7 @@ pub trait KeyValueStore {
 
     fn get(&self, key: &[u8], column: Column) -> DatabaseResult<Option<Value>>;
 
-    fn read(
-        &self,
-        key: &[u8],
-        column: Column,
-        buf: &mut [u8],
-    ) -> DatabaseResult<Option<usize>>;
+    fn read(&self, key: &[u8], column: Column, buf: &mut [u8]) -> DatabaseResult<Option<usize>>;
 
     fn read_alloc(&self, key: &[u8], column: Column) -> DatabaseResult<Option<Value>>;
 

@@ -1,27 +1,14 @@
-use crate::database::{
-    storage::DatabaseColumn,
-    Column,
-    Database,
-};
+use crate::database::{storage::DatabaseColumn, Column, Database};
 use fuel_core_storage::{
     not_found,
-    tables::{
-        FuelBlocks,
-        SealedBlockConsensus,
-    },
-    Result as StorageResult,
-    StorageAsRef,
+    tables::{FuelBlocks, SealedBlockConsensus},
+    Result as StorageResult, StorageAsRef,
 };
 use fuel_core_types::{
     blockchain::{
-        consensus::{
-            Consensus,
-            Genesis,
-            Sealed,
-        },
+        consensus::{Consensus, Genesis, Sealed},
         primitives::BlockId,
-        SealedBlock,
-        SealedBlockHeader,
+        SealedBlock, SealedBlockHeader,
     },
     fuel_types::BlockHeight,
     services::p2p::Transactions,
@@ -35,10 +22,7 @@ impl DatabaseColumn for SealedBlockConsensus {
 }
 
 impl Database {
-    pub fn get_sealed_block_by_id(
-        &self,
-        block_id: &BlockId,
-    ) -> StorageResult<Option<SealedBlock>> {
+    pub fn get_sealed_block_by_id(&self, block_id: &BlockId) -> StorageResult<Option<SealedBlock>> {
         // combine the block and consensus metadata into a sealed fuel block type
 
         let block = self.get_full_block(block_id)?;
