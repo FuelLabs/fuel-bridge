@@ -12,7 +12,7 @@ import {
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { BigNumber, Signer } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from 'ethers';
 import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,

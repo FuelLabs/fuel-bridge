@@ -3,7 +3,7 @@ import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import chai from 'chai';
 import type { BigNumber } from 'ethers';
 import { BigNumber as BN, constants } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from 'ethers';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import { randomBytes, randomBytes32 } from '../protocol/utils';

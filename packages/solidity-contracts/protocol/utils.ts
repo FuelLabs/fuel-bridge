@@ -1,60 +1,33 @@
 // Helper functions for testing
 import type { BigNumberish, BytesLike } from 'ethers';
-import { BigNumber as BN, BigNumber, ethers } from 'ethers';
+import {
+  Wallet,
+  toUtf8Bytes,
+  keccak256,
+  randomBytes,
+  toBeHex,
+  hexlify,
+  solidityPacked,
+} from 'ethers';
 
 import type BlockHeader from './blockHeader';
 import { ZERO, EMPTY } from './constants';
-import hash from './cryptography';
 
-export const DEPOSIT_TO_CONTRACT_FLAG = ethers.utils
-  .keccak256(ethers.utils.toUtf8Bytes('DEPOSIT_TO_CONTRACT'))
-  .substring(0, 4);
+export const DEPOSIT_TO_CONTRACT_FLAG = keccak256(
+  toUtf8Bytes('DEPOSIT_TO_CONTRACT')
+).substring(0, 4);
 
 export function randomAddress(): string {
-  return hash(
-    BN.from(Math.floor(Math.random() * 1_000_000)).toHexString()
-  ).slice(0, 42);
+  return Wallet.createRandom().address;
 }
 
 export function randomBytes32(): string {
-  return hash(BN.from(Math.floor(Math.random() * 1_000_000)).toHexString());
-}
-
-export function randomInt(max: number): number {
-  return Math.floor(Math.random() * max);
-}
-
-export function randomBytes(length: number): string {
-  return hash(
-    BN.from(Math.floor(Math.random() * 1_000_000)).toHexString()
-  ).slice(0, length * 2 + 2);
-}
-
-export function uintToBytes32(i: number): string {
-  const value = BN.from(i).toHexString();
-  let trimmedValue = value.slice(2);
-  trimmedValue = '0'.repeat(64 - trimmedValue.length).concat(trimmedValue);
-  return '0x'.concat(trimmedValue);
-}
-
-export function padUint(value: BN): string {
-  // uint256 is encoded as 32 bytes, so pad that string.
-  let trimmedValue = value.toHexString().slice(2);
-  trimmedValue = '0'.repeat(64 - trimmedValue.length).concat(trimmedValue);
-  return '0x'.concat(trimmedValue);
-}
-
-export function padBytes(value: string): string {
-  let trimmedValue = value.slice(2);
-  trimmedValue = '0'.repeat(64 - trimmedValue.length).concat(trimmedValue);
-  return '0x'.concat(trimmedValue);
+  return hexlify(randomBytes(32));
 }
 
 export function tai64Time(millis: number): string {
-  const zeroPointOffset = '4611686018427387914';
-  return BN.from(Math.floor(millis / 1000))
-    .add(zeroPointOffset)
-    .toHexString();
+  const zeroPointOffset = BigInt('4611686018427387914');
+  return toBeHex(BigInt(Math.floor(millis / 1000)) + zeroPointOffset);
 }
 
 // Computes data for message
@@ -75,10 +48,10 @@ export function computeMessageData(
     'bytes32',
     'uint256',
   ];
-  const values: (string | number | BN | BytesLike | BigNumberish)[] = [
+  const values: (string | number | bigint | BytesLike | BigNumberish)[] = [
     fuelContractId,
     tokenAddress,
-    BigNumber.from(tokenId),
+    BigInt(tokenId),
     from,
     to,
     amount,
@@ -94,7 +67,7 @@ export function computeMessageData(
     }
   }
 
-  return ethers.utils.solidityPack(typings, values);
+  return solidityPacked(typings, values);
 }
 
 // Create a simple block
