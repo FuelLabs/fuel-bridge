@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
-      - run: pnpm audit --prod
+      - run: pnpm audit --prod --audit-level high
 
   check-packages-changed:
     needs: audit-deps
