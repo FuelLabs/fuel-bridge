@@ -1,4 +1,4 @@
-import { concat, sha256 } from 'ethers/lib/utils';
+import { concat, sha256 } from 'ethers';
 import type { Contract } from 'fuels';
 import { ZeroBytes32 } from 'fuels';
 
