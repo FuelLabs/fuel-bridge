@@ -1,8 +1,10 @@
 import { config as dotEnvConfig } from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/types';
-// import '@nomicfoundation/hardhat-toolbox'; // Uncomment this line and the project fails
-// import '@nomicfoundation/hardhat-network-helpers';
-// import '@openzeppelin/hardhat-upgrades';
+import '@nomicfoundation/hardhat-ethers';
+import '@nomicfoundation/hardhat-network-helpers';
+import '@nomicfoundation/hardhat-verify';
+import '@typechain/hardhat';
+import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
 import 'solidity-coverage';
 
@@ -69,6 +71,9 @@ const config: HardhatUserConfig = {
       deploy: ['deploy/beta5devnet'],
       chainId: 11155111,
     },
+  },
+  typechain: {
+    outDir: 'typechain',
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
