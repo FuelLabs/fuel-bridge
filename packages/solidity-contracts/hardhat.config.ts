@@ -1,12 +1,10 @@
 import { config as dotEnvConfig } from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/types';
-import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomiclabs/hardhat-etherscan';
-import '@openzeppelin/hardhat-upgrades';
-import 'hardhat-typechain';
+// import '@nomicfoundation/hardhat-toolbox'; // Uncomment this line and the project fails
+// import '@nomicfoundation/hardhat-network-helpers';
+// import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
 import 'solidity-coverage';
-import 'hardhat-gas-reporter';
 
 dotEnvConfig();
 
