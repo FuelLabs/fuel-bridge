@@ -39,6 +39,7 @@
   "devDependencies": {
     "@fuel-contracts/merkle-sol": "^0.1.4",
     "@fuel-ts/merkle": "^0.21.2",
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.4",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomicfoundation/hardhat-verify": "1.1.1",
@@ -72,7 +73,7 @@
     "ts-generator": "^0.1.1",
     "ts-node": "^10.9.1",
     "tsup": "^7.2.0",
-    "typechain": "^8.3.1",
+    "typechain": "^8.3.2",
     "typescript": "^4.9.3"
   }
 }

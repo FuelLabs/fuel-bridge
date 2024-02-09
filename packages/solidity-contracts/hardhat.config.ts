@@ -3,6 +3,7 @@ import type { HardhatUserConfig } from 'hardhat/types';
 import '@nomicfoundation/hardhat-ethers';
 import '@nomicfoundation/hardhat-network-helpers';
 import '@nomicfoundation/hardhat-verify';
+import '@nomicfoundation/hardhat-chai-matchers';
 import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
