@@ -1,7 +1,11 @@
-import { hexZeroPad } from '@ethersproject/bytes';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { constants, type ContractFactory } from 'ethers';
+import {
+  ZeroHash,
+  type ContractFactory,
+  MaxUint256,
+  zeroPadValue,
+} from 'ethers';
 import hre from 'hardhat';
 
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
@@ -19,8 +23,8 @@ type Env = {
   erc20Gateway: FuelERC20GatewayV2;
   V2Implementation: ContractFactory;
   token: Token;
-  signers: SignerWithAddress[];
-  deployer: SignerWithAddress;
+  signers: HardhatEthersSigner[];
+  deployer: HardhatEthersSigner;
 };
 
 export function behavesLikeErc20GatewayV2(fixture: () => Promise<Env>) {
@@ -37,16 +41,22 @@ export function behavesLikeErc20GatewayV2(fixture: () => Promise<Env>) {
         deployer
       ).deploy();
 
-      const erc20Gateway = await hre.ethers
+      const erc20GatewayDeployment = await hre.ethers
         .getContractFactory('FuelERC20Gateway')
-        .then((factory) =>
-          hre.upgrades.deployProxy(factory, [fuelMessagePortal.address], {
-            initializer: 'initialize',
-          })
+        .then(async (factory) =>
+          hre.upgrades.deployProxy(
+            factory,
+            [await fuelMessagePortal.getAddress()],
+            {
+              initializer: 'initialize',
+            }
+          )
         )
-        .then(({ address }) =>
-          FuelERC20GatewayV2__factory.connect(address, deployer)
-        );
+        .then((tx) => tx.waitForDeployment());
+      const erc20Gateway = FuelERC20GatewayV2__factory.connect(
+        await erc20GatewayDeployment.getAddress(),
+        erc20GatewayDeployment.runner
+      );
 
       await expect(erc20Gateway.isBridge(randomBytes32(), randomAddress())).to
         .be.reverted;
@@ -67,11 +77,10 @@ export function behavesLikeErc20GatewayV2(fixture: () => Promise<Env>) {
         const { token, signers, erc20Gateway } = env;
 
         const [, user] = signers;
-        const { HashZero, MaxUint256 } = constants;
 
         const depositTx = erc20Gateway
           .connect(user)
-          .deposit(HashZero, token.address, HashZero, MaxUint256);
+          .deposit(ZeroHash, token, ZeroHash, MaxUint256);
 
         await expect(depositTx).to.be.revertedWithCustomError(
           erc20Gateway,
@@ -85,33 +94,30 @@ export function behavesLikeErc20GatewayV2(fixture: () => Promise<Env>) {
 
         const depositAmount = 100;
         await token.mint(user.address, depositAmount);
-        await token
-          .connect(user)
-          .approve(erc20Gateway.address, constants.MaxUint256);
+        await token.connect(user).approve(erc20Gateway, MaxUint256);
 
         const fuelBridge = randomBytes32();
         const fuelRecipient = randomBytes32();
-        const sender = hexZeroPad(user.address.toLowerCase(), 32);
+        const sender = zeroPadValue(user.address.toLowerCase(), 32);
 
         await fuelMessagePortal.setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
-          fuelMessagePortal.address,
+          fuelMessagePortal,
           hre
         );
 
         const registerTx = await erc20Gateway
           .connect(impersonatedPortal)
-          .registerAsReceiver(token.address);
+          .registerAsReceiver(token);
 
         await expect(registerTx).to.emit(erc20Gateway, 'ReceiverRegistered');
 
         const depositTx = await erc20Gateway
           .connect(user)
-          .deposit(fuelRecipient, token.address, fuelBridge, depositAmount);
-
+          .deposit(fuelRecipient, token, fuelBridge, depositAmount);
         await expect(depositTx)
           .to.emit(erc20Gateway, 'Deposit')
-          .withArgs(sender, token.address, fuelBridge, depositAmount);
+          .withArgs(sender, token, fuelBridge, depositAmount);
       });
     });
   });
