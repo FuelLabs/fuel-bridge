@@ -1,8 +1,11 @@
-import { constants } from 'ethers';
+import { MaxUint256 } from 'ethers';
 import hre, { deployments } from 'hardhat';
 
-import { FuelERC20GatewayV3__factory } from '../typechain';
-import type { MockFuelMessagePortal, Token } from '../typechain';
+import type {
+  FuelERC20GatewayV3,
+  MockFuelMessagePortal,
+  Token,
+} from '../typechain';
 
 import {
   behavesLikeErc20GatewayV2,
@@ -19,15 +22,13 @@ describe('erc20GatewayV3', () => {
     const fuelMessagePortal = await getContractFactory(
       'MockFuelMessagePortal'
     ).then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
-    const erc20Gateway = await getContractFactory('FuelERC20Gateway')
-      .then((factory) =>
-        upgrades.deployProxy(factory, [fuelMessagePortal.address], {
+    const erc20GatewayV1 = await getContractFactory('FuelERC20Gateway')
+      .then(async (factory) =>
+        upgrades.deployProxy(factory, [await fuelMessagePortal.getAddress()], {
           initializer,
         })
       )
-      .then(({ address }) =>
-        FuelERC20GatewayV3__factory.connect(address, deployer)
-      );
+      .then((tx) => tx.waitForDeployment());
 
     const token = await hre.ethers
       .getContractFactory('Token')
@@ -36,13 +37,12 @@ describe('erc20GatewayV3', () => {
     const V2Implementation = await getContractFactory('FuelERC20GatewayV2');
     const V3Implementation = await getContractFactory('FuelERC20GatewayV3');
 
-    await upgrades.upgradeProxy(erc20Gateway, V2Implementation);
-    await upgrades.upgradeProxy(erc20Gateway, V3Implementation);
+    await upgrades.upgradeProxy(erc20GatewayV1, V2Implementation);
+    const erc20Gateway = (await upgrades
+      .upgradeProxy(erc20GatewayV1, V3Implementation)
+      .then((tx) => tx.waitForDeployment())) as FuelERC20GatewayV3;
 
-    await erc20Gateway.setGlobalDepositLimit(
-      token.address,
-      constants.MaxUint256
-    );
+    await erc20Gateway.setGlobalDepositLimit(token, MaxUint256);
 
     return {
       fuelMessagePortal,

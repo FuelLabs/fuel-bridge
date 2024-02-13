@@ -8,7 +8,7 @@ import type {
 
 import { behavesLikeErc20GatewayV2 } from './behaviors';
 
-describe.only('erc20GatewayV2', () => {
+describe('erc20GatewayV2', () => {
   const fixture = deployments.createFixture(async ({ upgrades }) => {
     const signers = await hre.ethers.getSigners();
     const [deployer] = signers;

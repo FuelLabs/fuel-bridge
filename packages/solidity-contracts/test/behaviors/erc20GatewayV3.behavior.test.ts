@@ -1,7 +1,11 @@
-import { hexZeroPad } from '@ethersproject/bytes';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { utils, constants, type ContractFactory, BigNumber } from 'ethers';
+import {
+  MaxUint256,
+  type ContractFactory,
+  parseEther,
+  zeroPadValue,
+} from 'ethers';
 import hre from 'hardhat';
 import { random } from 'lodash';
 
@@ -13,15 +17,16 @@ import {
   type Token,
   FuelERC20GatewayV3__factory,
 } from '../../typechain';
-import { encodeErc20DepositMessage, impersonateAccount } from '../utils';
+import { encodeErc20DepositMessage } from '../utils';
+import { impersonateAccount } from '../utils/impersonateAccount';
 
 type Env = {
   fuelMessagePortal: MockFuelMessagePortal;
   erc20Gateway: FuelERC20GatewayV3;
   V2Implementation: ContractFactory;
   token: Token;
-  signers: SignerWithAddress[];
-  deployer: SignerWithAddress;
+  signers: HardhatEthersSigner[];
+  deployer: HardhatEthersSigner;
 };
 
 const TOKEN_ID = 0;
@@ -46,9 +51,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             initializer: 'initialize',
           })
         )
-        .then(({ address }) =>
-          FuelERC20GatewayV3__factory.connect(address, deployer)
-        );
+        .then((tx) => FuelERC20GatewayV3__factory.connect(tx as any, deployer));
 
       // Check that functions that only exist on V3 do revert
       await expect(erc20Gateway.depositLimitGlobal(randomAddress())).to.be
@@ -75,10 +78,12 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
         const tx = erc20Gateway
           .connect(mallory)
-          .setGlobalDepositLimit(token.address, constants.MaxUint256);
+          .setGlobalDepositLimit(token, MaxUint256);
 
         const expectedErrorMsg =
-          `AccessControl: account ${mallory.address.toLowerCase()} ` +
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()} ` +
           'is missing role 0x0000000000000000000000000000000000000000000000000000000000000000';
         await expect(tx).to.be.revertedWith(expectedErrorMsg);
       });
@@ -93,16 +98,16 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = BigNumber.from(0);
+        const amount = BigInt(0);
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         const depositTx = erc20Gateway
           .connect(user)
-          .deposit(recipient, token.address, fuelBridge, amount);
+          .deposit(recipient, token, fuelBridge, amount);
 
         await expect(depositTx).to.be.revertedWithCustomError(
           erc20Gateway,
@@ -118,20 +123,20 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+        const amount = parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         await erc20Gateway
           .connect(deployer)
-          .setGlobalDepositLimit(token.address, amount.sub(1));
+          .setGlobalDepositLimit(token, amount - 1n);
 
         const depositTx = erc20Gateway
           .connect(user)
-          .deposit(recipient, token.address, fuelBridge, amount);
+          .deposit(recipient, token, fuelBridge, amount);
 
         await expect(depositTx).to.be.revertedWithCustomError(
           erc20Gateway,
@@ -148,48 +153,48 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+        const amount = parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
         await erc20Gateway
           .connect(deployer)
-          .setGlobalDepositLimit(token.address, amount);
+          .setGlobalDepositLimit(token, amount);
 
         await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
-          fuelMessagePortal.address,
+          fuelMessagePortal,
           hre
         );
         await erc20Gateway
           .connect(impersonatedPortal)
-          .registerAsReceiver(token.address);
+          .registerAsReceiver(token);
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         const depositTx = erc20Gateway
           .connect(user)
-          .deposit(recipient, token.address, fuelBridge, amount);
+          .deposit(recipient, token, fuelBridge, amount);
 
         await expect(depositTx).to.changeTokenBalances(
           token,
-          [user.address, erc20Gateway.address],
-          [amount.mul(-1), amount]
+          [user, erc20Gateway],
+          [amount * -1n, amount]
         );
 
         await expect(depositTx)
           .to.emit(erc20Gateway, 'Deposit')
           .withArgs(
-            hexZeroPad(user.address, 32).toLowerCase(),
-            token.address,
+            zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+            token,
             fuelBridge,
             amount
           );
 
         const expectedMessageData = encodeErc20DepositMessage(
           fuelBridge,
-          token,
+          await token.getAddress(),
           user,
           recipient,
           amount
@@ -217,51 +222,45 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
-        const depositData = [0, 1, 2, 3, 4];
+        const amount = parseEther(random(0.01, 1, true).toFixed(2));
+        const depositData = new Uint8Array([0, 1, 2, 3, 4]);
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
         await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
-          fuelMessagePortal.address,
+          fuelMessagePortal,
           hre
         );
         await erc20Gateway
           .connect(impersonatedPortal)
-          .registerAsReceiver(token.address);
+          .registerAsReceiver(token);
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         const depositTx = erc20Gateway
           .connect(user)
-          .depositWithData(
-            recipient,
-            token.address,
-            fuelBridge,
-            amount,
-            depositData
-          );
+          .depositWithData(recipient, token, fuelBridge, amount, depositData);
 
         await expect(depositTx).to.changeTokenBalances(
           token,
-          [user.address, erc20Gateway.address],
-          [amount.mul(-1), amount]
+          [user, erc20Gateway],
+          [amount * -1n, amount]
         );
 
         await expect(depositTx)
           .to.emit(erc20Gateway, 'Deposit')
           .withArgs(
-            hexZeroPad(user.address, 32).toLowerCase(),
-            token.address,
+            zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+            token,
             fuelBridge,
             amount
           );
 
         const expectedMessageData = encodeErc20DepositMessage(
           fuelBridge,
-          token,
+          await token.getAddress(),
           user,
           recipient,
           amount,
@@ -290,51 +289,45 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
-        const depositData = [];
+        const amount = parseEther(random(0.01, 1, true).toFixed(2));
+        const depositData = new Uint8Array([]);
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
         await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
-          fuelMessagePortal.address,
+          fuelMessagePortal,
           hre
         );
         await erc20Gateway
           .connect(impersonatedPortal)
-          .registerAsReceiver(token.address);
+          .registerAsReceiver(token);
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         const depositTx = erc20Gateway
           .connect(user)
-          .depositWithData(
-            recipient,
-            token.address,
-            fuelBridge,
-            amount,
-            depositData
-          );
+          .depositWithData(recipient, token, fuelBridge, amount, depositData);
 
         await expect(depositTx).to.changeTokenBalances(
           token,
-          [user.address, erc20Gateway.address],
-          [amount.mul(-1), amount]
+          [user, erc20Gateway],
+          [amount * -1n, amount]
         );
 
         await expect(depositTx)
           .to.emit(erc20Gateway, 'Deposit')
           .withArgs(
-            hexZeroPad(user.address, 32).toLowerCase(),
-            token.address,
+            zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+            token,
             fuelBridge,
             amount
           );
 
         const expectedMessageData = encodeErc20DepositMessage(
           fuelBridge,
-          token,
+          await token.getAddress(),
           user,
           recipient,
           amount,
@@ -357,7 +350,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
       describe('when there is a previous existing deposit', async () => {
         let fuelBridge1: string;
         let fuelBridge2: string;
-        let preExistingAmount: BigNumber;
+        let preExistingAmount: bigint;
 
         beforeEach('make a deposit', async () => {
           const {
@@ -372,9 +365,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          preExistingAmount = utils.parseEther(
-            random(0.01, 1, true).toFixed(2)
-          );
+          preExistingAmount = parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
@@ -382,26 +373,26 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             .connect(deployer)
             .setMessageSender(fuelBridge1);
           const impersonatedPortal = await impersonateAccount(
-            fuelMessagePortal.address,
+            fuelMessagePortal,
             hre
           );
           await erc20Gateway
             .connect(impersonatedPortal)
-            .registerAsReceiver(token.address);
+            .registerAsReceiver(token);
 
           await fuelMessagePortal
             .connect(deployer)
             .setMessageSender(fuelBridge2);
           await erc20Gateway
             .connect(impersonatedPortal)
-            .registerAsReceiver(token.address);
+            .registerAsReceiver(token);
 
-          await token.mint(user.address, preExistingAmount);
-          await token.approve(erc20Gateway.address, constants.MaxUint256);
+          await token.mint(user, preExistingAmount);
+          await token.approve(erc20Gateway, MaxUint256);
 
           await erc20Gateway
             .connect(user)
-            .deposit(recipient, token.address, fuelBridge, preExistingAmount);
+            .deposit(recipient, token, fuelBridge, preExistingAmount);
         });
 
         it('correctly updates global deposits', async () => {
@@ -414,35 +405,35 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+          const amount = parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
-          await token.mint(user.address, amount);
-          await token.approve(erc20Gateway.address, constants.MaxUint256);
+          await token.mint(user, amount);
+          await token.approve(erc20Gateway, MaxUint256);
 
           const depositTx = erc20Gateway
             .connect(user)
-            .deposit(recipient, token.address, fuelBridge, amount);
+            .deposit(recipient, token, fuelBridge, amount);
 
           await expect(depositTx).to.changeTokenBalances(
             token,
-            [user.address, erc20Gateway.address],
-            [amount.mul(-1), amount]
+            [user, erc20Gateway],
+            [amount * -1n, amount]
           );
 
           await expect(depositTx)
             .to.emit(erc20Gateway, 'Deposit')
             .withArgs(
-              hexZeroPad(user.address, 32).toLowerCase(),
-              token.address,
+              zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+              token,
               fuelBridge,
               amount
             );
 
           const expectedMessageData = encodeErc20DepositMessage(
             fuelBridge,
-            token,
+            await token.getAddress(),
             user,
             recipient,
             amount
@@ -460,10 +451,8 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
           expect(logs).to.have.length(1);
           expect(logs[0].args.data).to.be.equal(expectedMessageData);
 
-          const actualDepositTotals = await erc20Gateway.depositTotals(
-            token.address
-          );
-          const expectedDepositTotals = amount.add(preExistingAmount);
+          const actualDepositTotals = await erc20Gateway.depositTotals(token);
+          const expectedDepositTotals = amount + preExistingAmount;
 
           expect(actualDepositTotals).to.be.equal(expectedDepositTotals);
         });
@@ -478,35 +467,35 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+          const amount = parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge1;
 
-          await token.mint(user.address, amount);
-          await token.approve(erc20Gateway.address, constants.MaxUint256);
+          await token.mint(user, amount);
+          await token.approve(erc20Gateway, MaxUint256);
 
           const depositTx = erc20Gateway
             .connect(user)
-            .deposit(recipient, token.address, fuelBridge, amount);
+            .deposit(recipient, token, fuelBridge, amount);
 
           await expect(depositTx).to.changeTokenBalances(
             token,
-            [user.address, erc20Gateway.address],
-            [amount.mul(-1), amount]
+            [user, erc20Gateway],
+            [amount * -1n, amount]
           );
 
           await expect(depositTx)
             .to.emit(erc20Gateway, 'Deposit')
             .withArgs(
-              hexZeroPad(user.address, 32).toLowerCase(),
-              token.address,
+              zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+              token,
               fuelBridge,
               amount
             );
 
           const expectedMessageData = encodeErc20DepositMessage(
             fuelBridge,
-            token,
+            await token.getAddress(),
             user,
             recipient,
             amount
@@ -525,10 +514,10 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
           expect(logs[0].args.data).to.be.equal(expectedMessageData);
 
           const actualTokenDeposits = await erc20Gateway.tokensDeposited(
-            token.address,
+            token,
             fuelBridge
           );
-          const expectedTokenDeposits = amount.add(preExistingAmount);
+          const expectedTokenDeposits = amount + preExistingAmount;
 
           expect(actualTokenDeposits).to.be.equal(expectedTokenDeposits);
         });
@@ -543,35 +532,35 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
           const [user] = signers;
           const token = _token.connect(user);
-          const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+          const amount = parseEther(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
           const fuelBridge = fuelBridge2;
 
-          await token.mint(user.address, amount);
-          await token.approve(erc20Gateway.address, constants.MaxUint256);
+          await token.mint(user, amount);
+          await token.approve(erc20Gateway, MaxUint256);
 
           const depositTx = erc20Gateway
             .connect(user)
-            .deposit(recipient, token.address, fuelBridge, amount);
+            .deposit(recipient, token, fuelBridge, amount);
 
           await expect(depositTx).to.changeTokenBalances(
             token,
-            [user.address, erc20Gateway.address],
-            [amount.mul(-1), amount]
+            [user, erc20Gateway],
+            [amount * -1n, amount]
           );
 
           await expect(depositTx)
             .to.emit(erc20Gateway, 'Deposit')
             .withArgs(
-              hexZeroPad(user.address, 32).toLowerCase(),
-              token.address,
+              zeroPadValue(await user.getAddress(), 32).toLowerCase(),
+              token,
               fuelBridge,
               amount
             );
 
           const expectedMessageData = encodeErc20DepositMessage(
             fuelBridge,
-            token,
+            await token.getAddress(),
             user,
             recipient,
             amount
@@ -590,7 +579,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
           expect(logs[0].args.data).to.be.equal(expectedMessageData);
 
           const actualTokenDeposits = await erc20Gateway.tokensDeposited(
-            token.address,
+            token,
             fuelBridge2
           );
 
@@ -609,36 +598,36 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         } = env;
         const token = _token.connect(user);
 
-        const amount = utils.parseEther(random(0.01, 1, true).toFixed(2));
+        const amount = parseEther(random(0.01, 1, true).toFixed(2));
         const recipient = randomBytes32();
         const fuelBridge = randomBytes32();
 
         await erc20Gateway
           .connect(deployer)
-          .setGlobalDepositLimit(token.address, amount);
+          .setGlobalDepositLimit(token, amount);
 
         await fuelMessagePortal.connect(deployer).setMessageSender(fuelBridge);
         const impersonatedPortal = await impersonateAccount(
-          fuelMessagePortal.address,
+          fuelMessagePortal,
           hre
         );
         await erc20Gateway
           .connect(impersonatedPortal)
-          .registerAsReceiver(token.address);
+          .registerAsReceiver(token);
 
-        await token.mint(user.address, amount);
-        await token.approve(erc20Gateway.address, constants.MaxUint256);
+        await token.mint(user, amount);
+        await token.approve(erc20Gateway, MaxUint256);
 
         await erc20Gateway
           .connect(user)
-          .deposit(recipient, token.address, fuelBridge, amount);
+          .deposit(recipient, token, fuelBridge, amount);
 
         return { amount, recipient, fuelBridge, impersonatedPortal };
       };
 
       it('can withdraw several times and reduces deposited balances', async () => {
         const { amount, impersonatedPortal, fuelBridge } = await deposit();
-        const withdrawAmount = amount.div(4);
+        const withdrawAmount = amount / 4n;
 
         const {
           token,
@@ -654,33 +643,28 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
           const recipient = randomAddress();
           const withdrawalTx = erc20Gateway
             .connect(impersonatedPortal)
-            .finalizeWithdrawal(
-              recipient,
-              token.address,
-              withdrawAmount,
-              TOKEN_ID
-            );
+            .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
           await withdrawalTx;
 
-          const expectedTokenTotals = amount.sub(withdrawAmount);
+          const expectedTokenTotals = amount - withdrawAmount;
           expect(
-            await erc20Gateway.tokensDeposited(token.address, fuelBridge)
+            await erc20Gateway.tokensDeposited(token, fuelBridge)
           ).to.be.equal(expectedTokenTotals);
-          expect(await erc20Gateway.depositTotals(token.address)).to.be.equal(
+          expect(await erc20Gateway.depositTotals(token)).to.be.equal(
             expectedTokenTotals
           );
 
           await expect(withdrawalTx).to.changeTokenBalances(
             token,
             [erc20Gateway, recipient],
-            [withdrawAmount.mul(-1), withdrawAmount]
+            [withdrawAmount * -1n, withdrawAmount]
           );
           await expect(withdrawalTx)
             .to.emit(erc20Gateway, 'Withdrawal')
             .withArgs(
-              hexZeroPad(recipient, 32).toLowerCase(),
-              token.address,
+              zeroPadValue(recipient, 32).toLowerCase(),
+              token,
               fuelBridge,
               withdrawAmount
             );
@@ -691,36 +675,29 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
           const recipient = randomAddress();
           const withdrawalTx = erc20Gateway
             .connect(impersonatedPortal)
-            .finalizeWithdrawal(
-              recipient,
-              token.address,
-              withdrawAmount,
-              TOKEN_ID
-            );
+            .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
           await withdrawalTx;
 
-          const expectedTokenTotals = amount
-            .sub(withdrawAmount)
-            .sub(withdrawAmount);
+          const expectedTokenTotals = amount - withdrawAmount * 2n;
 
           expect(
-            await erc20Gateway.tokensDeposited(token.address, fuelBridge)
+            await erc20Gateway.tokensDeposited(token, fuelBridge)
           ).to.be.equal(expectedTokenTotals);
-          expect(await erc20Gateway.depositTotals(token.address)).to.be.equal(
+          expect(await erc20Gateway.depositTotals(token)).to.be.equal(
             expectedTokenTotals
           );
 
           await expect(withdrawalTx).to.changeTokenBalances(
             token,
             [erc20Gateway, recipient],
-            [withdrawAmount.mul(-1), withdrawAmount]
+            [withdrawAmount * -1n, withdrawAmount]
           );
           await expect(withdrawalTx)
             .to.emit(erc20Gateway, 'Withdrawal')
             .withArgs(
-              hexZeroPad(recipient, 32).toLowerCase(),
-              token.address,
+              zeroPadValue(recipient, 32).toLowerCase(),
+              token,
               fuelBridge,
               withdrawAmount
             );
@@ -743,12 +720,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         const recipient = randomAddress();
         const withdrawalTx = erc20Gateway
           .connect(impersonatedPortal)
-          .finalizeWithdrawal(
-            recipient,
-            token.address,
-            withdrawAmount,
-            TOKEN_ID
-          );
+          .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
         await expect(withdrawalTx).to.be.revertedWithCustomError(
           erc20Gateway,
@@ -772,12 +744,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         const recipient = randomAddress();
         const withdrawalTx = erc20Gateway
           .connect(impersonatedPortal)
-          .finalizeWithdrawal(
-            recipient,
-            token.address,
-            withdrawAmount,
-            TOKEN_ID + 1
-          );
+          .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID + 1);
 
         await expect(withdrawalTx).to.be.revertedWithCustomError(
           erc20Gateway,
@@ -787,7 +754,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
       it('reverts if trying to withdraw more than initially deposited', async () => {
         const { amount, impersonatedPortal, fuelBridge } = await deposit();
-        const withdrawAmount = amount.add(1);
+        const withdrawAmount = amount + 1n;
 
         const {
           token,
@@ -801,12 +768,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
         const recipient = randomAddress();
         const withdrawalTx = erc20Gateway
           .connect(impersonatedPortal)
-          .finalizeWithdrawal(
-            recipient,
-            token.address,
-            withdrawAmount,
-            TOKEN_ID
-          );
+          .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
         await expect(withdrawalTx).to.be.revertedWithPanic(
           UNDERFLOW_PANIC_CODE
@@ -831,12 +793,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
         const withdrawalTx = erc20Gateway
           .connect(impersonatedPortal)
-          .finalizeWithdrawal(
-            recipient,
-            token.address,
-            withdrawAmount,
-            TOKEN_ID
-          );
+          .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
         await expect(withdrawalTx).to.be.revertedWith('Pausable: paused');
       });
@@ -858,12 +815,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
 
         const withdrawalTx = erc20Gateway
           .connect(mallory)
-          .finalizeWithdrawal(
-            recipient,
-            token.address,
-            withdrawAmount,
-            TOKEN_ID
-          );
+          .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
 
         await expect(withdrawalTx).to.be.revertedWithCustomError(
           erc20Gateway,
