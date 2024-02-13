@@ -126,7 +126,7 @@ const fixture = deployments.createFixture(
   }
 );
 
-describe.only('ERC721 Gateway', () => {
+describe('ERC721 Gateway', () => {
   let env: Env;
 
   // Contract constants
