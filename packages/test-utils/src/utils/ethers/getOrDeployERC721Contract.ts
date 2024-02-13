@@ -13,16 +13,17 @@ export async function getOrDeployERC721Contract(env: TestEnvironment) {
   if (!ethTestNft) {
     debug(`Creating ERC-721 token contract to test with...`);
     const eth_tokenFactory = new NFT__factory(ethDeployer);
-    ethTestNft = await eth_tokenFactory.deploy();
-    await ethTestNft.deployed();
+    ethTestNft = await eth_tokenFactory
+      .deploy()
+      .then((tx) => tx.waitForDeployment());
+
     debug(
-      `Ethereum ERC-721 token contract created at address ${ethTestNft.address}.`
+      `Ethereum ERC-721 token contract created at address ${await ethTestNft.getAddress()}.`
     );
   }
   ethTestNft = ethTestNft.connect(ethAcct);
-  const ethTestTokenAddress = ethTestNft.address;
   debug(
-    `Testing with Ethereum ERC-721 token contract at ${ethTestTokenAddress}.`
+    `Testing with Ethereum ERC-721 token contract at ${await ethTestNft.getAddress()}.`
   );
 
   return ethTestNft;

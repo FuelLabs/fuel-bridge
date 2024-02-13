@@ -1,6 +1,5 @@
 /// @dev The Fuel testing setup.
 /// A set of useful helper methods for setting up the integration test environment.
-import type { Provider as EthProvider } from '@ethersproject/providers';
 import type {
   FuelChainState,
   FuelMessagePortal,
@@ -14,8 +13,8 @@ import {
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
-import type { Wallet as EthSigner } from 'ethers';
-import { ethers } from 'ethers';
+import type { Signer as EthSigner, Provider as EthProvider } from 'ethers';
+import { JsonRpcProvider, ethers, formatEther, parseEther } from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';
 
@@ -148,9 +147,8 @@ export async function setupEnvironment(
   }
 
   // Create provider and signers from http_ethereum_client
-  const eth_provider = new ethers.providers.JsonRpcProvider(
-    http_ethereum_client
-  );
+  const eth_provider = new JsonRpcProvider(http_ethereum_client);
+
   try {
     await eth_provider.getBlockNumber();
   } catch (e) {
@@ -161,29 +159,29 @@ export async function setupEnvironment(
     );
   }
   const eth_deployer = new ethers.Wallet(pk_eth_deployer, eth_provider);
-  const eth_deployerBalance = await eth_deployer.getBalance();
-  if (eth_deployerBalance.lt(ethers.utils.parseEther('5'))) {
+  const eth_deployerBalance = await eth_provider.getBalance(eth_deployer);
+  if (eth_deployerBalance < parseEther('5')) {
     throw new Error(
       'Ethereum deployer balance is very low (' +
-        ethers.utils.formatEther(eth_deployerBalance) +
+        formatEther(eth_deployerBalance) +
         'ETH)'
     );
   }
   const eth_signer1 = new ethers.Wallet(pk_eth_signer1, eth_provider);
-  const eth_signer1Balance = await eth_signer1.getBalance();
-  if (eth_signer1Balance.lt(ethers.utils.parseEther('1'))) {
+  const eth_signer1Balance = await eth_provider.getBalance(eth_signer1);
+  if (eth_signer1Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
       to: await eth_signer1.getAddress(),
-      value: ethers.utils.parseEther('1'),
+      value: parseEther('1'),
     });
     await tx.wait();
   }
   const eth_signer2 = new ethers.Wallet(pk_eth_signer2, eth_provider);
-  const eth_signer2Balance = await eth_signer2.getBalance();
-  if (eth_signer2Balance.lt(ethers.utils.parseEther('1'))) {
+  const eth_signer2Balance = await eth_provider.getBalance(eth_signer2);
+  if (eth_signer2Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
       to: await eth_signer2.getAddress(),
-      value: ethers.utils.parseEther('1'),
+      value: parseEther('1'),
     });
     await tx.wait();
   }
@@ -245,6 +243,7 @@ export async function setupEnvironment(
   }
 
   // Connect existing contracts
+
   const eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
     eth_fuelChainStateAddress,
     eth_deployer
