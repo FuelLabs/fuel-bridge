@@ -54,7 +54,7 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
   return 0;
 }
 
-describe.only('Incoming Messages', async () => {
+describe('Incoming Messages', async () => {
   let env: HarnessObject;
   let fuelBaseAssetDecimals: bigint;
   let baseAssetConversion: bigint;
