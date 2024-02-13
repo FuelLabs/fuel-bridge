@@ -3,6 +3,7 @@ import chai from 'chai';
 import type { Provider } from 'ethers';
 import {
   MaxUint256,
+  Wallet,
   hexlify,
   parseEther,
   randomBytes,
@@ -11,10 +12,13 @@ import {
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import { randomBytes32 } from '../protocol/utils';
-import type { FuelChainState, FuelMessagePortalV2 } from '../typechain';
+import {
+  FuelMessagePortalV2__factory,
+  type FuelChainState,
+  type FuelMessagePortalV2,
+  FuelChainState__factory,
+} from '../typechain';
 import type { MessageTester } from '../typechain/MessageTester';
-
-import {} from '@openzeppelin/hardhat-upgrades';
 
 import { addressToB256 } from './utils/addressConversion';
 
@@ -79,6 +83,11 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         await fuelMessagePortalDeployment.getAddress()
       ).connect(fuelMessagePortalDeployment.runner) as FuelMessagePortalV2;
 
+      const wallet = Wallet.createRandom().connect(deployer.provider);
+      FuelChainState__factory.connect(
+        await fuelMessagePortal.getAddress(),
+        wallet
+      );
       const messageTester = (await ethers
         .getContractFactory('MessageTester', deployer)
         .then(async (factory) =>
