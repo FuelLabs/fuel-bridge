@@ -15,6 +15,7 @@ import {
   FuelChainState__factory,
   FuelMessagePortal__factory,
   FuelERC20GatewayV2__factory,
+  FuelERC721Gateway__factory,
 } from '../typechain';
 
 // All deployable contracts.
@@ -145,18 +146,13 @@ export async function deployFuel(
     deployer
   );
 
-  console.log('aaa');
   const fuelChainState = await upgrades
     .deployProxy(FuelChainState, [], {
       initializer: 'initialize',
     })
     .then((tx) => tx.waitForDeployment())
-    .then((tx) => tx.getAddress())
-    .then((address) =>
-      FuelChainState__factory.connect(address, FuelChainState.runner)
-    );
+    .then((tx) => FuelChainState__factory.connect(tx as any, tx.runner));
 
-  console.log('bbbb');
   // Deploy message portal contract
   const FuelMessagePortal = await ethers.getContractFactory(
     'FuelMessagePortal',
@@ -168,10 +164,7 @@ export async function deployFuel(
       initializer: 'initialize',
     })
     .then((tx) => tx.waitForDeployment())
-    .then((tx) => tx.getAddress())
-    .then((address) =>
-      FuelMessagePortal__factory.connect(address, FuelMessagePortal.runner)
-    );
+    .then((tx) => FuelMessagePortal__factory.connect(tx as any, tx.runner));
 
   // Deploy gateway contract for ERC20 bridging
   const FuelERC20Gateway = await ethers.getContractFactory(
@@ -183,24 +176,19 @@ export async function deployFuel(
       initializer: 'initialize',
     })
     .then((tx) => tx.waitForDeployment())
-    .then((tx) => tx.getAddress())
-    .then((address) =>
-      FuelERC20GatewayV2__factory.connect(address, FuelERC20Gateway.runner)
-    );
+    .then((tx) => FuelERC20GatewayV2__factory.connect(tx as any, tx.runner));
 
   // Deploy gateway contract for ERC721 bridging
   const FuelERC721Gateway = await ethers.getContractFactory(
     'FuelERC721GatewayV2',
     deployer
   );
-  const fuelERC721Gateway = (await upgrades.deployProxy(
-    FuelERC721Gateway,
-    [await fuelMessagePortal.getAddress()],
-    {
+  const fuelERC721Gateway = await upgrades
+    .deployProxy(FuelERC721Gateway, [await fuelMessagePortal.getAddress()], {
       initializer: 'initialize',
-    }
-  )) as unknown as FuelERC721Gateway;
-  await fuelERC721Gateway.waitForDeployment();
+    })
+    .then((tx) => tx.waitForDeployment())
+    .then((tx) => FuelERC721Gateway__factory.connect(tx as any, tx.runner));
 
   // Return deployed contracts
   return {

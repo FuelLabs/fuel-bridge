@@ -11,13 +11,13 @@ import hre from 'hardhat';
 
 import type { HarnessObject } from '../protocol/harness';
 import { randomAddress, randomBytes32 } from '../protocol/utils';
-import type {
-  FuelERC20Gateway,
-  MockFuelMessagePortal,
-  Token,
+import {
+  FuelERC20Gateway__factory,
+  type MockFuelMessagePortal,
+  type Token,
 } from '../typechain';
 
-import { impersonateAccount } from './hardhat-utils/impersonateAccount';
+import { impersonateAccount } from './utils/impersonateAccount';
 
 const { expect } = chai;
 const { deployments } = hre;
@@ -32,7 +32,7 @@ type Fixture = Pick<
   | 'initialTokenAmount'
 > & { fuelMessagePortalMock: MockFuelMessagePortal };
 
-describe.only('ERC20 Gateway', async () => {
+describe('ERC20 Gateway', async () => {
   let env: Fixture;
 
   // Message data
@@ -56,11 +56,14 @@ describe.only('ERC20 Gateway', async () => {
       deployer
     );
 
-    const fuelERC20Gateway = (await hre.upgrades.deployProxy(
-      FuelERC20Gateway,
-      [await fuelMessagePortalMock.getAddress()],
-      { initializer: 'initialize' }
-    )) as unknown as FuelERC20Gateway;
+    const fuelERC20Gateway = await hre.upgrades
+      .deployProxy(
+        FuelERC20Gateway,
+        [await fuelMessagePortalMock.getAddress()],
+        { initializer: 'initialize' }
+      )
+      .then((tx) => tx.waitForDeployment())
+      .then((tx) => FuelERC20Gateway__factory.connect(tx as any, tx.runner));
 
     const initialTokenAmount = parseEther('1000000');
     for (let i = 0; i < signers.length; i += 1) {
