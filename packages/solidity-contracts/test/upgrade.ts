@@ -10,7 +10,7 @@ import type { UpgradeableTester } from '../typechain';
 
 const { expect } = chai;
 
-describe('Contract Upgradability', async () => {
+describe.only('Contract Upgradability', async () => {
   let env: HarnessObject;
   let upgradeableTester: UpgradeableTester;
 
@@ -22,9 +22,9 @@ describe('Contract Upgradability', async () => {
       'UpgradeableTester',
       env.deployer
     );
-    upgradeableTester =
-      (await upgradeableTesterContractFactory.deploy()) as UpgradeableTester;
-    await upgradeableTester.deployed();
+    upgradeableTester = (await upgradeableTesterContractFactory
+      .deploy()
+      .then((tx) => tx.waitForDeployment())) as UpgradeableTester;
   });
 
   describe('Upgrade contracts', async () => {
@@ -32,10 +32,10 @@ describe('Contract Upgradability', async () => {
       '0x0000000000000000000000000000000000000000000000000000000000000000';
     it('Should be able to upgrade contracts', async () => {
       const contracts: DeployedContractAddresses = {
-        FuelChainState: env.fuelChainState.address,
-        FuelMessagePortal: env.fuelMessagePortal.address,
-        FuelERC20Gateway: env.fuelERC20Gateway.address,
-        FuelERC721Gateway: env.fuelERC721Gateway.address,
+        FuelChainState: await env.fuelChainState.getAddress(),
+        FuelMessagePortal: await env.fuelMessagePortal.getAddress(),
+        FuelERC20Gateway: await env.fuelERC20Gateway.getAddress(),
+        FuelERC721Gateway: await env.fuelERC721Gateway.getAddress(),
         FuelChainState_impl: '',
         FuelMessagePortal_impl: '',
         FuelERC20Gateway_impl: '',
@@ -44,13 +44,13 @@ describe('Contract Upgradability', async () => {
       const upgradedContracts = await upgradeFuel(contracts, env.deployer);
 
       expect(upgradedContracts.FuelChainState).to.equal(
-        env.fuelChainState.address
+        await env.fuelChainState.getAddress()
       );
       expect(upgradedContracts.FuelMessagePortal).to.equal(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
       expect(upgradedContracts.FuelERC20Gateway).to.equal(
-        env.fuelERC20Gateway.address
+        await env.fuelERC20Gateway.getAddress()
       );
     });
 
@@ -59,22 +59,24 @@ describe('Contract Upgradability', async () => {
         'Initializable: contract is already initialized'
       );
       await expect(
-        env.fuelMessagePortal.initialize(env.fuelChainState.address)
+        env.fuelMessagePortal.initialize(await env.fuelChainState.getAddress())
       ).to.be.revertedWith('Initializable: contract is already initialized');
       await expect(
-        env.fuelERC20Gateway.initialize(env.fuelMessagePortal.address)
+        env.fuelERC20Gateway.initialize(
+          await env.fuelMessagePortal.getAddress()
+        )
       ).to.be.revertedWith('Initializable: contract is already initialized');
     });
 
     it('Should not be able to call init functions for upgradeable abstract contracts', async () => {
       await expect(
         upgradeableTester.testFuelMessagesEnabledInit(
-          env.fuelMessagePortal.address
+          await env.fuelMessagePortal.getAddress()
         )
       ).to.be.revertedWith('Initializable: contract is not initializing');
       await expect(
         upgradeableTester.testFuelMessagesEnabledInitUnchained(
-          env.fuelMessagePortal.address
+          await env.fuelMessagePortal.getAddress()
         )
       ).to.be.revertedWith('Initializable: contract is not initializing');
     });

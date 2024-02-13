@@ -29,7 +29,7 @@ const ETH_PER_ACCOUNT_LIMIT = parseEther('10');
 
 const EMPTY_DATA = new Uint8Array([]);
 
-describe.only('FuelMessagesPortalV2 - Outgoing messages', async () => {
+describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   const nonceList: string[] = [];
 
   let signers: HardhatEthersSigner[];
