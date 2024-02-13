@@ -5,7 +5,6 @@ import {
   keccak256,
   parseEther,
   randomBytes,
-  toBeHex,
   toUtf8Bytes,
   zeroPadValue,
 } from 'ethers';
@@ -18,7 +17,7 @@ import type { MessageTester } from '../typechain/MessageTester.d';
 
 const { expect } = chai;
 
-describe.only('Outgoing Messages', async () => {
+describe('Outgoing Messages', async () => {
   let env: HarnessObject;
   const nonceList: string[] = [];
 
