@@ -1,7 +1,13 @@
-import type { Provider } from '@ethersproject/abstract-provider';
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
 import chai from 'chai';
-import { BigNumber as BN } from 'ethers';
+import type { Provider } from 'ethers';
+import {
+  keccak256,
+  parseEther,
+  toBeHex,
+  toUtf8Bytes,
+  zeroPadValue,
+} from 'ethers';
 import { ethers } from 'hardhat';
 
 import type { BlockHeaderLite } from '../protocol/blockHeader';
@@ -48,10 +54,10 @@ function getLeafIndexKey(nodes: TreeNode[], data: string): number {
   return 0;
 }
 
-describe('Incoming Messages', async () => {
+describe.only('Incoming Messages', async () => {
   let env: HarnessObject;
-  let fuelBaseAssetDecimals: number;
-  let baseAssetConversion: number;
+  let fuelBaseAssetDecimals: bigint;
+  let baseAssetConversion: bigint;
 
   // Contract constants
   const TIME_TO_FINALIZE = 10800;
@@ -120,34 +126,33 @@ describe('Incoming Messages', async () => {
   before(async () => {
     env = await setupFuel();
     fuelBaseAssetDecimals = await env.fuelMessagePortal.fuelBaseAssetDecimals();
-    baseAssetConversion = 10 ** (18 - fuelBaseAssetDecimals);
+    baseAssetConversion = 10n ** (18n - fuelBaseAssetDecimals);
 
     // Deploy contracts for message testing.
     const messageTesterContractFactory = await ethers.getContractFactory(
       'MessageTester',
       env.deployer
     );
-    messageTester = (await messageTesterContractFactory.deploy(
-      env.fuelMessagePortal.address
-    )) as MessageTester;
-    await messageTester.deployed();
+    messageTester = (await messageTesterContractFactory
+      .deploy(env.fuelMessagePortal)
+      .then((tx) => tx.waitForDeployment())) as MessageTester;
+
     expect(await messageTester.data1()).to.be.equal(0);
     expect(await messageTester.data2()).to.be.equal(0);
 
     // get data for building messages
-    messageTesterAddress = messageTester.address
-      .split('0x')
-      .join('0x000000000000000000000000');
-    fuelMessagePortalContractAddress = env.fuelMessagePortal.address
-      .split('0x')
-      .join('0x000000000000000000000000');
+    messageTesterAddress = zeroPadValue(await messageTester.getAddress(), 32);
+    fuelMessagePortalContractAddress = zeroPadValue(
+      await env.fuelMessagePortal.getAddress(),
+      32
+    );
     trustedSenderAddress = await messageTester.getTrustedSender();
 
     // message from trusted sender
     message1 = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BN.from(0),
+      0n,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData1,
@@ -157,7 +162,7 @@ describe('Incoming Messages', async () => {
     message2 = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BN.from(0),
+      0n,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -168,7 +173,7 @@ describe('Incoming Messages', async () => {
     messageWithAmount = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      ethers.utils.parseEther('0.1').div(baseAssetConversion),
+      parseEther('0.1') / baseAssetConversion,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -179,7 +184,7 @@ describe('Incoming Messages', async () => {
     messageBadSender = new Message(
       randomBytes32(),
       messageTesterAddress,
-      BN.from(0),
+      0n,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData3,
@@ -189,10 +194,8 @@ describe('Incoming Messages', async () => {
     // message to bad recipient
     messageBadRecipient = new Message(
       trustedSenderAddress,
-      env.fuelMessagePortal.address
-        .split('0x')
-        .join('0x000000000000000000000000'),
-      BN.from(0),
+      fuelMessagePortalContractAddress,
+      0n,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -203,7 +206,7 @@ describe('Incoming Messages', async () => {
     messageBadData = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BN.from(0),
+      0n,
       randomBytes32(),
       randomBytes32()
     );
@@ -211,15 +214,15 @@ describe('Incoming Messages', async () => {
     messageEOA = new Message(
       randomBytes32(),
       env.addresses[2].split('0x').join('0x000000000000000000000000'),
-      ethers.utils.parseEther('0.1').div(baseAssetConversion),
+      parseEther('0.1') / baseAssetConversion,
       randomBytes32(),
       '0x'
     );
     // message to EOA no amount
     messageEOANoAmount = new Message(
       randomBytes32(),
-      env.addresses[3].split('0x').join('0x000000000000000000000000'),
-      BN.from(0),
+      zeroPadValue(env.addresses[3], 32),
+      0n,
       randomBytes32(),
       '0x'
     );
@@ -282,24 +285,22 @@ describe('Incoming Messages', async () => {
 
     // make sure the portal has eth to relay
     await env.fuelMessagePortal.depositETH(EMPTY, {
-      value: ethers.utils.parseEther('0.2'),
+      value: parseEther('0.2'),
     });
 
     // Verify contract getters
     expect(await env.fuelMessagePortal.fuelChainStateContract()).to.equal(
-      env.fuelChainState.address
+      await env.fuelChainState.getAddress()
     );
     expect(await messageTester.fuelMessagePortal()).to.equal(
-      env.fuelMessagePortal.address
+      await env.fuelMessagePortal.getAddress()
     );
   });
 
   describe('Verify access control', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
     let signer0: string;
     let signer1: string;
     let signer2: string;
@@ -441,7 +442,7 @@ describe('Incoming Messages', async () => {
   describe('Relay both valid and invalid messages', async () => {
     let provider: Provider;
     before(async () => {
-      provider = env.fuelMessagePortal.provider;
+      provider = env.deployer.provider;
     });
 
     it('Should not get a valid message sender outside of relaying', async () => {
@@ -497,11 +498,9 @@ describe('Incoming Messages', async () => {
 
     it('Should not be able to relay message with bad proof in root block', async () => {
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         message1,
         67
@@ -526,20 +525,18 @@ describe('Incoming Messages', async () => {
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(portalBalance);
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
 
     it('Should be able to relay valid message', async () => {
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         message1,
         22
@@ -562,9 +559,9 @@ describe('Incoming Messages', async () => {
       expect(await messageTester.data1()).to.be.equal(messageTestData1);
       expect(await messageTester.data2()).to.be.equal(messageTestData2);
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(portalBalance);
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
@@ -616,11 +613,9 @@ describe('Incoming Messages', async () => {
 
     it('Should be able to relay message with amount', async () => {
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageWithAmount,
         33
@@ -643,14 +638,12 @@ describe('Incoming Messages', async () => {
       expect(await messageTester.data1()).to.be.equal(messageTestData2);
       expect(await messageTester.data2()).to.be.equal(messageTestData3);
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(
-        portalBalance.sub(messageWithAmount.amount.mul(baseAssetConversion))
+        portalBalance - messageWithAmount.amount * baseAssetConversion
       );
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
-        messageTesterBalance.add(
-          messageWithAmount.amount.mul(baseAssetConversion)
-        )
+      expect(await provider.getBalance(messageTester)).to.be.equal(
+        messageTesterBalance + messageWithAmount.amount * baseAssetConversion
       );
     });
 
@@ -723,7 +716,7 @@ describe('Incoming Messages', async () => {
     it('Should be able to relay message to EOA', async () => {
       const accountBalance = await provider.getBalance(env.addresses[2]);
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageEOA,
@@ -745,19 +738,17 @@ describe('Incoming Messages', async () => {
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(true);
       expect(await provider.getBalance(env.addresses[2])).to.be.equal(
-        accountBalance.add(messageEOA.amount.mul(baseAssetConversion))
+        accountBalance + messageEOA.amount * baseAssetConversion
       );
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
-      ).to.be.equal(
-        portalBalance.sub(messageEOA.amount.mul(baseAssetConversion))
-      );
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
+      ).to.be.equal(portalBalance - messageEOA.amount * baseAssetConversion);
     });
 
     it('Should be able to relay message to EOA with no amount', async () => {
       const accountBalance = await provider.getBalance(env.addresses[3]);
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageEOANoAmount,
@@ -782,17 +773,15 @@ describe('Incoming Messages', async () => {
         accountBalance
       );
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(portalBalance);
     });
 
     it('Should not be able to relay valid message with different amount', async () => {
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         message2,
         68
@@ -801,7 +790,7 @@ describe('Incoming Messages', async () => {
         sender: message2.sender,
         recipient: message2.recipient,
         nonce: message2.nonce,
-        amount: message2.amount.add(ethers.utils.parseEther('1.0')),
+        amount: message2.amount + parseEther('1.0'),
         data: message2.data,
       };
       expect(
@@ -823,9 +812,9 @@ describe('Incoming Messages', async () => {
         await env.fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(portalBalance);
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
@@ -833,11 +822,9 @@ describe('Incoming Messages', async () => {
     it('Should not be able to relay non-existent message', async () => {
       const [, msgBlockHeader, blockInRoot] = generateProof(message2, 1);
       const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
+        await env.fuelMessagePortal.getAddress()
       );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const msgInBlock = {
         key: 0,
         proof: [],
@@ -855,9 +842,9 @@ describe('Incoming Messages', async () => {
         'InvalidMessageInBlockProof'
       );
       expect(
-        await provider.getBalance(env.fuelMessagePortal.address)
+        await provider.getBalance(await env.fuelMessagePortal.getAddress())
       ).to.be.equal(portalBalance);
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
@@ -877,7 +864,7 @@ describe('Incoming Messages', async () => {
       const messageReentrant = new Message(
         trustedSenderAddress,
         fuelMessagePortalContractAddress,
-        BN.from(0),
+        0n,
         randomBytes32(),
         reentrantTestData
       );
@@ -888,13 +875,13 @@ describe('Incoming Messages', async () => {
       );
 
       // create block that contains this message
-      const tai64Time = BN.from(Math.floor(new Date().getTime() / 1000)).add(
-        '4611686018427387914'
-      );
+      const tai64Time =
+        BigInt(Math.floor(new Date().getTime() / 1000)) + 4611686018427387914n;
+
       const reentrantTestMessageBlock = createBlock(
         '',
         blockIds.length,
-        tai64Time.toHexString(),
+        toBeHex(tai64Time),
         '1',
         calcRoot(messageReentrantMessages)
       );
@@ -907,7 +894,7 @@ describe('Incoming Messages', async () => {
       const reentrantTestRootBlock = createBlock(
         calcRoot(blockIds),
         blockIds.length,
-        tai64Time.toHexString()
+        toBeHex(tai64Time)
       );
       const reentrantTestPrevBlockNodes = constructTree(blockIds);
       const reentrantTestRootBlockId = computeBlockId(reentrantTestRootBlock);
@@ -958,9 +945,7 @@ describe('Incoming Messages', async () => {
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
 
     it('Should be able to grant pauser role', async () => {
       expect(
