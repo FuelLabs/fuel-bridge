@@ -1,4 +1,4 @@
-import { utils } from 'ethers';
+import { solidityPacked } from 'ethers';
 
 import hash from './cryptography';
 
@@ -21,7 +21,7 @@ class BlockHeader {
 
 // Serialize a block application header.
 export function serializeApplicationHeader(blockHeader: BlockHeader): string {
-  return utils.solidityPack(
+  return solidityPacked(
     ['uint64', 'uint64', 'uint64', 'bytes32', 'bytes32'],
     [
       blockHeader.daHeight,
@@ -40,7 +40,7 @@ export function computeApplicationHeaderHash(blockHeader: BlockHeader): string {
 
 // Serialize a block consensus header.
 export function serializeConsensusHeader(blockHeader: BlockHeader): string {
-  return utils.solidityPack(
+  return solidityPacked(
     ['bytes32', 'uint32', 'uint64', 'bytes32'],
     [
       blockHeader.prevRoot,
