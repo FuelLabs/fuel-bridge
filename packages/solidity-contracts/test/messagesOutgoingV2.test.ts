@@ -1,14 +1,17 @@
-import type { Provider } from '@ethersproject/abstract-provider';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import chai from 'chai';
-import type { BigNumber } from 'ethers';
-import { BigNumber as BN, constants } from 'ethers';
-import { parseEther } from 'ethers';
+import type { Provider } from 'ethers';
+import {
+  MaxUint256,
+  hexlify,
+  parseEther,
+  randomBytes,
+  zeroPadValue,
+} from 'ethers';
 import { deployments, ethers, upgrades } from 'hardhat';
 
-import { randomBytes, randomBytes32 } from '../protocol/utils';
+import { randomBytes32 } from '../protocol/utils';
 import type { FuelChainState, FuelMessagePortalV2 } from '../typechain';
-import { FuelMessagePortalV2__factory } from '../typechain';
 import type { MessageTester } from '../typechain/MessageTester';
 
 import {} from '@openzeppelin/hardhat-upgrades';
@@ -17,17 +20,19 @@ import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;
 
-const ETH_DECIMALS = 18;
-const FUEL_BASE_ASSET_DECIMALS = 9;
-const BASE_ASSET_CONVERSION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
+const ETH_DECIMALS = 18n;
+const FUEL_BASE_ASSET_DECIMALS = 9n;
+const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
 const ETH_GLOBAL_LIMIT = parseEther('20');
 const ETH_PER_ACCOUNT_LIMIT = parseEther('10');
 
-describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
+const EMPTY_DATA = new Uint8Array([]);
+
+describe.only('FuelMessagesPortalV2 - Outgoing messages', async () => {
   const nonceList: string[] = [];
 
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let addresses: string[];
 
   // Testing contracts
@@ -40,7 +45,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   const fixture = deployments.createFixture(
     async (
       { ethers, upgrades: { deployProxy } },
-      options?: { globalEthLimit?: BigNumber; perAccountEthLimit?: BigNumber }
+      options?: { globalEthLimit?: bigint; perAccountEthLimit?: bigint }
     ) => {
       const provider = ethers.provider;
       const signers = await ethers.getSigners();
@@ -50,42 +55,50 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         initializer: 'initialize',
       };
 
-      const fuelChainState = await ethers
+      const fuelChainState = (await ethers
         .getContractFactory('FuelChainState', deployer)
-        .then(
-          (factory) =>
-            deployProxy(factory, [], proxyOptions) as Promise<FuelChainState>
-        );
+        .then(async (factory) => deployProxy(factory, [], proxyOptions))
+        .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
-      const fuelMessagePortal = await ethers
+      const fuelMessagePortalDeployment = await ethers
         .getContractFactory('FuelMessagePortal', deployer)
-        .then((factory) =>
-          deployProxy(factory, [fuelChainState.address], proxyOptions)
+        .then(async (factory) =>
+          deployProxy(
+            factory,
+            [await fuelChainState.getAddress()],
+            proxyOptions
+          )
         )
-        .then(({ address }) =>
-          FuelMessagePortalV2__factory.connect(address, deployer)
-        );
+        .then((tx) => tx.waitForDeployment());
 
       const V2Implementation = await ethers.getContractFactory(
         'FuelMessagePortalV2'
       );
 
-      const messageTester = await ethers
+      const fuelMessagePortal = V2Implementation.attach(
+        await fuelMessagePortalDeployment.getAddress()
+      ).connect(fuelMessagePortalDeployment.runner) as FuelMessagePortalV2;
+
+      const messageTester = (await ethers
         .getContractFactory('MessageTester', deployer)
-        .then(
-          (factory) =>
-            factory.deploy(fuelMessagePortal.address) as Promise<MessageTester>
-        );
+        .then(async (factory) =>
+          factory.deploy(await fuelMessagePortal.getAddress())
+        )
+        .then((tx) => tx.waitForDeployment())) as MessageTester;
 
       await signers[0].sendTransaction({
-        to: messageTester.address,
+        to: messageTester,
         value: parseEther('2'),
       });
 
-      await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-        unsafeAllow: ['constructor'],
-        constructorArgs: [options?.globalEthLimit || ETH_GLOBAL_LIMIT],
-      });
+      await upgrades.upgradeProxy(
+        fuelMessagePortalDeployment,
+        V2Implementation,
+        {
+          unsafeAllow: ['constructor'],
+          constructorArgs: [options?.globalEthLimit || ETH_GLOBAL_LIMIT],
+        }
+      );
 
       return {
         provider,
@@ -127,8 +140,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
         await expect(tx).not.to.be.reverted;
         await expect(tx).to.changeEtherBalances(
-          [sender.address, fuelMessagePortal.address],
-          [value.mul(-1), value]
+          [sender.address, await fuelMessagePortal.getAddress()],
+          [value * -1n, value]
         );
 
         expect(await fuelMessagePortal.totalDeposited()).equal(value);
@@ -142,11 +155,11 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
         await expect(tx).not.to.be.reverted;
         await expect(tx).to.changeEtherBalances(
-          [sender.address, fuelMessagePortal.address],
-          [value.mul(-1), value]
+          [sender.address, await fuelMessagePortal.getAddress()],
+          [value * -1n, value]
         );
 
-        expect(await fuelMessagePortal.totalDeposited()).equal(value.mul(2));
+        expect(await fuelMessagePortal.totalDeposited()).equal(value * 2n);
       }
     });
 
@@ -175,8 +188,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   describe('Behaves like V1 - Send messages', async () => {
     before(async () => {
       const fixt = await fixture({
-        globalEthLimit: constants.MaxUint256,
-        perAccountEthLimit: constants.MaxUint256,
+        globalEthLimit: MaxUint256,
+        perAccountEthLimit: MaxUint256,
       });
       ({
         messageTester,
@@ -188,29 +201,29 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
       // Verify contract getters
       expect(await fuelMessagePortal.fuelChainStateContract()).to.equal(
-        fuelChainState.address
+        await fuelChainState.getAddress()
       );
       expect(await messageTester.fuelMessagePortal()).to.equal(
-        fuelMessagePortal.address
+        await fuelMessagePortal.getAddress()
       );
     });
 
     it('Should be able to send message with data', async () => {
       const recipient = randomBytes32();
-      const data = randomBytes(16);
+      const data = hexlify(randomBytes(16));
       await expect(messageTester.attemptSendMessage(recipient, data)).to.not.be
         .reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({
-        address: fuelMessagePortal.address,
+        address: fuelMessagePortal,
       });
       const messageSentEvent = fuelMessagePortal.interface.parseLog(
         logs[logs.length - 1]
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        addressToB256(messageTester.address).toLowerCase()
+        addressToB256(await messageTester.getAddress()).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -223,22 +236,19 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
     it('Should be able to send message without data', async () => {
       const recipient = randomBytes32();
-      await expect(messageTester.attemptSendMessage(recipient, [])).to.not.be
-        .reverted;
+      await expect(messageTester.attemptSendMessage(recipient, EMPTY_DATA)).to
+        .not.be.reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({
-        address: fuelMessagePortal.address,
+        address: fuelMessagePortal,
       });
       const messageSentEvent = fuelMessagePortal.interface.parseLog(
         logs[logs.length - 1]
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(await messageTester.getAddress(), 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
@@ -251,36 +261,31 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
     it('Should be able to send message with amount and data', async () => {
       const recipient = randomBytes32();
-      const data = randomBytes(8);
-      const portalBalance = await provider.getBalance(
-        fuelMessagePortal.address
-      );
+      const data = hexlify(randomBytes(8));
+      const portalBalance = await provider.getBalance(fuelMessagePortal);
       await expect(
         messageTester.attemptSendMessageWithAmount(
           recipient,
-          ethers.utils.parseEther('0.1'),
+          parseEther('0.1'),
           data
         )
       ).to.not.be.reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({
-        address: fuelMessagePortal.address,
+        address: fuelMessagePortal,
       });
       const messageSentEvent = fuelMessagePortal.interface.parseLog(
         logs[logs.length - 1]
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(await messageTester.getAddress(), 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('0.1').div(BASE_ASSET_CONVERSION)
+        parseEther('0.1') / BASE_ASSET_CONVERSION
       );
 
       // Check that nonce is unique
@@ -288,42 +293,37 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       nonceList.push(messageSentEvent.args.nonce);
 
       // Check that portal balance increased
-      expect(await provider.getBalance(fuelMessagePortal.address)).to.equal(
-        portalBalance.add(ethers.utils.parseEther('0.1'))
+      expect(await provider.getBalance(fuelMessagePortal)).to.equal(
+        portalBalance + parseEther('0.1')
       );
     });
 
     it('Should be able to send message with amount and without data', async () => {
       const recipient = randomBytes32();
-      const portalBalance = await provider.getBalance(
-        fuelMessagePortal.address
-      );
+      const portalBalance = await provider.getBalance(fuelMessagePortal);
       await expect(
         messageTester.attemptSendMessageWithAmount(
           recipient,
-          ethers.utils.parseEther('0.5'),
-          []
+          parseEther('0.5'),
+          EMPTY_DATA
         )
       ).to.not.be.reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({
-        address: fuelMessagePortal.address,
+        address: fuelMessagePortal,
       });
       const messageSentEvent = fuelMessagePortal.interface.parseLog(
         logs[logs.length - 1]
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(await messageTester.getAddress(), 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('0.5').div(BASE_ASSET_CONVERSION)
+        parseEther('0.5') / BASE_ASSET_CONVERSION
       );
 
       // Check that nonce is unique
@@ -331,15 +331,15 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       nonceList.push(messageSentEvent.args.nonce);
 
       // Check that portal balance increased
-      expect(await provider.getBalance(fuelMessagePortal.address)).to.equal(
-        portalBalance.add(ethers.utils.parseEther('0.5'))
+      expect(await provider.getBalance(fuelMessagePortal)).to.equal(
+        portalBalance + parseEther('0.5')
       );
     });
 
     it('Should not be able to send message with amount too small', async () => {
       const recipient = randomBytes32();
       await expect(
-        fuelMessagePortal.sendMessage(recipient, [], {
+        fuelMessagePortal.sendMessage(recipient, EMPTY_DATA, {
           value: 1,
         })
       ).to.be.revertedWithCustomError(
@@ -355,17 +355,17 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         '0xf00000000000000000000000',
       ]);
 
-      const maxUint64 = BN.from('0xffffffffffffffff');
-      const precision = 10 ** 9;
+      const maxUint64 = BigInt('0xffffffffffffffff');
+      const precision = 10n ** 9n;
 
-      const maxAllowedValue = maxUint64.mul(precision);
-      await fuelMessagePortal.sendMessage(recipient, [], {
+      const maxAllowedValue = maxUint64 * precision;
+      await fuelMessagePortal.sendMessage(recipient, EMPTY_DATA, {
         value: maxAllowedValue,
       });
 
-      const minUnallowedValue = maxUint64.add(1).mul(precision);
+      const minUnallowedValue = (maxUint64 + 1n) * precision;
       await expect(
-        fuelMessagePortal.sendMessage(recipient, [], {
+        fuelMessagePortal.sendMessage(recipient, EMPTY_DATA, {
           value: minUnallowedValue,
         })
       ).to.be.revertedWithCustomError(fuelMessagePortal, 'AmountTooBig');
@@ -382,28 +382,25 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       const recipient = randomBytes32();
       await expect(
         fuelMessagePortal.depositETH(recipient, {
-          value: ethers.utils.parseEther('1.234'),
+          value: parseEther('1.234'),
         })
       ).to.not.be.reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({
-        address: fuelMessagePortal.address,
+        address: fuelMessagePortal,
       });
       const messageSentEvent = fuelMessagePortal.interface.parseLog(
         logs[logs.length - 1]
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        addresses[0]
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(addresses[0], 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('1.234').div(BASE_ASSET_CONVERSION)
+        parseEther('1.234') / BASE_ASSET_CONVERSION
       );
 
       // Check that nonce is unique
