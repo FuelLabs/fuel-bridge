@@ -9,7 +9,6 @@ import {
 import hre from 'hardhat';
 
 import { randomAddress, randomBytes32 } from '../protocol/utils';
-import { FuelERC721GatewayV2__factory } from '../typechain';
 import type {
   FuelERC721GatewayV2,
   MockFuelMessagePortal,
