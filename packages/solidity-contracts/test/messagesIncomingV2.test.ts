@@ -32,7 +32,7 @@ const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
 const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
-describe.only('FuelMessagePortalV2 - Incoming messages', () => {
+describe('FuelMessagePortalV2 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
   let signers: HardhatEthersSigner[];
