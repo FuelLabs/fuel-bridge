@@ -9,7 +9,10 @@ export async function validateFundgibleContracts(
   fuelTestToken: Contract,
   ethTestToken: Token
 ) {
-  const ethTestTokenAddress = ethTestToken.address;
+  const ethTestTokenAddress = await ethTestToken.getAddress();
+  const fuelErc20GatewayAddress = (
+    await env.eth.fuelERC20Gateway.getAddress()
+  ).toLowerCase();
 
   const l1Decimals = parseInt(
     (
@@ -52,13 +55,11 @@ export async function validateFundgibleContracts(
         .txParams(FUEL_CALL_TX_PARAMS)
         .dryRun()
     ).value.substring(26);
-  if (
-    l1Gateway.toLowerCase() != env.eth.fuelERC20Gateway.address.toLowerCase()
-  ) {
+  if (l1Gateway.toLowerCase() != fuelErc20GatewayAddress.toLowerCase()) {
     throw new Error(
       [
         'L1 token gateway address from the Fuel token contract does not match the actual L1 token gateway address',
-        `[expected:${env.eth.fuelERC20Gateway.address}, actual:${l1Gateway}].`,
+        `[expected:${fuelErc20GatewayAddress}, actual:${l1Gateway}].`,
       ].join(' ')
     );
   }

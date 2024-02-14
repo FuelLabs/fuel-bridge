@@ -17,12 +17,13 @@ export async function logETHBalances(
   ethereumAccount: Signer,
   fuelAccount: WalletUnlocked
 ) {
+  const ethersProvider = ethereumAccount.provider;
   const etherAccountAddress = await ethereumAccount.getAddress();
   const fuelAccountAddress = await fuelAccount.address.toHexString();
   console.log('Account balances:');
   console.log(
     `  Ethereum - ${formatEther(
-      await ethereumAccount.getBalance()
+      await ethersProvider.getBalance(ethereumAccount)
     )} ETH (${etherAccountAddress})`
   );
   console.log(
