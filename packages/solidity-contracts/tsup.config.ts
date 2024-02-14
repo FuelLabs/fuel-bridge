@@ -4,6 +4,6 @@ export default {
   dts: true,
   treeshake: true,
   format: ['cjs', 'esm'],
-  minify: true,
+  minify: false,
   entry: ['./exports/index.ts'],
 };
