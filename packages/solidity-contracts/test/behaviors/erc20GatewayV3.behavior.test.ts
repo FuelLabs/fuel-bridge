@@ -204,9 +204,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             CONTRACT_MESSAGE_PREDICATE,
             null
           ),
-          await depositTx
-            .then((tx) => tx.wait())
-            .then((receipt) => receipt.blockHash)
+          await depositTx.then((tx) => tx.blockNumber)
         );
 
         expect(logs).to.have.length(1);
@@ -271,9 +269,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             CONTRACT_MESSAGE_PREDICATE,
             null
           ),
-          await depositTx
-            .then((tx) => tx.wait())
-            .then((receipt) => receipt.blockHash)
+          await depositTx.then((tx) => tx.blockNumber)
         );
 
         expect(logs).to.have.length(1);
@@ -338,9 +334,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
             CONTRACT_MESSAGE_PREDICATE,
             null
           ),
-          await depositTx
-            .then((tx) => tx.wait())
-            .then((receipt) => receipt.blockHash)
+          await depositTx.then((tx) => tx.blockNumber)
         );
 
         expect(logs).to.have.length(1);
@@ -443,9 +437,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
               CONTRACT_MESSAGE_PREDICATE,
               null
             ),
-            await depositTx
-              .then((tx) => tx.wait())
-              .then((receipt) => receipt.blockHash)
+            await depositTx.then((tx) => tx.blockNumber)
           );
 
           expect(logs).to.have.length(1);
@@ -505,9 +497,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
               CONTRACT_MESSAGE_PREDICATE,
               null
             ),
-            await depositTx
-              .then((tx) => tx.wait())
-              .then((receipt) => receipt.blockHash)
+            await depositTx.then((tx) => tx.blockNumber)
           );
 
           expect(logs).to.have.length(1);
@@ -570,9 +560,7 @@ export function behavesLikeErc20GatewayV3(fixture: () => Promise<Env>) {
               CONTRACT_MESSAGE_PREDICATE,
               null
             ),
-            await depositTx
-              .then((tx) => tx.wait())
-              .then((receipt) => receipt.blockHash)
+            await depositTx.then((tx) => tx.blockNumber)
           );
 
           expect(logs).to.have.length(1);

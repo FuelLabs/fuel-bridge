@@ -11,10 +11,10 @@ import hre from 'hardhat';
 
 import type { HarnessObject } from '../protocol/harness';
 import { randomAddress, randomBytes32 } from '../protocol/utils';
-import {
-  FuelERC20Gateway__factory,
-  type MockFuelMessagePortal,
-  type Token,
+import type {
+  FuelERC20Gateway,
+  MockFuelMessagePortal,
+  Token,
 } from '../typechain';
 
 import { impersonateAccount } from './utils/impersonateAccount';
@@ -56,14 +56,13 @@ describe('ERC20 Gateway', async () => {
       deployer
     );
 
-    const fuelERC20Gateway = await hre.upgrades
+    const fuelERC20Gateway = (await hre.upgrades
       .deployProxy(
         FuelERC20Gateway,
         [await fuelMessagePortalMock.getAddress()],
         { initializer: 'initialize' }
       )
-      .then((tx) => tx.waitForDeployment())
-      .then((tx) => FuelERC20Gateway__factory.connect(tx as any, tx.runner));
+      .then((tx) => tx.waitForDeployment())) as FuelERC20Gateway;
 
     const initialTokenAmount = parseEther('1000000');
     for (let i = 0; i < signers.length; i += 1) {
