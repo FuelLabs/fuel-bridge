@@ -21,12 +21,12 @@ use super::builder;
 
 abigen!(Contract(
     name = "TestContract",
-    abi = "packages/message-predicates/contract-message-predicate/out/debug/contract_message_test-abi.json"
+    abi = "packages/message-predicates/contract-message-predicate/out/release/contract_message_test-abi.json"
 ));
 
 pub const MESSAGE_SENDER_ADDRESS: &str =
     "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc";
-pub const TEST_RECEIVER_CONTRACT_BINARY: &str = "./out/debug/contract_message_test.bin";
+pub const TEST_RECEIVER_CONTRACT_BINARY: &str = "./out/release/contract_message_test.bin";
 
 /// Sets up a test fuel environment with a funded wallet
 pub async fn setup_environment(

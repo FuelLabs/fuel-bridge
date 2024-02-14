@@ -19,7 +19,7 @@ The message to contract predicate relies on a script that performs only the foll
 Build:
 
 ```sh
-pnpm forc build
+pnpm forc build --release
 cargo run
 ```
 
