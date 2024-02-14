@@ -10,7 +10,7 @@ import type { UpgradeableTester } from '../typechain';
 
 const { expect } = chai;
 
-describe.only('Contract Upgradability', async () => {
+describe('Contract Upgradability', async () => {
   let env: HarnessObject;
   let upgradeableTester: UpgradeableTester;
 
