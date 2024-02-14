@@ -38,14 +38,15 @@ export async function getOrDeployECR20Contract(env: TestEnvironment) {
   if (!ethTestToken) {
     debug(`Creating ERC-20 token contract to test with...`);
     const eth_tokenFactory = new Token__factory(ethDeployer);
-    ethTestToken = await eth_tokenFactory.deploy();
-    await ethTestToken.deployed();
+    ethTestToken = await eth_tokenFactory
+      .deploy()
+      .then((tx) => tx.waitForDeployment());
     debug(
-      `Ethereum ERC-20 token contract created at address ${ethTestToken.address}.`
+      `Ethereum ERC-20 token contract created at address ${await ethTestToken.getAddress()}.`
     );
   }
   ethTestToken = ethTestToken.connect(ethAcct);
-  const ethTestTokenAddress = ethTestToken.address;
+  const ethTestTokenAddress = await ethTestToken.getAddress();
   debug(
     `Testing with Ethereum ERC-20 token contract at ${ethTestTokenAddress}.`
   );
@@ -61,12 +62,12 @@ export async function mintECR20(
 ) {
   if (
     (await ethTestToken.balanceOf(ethAcctAddr)) <=
-    ethers_parseToken(amount, 18).mul(2)
+    ethers_parseToken(amount, 18n) * 2n
   ) {
     debug(`Minting ERC-20 tokens to test with...`);
     const tokenMintTx1 = await ethTestToken
       .connect(env.eth.deployer)
-      .mint(ethAcctAddr, ethers_parseToken('100', 18));
+      .mint(ethAcctAddr, ethers_parseToken('100', 18n));
     await tokenMintTx1.wait();
   }
 }

@@ -1,4 +1,4 @@
-import type { JsonRpcProvider } from '@ethersproject/providers';
+import type { JsonRpcProvider } from 'ethers';
 import type { MessageProof } from 'fuels';
 import { arrayify } from 'fuels';
 
