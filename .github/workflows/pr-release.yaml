@@ -24,7 +24,7 @@ jobs:
           npm-token: ${{ secrets.NPM_TOKEN }}
 
       - name: Build Contracts
-        run: forc build
+        run: forc build --release
 
       - name: Build
         run: pnpm build

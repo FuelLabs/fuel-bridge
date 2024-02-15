@@ -28,7 +28,7 @@ This project uses the general contract message relaying script/predicate from th
 In the root of the repository run the following command to build all the Sway programs.
 
 ```bash
-forc build
+forc build --release
 ```
 
 ### Running Rust Tests

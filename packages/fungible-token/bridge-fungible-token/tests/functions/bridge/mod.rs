@@ -364,7 +364,7 @@ mod success {
 
         // Now try to withdraw
         let withdrawal_amount = config.fuel_equivalent_amount(config.amount.test);
-        let gas = 10_000;
+        let gas = 100_000;
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
@@ -461,7 +461,7 @@ mod success {
 
         // Now try to withdraw
         let withdrawal_amount = fuel_side_token_amount;
-        let gas = 10_000;
+        let gas = 100_000;
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
