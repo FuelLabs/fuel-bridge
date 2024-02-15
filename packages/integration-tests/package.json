@@ -14,9 +14,6 @@
     "transfer": "pnpm ts-node scripts/transfer.ts"
   },
   "devDependencies": {
-    "@ethersproject/abi": "^5.7.0",
-    "@ethersproject/bytes": "^5.7.0",
-    "@ethersproject/providers": "^5.7.0",
     "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/solidity-contracts": "workspace:*",
@@ -26,7 +23,7 @@
     "chai": "^4.3.6",
     "dotenv": "^16.0.3",
     "ethereum-waffle": "^4.0.2",
-    "ethers": "^5.7.2",
+    "ethers": "6.11.0",
     "fuels": "0.71.1",
     "mocha": "^10.0.0",
     "ts-node": "^10.9.1",
