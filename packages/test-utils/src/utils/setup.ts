@@ -13,7 +13,7 @@ import {
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
-import type { Signer as EthSigner, Provider as EthProvider } from 'ethers';
+import type { Wallet as EthSigner, Provider as EthProvider } from 'ethers';
 import { JsonRpcProvider, ethers, formatEther, parseEther } from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';

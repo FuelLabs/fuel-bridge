@@ -1,4 +1,4 @@
-import type { JsonRpcProvider, Provider } from '@ethersproject/providers';
+import type { JsonRpcProvider, Provider } from 'ethers';
 
 export async function isHardhatProvider(provider: Provider) {
   if (!('send' in provider)) return false;
