@@ -13,7 +13,6 @@ import { deployments, ethers, upgrades } from 'hardhat';
 
 import { randomBytes32 } from '../protocol/utils';
 import {
-  FuelMessagePortalV2__factory,
   type FuelChainState,
   type FuelMessagePortalV2,
   FuelChainState__factory,
