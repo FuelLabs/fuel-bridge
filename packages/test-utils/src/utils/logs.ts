@@ -9,10 +9,6 @@ import {
   fuels_formatToken,
 } from './parsers';
 
-export const LOG_CONFIG = {
-  debug: process.env.DEBUG || true,
-};
-
 export async function logETHBalances(
   ethereumAccount: Signer,
   fuelAccount: WalletUnlocked
@@ -57,7 +53,7 @@ export async function logTokenBalances(
 }
 
 export function debug(...args: any) {
-  if (LOG_CONFIG.debug) {
+  if (process.env.DEBUG) {
     console.log(...args);
   }
 }
