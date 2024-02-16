@@ -6,8 +6,8 @@ import type { TestEnvironment } from '../setup';
 
 export async function getOrDeployERC721Contract(env: TestEnvironment) {
   debug('Setting up environment...');
-  const ethDeployer = env.eth.deployer;
-  const ethAcct = env.eth.signers[0];
+  const ethDeployer = env.eth.signers[0];
+
   // load ERC721 contract
   let ethTestNft: NFT = null;
   if (!ethTestNft) {
@@ -21,7 +21,7 @@ export async function getOrDeployERC721Contract(env: TestEnvironment) {
       `Ethereum ERC-721 token contract created at address ${await ethTestNft.getAddress()}.`
     );
   }
-  ethTestNft = ethTestNft.connect(ethAcct);
+  ethTestNft = ethTestNft.connect(ethDeployer);
   debug(
     `Testing with Ethereum ERC-721 token contract at ${await ethTestNft.getAddress()}.`
   );

@@ -9,7 +9,7 @@ const { ETH_ERC20_TOKEN_ADDRESS } = process.env;
 
 export async function getOrDeployECR20Contract(env: TestEnvironment) {
   debug('Setting up environment...');
-  const ethDeployer = env.eth.deployer;
+  const ethDeployer = env.eth.signers[0];
   const ethDeployerAddr = await ethDeployer.getAddress();
   const ethAcct = env.eth.signers[0];
 

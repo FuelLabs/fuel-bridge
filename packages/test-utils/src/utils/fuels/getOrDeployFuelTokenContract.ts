@@ -37,6 +37,7 @@ export async function getOrDeployFuelTokenContract(
 
   const tokenAddress = (await ethTestToken.getAddress()).replace('0x', '');
   const tokenGateway = ethTokenGateway.replace('0x', '');
+  const ethAcct = env.eth.signers[0];
   const fuelAcct = env.fuel.signers[1];
 
   let fuelTestToken: Contract = null;
@@ -145,13 +146,15 @@ export async function getOrDeployFuelTokenContract(
         ])
       )
       .then(([relayMessageParams]) =>
-        env.eth.fuelMessagePortal.relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        )
+        env.eth.fuelMessagePortal
+          .connect(ethAcct)
+          .relayMessage(
+            relayMessageParams.message,
+            relayMessageParams.rootBlockHeader,
+            relayMessageParams.blockHeader,
+            relayMessageParams.blockInHistoryProof,
+            relayMessageParams.messageInBlockProof
+          )
       )
       .then((tx) => tx.wait());
 
