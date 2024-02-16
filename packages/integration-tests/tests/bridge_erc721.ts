@@ -9,7 +9,6 @@ import {
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
-  LOG_CONFIG,
   waitForBlockCommit,
   waitForBlockFinalization,
   getTokenId,
@@ -27,8 +26,6 @@ import type {
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
-
-LOG_CONFIG.debug = false;
 
 const { expect } = chai;
 
@@ -120,7 +117,7 @@ describe('Bridging ERC721 tokens', async function () {
         .approve(env.eth.fuelERC721Gateway, eth_tokenId);
 
       // use the FuelERC721Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      const result = await env.eth.fuelERC721Gateway
+      const receipt = await env.eth.fuelERC721Gateway
         .connect(ethereumTokenSender)
         .deposit(
           fuelTokenReceiverAddress,
@@ -130,7 +127,7 @@ describe('Bridging ERC721 tokens', async function () {
         )
         .then((tx) => tx.wait());
 
-      expect(result.status).to.equal(1);
+      expect(receipt.status).to.equal(1);
 
       const filter = env.eth.fuelMessagePortal.filters.MessageSent(
         null, // Args set to null since there should be just 1 event for MessageSent
@@ -140,23 +137,23 @@ describe('Bridging ERC721 tokens', async function () {
         null
       );
 
-      const [log, ...rest] = await env.eth.provider.getLogs({
-        ...filter,
-        fromBlock: result.blockNumber,
-        toBlock: result.blockNumber,
-      });
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          filter,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
 
-      expect(rest.length).to.be.equal(0);
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
 
       // parse events from logs
-      const event = env.eth.fuelMessagePortal.interface.parseLog(log);
-      fuelTokenMessageNonce = new BN(event.args.nonce.toHexString());
+      fuelTokenMessageNonce = new BN(event.args.nonce.toString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
       // check that the tokenId now belongs to the gateway
-      expect(await eth_testToken.ownerOf(eth_tokenId)).to.be.equal(
-        eth_erc721GatewayAddress
-      );
+      expect(
+        (await eth_testToken.ownerOf(eth_tokenId)).toLowerCase()
+      ).to.be.equal(eth_erc721GatewayAddress);
     });
 
     it('Relay message from Ethereum on Fuel', async function () {

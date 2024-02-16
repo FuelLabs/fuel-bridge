@@ -70,10 +70,23 @@ describe('Transferring ETH', async function () {
       expect(receipt.status).to.equal(1);
 
       // parse events from logs
-      const event = env.eth.fuelMessagePortal.interface.parseLog(
-        receipt.logs[0]
+      const filter = env.eth.fuelMessagePortal.filters.MessageSent(
+        null, // Args set to null since there should be just 1 event for MessageSent
+        null,
+        null,
+        null,
+        null
       );
-      fuelETHMessageNonce = new BN(event.args.nonce.toHexString());
+
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          filter,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      fuelETHMessageNonce = new BN(event.args.nonce.toString());
 
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await env.eth.provider.getBalance(
