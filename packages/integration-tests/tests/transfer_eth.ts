@@ -29,7 +29,7 @@ describe('Transferring ETH', async function () {
 
   let env: TestEnvironment;
 
-  // override the default test timeout from 2000ms
+  // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   before(async () => {
@@ -92,12 +92,11 @@ describe('Transferring ETH', async function () {
       const newSenderBalance = await env.eth.provider.getBalance(
         ethereumETHSenderAddress
       );
-      const ethereumETHSenderBalanceMinusGas =
-        ethereumETHSenderBalance - receipt.gasUsed * receipt.gasPrice;
-      expect(
-        newSenderBalance ===
-          ethereumETHSenderBalanceMinusGas - parseEther(NUM_ETH)
-      ).to.be.true;
+
+      const txCost = receipt.gasUsed * receipt.gasPrice;
+      const expectedSenderBalance =
+        ethereumETHSenderBalance - txCost - parseEther(NUM_ETH);
+      expect(newSenderBalance).to.be.eq(expectedSenderBalance);
     });
 
     it('Wait for ETH to arrive on Fuel', async function () {
