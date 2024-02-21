@@ -77,7 +77,7 @@ pub struct UTXOInputs {
 }
 
 impl BridgingConfig {
-    pub fn new(bridge_decimals: u8, proxy_decimals: u8) -> Self {
+    pub fn new(bridge_decimals: u64, proxy_decimals: u64) -> Self {
         let bridged_token_decimals = Unsigned256::from(bridge_decimals);
         let proxy_token_decimals = Unsigned256::from(proxy_decimals);
         let one = Unsigned256::from(1);

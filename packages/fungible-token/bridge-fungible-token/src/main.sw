@@ -34,6 +34,7 @@ use std::{
     hash::sha256,
     inputs::input_message_sender,
     message::send_message,
+    primitive_conversions::u64::*,
     string::String,
 };
 use utils::{
@@ -45,8 +46,8 @@ use utils::{
 use src_20::SRC20;
 
 configurable {
-    DECIMALS: u8 = 9u8,
-    BRIDGED_TOKEN_DECIMALS: u8 = 18u8,
+    DECIMALS: u64 = 9u64,
+    BRIDGED_TOKEN_DECIMALS: u64 = 18u64,
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
     BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
     NAME: str[64] = __to_str_array("MY_TOKEN                                                        "),
@@ -97,7 +98,7 @@ impl MessageReceiver for Contract {
             return;
         };
 
-        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS, BRIDGED_TOKEN_DECIMALS);
+        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS.try_as_u8().unwrap(), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap());
 
         match res_amount {
             Result::Err(_) => {
@@ -229,7 +230,7 @@ impl Bridge for Contract {
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS, BRIDGED_TOKEN_DECIMALS).unwrap();
+        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS.try_as_u8().unwrap(), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap()).unwrap();
         storage
             .tokens_minted
             .insert(
@@ -260,7 +261,10 @@ impl Bridge for Contract {
     }
 
     fn bridged_token_decimals() -> u8 {
-        DECIMALS
+        let dec = 18u64.try_as_u8().unwrap();
+
+        dec
+        // DECIMALS.try_as_u8().unwrap()
     }
 
     fn bridged_token_gateway() -> b256 {
@@ -303,7 +307,7 @@ impl SRC20 for Contract {
     #[storage(read)]
     fn decimals(asset: AssetId) -> Option<u8> {
         match storage.tokens_minted.get(asset).try_read() {
-            Some(_) => Some(DECIMALS),
+            Some(_) => Some(DECIMALS.try_as_u8().unwrap()),
             None => None,
         }
     }
