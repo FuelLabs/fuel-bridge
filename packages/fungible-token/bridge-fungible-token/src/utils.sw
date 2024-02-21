@@ -56,9 +56,6 @@ pub fn adjust_deposit_decimals(
     decimals: u8,
     bridged_token_decimals: u8,
 ) -> Result<u64, BridgeFungibleTokenError> {
-    log(decimals);
-    log(decimals);
-    log(decimals);
     let value = val.as_u256();
 
     let adjusted: u256 = if bridged_token_decimals > decimals {
