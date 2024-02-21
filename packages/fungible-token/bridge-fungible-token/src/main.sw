@@ -261,10 +261,7 @@ impl Bridge for Contract {
     }
 
     fn bridged_token_decimals() -> u8 {
-        let dec = 18u64.try_as_u8().unwrap();
-
-        dec
-        // DECIMALS.try_as_u8().unwrap()
+        DECIMALS.try_as_u8().unwrap()
     }
 
     fn bridged_token_gateway() -> b256 {
