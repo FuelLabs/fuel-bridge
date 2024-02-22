@@ -45,6 +45,9 @@ use utils::{
 };
 use src_20::SRC20;
 
+const DEFAULT_DECIMALS: u8 = 9u8;
+const DEFAULT_BRIDGED_TOKEN_DECIMALS: u8 = 18u8;
+
 configurable {
     DECIMALS: u64 = 9u64,
     BRIDGED_TOKEN_DECIMALS: u64 = 18u64,
@@ -98,7 +101,7 @@ impl MessageReceiver for Contract {
             return;
         };
 
-        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS.try_as_u8().unwrap(), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap());
+        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS));
 
         match res_amount {
             Result::Err(_) => {
@@ -230,7 +233,7 @@ impl Bridge for Contract {
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS.try_as_u8().unwrap(), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap()).unwrap();
+        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS)).unwrap();
         storage
             .tokens_minted
             .insert(
@@ -261,7 +264,7 @@ impl Bridge for Contract {
     }
 
     fn bridged_token_decimals() -> u8 {
-        BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap()
+        BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS)
     }
 
     fn bridged_token_gateway() -> b256 {
@@ -304,7 +307,7 @@ impl SRC20 for Contract {
     #[storage(read)]
     fn decimals(asset: AssetId) -> Option<u8> {
         match storage.tokens_minted.get(asset).try_read() {
-            Some(_) => Some(DECIMALS.try_as_u8().unwrap()),
+            Some(_) => Some(DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS)),
             None => None,
         }
     }
