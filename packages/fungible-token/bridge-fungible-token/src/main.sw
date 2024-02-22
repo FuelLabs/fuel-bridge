@@ -101,7 +101,16 @@ impl MessageReceiver for Contract {
             return;
         };
 
-        let res_amount = adjust_deposit_decimals(message_data.amount, DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS));
+        let res_amount = adjust_deposit_decimals(
+            message_data
+                .amount,
+            DECIMALS
+                .try_as_u8()
+                .unwrap_or(DEFAULT_DECIMALS),
+            BRIDGED_TOKEN_DECIMALS
+                .try_as_u8()
+                .unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS),
+        );
 
         match res_amount {
             Result::Err(_) => {
@@ -233,7 +242,15 @@ impl Bridge for Contract {
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
         // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(amount, DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS), BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS)).unwrap();
+        let adjusted_amount = adjust_withdrawal_decimals(
+            amount,
+            DECIMALS
+                .try_as_u8()
+                .unwrap_or(DEFAULT_DECIMALS),
+            BRIDGED_TOKEN_DECIMALS
+                .try_as_u8()
+                .unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS),
+        ).unwrap();
         storage
             .tokens_minted
             .insert(
