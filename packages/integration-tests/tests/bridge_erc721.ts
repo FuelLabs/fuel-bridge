@@ -81,18 +81,13 @@ describe('Bridging ERC721 tokens', async function () {
     );
 
     // mint tokens as starting balances
-    await eth_testToken.mint(
-      await env.eth.deployer.getAddress(),
-      await env.eth.deployer.getAddress()
-    );
-    await eth_testToken.mint(
-      await env.eth.signers[0].getAddress(),
-      await env.eth.signers[0].getAddress()
-    );
-    await eth_testToken.mint(
-      await env.eth.signers[1].getAddress(),
-      await env.eth.signers[1].getAddress()
-    );
+
+    const deployerAddr = await env.eth.deployer.getAddress();
+    await eth_testToken.mint(deployerAddr, deployerAddr);
+    const signer0Addr = await env.eth.signers[0].getAddress();
+    await eth_testToken.mint(signer0Addr, signer0Addr);
+    const signer1Addr = await env.eth.signers[1].getAddress();
+    await eth_testToken.mint(signer1Addr, signer1Addr);
   });
 
   describe('Bridge ERC721 to Fuel', async () => {
@@ -121,7 +116,7 @@ describe('Bridging ERC721 tokens', async function () {
         .connect(ethereumTokenSender)
         .deposit(
           fuelTokenReceiverAddress,
-          eth_testToken.getAddress(),
+          eth_testTokenAddress,
           fuel_testContractId,
           eth_tokenId
         )

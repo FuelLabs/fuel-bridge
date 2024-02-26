@@ -66,7 +66,7 @@ describe('ERC20 Gateway', async () => {
 
     const initialTokenAmount = parseEther('1000000');
     for (let i = 0; i < signers.length; i += 1) {
-      await token.mint(await signers[i].getAddress(), initialTokenAmount);
+      await token.mint(signers[i], initialTokenAmount);
     }
 
     await token

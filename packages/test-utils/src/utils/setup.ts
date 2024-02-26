@@ -194,7 +194,7 @@ export async function setupEnvironment(
   const eth_signer1Balance = await eth_provider.getBalance(eth_signer1);
   if (eth_signer1Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
-      to: await eth_signer1.getAddress(),
+      to: eth_signer1,
       value: parseEther('1'),
     });
     await tx.wait();
@@ -205,7 +205,7 @@ export async function setupEnvironment(
   const eth_signer2Balance = await eth_provider.getBalance(eth_signer2);
   if (eth_signer2Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
-      to: await eth_signer2.getAddress(),
+      to: eth_signer2,
       value: parseEther('1'),
     });
     await tx.wait();

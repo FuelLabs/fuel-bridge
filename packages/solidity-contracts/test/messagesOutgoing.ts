@@ -13,7 +13,7 @@ import { ethers } from 'hardhat';
 import type { HarnessObject } from '../protocol/harness';
 import { setupFuel } from '../protocol/harness';
 import { randomBytes32 } from '../protocol/utils';
-import type { MessageTester } from '../typechain/MessageTester.d';
+import type { MessageTester } from '../typechain';
 
 const { expect } = chai;
 
@@ -23,17 +23,19 @@ describe('Outgoing Messages', async () => {
 
   // Testing contracts
   let messageTester: MessageTester;
+  let messageTesterAddress: string;
+  let fuelMessagePortalAddress: string;
 
   before(async () => {
     env = await setupFuel();
+    fuelMessagePortalAddress = await env.fuelMessagePortal.getAddress();
 
     // Deploy contracts for message testing
     messageTester = (await ethers
       .getContractFactory('MessageTester', env.deployer)
-      .then(async (factory) =>
-        factory.deploy(await env.fuelMessagePortal.getAddress())
-      )
+      .then(async (factory) => factory.deploy(env.fuelMessagePortal))
       .then((tx) => tx.waitForDeployment())) as MessageTester;
+    messageTesterAddress = await messageTester.getAddress();
 
     // Send eth to contract
     const tx = {
@@ -48,7 +50,7 @@ describe('Outgoing Messages', async () => {
       await env.fuelChainState.getAddress()
     );
     expect(await messageTester.fuelMessagePortal()).to.equal(
-      await env.fuelMessagePortal.getAddress()
+      fuelMessagePortalAddress
     );
   });
 
@@ -199,9 +201,10 @@ describe('Outgoing Messages', async () => {
     let filterAddress: string;
     let fuelBaseAssetDecimals: bigint;
     let baseAssetConversion: bigint;
+
     before(async () => {
       provider = env.deployer.provider;
-      filterAddress = await env.fuelMessagePortal.getAddress();
+      filterAddress = fuelMessagePortalAddress;
       fuelBaseAssetDecimals =
         await env.fuelMessagePortal.fuelBaseAssetDecimals();
       baseAssetConversion = 10n ** (18n - fuelBaseAssetDecimals);
@@ -220,7 +223,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32).toLowerCase()
+        zeroPadValue(messageTesterAddress, 32).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -244,7 +247,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32)
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
@@ -274,7 +277,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32)
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -310,7 +313,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32).toLowerCase()
+        zeroPadValue(messageTesterAddress, 32).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');

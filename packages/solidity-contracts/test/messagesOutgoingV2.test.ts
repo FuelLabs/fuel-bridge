@@ -12,12 +12,12 @@ import {
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import { randomBytes32 } from '../protocol/utils';
-import {
-  type FuelChainState,
-  type FuelMessagePortalV2,
-  FuelChainState__factory,
+import { FuelChainState__factory } from '../typechain';
+import type {
+  MessageTester,
+  FuelChainState,
+  FuelMessagePortalV2,
 } from '../typechain';
-import type { MessageTester } from '../typechain/MessageTester';
 
 import { addressToB256 } from './utils/addressConversion';
 
@@ -79,7 +79,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
 
       const fuelMessagePortal = V2Implementation.attach(
-        await fuelMessagePortalDeployment.getAddress()
+        fuelMessagePortalDeployment
       ).connect(fuelMessagePortalDeployment.runner) as FuelMessagePortalV2;
 
       const wallet = Wallet.createRandom().connect(deployer.provider);
@@ -89,9 +89,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
       const messageTester = (await ethers
         .getContractFactory('MessageTester', deployer)
-        .then(async (factory) =>
-          factory.deploy(await fuelMessagePortal.getAddress())
-        )
+        .then(async (factory) => factory.deploy(fuelMessagePortal))
         .then((tx) => tx.waitForDeployment())) as MessageTester;
 
       await signers[0].sendTransaction({
@@ -140,6 +138,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
     it('should track the amount of deposited ether', async () => {
       const recipient = randomBytes32();
       const value = parseEther('1');
+      const fuelMessagePortalAddress = await fuelMessagePortal.getAddress();
+
       {
         const sender = signers[1];
         const tx = fuelMessagePortal
@@ -148,7 +148,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
         await expect(tx).not.to.be.reverted;
         await expect(tx).to.changeEtherBalances(
-          [sender.address, await fuelMessagePortal.getAddress()],
+          [sender.address, fuelMessagePortalAddress],
           [value * -1n, value]
         );
 
@@ -163,7 +163,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
 
         await expect(tx).not.to.be.reverted;
         await expect(tx).to.changeEtherBalances(
-          [sender.address, await fuelMessagePortal.getAddress()],
+          [sender.address, fuelMessagePortalAddress],
           [value * -1n, value]
         );
 
@@ -194,6 +194,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
   });
 
   describe('Behaves like V1 - Send messages', async () => {
+    let messageTesterAddress: string;
+
     before(async () => {
       const fixt = await fixture({
         globalEthLimit: MaxUint256,
@@ -214,6 +216,8 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       expect(await messageTester.fuelMessagePortal()).to.equal(
         await fuelMessagePortal.getAddress()
       );
+
+      messageTesterAddress = await messageTester.getAddress();
     });
 
     it('Should be able to send message with data', async () => {
@@ -231,7 +235,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        addressToB256(await messageTester.getAddress()).toLowerCase()
+        addressToB256(messageTesterAddress).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -256,7 +260,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32)
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
@@ -288,7 +292,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32)
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -326,7 +330,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        zeroPadValue(await messageTester.getAddress(), 32)
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');

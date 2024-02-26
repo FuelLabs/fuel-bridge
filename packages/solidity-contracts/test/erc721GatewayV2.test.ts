@@ -100,7 +100,7 @@ describe('erc721GatewayV2', () => {
 
       const depositTx = erc721Gateway
         .connect(user)
-        .deposit(ZeroHash, await nft.getAddress(), ZeroHash, MaxUint256);
+        .deposit(ZeroHash, nft, ZeroHash, MaxUint256);
 
       await expect(depositTx).to.be.revertedWithCustomError(
         erc721Gateway,
@@ -122,23 +122,23 @@ describe('erc721GatewayV2', () => {
 
       await fuelMessagePortal.setMessageSender(fuelBridge);
       const impersonatedPortal = await impersonateAccount(
-        await fuelMessagePortal.getAddress(),
+        fuelMessagePortal,
         hre
       );
 
       const registerTx = await erc721Gateway
         .connect(impersonatedPortal)
-        .registerAsReceiver(await nft.getAddress());
+        .registerAsReceiver(nft);
 
       await expect(registerTx).to.emit(erc721Gateway, 'ReceiverRegistered');
 
       const depositTx = await erc721Gateway
         .connect(user)
-        .deposit(fuelRecipient, await nft.getAddress(), fuelBridge, tokenId);
+        .deposit(fuelRecipient, nft, fuelBridge, tokenId);
 
       await expect(depositTx)
         .to.emit(erc721Gateway, 'Deposit')
-        .withArgs(sender, await nft.getAddress(), fuelBridge, tokenId);
+        .withArgs(sender, nft, fuelBridge, tokenId);
     });
   });
 });

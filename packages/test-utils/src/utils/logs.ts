@@ -37,7 +37,7 @@ export async function logTokenBalances(
   fuelTestTokenId: string
 ) {
   const etherAccountAddress = await ethereumAccount.getAddress();
-  const fuelAccountAddress = await fuelAccount.address.toHexString();
+  const fuelAccountAddress = fuelAccount.address.toHexString();
   console.log('Account balances:');
   console.log(
     `  Ethereum - ${ethers_formatToken(

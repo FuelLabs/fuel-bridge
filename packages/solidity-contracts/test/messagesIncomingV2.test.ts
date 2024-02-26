@@ -255,9 +255,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
         .getContractFactory('MessageTester', deployer)
         .then(
           async (factory) =>
-            factory.deploy(
-              await fuelMessagePortal.getAddress()
-            ) as Promise<MessageTester>
+            factory.deploy(fuelMessagePortal) as Promise<MessageTester>
         );
 
       return {
