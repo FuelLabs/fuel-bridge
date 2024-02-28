@@ -1,7 +1,12 @@
-import { hexZeroPad } from '@ethersproject/bytes';
 import chai from 'chai';
 import type { BigNumberish } from 'ethers';
-import { BigNumber as BN, constants, utils } from 'ethers';
+import {
+  ZeroHash,
+  keccak256,
+  parseEther,
+  toUtf8Bytes,
+  zeroPadValue,
+} from 'ethers';
 import hre from 'hardhat';
 
 import type { HarnessObject } from '../protocol/harness';
@@ -12,10 +17,10 @@ import type {
   Token,
 } from '../typechain';
 
-import { impersonateAccount } from './hardhat-utils/impersonateAccount';
+import { impersonateAccount } from './utils/impersonateAccount';
 
 const { expect } = chai;
-const { ethers, deployments } = hre;
+const { deployments } = hre;
 
 type Fixture = Pick<
   HarnessObject,
@@ -45,23 +50,28 @@ describe('ERC20 Gateway', async () => {
     const fuelMessagePortalMock = await hre.ethers
       .getContractFactory('MockFuelMessagePortal', deployer)
       .then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
-    const fuelERC20Gateway = await hre.ethers
-      .getContractFactory('FuelERC20Gateway', deployer)
-      .then(
-        (factory) =>
-          hre.upgrades.deployProxy(factory, [fuelMessagePortalMock.address], {
-            initializer: 'initialize',
-          }) as Promise<FuelERC20Gateway>
-      );
 
-    const initialTokenAmount = ethers.utils.parseEther('1000000');
+    const FuelERC20Gateway = await hre.ethers.getContractFactory(
+      'FuelERC20Gateway',
+      deployer
+    );
+
+    const fuelERC20Gateway = (await hre.upgrades
+      .deployProxy(
+        FuelERC20Gateway,
+        [await fuelMessagePortalMock.getAddress()],
+        { initializer: 'initialize' }
+      )
+      .then((tx) => tx.waitForDeployment())) as FuelERC20Gateway;
+
+    const initialTokenAmount = parseEther('1000000');
     for (let i = 0; i < signers.length; i += 1) {
-      await token.mint(await signers[i].getAddress(), initialTokenAmount);
+      await token.mint(signers[i], initialTokenAmount);
     }
 
     await token
       .connect(signers[0])
-      .approve(fuelERC20Gateway.address, initialTokenAmount);
+      .approve(fuelERC20Gateway, initialTokenAmount);
 
     return {
       token,
@@ -82,19 +92,14 @@ describe('ERC20 Gateway', async () => {
     it('Should not be able to deposit zero', async () => {
       const { token, fuelERC20Gateway } = env;
 
-      const previousBalance = await token.balanceOf(fuelERC20Gateway.address);
+      const previousBalance = await token.balanceOf(fuelERC20Gateway);
 
       // Attempt deposit
       await expect(
-        fuelERC20Gateway.deposit(
-          randomBytes32(),
-          token.address,
-          fuelTokenTarget1,
-          0
-        )
+        fuelERC20Gateway.deposit(randomBytes32(), token, fuelTokenTarget1, 0)
       ).to.be.revertedWith('Cannot deposit zero');
 
-      const newBalance = await token.balanceOf(fuelERC20Gateway.address);
+      const newBalance = await token.balanceOf(fuelERC20Gateway);
       expect(newBalance).to.be.equal(previousBalance);
     });
 
@@ -123,29 +128,27 @@ describe('ERC20 Gateway', async () => {
         depositRecipient: string,
         fuelTokenTarget: string
       ) {
-        const senderAddress = (
-          await fuelERC20Gateway.signer.getAddress()
-        ).toLowerCase();
-
         const depositTx = fuelERC20Gateway.deposit(
           depositRecipient,
-          token.address,
+          token,
           fuelTokenTarget,
           depositAmount
         );
 
+        const senderAddress = (await depositTx).from.toLowerCase();
+
         await expect(depositTx)
           .to.emit(fuelERC20Gateway, 'Deposit')
           .withArgs(
-            hexZeroPad(senderAddress, 32),
-            token.address,
+            zeroPadValue(senderAddress, 32),
+            token,
             fuelTokenTarget,
             depositAmount
           );
 
         await expect(depositTx).to.changeTokenBalance(
           token,
-          fuelERC20Gateway.address,
+          fuelERC20Gateway,
           depositAmount
         );
       }
@@ -155,33 +158,31 @@ describe('ERC20 Gateway', async () => {
       const { fuelERC20Gateway, token } = env;
 
       const depositRecipient = randomBytes32();
-      const depositData = [3, 2, 6, 9, 2, 5];
+      const depositData = new Uint8Array([3, 2, 6, 9, 2, 5]);
       const depositAmount = 85;
-
-      const senderAddress = (
-        await fuelERC20Gateway.signer.getAddress()
-      ).toLowerCase();
 
       const depositTx = fuelERC20Gateway.depositWithData(
         depositRecipient,
-        token.address,
+        token,
         fuelTokenTarget1,
         depositAmount,
         depositData
       );
 
+      const senderAddress = (await depositTx).from.toLowerCase();
+
       await expect(depositTx)
         .to.emit(fuelERC20Gateway, 'Deposit')
         .withArgs(
-          hexZeroPad(senderAddress, 32),
-          token.address,
+          zeroPadValue(senderAddress, 32),
+          token,
           fuelTokenTarget1,
           depositAmount
         );
 
       await expect(depositTx).to.changeTokenBalance(
         token,
-        fuelERC20Gateway.address,
+        fuelERC20Gateway,
         depositAmount
       );
     });
@@ -190,33 +191,31 @@ describe('ERC20 Gateway', async () => {
       const { fuelERC20Gateway, token } = env;
 
       const depositRecipient = randomBytes32();
-      const depositData = [];
+      const depositData = new Uint8Array([]);
       const depositAmount = 85;
-
-      const senderAddress = (
-        await fuelERC20Gateway.signer.getAddress()
-      ).toLowerCase();
 
       const depositTx = fuelERC20Gateway.depositWithData(
         depositRecipient,
-        token.address,
+        token,
         fuelTokenTarget1,
         depositAmount,
         depositData
       );
 
+      const senderAddress = (await depositTx).from.toLowerCase();
+
       await expect(depositTx)
         .to.emit(fuelERC20Gateway, 'Deposit')
         .withArgs(
-          hexZeroPad(senderAddress, 32),
-          token.address,
+          zeroPadValue(senderAddress, 32),
+          token,
           fuelTokenTarget1,
           depositAmount
         );
 
       await expect(depositTx).to.changeTokenBalance(
         token,
-        fuelERC20Gateway.address,
+        fuelERC20Gateway,
         depositAmount
       );
     });
@@ -230,12 +229,7 @@ describe('ERC20 Gateway', async () => {
         addresses: [, , to],
       } = env;
       await expect(
-        env.fuelERC20Gateway.finalizeWithdrawal(
-          to,
-          token.address,
-          BN.from(100),
-          ethers.constants.HashZero
-        )
+        env.fuelERC20Gateway.finalizeWithdrawal(to, token, 100n, ZeroHash)
       ).to.be.revertedWithCustomError(fuelERC20Gateway, 'CallerIsNotPortal');
     });
 
@@ -256,7 +250,7 @@ describe('ERC20 Gateway', async () => {
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, withdrawalAmount, 0);
+        .finalizeWithdrawal(recipient, token, withdrawalAmount, 0);
 
       await expect(withdrawTx).to.changeTokenBalances(
         token,
@@ -282,7 +276,7 @@ describe('ERC20 Gateway', async () => {
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, withdrawalAmount, 0);
+        .finalizeWithdrawal(recipient, token, withdrawalAmount, 0);
 
       await expect(withdrawTx).to.changeTokenBalances(
         token,
@@ -301,7 +295,7 @@ describe('ERC20 Gateway', async () => {
 
       await fuelMessagePortalMock.setMessageSender(fuelTokenTarget1);
       const withdrawableAmount = await fuelERC20Gateway.tokensDeposited(
-        token.address,
+        token,
         fuelTokenTarget1
       );
       const impersonatedPortal = await impersonateAccount(
@@ -311,21 +305,11 @@ describe('ERC20 Gateway', async () => {
 
       await fuelERC20Gateway
         .connect(impersonatedPortal)
-        .callStatic.finalizeWithdrawal(
-          recipient,
-          token.address,
-          withdrawableAmount,
-          0
-        );
+        .finalizeWithdrawal.staticCall(recipient, token, withdrawableAmount, 0);
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(
-          recipient,
-          token.address,
-          withdrawableAmount.add(1),
-          0
-        );
+        .finalizeWithdrawal(recipient, token, withdrawableAmount + 1n, 0);
 
       await expect(withdrawTx).to.be.revertedWithPanic(0x11);
     });
@@ -345,7 +329,7 @@ describe('ERC20 Gateway', async () => {
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, 0, 0);
+        .finalizeWithdrawal(recipient, token, 0, 0);
 
       await expect(withdrawTx).to.be.revertedWith('Cannot withdraw zero');
     });
@@ -360,7 +344,7 @@ describe('ERC20 Gateway', async () => {
 
       const L2Token = randomBytes32();
       expect(
-        await fuelERC20Gateway.tokensDeposited(token.address, L2Token)
+        await fuelERC20Gateway.tokensDeposited(token, L2Token)
       ).to.be.equal(0);
 
       await fuelMessagePortalMock.setMessageSender(L2Token);
@@ -372,7 +356,7 @@ describe('ERC20 Gateway', async () => {
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, withdrawalAmount, 0);
+        .finalizeWithdrawal(recipient, token, withdrawalAmount, 0);
 
       await expect(withdrawTx).to.be.revertedWithPanic(0x11);
     });
@@ -409,9 +393,7 @@ describe('ERC20 Gateway', async () => {
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
 
     it('Should be able to grant pauser role', async () => {
       expect(
@@ -486,7 +468,7 @@ describe('ERC20 Gateway', async () => {
 
       const withdrawTx = fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, 0, 0);
+        .finalizeWithdrawal(recipient, token, 0, 0);
 
       await expect(withdrawTx).to.be.revertedWith('Pausable: paused');
     });
@@ -495,7 +477,7 @@ describe('ERC20 Gateway', async () => {
       await expect(
         env.fuelERC20Gateway.deposit(
           randomBytes32(),
-          env.token.address,
+          env.token,
           fuelTokenTarget1,
           175
         )
@@ -506,10 +488,10 @@ describe('ERC20 Gateway', async () => {
       await expect(
         env.fuelERC20Gateway.depositWithData(
           randomBytes32(),
-          env.token.address,
+          env.token,
           fuelTokenTarget1,
           205,
-          []
+          new Uint8Array([])
         )
       ).to.be.revertedWith('Pausable: paused');
     });
@@ -540,7 +522,7 @@ describe('ERC20 Gateway', async () => {
       const withdrawalAmount = 250;
       const withdrawTx = await fuelERC20Gateway
         .connect(impersonatedPortal)
-        .finalizeWithdrawal(recipient, token.address, withdrawalAmount, 0);
+        .finalizeWithdrawal(recipient, token, withdrawalAmount, 0);
 
       await expect(withdrawTx).to.changeTokenBalances(
         token,
@@ -567,14 +549,14 @@ describe('ERC20 Gateway', async () => {
   describe('rescueETH()', async () => {
     it('Should allow to withdraw ETH sent by accident', async () => {
       const { token, fuelERC20Gateway, deployer } = env;
-      const value = utils.parseEther('1'); // forwarded ether by accident
+      const value = parseEther('1'); // forwarded ether by accident
       const depositAmount = 320;
       const recipient = randomBytes32();
 
       await expect(() =>
         fuelERC20Gateway.deposit(
           recipient,
-          token.address,
+          token,
           fuelTokenTarget2,
           depositAmount,
           { value }
@@ -588,7 +570,7 @@ describe('ERC20 Gateway', async () => {
     it('Should reject non-admin calls', async () => {
       const mallory = env.signers[1];
       const malloryAddr = (await mallory.getAddress()).toLowerCase();
-      const defaultAdminRole = constants.HashZero;
+      const defaultAdminRole = ZeroHash;
       const error = `AccessControl: account ${malloryAddr} is missing role ${defaultAdminRole}`;
       await expect(
         env.fuelERC20Gateway.connect(mallory).rescueETH()

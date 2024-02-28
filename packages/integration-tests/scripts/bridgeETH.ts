@@ -12,7 +12,7 @@ import {
   getBlock,
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from 'ethers';
 import {
   Address,
   BN,

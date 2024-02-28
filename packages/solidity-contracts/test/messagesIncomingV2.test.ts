@@ -1,8 +1,7 @@
-import type { Provider } from '@ethersproject/abstract-provider';
 import { calcRoot, constructTree, getProof } from '@fuel-ts/merkle';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { BigNumber, constants } from 'ethers';
+import { MaxUint256, parseEther, toBeHex, type Provider } from 'ethers';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -18,7 +17,6 @@ import type {
   FuelChainState,
   MessageTester,
 } from '../typechain';
-import { FuelMessagePortalV2__factory } from '../typechain';
 
 import { addressToB256, b256ToAddress } from './utils/addressConversion';
 import { createBlock } from './utils/createBlock';
@@ -30,14 +28,14 @@ import {
   getLeafIndexKey,
 } from './utils/merkle';
 
-const ETH_DECIMALS = 18;
-const FUEL_BASE_ASSET_DECIMALS = 9;
-const BASE_ASSET_CONVERSION = 10 ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
+const ETH_DECIMALS = 18n;
+const FUEL_BASE_ASSET_DECIMALS = 9n;
+const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
 describe('FuelMessagePortalV2 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
-  let signers: SignerWithAddress[];
+  let signers: HardhatEthersSigner[];
   let fuelMessagePortal: FuelMessagePortalV2;
   let fuelChainState: FuelChainState;
 
@@ -80,7 +78,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     blockIds = [];
     blockHeaders = [];
     // get data for building messages
-    messageTesterAddress = addressToB256(messageTester.address);
+    messageTesterAddress = addressToB256(await messageTester.getAddress());
     b256_fuelMessagePortalAddress = addressToB256(portalAddr);
 
     trustedSenderAddress = await messageTester.getTrustedSender();
@@ -89,7 +87,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     message1 = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData1,
@@ -99,7 +97,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     message2 = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -110,7 +108,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageWithAmount = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      ethers.utils.parseEther('0.1').div(BASE_ASSET_CONVERSION),
+      parseEther('0.1') / BASE_ASSET_CONVERSION,
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -121,7 +119,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageBadSender = new Message(
       randomBytes32(),
       messageTesterAddress,
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData3,
@@ -132,7 +130,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageBadRecipient = new Message(
       trustedSenderAddress,
       addressToB256(portalAddr),
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       messageTester.interface.encodeFunctionData('receiveMessage', [
         messageTestData2,
@@ -143,7 +141,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageBadData = new Message(
       trustedSenderAddress,
       messageTesterAddress,
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       randomBytes32()
     );
@@ -151,7 +149,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageEOA = new Message(
       randomBytes32(),
       addressToB256(addresses[2]),
-      ethers.utils.parseEther('0.1').div(BASE_ASSET_CONVERSION),
+      parseEther('0.1') / BASE_ASSET_CONVERSION,
       randomBytes32(),
       '0x'
     );
@@ -159,7 +157,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     messageEOANoAmount = new Message(
       randomBytes32(),
       addressToB256(addresses[3]),
-      BigNumber.from(0),
+      BigInt(0),
       randomBytes32(),
       '0x'
     );
@@ -229,31 +227,35 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
         initializer: 'initialize',
       };
 
-      const fuelChainState = await ethers
+      const fuelChainState = (await ethers
         .getContractFactory('FuelChainState', deployer)
-        .then(
-          (factory) =>
-            deployProxy(factory, [], proxyOptions) as Promise<FuelChainState>
-        );
+        .then(async (factory) => deployProxy(factory, [], proxyOptions))
+        .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
-      const fuelMessagePortal = await ethers
+      const deployment = await ethers
         .getContractFactory('FuelMessagePortal', deployer)
-        .then((factory) =>
-          deployProxy(factory, [fuelChainState.address], proxyOptions)
+        .then(async (factory) =>
+          deployProxy(
+            factory,
+            [await fuelChainState.getAddress()],
+            proxyOptions
+          )
         )
-        .then(({ address }) =>
-          FuelMessagePortalV2__factory.connect(address, deployer)
-        );
+        .then((tx) => tx.waitForDeployment());
 
       const V2Implementation = await ethers.getContractFactory(
         'FuelMessagePortalV2'
       );
 
+      const fuelMessagePortal = V2Implementation.attach(
+        await deployment.getAddress()
+      ).connect(deployment.runner) as FuelMessagePortalV2;
+
       const messageTester = await ethers
         .getContractFactory('MessageTester', deployer)
         .then(
-          (factory) =>
-            factory.deploy(fuelMessagePortal.address) as Promise<MessageTester>
+          async (factory) =>
+            factory.deploy(fuelMessagePortal) as Promise<MessageTester>
         );
 
       return {
@@ -297,11 +299,11 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [constants.MaxUint256],
+        constructorArgs: [MaxUint256],
       });
 
       await setupMessages(
-        fuelMessagePortal.address,
+        await fuelMessagePortal.getAddress(),
         messageTester,
         fuelChainState,
         addresses
@@ -311,9 +313,9 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     // Simulates the case when withdrawn amount < initial deposited amount
     it('should update the amount of deposited ether', async () => {
       const recipient = b256ToAddress(messageEOA.recipient);
-      const txSender = signers.find((signer) => signer.address === recipient);
-      const withdrawnAmount = messageEOA.amount.mul(BASE_ASSET_CONVERSION);
-      const depositedAmount = withdrawnAmount.mul(2);
+      const txSender = signers.find((_, i) => addresses[i] === recipient);
+      const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
+      const depositedAmount = withdrawnAmount * 2n;
 
       await fuelMessagePortal
         .connect(txSender)
@@ -342,15 +344,15 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       );
       await expect(relayTx).to.not.be.reverted;
       await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal.address, recipient],
-        [withdrawnAmount.mul(-1), withdrawnAmount]
+        [await fuelMessagePortal.getAddress(), recipient],
+        [withdrawnAmount * -1n, withdrawnAmount]
       );
 
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(true);
 
-      const expectedDepositedAmount = depositedAmount.sub(withdrawnAmount);
+      const expectedDepositedAmount = depositedAmount - withdrawnAmount;
       expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
         expectedDepositedAmount
       );
@@ -372,11 +374,11 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [constants.MaxUint256],
+        constructorArgs: [MaxUint256],
       });
 
       await setupMessages(
-        fuelMessagePortal.address,
+        await fuelMessagePortal.getAddress(),
         messageTester,
         fuelChainState,
         addresses
@@ -430,12 +432,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     });
 
     it('Should not be able to relay message with bad proof in root block', async () => {
-      const portalBalance = await provider.getBalance(
-        fuelMessagePortal.address
-      );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const portalBalance = await provider.getBalance(fuelMessagePortal);
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         message1,
         blockHeaders,
@@ -462,21 +460,17 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
-      expect(await provider.getBalance(fuelMessagePortal.address)).to.be.equal(
+      expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
         portalBalance
       );
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
 
     it('Should be able to relay valid message', async () => {
-      const portalBalance = await provider.getBalance(
-        fuelMessagePortal.address
-      );
-      const messageTesterBalance = await provider.getBalance(
-        messageTester.address
-      );
+      const portalBalance = await provider.getBalance(fuelMessagePortal);
+      const messageTesterBalance = await provider.getBalance(messageTester);
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         message1,
         blockHeaders,
@@ -501,10 +495,10 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       ).to.be.equal(true);
       expect(await messageTester.data1()).to.be.equal(messageTestData1);
       expect(await messageTester.data2()).to.be.equal(messageTestData2);
-      expect(await provider.getBalance(fuelMessagePortal.address)).to.be.equal(
+      expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
         portalBalance
       );
-      expect(await provider.getBalance(messageTester.address)).to.be.equal(
+      expect(await provider.getBalance(messageTester)).to.be.equal(
         messageTesterBalance
       );
     });
@@ -561,9 +555,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     });
 
     it('Should be able to relay message with amount', async () => {
-      const expectedWithdrawnAmount = messageWithAmount.amount.mul(
-        BASE_ASSET_CONVERSION
-      );
+      const expectedWithdrawnAmount =
+        messageWithAmount.amount * BASE_ASSET_CONVERSION;
 
       await fuelMessagePortal.depositETH(messageWithAmount.sender, {
         value: expectedWithdrawnAmount,
@@ -590,8 +583,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       await expect(relayTx).to.not.be.reverted;
       await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal.address, messageTester.address],
-        [expectedWithdrawnAmount.mul(-1), expectedWithdrawnAmount]
+        [fuelMessagePortal, messageTester],
+        [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
       );
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
@@ -677,9 +670,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
     });
 
     it('Should be able to relay message to EOA', async () => {
-      const expectedWithdrawnAmount = messageEOA.amount.mul(
-        BASE_ASSET_CONVERSION
-      );
+      const expectedWithdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
       const expectedRecipient = b256ToAddress(messageEOA.recipient);
 
       await fuelMessagePortal.depositETH(messageEOA.sender, {
@@ -707,8 +698,8 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       );
       await expect(relayTx).to.not.be.reverted;
       await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal.address, expectedRecipient],
-        [expectedWithdrawnAmount.mul(-1), expectedWithdrawnAmount]
+        [fuelMessagePortal, expectedRecipient],
+        [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
       );
 
       expect(
@@ -738,7 +729,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       );
       await expect(relayTx).to.not.be.reverted;
       await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal.address, messageRecipient],
+        [fuelMessagePortal, messageRecipient],
         [0, 0]
       );
       expect(
@@ -759,7 +750,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
         sender: message2.sender,
         recipient: message2.recipient,
         nonce: message2.nonce,
-        amount: message2.amount.add(ethers.utils.parseEther('1.0')),
+        amount: message2.amount + parseEther('1.0'),
         data: message2.data,
       };
 
@@ -830,7 +821,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       const messageReentrant = new Message(
         trustedSenderAddress,
         b256_fuelMessagePortalAddress,
-        BigNumber.from(0),
+        BigInt(0),
         randomBytes32(),
         reentrantTestData
       );
@@ -841,13 +832,12 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       );
 
       // create block that contains this message
-      const tai64Time = BigNumber.from(
-        Math.floor(new Date().getTime() / 1000)
-      ).add('4611686018427387914');
+      const tai64Time =
+        BigInt(Math.floor(new Date().getTime() / 1000)) + 4611686018427387914n;
       const reentrantTestMessageBlock = createBlock(
         '',
         blockIds.length,
-        tai64Time.toHexString(),
+        toBeHex(tai64Time),
         '1',
         calcRoot(messageReentrantMessages)
       );
@@ -860,7 +850,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
       const reentrantTestRootBlock = createBlock(
         calcRoot(blockIds),
         blockIds.length,
-        tai64Time.toHexString()
+        toBeHex(tai64Time)
       );
       const reentrantTestPrevBlockNodes = constructTree(blockIds);
       const reentrantTestRootBlockId = computeBlockId(reentrantTestRootBlock);

@@ -2,7 +2,8 @@ import {
   fungibleTokenBinary,
   fungibleTokenABI,
 } from '@fuel-bridge/fungible-token';
-import type { ethers } from 'ethers';
+import type { NFT, Token } from '@fuel-bridge/solidity-contracts/typechain';
+import type { AddressLike } from 'ethers';
 import type { TxParams } from 'fuels';
 import { ContractFactory, bn, Contract, TransactionStatus } from 'fuels';
 
@@ -22,13 +23,21 @@ const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
 export async function getOrDeployFuelTokenContract(
   env: TestEnvironment,
-  ethTestToken: ethers.Contract,
-  ethTokenGateway: { address: string },
+  ethTestToken: Token | NFT,
+  ethTokenGateway: AddressLike,
   fuelTxParams: TxParams,
   DECIMALS?: number
 ) {
-  const tokenGateway = ethTokenGateway.address.replace('0x', '');
-  const tokenAddress = ethTestToken.address.replace('0x', '');
+  if (typeof ethTokenGateway !== 'string') {
+    ethTokenGateway =
+      'then' in ethTokenGateway
+        ? await ethTokenGateway
+        : await ethTokenGateway.getAddress();
+  }
+
+  const tokenAddress = (await ethTestToken.getAddress()).replace('0x', '');
+  const tokenGateway = ethTokenGateway.replace('0x', '');
+  const ethAcct = env.eth.signers[0];
   const fuelAcct = env.fuel.signers[1];
 
   let fuelTestToken: Contract = null;
@@ -59,9 +68,7 @@ export async function getOrDeployFuelTokenContract(
     );
 
     const BRIDGED_TOKEN_DECIMALS: number =
-      'decimals' in ethTestToken.callStatic
-        ? await ethTestToken.callStatic.decimals()
-        : 0;
+      'decimals' in ethTestToken ? Number(await ethTestToken.decimals()) : 0;
 
     const configurableConstants: any = {
       BRIDGED_TOKEN_DECIMALS,
@@ -139,13 +146,15 @@ export async function getOrDeployFuelTokenContract(
         ])
       )
       .then(([relayMessageParams]) =>
-        env.eth.fuelMessagePortal.relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        )
+        env.eth.fuelMessagePortal
+          .connect(ethAcct)
+          .relayMessage(
+            relayMessageParams.message,
+            relayMessageParams.rootBlockHeader,
+            relayMessageParams.blockHeader,
+            relayMessageParams.blockInHistoryProof,
+            relayMessageParams.messageInBlockProof
+          )
       )
       .then((tx) => tx.wait());
 

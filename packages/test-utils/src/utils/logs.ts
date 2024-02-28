@@ -1,6 +1,6 @@
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { Signer } from 'ethers';
-import { formatEther } from 'ethers/lib/utils';
+import { formatEther } from 'ethers';
 import type { WalletUnlocked } from 'fuels';
 
 import {
@@ -9,20 +9,17 @@ import {
   fuels_formatToken,
 } from './parsers';
 
-export const LOG_CONFIG = {
-  debug: process.env.DEBUG || true,
-};
-
 export async function logETHBalances(
   ethereumAccount: Signer,
   fuelAccount: WalletUnlocked
 ) {
+  const ethersProvider = ethereumAccount.provider;
   const etherAccountAddress = await ethereumAccount.getAddress();
   const fuelAccountAddress = await fuelAccount.address.toHexString();
   console.log('Account balances:');
   console.log(
     `  Ethereum - ${formatEther(
-      await ethereumAccount.getBalance()
+      await ethersProvider.getBalance(ethereumAccount)
     )} ETH (${etherAccountAddress})`
   );
   console.log(
@@ -40,7 +37,7 @@ export async function logTokenBalances(
   fuelTestTokenId: string
 ) {
   const etherAccountAddress = await ethereumAccount.getAddress();
-  const fuelAccountAddress = await fuelAccount.address.toHexString();
+  const fuelAccountAddress = fuelAccount.address.toHexString();
   console.log('Account balances:');
   console.log(
     `  Ethereum - ${ethers_formatToken(
@@ -56,7 +53,7 @@ export async function logTokenBalances(
 }
 
 export function debug(...args: any) {
-  if (LOG_CONFIG.debug) {
+  if (process.env.DEBUG) {
     console.log(...args);
   }
 }

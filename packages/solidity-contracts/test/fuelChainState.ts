@@ -1,5 +1,5 @@
 import chai from 'chai';
-import { BigNumber } from 'ethers';
+import { keccak256, toBeHex, toUtf8Bytes } from 'ethers';
 import { ethers } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -15,7 +15,7 @@ const { expect } = chai;
 function createBlock(height: number): BlockHeader {
   const header: BlockHeader = {
     prevRoot: EMPTY,
-    height: BigNumber.from(height).toHexString(),
+    height: toBeHex(BigInt(height)),
     timestamp: tai64Time(new Date().getTime()),
     daHeight: '0',
     txCount: '0',
@@ -58,9 +58,7 @@ describe('Fuel Chain State', async () => {
   describe('Verify access control', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
     let signer0: string;
     let signer1: string;
     let signer2: string;
@@ -201,9 +199,7 @@ describe('Fuel Chain State', async () => {
   describe('Verify admin functions', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const committerRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('COMMITTER_ROLE')
-    );
+    const committerRole = keccak256(toUtf8Bytes('COMMITTER_ROLE'));
     let signer1: string;
     let signer2: string;
     before(async () => {
@@ -285,9 +281,7 @@ describe('Fuel Chain State', async () => {
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
 
     it('Should be able to grant pauser role', async () => {
       expect(
