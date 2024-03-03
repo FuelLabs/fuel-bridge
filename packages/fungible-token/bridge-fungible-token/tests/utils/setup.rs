@@ -41,17 +41,20 @@ abigen!(
 );
 
 /// Used for setting up tests with various message values
+#[derive(Debug)]
 pub struct BridgingConfig {
     pub adjustment: Adjustment,
     pub amount: TxAmount,
     pub overflow: Overflow,
 }
 
+#[derive(Debug)]
 pub struct Adjustment {
     pub factor: Unsigned256,
     pub is_div: bool,
 }
 
+#[derive(Debug)]
 pub struct TxAmount {
     pub min: Unsigned256,
     pub max: Unsigned256,
@@ -59,12 +62,14 @@ pub struct TxAmount {
     pub not_enough: Unsigned256,
 }
 
+#[derive(Debug)]
 pub struct Overflow {
     pub one: Unsigned256,
     pub two: Unsigned256,
     pub three: Unsigned256,
 }
 
+#[derive(Debug)]
 pub struct UTXOInputs {
     pub contract: Vec<Input>,
     pub coin: Vec<Input>,
@@ -72,7 +77,7 @@ pub struct UTXOInputs {
 }
 
 impl BridgingConfig {
-    pub fn new(bridge_decimals: u8, proxy_decimals: u8) -> Self {
+    pub fn new(bridge_decimals: u64, proxy_decimals: u64) -> Self {
         let bridged_token_decimals = Unsigned256::from(bridge_decimals);
         let proxy_token_decimals = Unsigned256::from(proxy_decimals);
         let one = Unsigned256::from(1);

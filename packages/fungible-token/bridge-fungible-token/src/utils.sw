@@ -3,6 +3,7 @@ library;
 use ::cast::*;
 use ::data_structures::MessageData;
 use ::errors::BridgeFungibleTokenError;
+use ::events::DepositEvent;
 use std::{
     bytes::Bytes,
     constants::ZERO_B256,

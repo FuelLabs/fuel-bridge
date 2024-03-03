@@ -520,7 +520,7 @@ mod success {
 
         let response = bridged_token_decimals(&contract).await;
 
-        assert_eq!(response, BRIDGED_TOKEN_DECIMALS)
+        assert_eq!(u64::from(response), BRIDGED_TOKEN_DECIMALS)
     }
 
     #[tokio::test]
