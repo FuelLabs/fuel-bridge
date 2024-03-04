@@ -1,7 +1,8 @@
 use std::{mem::size_of, num::ParseIntError, str::FromStr, vec};
 
+use fuel_core_types::fuel_vm::SecretKey;
 use fuels::{
-    accounts::{fuel_crypto::SecretKey, wallet::WalletUnlocked},
+    accounts::wallet::WalletUnlocked,
     prelude::{
         abigen, setup_custom_assets_coins, Address, AssetConfig, AssetId, Contract,
         LoadConfiguration, TxPolicies,
@@ -20,12 +21,12 @@ use super::builder;
 
 abigen!(Contract(
     name = "TestContract",
-    abi = "packages/message-predicates/contract-message-predicate/out/debug/contract_message_test-abi.json"
+    abi = "packages/message-predicates/contract-message-predicate/out/release/contract_message_test-abi.json"
 ));
 
 pub const MESSAGE_SENDER_ADDRESS: &str =
     "0xca400d3e7710eee293786830755278e6d2b9278b4177b8b1a896ebd5f55c10bc";
-pub const TEST_RECEIVER_CONTRACT_BINARY: &str = "./out/debug/contract_message_test.bin";
+pub const TEST_RECEIVER_CONTRACT_BINARY: &str = "./out/release/contract_message_test.bin";
 
 /// Sets up a test fuel environment with a funded wallet
 pub async fn setup_environment(
@@ -143,13 +144,10 @@ pub async fn relay_message_to_contract(
     gas_coins: &[Input],
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
-    let network_info = provider.network_info().await.unwrap();
 
     let inputs = [gas_coins, contracts.as_slice()].concat();
 
-    let tx =
-        builder::build_contract_message_tx(message, inputs.as_slice(), &[], network_info, wallet)
-            .await;
+    let tx = builder::build_contract_message_tx(message, inputs.as_slice(), &[], wallet).await;
 
     provider
         .send_transaction(tx)

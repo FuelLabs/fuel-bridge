@@ -11,8 +11,8 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import type { BigNumber, Signer } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import type { Signer } from 'ethers';
+import { parseEther } from 'ethers';
 import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
@@ -29,7 +29,7 @@ describe('Transferring ETH', async function () {
 
   let env: TestEnvironment;
 
-  // override the default test timeout from 2000ms
+  // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   before(async () => {
@@ -40,7 +40,7 @@ describe('Transferring ETH', async function () {
     const NUM_ETH = '0.1';
     let ethereumETHSender: Signer;
     let ethereumETHSenderAddress: string;
-    let ethereumETHSenderBalance: BigNumber;
+    let ethereumETHSenderBalance: bigint;
     let fuelETHReceiver: AbstractAddress;
     let fuelETHReceiverAddress: string;
     let fuelETHReceiverBalance: BN;
@@ -48,7 +48,9 @@ describe('Transferring ETH', async function () {
     before(async () => {
       ethereumETHSender = env.eth.signers[0];
       ethereumETHSenderAddress = await ethereumETHSender.getAddress();
-      ethereumETHSenderBalance = await ethereumETHSender.getBalance();
+      ethereumETHSenderBalance = await env.eth.provider.getBalance(
+        ethereumETHSender
+      );
       fuelETHReceiver = env.fuel.signers[0].address;
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
       fuelETHReceiverBalance = await env.fuel.provider.getBalance(
@@ -64,27 +66,37 @@ describe('Transferring ETH', async function () {
         .depositETH(fuelETHReceiverAddress, {
           value: parseEther(NUM_ETH),
         });
-      const result = await tx.wait();
-      expect(result.status).to.equal(1);
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
 
       // parse events from logs
-      const event = env.eth.fuelMessagePortal.interface.parseLog(
-        result.logs[0]
+      const filter = env.eth.fuelMessagePortal.filters.MessageSent(
+        null, // Args set to null since there should be just 1 event for MessageSent
+        null,
+        null,
+        null,
+        null
       );
-      fuelETHMessageNonce = new BN(event.args.nonce.toHexString());
+
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          filter,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      fuelETHMessageNonce = new BN(event.args.nonce.toString());
 
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await env.eth.provider.getBalance(
         ethereumETHSenderAddress
       );
-      const ethereumETHSenderBalanceMinusGas = ethereumETHSenderBalance.sub(
-        result.gasUsed.mul(result.effectiveGasPrice)
-      );
-      expect(
-        newSenderBalance.eq(
-          ethereumETHSenderBalanceMinusGas.sub(parseEther(NUM_ETH))
-        )
-      ).to.be.true;
+
+      const txCost = receipt.gasUsed * receipt.gasPrice;
+      const expectedSenderBalance =
+        ethereumETHSenderBalance - txCost - parseEther(NUM_ETH);
+      expect(newSenderBalance).to.be.eq(expectedSenderBalance);
     });
 
     it('Wait for ETH to arrive on Fuel', async function () {
@@ -117,7 +129,7 @@ describe('Transferring ETH', async function () {
     let fuelETHSenderBalance: BN;
     let ethereumETHReceiver: Signer;
     let ethereumETHReceiverAddress: string;
-    let ethereumETHReceiverBalance: BigNumber;
+    let ethereumETHReceiverBalance: bigint;
     let withdrawMessageProof: MessageProof;
 
     before(async () => {
@@ -125,7 +137,9 @@ describe('Transferring ETH', async function () {
       fuelETHSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
-      ethereumETHReceiverBalance = await ethereumETHReceiver.getBalance();
+      ethereumETHReceiverBalance = await env.eth.provider.getBalance(
+        ethereumETHReceiver
+      );
     });
 
     it('Send ETH via OutputMessage', async () => {
@@ -190,11 +204,11 @@ describe('Transferring ETH', async function () {
 
     it('Check ETH arrived on Ethereum', async () => {
       // check that the recipient balance has increased by the expected amount
-      const newReceiverBalance = await ethereumETHReceiver.getBalance();
+      const newReceiverBalance = await env.eth.provider.getBalance(
+        ethereumETHReceiver
+      );
       expect(
-        newReceiverBalance.eq(
-          ethereumETHReceiverBalance.add(parseEther(NUM_ETH))
-        )
+        newReceiverBalance === ethereumETHReceiverBalance + parseEther(NUM_ETH)
       ).to.be.true;
     });
   });

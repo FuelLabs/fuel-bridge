@@ -70,7 +70,7 @@ const TOKEN_AMOUNT = '10';
   // approve fuel erc20 gateway to spend the tokens
   console.log('Approving Tokens for gateway...');
   const eApproveTx = await ethTestToken.approve(
-    gatewayContract.address,
+    await gatewayContract.getAddress(),
     ethers_parseToken(TOKEN_AMOUNT, 18)
   );
   const eApproveTxResult = await eApproveTx.wait();
@@ -83,7 +83,7 @@ const TOKEN_AMOUNT = '10';
   console.log(`Sending ${TOKEN_AMOUNT} Tokens from Ethereum...`);
   const eDepositTx = await gatewayContract.deposit(
     fuelAcctAddr,
-    ethTestToken.address,
+    await ethTestToken.getAddress(),
     fuelTestToken.id.toHexString(),
     ethers_parseToken(TOKEN_AMOUNT, 18)
   );

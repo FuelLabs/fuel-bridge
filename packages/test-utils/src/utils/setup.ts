@@ -1,6 +1,5 @@
 /// @dev The Fuel testing setup.
 /// A set of useful helper methods for setting up the integration test environment.
-import type { Provider as EthProvider } from '@ethersproject/providers';
 import type {
   FuelChainState,
   FuelMessagePortal,
@@ -14,8 +13,14 @@ import {
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
-import type { Wallet as EthSigner } from 'ethers';
-import { ethers } from 'ethers';
+import type { Signer as EthSigner, Provider as EthProvider } from 'ethers';
+import {
+  JsonRpcProvider,
+  ethers,
+  formatEther,
+  parseEther,
+  NonceManager,
+} from 'ethers';
 import type { WalletUnlocked as FuelWallet } from 'fuels';
 import { Wallet, Provider as FuelProvider } from 'fuels';
 
@@ -27,12 +32,25 @@ dotenv.config();
 const def_http_eth: string = 'http://127.0.0.1:8545';
 const def_http_deployer: string = 'http://127.0.0.1:8080';
 const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
-const def_pk_eth_deployer: string =
-  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d';
-const def_pk_eth_signer1: string =
-  '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a';
-const def_pk_eth_signer2: string =
-  '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6';
+
+// Default private keys of the developer mnemonic
+const eth_private_keys: string[] = [
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
+  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d', // Deployer private key
+  '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a', // Signer 1 private key
+  '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6', // Signer 2 private key
+  '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a',
+  '0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba',
+  '0x92db14e403b83dfe3df233f83dfa3a0d7096f21ca9b0d6d6b8d88b2b4ec1564e',
+  '0x4bbbf85ce3377467afe5d46f804f221813b2bb87f24d81f60f1fcdbf7cbf4356',
+  '0xdbda1821b80551c9d65939329250298aa3472ba22feea921c0cf5d620ea67b97',
+  '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
+];
+
+const def_pk_eth_deployer: string = eth_private_keys[1];
+const def_pk_eth_signer1: string = eth_private_keys[3];
+const def_pk_eth_signer2: string = eth_private_keys[4];
+
 const def_pk_fuel_deployer: string =
   '0xba9e8401405cd4327119548bccf0cd8b195c3fb716c848d9571c60bb230c6978';
 const def_pk_fuel_signer1: string =
@@ -148,9 +166,8 @@ export async function setupEnvironment(
   }
 
   // Create provider and signers from http_ethereum_client
-  const eth_provider = new ethers.providers.JsonRpcProvider(
-    http_ethereum_client
-  );
+  const eth_provider = new JsonRpcProvider(http_ethereum_client);
+
   try {
     await eth_provider.getBlockNumber();
   } catch (e) {
@@ -160,30 +177,36 @@ export async function setupEnvironment(
         "). Are you sure it's running?"
     );
   }
-  const eth_deployer = new ethers.Wallet(pk_eth_deployer, eth_provider);
-  const eth_deployerBalance = await eth_deployer.getBalance();
-  if (eth_deployerBalance.lt(ethers.utils.parseEther('5'))) {
+  const eth_deployer = new NonceManager(
+    new ethers.Wallet(pk_eth_deployer, eth_provider)
+  );
+  const eth_deployerBalance = await eth_provider.getBalance(eth_deployer);
+  if (eth_deployerBalance < parseEther('5')) {
     throw new Error(
       'Ethereum deployer balance is very low (' +
-        ethers.utils.formatEther(eth_deployerBalance) +
+        formatEther(eth_deployerBalance) +
         'ETH)'
     );
   }
-  const eth_signer1 = new ethers.Wallet(pk_eth_signer1, eth_provider);
-  const eth_signer1Balance = await eth_signer1.getBalance();
-  if (eth_signer1Balance.lt(ethers.utils.parseEther('1'))) {
+  const eth_signer1 = new NonceManager(
+    new ethers.Wallet(pk_eth_signer1, eth_provider)
+  );
+  const eth_signer1Balance = await eth_provider.getBalance(eth_signer1);
+  if (eth_signer1Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
-      to: await eth_signer1.getAddress(),
-      value: ethers.utils.parseEther('1'),
+      to: eth_signer1,
+      value: parseEther('1'),
     });
     await tx.wait();
   }
-  const eth_signer2 = new ethers.Wallet(pk_eth_signer2, eth_provider);
-  const eth_signer2Balance = await eth_signer2.getBalance();
-  if (eth_signer2Balance.lt(ethers.utils.parseEther('1'))) {
+  const eth_signer2 = new NonceManager(
+    new ethers.Wallet(pk_eth_signer2, eth_provider)
+  );
+  const eth_signer2Balance = await eth_provider.getBalance(eth_signer2);
+  if (eth_signer2Balance < parseEther('1')) {
     const tx = await eth_deployer.sendTransaction({
-      to: await eth_signer2.getAddress(),
-      value: ethers.utils.parseEther('1'),
+      to: eth_signer2,
+      value: parseEther('1'),
     });
     await tx.wait();
   }
@@ -245,6 +268,7 @@ export async function setupEnvironment(
   }
 
   // Connect existing contracts
+
   const eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
     eth_fuelChainStateAddress,
     eth_deployer

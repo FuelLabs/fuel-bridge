@@ -6,23 +6,21 @@ import type { TestEnvironment } from '../setup';
 
 export async function getOrDeployERC721Contract(env: TestEnvironment) {
   debug('Setting up environment...');
-  const ethDeployer = env.eth.deployer;
-  const ethAcct = env.eth.signers[0];
-  // load ERC721 contract
-  let ethTestNft: NFT = null;
-  if (!ethTestNft) {
-    debug(`Creating ERC-721 token contract to test with...`);
-    const eth_tokenFactory = new NFT__factory(ethDeployer);
-    ethTestNft = await eth_tokenFactory.deploy();
-    await ethTestNft.deployed();
-    debug(
-      `Ethereum ERC-721 token contract created at address ${ethTestNft.address}.`
-    );
-  }
-  ethTestNft = ethTestNft.connect(ethAcct);
-  const ethTestTokenAddress = ethTestNft.address;
+  const ethDeployer = env.eth.signers[0];
+  debug(`Creating ERC-721 token contract to test with...`);
+  const eth_tokenFactory = new NFT__factory(ethDeployer);
+  let ethTestNft = await eth_tokenFactory
+    .deploy()
+    .then((tx) => tx.waitForDeployment());
+  const ethTestNftAddress = await ethTestNft.getAddress();
+
   debug(
-    `Testing with Ethereum ERC-721 token contract at ${ethTestTokenAddress}.`
+    `Ethereum ERC-721 token contract created at address ${ethTestNftAddress}.`
+  );
+
+  ethTestNft = ethTestNft.connect(ethDeployer);
+  debug(
+    `Testing with Ethereum ERC-721 token contract at ${ethTestNftAddress}.`
   );
 
   return ethTestNft;

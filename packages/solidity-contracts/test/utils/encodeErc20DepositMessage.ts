@@ -1,8 +1,7 @@
 import type { BigNumberish, BytesLike } from 'ethers';
-import { BigNumber, utils } from 'ethers';
+import { zeroPadValue as hexZeroPadLeft, toBeHex } from 'ethers';
 
 import { computeMessageData } from '../../protocol/utils';
-const { hexZeroPad } = utils;
 
 /**
  * @description Encodes an erc20 deposit message the same way the FuelERC20Gateway contract does
@@ -17,9 +16,9 @@ export function encodeErc20DepositMessage(
 ) {
   return computeMessageData(
     fuelContractId,
-    hexZeroPad(typeof token === 'string' ? token : token.address, 32),
-    hexZeroPad(BigNumber.from(0).toHexString(), 32),
-    hexZeroPad(typeof sender === 'string' ? sender : sender.address, 32),
+    hexZeroPadLeft(typeof token === 'string' ? token : token.address, 32),
+    hexZeroPadLeft(toBeHex(BigInt(0)), 32),
+    hexZeroPadLeft(typeof sender === 'string' ? sender : sender.address, 32),
     to,
     amount,
     data

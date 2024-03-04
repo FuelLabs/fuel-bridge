@@ -1,12 +1,13 @@
 import { config as dotEnvConfig } from 'dotenv';
 import type { HardhatUserConfig } from 'hardhat/types';
+import '@nomicfoundation/hardhat-ethers';
+import '@nomicfoundation/hardhat-network-helpers';
+import '@nomicfoundation/hardhat-verify';
 import '@nomicfoundation/hardhat-chai-matchers';
-import '@nomiclabs/hardhat-etherscan';
+import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
-import 'hardhat-typechain';
 import 'hardhat-deploy';
 import 'solidity-coverage';
-import 'hardhat-gas-reporter';
 
 dotEnvConfig();
 
@@ -71,6 +72,9 @@ const config: HardhatUserConfig = {
       deploy: ['deploy/beta5devnet'],
       chainId: 11155111,
     },
+  },
+  typechain: {
+    outDir: 'typechain',
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,

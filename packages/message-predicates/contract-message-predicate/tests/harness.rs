@@ -88,7 +88,6 @@ mod success {
             message_inputs[0].clone(),
             &[message_inputs[1].clone(), contract_input.clone()],
             &[],
-            provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
@@ -194,7 +193,6 @@ mod fail {
             coin_as_message,
             &vec![contract_input.clone()],
             &[],
-            provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
@@ -226,14 +224,8 @@ mod fail {
             env::setup_environment(vec![coin], vec![message]).await;
         let provider = wallet.provider().unwrap();
 
-        let tx = builder::build_contract_message_tx(
-            message_inputs[0].clone(),
-            &[],
-            &[],
-            provider.network_info().await.unwrap(),
-            &wallet,
-        )
-        .await;
+        let tx =
+            builder::build_contract_message_tx(message_inputs[0].clone(), &[], &[], &wallet).await;
 
         let tx_id = provider
             .send_transaction(tx)
@@ -266,7 +258,6 @@ mod fail {
             message_inputs[0].clone(),
             &vec![contract_input.clone()],
             &[],
-            provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
@@ -310,7 +301,6 @@ mod fail {
                 contract_input.clone(),
             ],
             &[],
-            provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;
@@ -340,7 +330,6 @@ mod fail {
             message_inputs[0].clone(),
             &vec![contract_input.clone()],
             &[],
-            provider.network_info().await.unwrap(),
             &wallet,
         )
         .await;

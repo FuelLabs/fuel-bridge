@@ -57,6 +57,6 @@ mod success {
 
         let response = decimals(&contract, asset_id).await.unwrap();
 
-        assert_eq!(response, PROXY_TOKEN_DECIMALS)
+        assert_eq!(u64::from(response), PROXY_TOKEN_DECIMALS)
     }
 }

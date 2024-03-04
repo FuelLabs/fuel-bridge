@@ -10,7 +10,7 @@ use crate::utils::{
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
-use fuels::{accounts::ViewOnlyAccount, prelude::AssetId, types::Bits256};
+use fuels::{prelude::AssetId, types::Bits256};
 
 mod success {
 
@@ -364,7 +364,7 @@ mod success {
 
         // Now try to withdraw
         let withdrawal_amount = config.fuel_equivalent_amount(config.amount.test);
-        let gas = 10_000;
+        let gas = 100_000;
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
@@ -461,7 +461,7 @@ mod success {
 
         // Now try to withdraw
         let withdrawal_amount = fuel_side_token_amount;
-        let gas = 10_000;
+        let gas = 100_000;
         let to = Bits256(*wallet.address().hash());
 
         let call_response = withdraw(&bridge, to, withdrawal_amount, gas).await;
@@ -520,7 +520,7 @@ mod success {
 
         let response = bridged_token_decimals(&contract).await;
 
-        assert_eq!(response, BRIDGED_TOKEN_DECIMALS)
+        assert_eq!(u64::from(response), BRIDGED_TOKEN_DECIMALS)
     }
 
     #[tokio::test]

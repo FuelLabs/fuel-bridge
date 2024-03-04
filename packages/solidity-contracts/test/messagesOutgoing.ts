@@ -1,12 +1,19 @@
-import type { Provider } from '@ethersproject/abstract-provider';
 import chai from 'chai';
-import { BigNumber as BN } from 'ethers';
+import type { Provider } from 'ethers';
+import {
+  hexlify,
+  keccak256,
+  parseEther,
+  randomBytes,
+  toUtf8Bytes,
+  zeroPadValue,
+} from 'ethers';
 import { ethers } from 'hardhat';
 
 import type { HarnessObject } from '../protocol/harness';
 import { setupFuel } from '../protocol/harness';
-import { randomBytes, randomBytes32 } from '../protocol/utils';
-import type { MessageTester } from '../typechain/MessageTester.d';
+import { randomBytes32 } from '../protocol/utils';
+import type { MessageTester } from '../typechain';
 
 const { expect } = chai;
 
@@ -16,43 +23,41 @@ describe('Outgoing Messages', async () => {
 
   // Testing contracts
   let messageTester: MessageTester;
+  let messageTesterAddress: string;
+  let fuelMessagePortalAddress: string;
 
   before(async () => {
     env = await setupFuel();
+    fuelMessagePortalAddress = await env.fuelMessagePortal.getAddress();
 
     // Deploy contracts for message testing
-    const messageTesterContractFactory = await ethers.getContractFactory(
-      'MessageTester',
-      env.deployer
-    );
-    messageTester = (await messageTesterContractFactory.deploy(
-      env.fuelMessagePortal.address
-    )) as MessageTester;
-    await messageTester.deployed();
+    messageTester = (await ethers
+      .getContractFactory('MessageTester', env.deployer)
+      .then(async (factory) => factory.deploy(env.fuelMessagePortal))
+      .then((tx) => tx.waitForDeployment())) as MessageTester;
+    messageTesterAddress = await messageTester.getAddress();
 
     // Send eth to contract
     const tx = {
-      to: messageTester.address,
-      value: ethers.utils.parseEther('2'),
+      to: messageTester,
+      value: parseEther('2'),
     };
     const transaction = await env.signers[0].sendTransaction(tx);
     await transaction.wait();
 
     // Verify contract getters
     expect(await env.fuelMessagePortal.fuelChainStateContract()).to.equal(
-      env.fuelChainState.address
+      await env.fuelChainState.getAddress()
     );
     expect(await messageTester.fuelMessagePortal()).to.equal(
-      env.fuelMessagePortal.address
+      fuelMessagePortalAddress
     );
   });
 
   describe('Verify access control', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
     let signer0: string;
     let signer1: string;
     let signer2: string;
@@ -194,19 +199,20 @@ describe('Outgoing Messages', async () => {
   describe('Send messages', async () => {
     let provider: Provider;
     let filterAddress: string;
-    let fuelBaseAssetDecimals: number;
-    let baseAssetConversion: number;
+    let fuelBaseAssetDecimals: bigint;
+    let baseAssetConversion: bigint;
+
     before(async () => {
-      provider = env.fuelMessagePortal.provider;
-      filterAddress = env.fuelMessagePortal.address;
+      provider = env.deployer.provider;
+      filterAddress = fuelMessagePortalAddress;
       fuelBaseAssetDecimals =
         await env.fuelMessagePortal.fuelBaseAssetDecimals();
-      baseAssetConversion = 10 ** (18 - fuelBaseAssetDecimals);
+      baseAssetConversion = 10n ** (18n - fuelBaseAssetDecimals);
     });
 
     it('Should be able to send message with data', async () => {
       const recipient = randomBytes32();
-      const data = randomBytes(16);
+      const data = hexlify(randomBytes(16));
       await expect(messageTester.attemptSendMessage(recipient, data)).to.not.be
         .reverted;
 
@@ -217,10 +223,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(messageTesterAddress, 32).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
@@ -233,8 +236,9 @@ describe('Outgoing Messages', async () => {
 
     it('Should be able to send message without data', async () => {
       const recipient = randomBytes32();
-      await expect(messageTester.attemptSendMessage(recipient, [])).to.not.be
-        .reverted;
+      await expect(
+        messageTester.attemptSendMessage(recipient, new Uint8Array([]))
+      ).to.not.be.reverted;
 
       // Check logs for message sent
       const logs = await provider.getLogs({ address: filterAddress });
@@ -243,10 +247,7 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
@@ -259,14 +260,12 @@ describe('Outgoing Messages', async () => {
 
     it('Should be able to send message with amount and data', async () => {
       const recipient = randomBytes32();
-      const data = randomBytes(8);
-      const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
-      );
+      const data = hexlify(randomBytes(8));
+      const portalBalance = await provider.getBalance(env.fuelMessagePortal);
       await expect(
         messageTester.attemptSendMessageWithAmount(
           recipient,
-          ethers.utils.parseEther('0.1'),
+          parseEther('0.1'),
           data
         )
       ).to.not.be.reverted;
@@ -278,15 +277,12 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(messageTesterAddress, 32)
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal(data);
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('0.1').div(baseAssetConversion)
+        parseEther('0.1') / baseAssetConversion
       );
 
       // Check that nonce is unique
@@ -294,21 +290,19 @@ describe('Outgoing Messages', async () => {
       nonceList.push(messageSentEvent.args.nonce);
 
       // Check that portal balance increased
-      expect(await provider.getBalance(env.fuelMessagePortal.address)).to.equal(
-        portalBalance.add(ethers.utils.parseEther('0.1'))
+      expect(await provider.getBalance(env.fuelMessagePortal)).to.equal(
+        portalBalance + parseEther('0.1')
       );
     });
 
     it('Should be able to send message with amount and without data', async () => {
       const recipient = randomBytes32();
-      const portalBalance = await provider.getBalance(
-        env.fuelMessagePortal.address
-      );
+      const portalBalance = await provider.getBalance(env.fuelMessagePortal);
       await expect(
         messageTester.attemptSendMessageWithAmount(
           recipient,
-          ethers.utils.parseEther('0.5'),
-          []
+          parseEther('0.5'),
+          new Uint8Array([])
         )
       ).to.not.be.reverted;
 
@@ -319,15 +313,12 @@ describe('Outgoing Messages', async () => {
       );
       expect(messageSentEvent.name).to.equal('MessageSent');
       expect(messageSentEvent.args.sender).to.equal(
-        messageTester.address
-          .split('0x')
-          .join('0x000000000000000000000000')
-          .toLowerCase()
+        zeroPadValue(messageTesterAddress, 32).toLowerCase()
       );
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('0.5').div(baseAssetConversion)
+        parseEther('0.5') / baseAssetConversion
       );
 
       // Check that nonce is unique
@@ -335,15 +326,15 @@ describe('Outgoing Messages', async () => {
       nonceList.push(messageSentEvent.args.nonce);
 
       // Check that portal balance increased
-      expect(await provider.getBalance(env.fuelMessagePortal.address)).to.equal(
-        portalBalance.add(ethers.utils.parseEther('0.5'))
+      expect(await provider.getBalance(env.fuelMessagePortal)).to.equal(
+        portalBalance + parseEther('0.5')
       );
     });
 
     it('Should not be able to send message with amount too small', async () => {
       const recipient = randomBytes32();
       await expect(
-        env.fuelMessagePortal.sendMessage(recipient, [], {
+        env.fuelMessagePortal.sendMessage(recipient, new Uint8Array([]), {
           value: 1,
         })
       ).to.be.revertedWithCustomError(
@@ -359,17 +350,17 @@ describe('Outgoing Messages', async () => {
         '0xf00000000000000000000000',
       ]);
 
-      const maxUint64 = BN.from('0xffffffffffffffff');
-      const precision = 10 ** 9;
+      const maxUint64 = BigInt('0xffffffffffffffff');
+      const precision = 10n ** 9n;
 
-      const maxAllowedValue = maxUint64.mul(precision);
-      await env.fuelMessagePortal.sendMessage(recipient, [], {
+      const maxAllowedValue = maxUint64 * precision;
+      await env.fuelMessagePortal.sendMessage(recipient, new Uint8Array([]), {
         value: maxAllowedValue,
       });
 
-      const minUnallowedValue = maxUint64.add(1).mul(precision);
+      const minUnallowedValue = (maxUint64 + 1n) * precision;
       await expect(
-        env.fuelMessagePortal.sendMessage(recipient, [], {
+        env.fuelMessagePortal.sendMessage(recipient, new Uint8Array([]), {
           value: minUnallowedValue,
         })
       ).to.be.revertedWithCustomError(env.fuelMessagePortal, 'AmountTooBig');
@@ -389,7 +380,7 @@ describe('Outgoing Messages', async () => {
       const recipient = randomBytes32();
       await expect(
         env.fuelMessagePortal.depositETH(recipient, {
-          value: ethers.utils.parseEther('1.234'),
+          value: parseEther('1.234'),
         })
       ).to.not.be.reverted;
 
@@ -408,7 +399,7 @@ describe('Outgoing Messages', async () => {
       expect(messageSentEvent.args.recipient).to.equal(recipient);
       expect(messageSentEvent.args.data).to.equal('0x');
       expect(messageSentEvent.args.amount).to.equal(
-        ethers.utils.parseEther('1.234').div(baseAssetConversion)
+        parseEther('1.234') / baseAssetConversion
       );
 
       // Check that nonce is unique
@@ -420,9 +411,7 @@ describe('Outgoing Messages', async () => {
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
     const recipient = randomBytes32();
     const data = randomBytes(8);
 

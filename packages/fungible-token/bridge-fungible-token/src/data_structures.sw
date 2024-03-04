@@ -11,12 +11,12 @@ pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
 pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
 
 pub struct MessageData {
-    amount: b256,
-    from: b256,
-    len: u16,
-    to: Identity,
-    token_address: b256,
-    token_id: b256,
+    pub amount: b256,
+    pub from: b256,
+    pub len: u16,
+    pub to: Identity,
+    pub token_address: b256,
+    pub token_id: b256,
 }
 
 impl MessageData {

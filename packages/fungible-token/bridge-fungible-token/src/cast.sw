@@ -6,9 +6,11 @@ impl From<b256> for u256 {
     fn from(value: b256) -> Self {
         value.as_u256()
     }
+}
 
-    fn into(self) -> b256 {
-        let result: b256 = asm(r1: self) {
+impl From<u256> for b256 {
+    fn from(value: u256) -> b256 {
+        let result: b256 = asm(r1: value) {
             r1: b256
         };
         result

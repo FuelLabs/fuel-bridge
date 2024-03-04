@@ -7,6 +7,6 @@ export default {
   treeshake: true,
   esbuildPlugins: [esbuildBinLoader],
   format: ['cjs', 'esm'],
-  minify: true,
+  minify: false,
   entry: ['./exports/index.ts'],
 };

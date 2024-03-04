@@ -1,11 +1,14 @@
-import { hexZeroPad } from '@ethersproject/bytes';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { constants, type ContractFactory } from 'ethers';
+import {
+  ZeroHash,
+  type ContractFactory,
+  MaxUint256,
+  zeroPadValue,
+} from 'ethers';
 import hre from 'hardhat';
 
 import { randomAddress, randomBytes32 } from '../protocol/utils';
-import { FuelERC721GatewayV2__factory } from '../typechain';
 import type {
   FuelERC721GatewayV2,
   MockFuelMessagePortal,
@@ -19,8 +22,8 @@ type Env = {
   erc721Gateway: FuelERC721GatewayV2;
   V2Implementation: ContractFactory;
   nft: NFT;
-  signers: SignerWithAddress[];
-  deployer: SignerWithAddress;
+  signers: HardhatEthersSigner[];
+  deployer: HardhatEthersSigner;
 };
 
 describe('erc721GatewayV2', () => {
@@ -31,25 +34,33 @@ describe('erc721GatewayV2', () => {
     const initializer = 'initialize';
     const fuelMessagePortal = await hre.ethers
       .getContractFactory('MockFuelMessagePortal')
-      .then((factory) => factory.deploy() as Promise<MockFuelMessagePortal>);
-    const erc721Gateway = await hre.ethers
-      .getContractFactory('FuelERC721Gateway')
-      .then((factory) =>
-        hre.upgrades.deployProxy(factory, [fuelMessagePortal.address], {
-          initializer,
-        })
-      )
-      .then(({ address }) =>
-        FuelERC721GatewayV2__factory.connect(address, deployer)
+      .then(
+        async (factory) => factory.deploy() as Promise<MockFuelMessagePortal>
       );
+    const erc721GatewayDeployment = await hre.ethers
+      .getContractFactory('FuelERC721Gateway')
+      .then(async (factory) =>
+        hre.upgrades.deployProxy(
+          factory,
+          [await fuelMessagePortal.getAddress()],
+          {
+            initializer,
+          }
+        )
+      )
+      .then((tx) => tx.waitForDeployment());
 
     const nft = await hre.ethers
       .getContractFactory('NFT')
-      .then((factory) => factory.deploy() as Promise<NFT>);
+      .then(async (factory) => factory.deploy() as Promise<NFT>);
 
     const V2Implementation = await hre.ethers.getContractFactory(
       'FuelERC721GatewayV2'
     );
+
+    const erc721Gateway = V2Implementation.attach(
+      await erc721GatewayDeployment.getAddress()
+    ).connect(erc721GatewayDeployment.runner) as FuelERC721GatewayV2;
 
     return {
       fuelMessagePortal,
@@ -86,11 +97,10 @@ describe('erc721GatewayV2', () => {
       const { nft, signers, erc721Gateway } = env;
 
       const [, user] = signers;
-      const { HashZero, MaxUint256 } = constants;
 
       const depositTx = erc721Gateway
         .connect(user)
-        .deposit(HashZero, nft.address, HashZero, MaxUint256);
+        .deposit(ZeroHash, nft, ZeroHash, MaxUint256);
 
       await expect(depositTx).to.be.revertedWithCustomError(
         erc721Gateway,
@@ -104,31 +114,31 @@ describe('erc721GatewayV2', () => {
 
       const tokenId = randomBytes32();
       await nft.mint(user.address, tokenId);
-      await nft.connect(user).approve(erc721Gateway.address, tokenId);
+      await nft.connect(user).approve(erc721Gateway, tokenId);
 
       const fuelBridge = randomBytes32();
       const fuelRecipient = randomBytes32();
-      const sender = hexZeroPad(user.address.toLowerCase(), 32);
+      const sender = zeroPadValue(user.address.toLowerCase(), 32);
 
       await fuelMessagePortal.setMessageSender(fuelBridge);
       const impersonatedPortal = await impersonateAccount(
-        fuelMessagePortal.address,
+        fuelMessagePortal,
         hre
       );
 
       const registerTx = await erc721Gateway
         .connect(impersonatedPortal)
-        .registerAsReceiver(nft.address);
+        .registerAsReceiver(nft);
 
       await expect(registerTx).to.emit(erc721Gateway, 'ReceiverRegistered');
 
       const depositTx = await erc721Gateway
         .connect(user)
-        .deposit(fuelRecipient, nft.address, fuelBridge, tokenId);
+        .deposit(fuelRecipient, nft, fuelBridge, tokenId);
 
       await expect(depositTx)
         .to.emit(erc721Gateway, 'Deposit')
-        .withArgs(sender, nft.address, fuelBridge, tokenId);
+        .withArgs(sender, nft, fuelBridge, tokenId);
     });
   });
 });

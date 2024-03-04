@@ -10,6 +10,6 @@
     "build": "tsup"
   },
   "dependencies": {
-    "fuels": "0.71.1"
+    "fuels": "0.73.0"
   }
 }

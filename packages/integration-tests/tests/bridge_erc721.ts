@@ -9,7 +9,6 @@ import {
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
-  LOG_CONFIG,
   waitForBlockCommit,
   waitForBlockFinalization,
   getTokenId,
@@ -18,8 +17,8 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import type { Wallet } from 'ethers';
-import { BigNumber, utils } from 'ethers';
+import { zeroPadValue } from 'ethers';
+import type { Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
@@ -28,13 +27,7 @@ import type {
   MessageProof,
 } from 'fuels';
 
-LOG_CONFIG.debug = false;
-
 const { expect } = chai;
-
-const signerToHexTokenId = (signer: { address: string }) => {
-  return utils.hexZeroPad(BigNumber.from(signer.address).toHexString(), 32);
-};
 
 describe('Bridging ERC721 tokens', async function () {
   // Timeout 6 minutes 40 seconds
@@ -45,6 +38,7 @@ describe('Bridging ERC721 tokens', async function () {
   let eth_testToken: NFT;
   let eth_testTokenAddress: string;
   let eth_tokenId: string;
+  let eth_erc721GatewayAddress: string;
   let fuel_testToken: Contract;
   let fuel_testContractId: string;
   let fuel_testAssetId: string;
@@ -55,7 +49,10 @@ describe('Bridging ERC721 tokens', async function () {
   before(async () => {
     env = await setupEnvironment({});
     eth_testToken = await getOrDeployERC721Contract(env);
-    eth_testTokenAddress = eth_testToken.address.toLowerCase();
+    eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
+    eth_erc721GatewayAddress = (
+      await env.eth.fuelERC721Gateway.getAddress()
+    ).toLowerCase();
     fuel_testToken = await getOrDeployFuelTokenContract(
       env,
       eth_testToken,
@@ -80,26 +77,21 @@ describe('Bridging ERC721 tokens', async function () {
       eth_testTokenAddress
     );
     expect(fuel_to_eth_address(expectedGatewayContractId)).to.equal(
-      env.eth.fuelERC721Gateway.address.toLowerCase()
+      eth_erc721GatewayAddress
     );
 
     // mint tokens as starting balances
-    await eth_testToken.mint(
-      env.eth.deployer.address,
-      env.eth.deployer.address
-    );
-    await eth_testToken.mint(
-      env.eth.signers[0].address,
-      env.eth.signers[0].address
-    );
-    await eth_testToken.mint(
-      env.eth.signers[1].address,
-      env.eth.signers[1].address
-    );
+
+    const deployerAddr = await env.eth.deployer.getAddress();
+    await eth_testToken.mint(deployerAddr, deployerAddr);
+    const signer0Addr = await env.eth.signers[0].getAddress();
+    await eth_testToken.mint(signer0Addr, signer0Addr);
+    const signer1Addr = await env.eth.signers[1].getAddress();
+    await eth_testToken.mint(signer1Addr, signer1Addr);
   });
 
   describe('Bridge ERC721 to Fuel', async () => {
-    let ethereumTokenSender: Wallet;
+    let ethereumTokenSender: Signer;
     let fuelTokenReceiver: FuelWallet;
     let fuelTokenReceiverAddress: string;
     let fuelTokenMessageNonce: BN;
@@ -109,7 +101,7 @@ describe('Bridging ERC721 tokens', async function () {
       ethereumTokenSender = env.eth.signers[0];
       fuelTokenReceiver = env.fuel.signers[0];
       fuelTokenReceiverAddress = fuelTokenReceiver.address.toHexString();
-      eth_tokenId = signerToHexTokenId(ethereumTokenSender);
+      eth_tokenId = zeroPadValue(await ethereumTokenSender.getAddress(), 32);
       fuel_testAssetId = getTokenId(fuel_testToken, eth_tokenId);
     });
 
@@ -117,20 +109,20 @@ describe('Bridging ERC721 tokens', async function () {
       // approve FuelERC721Gateway to spend the tokens
       await eth_testToken
         .connect(ethereumTokenSender)
-        .approve(env.eth.fuelERC721Gateway.address, eth_tokenId);
+        .approve(env.eth.fuelERC721Gateway, eth_tokenId);
 
       // use the FuelERC721Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      const result = await env.eth.fuelERC721Gateway
+      const receipt = await env.eth.fuelERC721Gateway
         .connect(ethereumTokenSender)
         .deposit(
           fuelTokenReceiverAddress,
-          eth_testToken.address,
+          eth_testTokenAddress,
           fuel_testContractId,
           eth_tokenId
         )
         .then((tx) => tx.wait());
 
-      expect(result.status).to.equal(1);
+      expect(receipt.status).to.equal(1);
 
       const filter = env.eth.fuelMessagePortal.filters.MessageSent(
         null, // Args set to null since there should be just 1 event for MessageSent
@@ -140,23 +132,23 @@ describe('Bridging ERC721 tokens', async function () {
         null
       );
 
-      const [log, ...rest] = await env.eth.provider.getLogs({
-        ...filter,
-        fromBlock: result.blockNumber,
-        toBlock: result.blockNumber,
-      });
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          filter,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
 
-      expect(rest.length).to.be.equal(0);
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
 
       // parse events from logs
-      const event = env.eth.fuelMessagePortal.interface.parseLog(log);
-      fuelTokenMessageNonce = new BN(event.args.nonce.toHexString());
+      fuelTokenMessageNonce = new BN(event.args.nonce.toString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
       // check that the tokenId now belongs to the gateway
-      expect(await eth_testToken.ownerOf(eth_tokenId)).to.be.equal(
-        env.eth.fuelERC721Gateway.address
-      );
+      expect(
+        (await eth_testToken.ownerOf(eth_tokenId)).toLowerCase()
+      ).to.be.equal(eth_erc721GatewayAddress);
     });
 
     it('Relay message from Ethereum on Fuel', async function () {
@@ -189,14 +181,14 @@ describe('Bridging ERC721 tokens', async function () {
 
   describe('Bridge ERC721 from Fuel', async () => {
     let fuelTokenSender: FuelWallet;
-    let ethereumTokenReceiver: Wallet;
+    let ethereumTokenReceiver: Signer;
     let ethereumTokenReceiverAddress: string;
     let withdrawMessageProof: MessageProof;
 
     before(async () => {
       fuelTokenSender = env.fuel.signers[0];
       ethereumTokenReceiver = env.eth.signers[1];
-      ethereumTokenReceiverAddress = ethereumTokenReceiver.address;
+      ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
     });
 
     it('Bridge ERC721 via Fuel token contract', async () => {

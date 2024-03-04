@@ -1,6 +1,6 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { ethers } from 'ethers';
-import { isAddress } from 'ethers/lib/utils';
+import { isAddress } from 'ethers';
 
 import { FuelChainState__factory } from '../typechain';
 

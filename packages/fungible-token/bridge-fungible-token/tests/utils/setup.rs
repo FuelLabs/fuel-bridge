@@ -7,15 +7,11 @@ use crate::utils::{
 };
 use fuel_core_types::{
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
-    fuel_types::Word,
+    fuel_types::{Nonce, Word},
+    fuel_vm::SecretKey,
 };
 use fuels::{
-    accounts::{
-        fuel_crypto::{fuel_types::Nonce, SecretKey},
-        predicate::Predicate,
-        wallet::WalletUnlocked,
-        ViewOnlyAccount,
-    },
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
@@ -35,27 +31,30 @@ use super::constants::{
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "packages/fungible-token/bridge-fungible-token/out/debug/bridge_fungible_token-abi.json",
+        abi = "packages/fungible-token/bridge-fungible-token/out/release/bridge_fungible_token-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",
         abi =
-            "packages/fungible-token/test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
+            "packages/fungible-token/test-deposit-recipient-contract/out/release/test_deposit_recipient_contract-abi.json",
     ),
 );
 
 /// Used for setting up tests with various message values
+#[derive(Debug)]
 pub struct BridgingConfig {
     pub adjustment: Adjustment,
     pub amount: TxAmount,
     pub overflow: Overflow,
 }
 
+#[derive(Debug)]
 pub struct Adjustment {
     pub factor: Unsigned256,
     pub is_div: bool,
 }
 
+#[derive(Debug)]
 pub struct TxAmount {
     pub min: Unsigned256,
     pub max: Unsigned256,
@@ -63,12 +62,14 @@ pub struct TxAmount {
     pub not_enough: Unsigned256,
 }
 
+#[derive(Debug)]
 pub struct Overflow {
     pub one: Unsigned256,
     pub two: Unsigned256,
     pub three: Unsigned256,
 }
 
+#[derive(Debug)]
 pub struct UTXOInputs {
     pub contract: Vec<Input>,
     pub coin: Vec<Input>,
@@ -76,7 +77,7 @@ pub struct UTXOInputs {
 }
 
 impl BridgingConfig {
-    pub fn new(bridge_decimals: u8, proxy_decimals: u8) -> Self {
+    pub fn new(bridge_decimals: u64, proxy_decimals: u64) -> Self {
         let bridged_token_decimals = Unsigned256::from(bridge_decimals);
         let proxy_token_decimals = Unsigned256::from(proxy_decimals);
         let one = Unsigned256::from(1);
@@ -282,8 +283,12 @@ pub(crate) async fn relay_message_to_contract(
     contracts: Vec<Input>,
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
-    let network_info = provider.network_info().await.unwrap();
-    let gas_price = network_info.min_gas_price;
+
+    let gas_price = provider
+        .node_info()
+        .await
+        .expect("Could not get node info")
+        .min_gas_price;
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
     let fetched_gas_coins: Vec<Input> = provider
@@ -300,7 +305,6 @@ pub(crate) async fn relay_message_to_contract(
         &fetched_gas_coins,
         &[Output::variable(Address::zeroed(), 0, AssetId::default())],
         tx_policies,
-        network_info,
         wallet,
     )
     .await;

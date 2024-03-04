@@ -8,7 +8,7 @@ use fuels::{
     prelude::*,
     types::{
         input::Input,
-        transaction_builders::{NetworkInfo, ScriptTransactionBuilder, TransactionBuilder},
+        transaction_builders::{ScriptTransactionBuilder, TransactionBuilder},
     },
 };
 
@@ -23,7 +23,6 @@ pub async fn build_contract_message_tx(
     gas_coins: &[Input],
     optional_outputs: &[Output],
     tx_policies: TxPolicies,
-    network_info: NetworkInfo,
     wallet: &WalletUnlocked,
 ) -> ScriptTransaction {
     // Get the script and predicate for contract messages
@@ -70,12 +69,15 @@ pub async fn build_contract_message_tx(
     // Append provided outputs
     tx_outputs.append(&mut optional_outputs.to_vec());
 
-    let mut builder = ScriptTransactionBuilder::new(network_info)
+    let mut builder = ScriptTransactionBuilder::default()
         .with_inputs(tx_inputs.clone())
         .with_outputs(tx_outputs.clone())
         .with_tx_policies(tx_policies)
         .with_script(script_bytecode);
 
-    wallet.sign_transaction(&mut builder);
+    builder
+        .add_signer(wallet.clone())
+        .expect("Could not add signer");
+
     builder.build(provider).await.unwrap()
 }

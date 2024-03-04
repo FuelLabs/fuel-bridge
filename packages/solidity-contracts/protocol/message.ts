@@ -1,5 +1,4 @@
-import type { BigNumber as BN } from 'ethers';
-import { ethers } from 'ethers';
+import { solidityPacked } from 'ethers';
 
 import hash from './cryptography';
 
@@ -8,7 +7,7 @@ class Message {
   constructor(
     public sender: string,
     public recipient: string,
-    public amount: BN,
+    public amount: bigint,
     public nonce: string,
     public data: string
   ) {}
@@ -17,7 +16,7 @@ class Message {
 // Computes the message ID.
 export function computeMessageId(message: Message): string {
   return hash(
-    ethers.utils.solidityPack(
+    solidityPacked(
       ['bytes32', 'bytes32', 'bytes32', 'uint64', 'bytes'],
       [
         message.sender,

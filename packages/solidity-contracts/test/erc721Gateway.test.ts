@@ -1,8 +1,8 @@
 import { constructTree, calcRoot, getProof } from '@fuel-ts/merkle';
-import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import chai from 'chai';
 import type { BigNumberish, BytesLike } from 'ethers';
-import { BigNumber as BN } from 'ethers';
+import { ZeroHash, keccak256, toUtf8Bytes, zeroPadValue } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 
 import type { BlockHeaderLite } from '../protocol/blockHeader';
@@ -74,7 +74,9 @@ type Env = Pick<
 const fixture = deployments.createFixture(
   async ({ ethers, upgrades: { deployProxy } }) => {
     const signers = await ethers.getSigners();
-    const addresses = signers.map((signer) => signer.address);
+    const addresses = await Promise.all(
+      signers.map((signer) => signer.getAddress())
+    );
     const [deployer] = signers;
 
     const proxyOptions = {
@@ -84,38 +86,32 @@ const fixture = deployments.createFixture(
     const NFT = await ethers.getContractFactory('NFT', deployer);
     const nft = (await NFT.deploy()) as NFT;
 
-    const fuelChainState = await ethers
+    const fuelChainState = (await ethers
       .getContractFactory('FuelChainState', deployer)
-      .then(
-        (factory) =>
-          deployProxy(factory, [], proxyOptions) as Promise<FuelChainState>
-      );
+      .then(async (factory) => deployProxy(factory, [], proxyOptions))
+      .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
-    const fuelMessagePortal = await ethers
+    const fuelMessagePortal = (await ethers
       .getContractFactory('FuelMessagePortal', deployer)
-      .then(
-        (factory) =>
-          deployProxy(
-            factory,
-            [fuelChainState.address],
-            proxyOptions
-          ) as Promise<FuelMessagePortal>
-      );
+      .then(async (factory) =>
+        deployProxy(factory, [await fuelChainState.getAddress()], proxyOptions)
+      )
+      .then((tx) => tx.waitForDeployment())) as FuelMessagePortal;
 
-    const fuelERC721Gateway = await ethers
+    const fuelERC721Gateway = (await ethers
       .getContractFactory('FuelERC721Gateway', deployer)
-      .then(
-        (factory) =>
-          deployProxy(
-            factory,
-            [fuelMessagePortal.address],
-            proxyOptions
-          ) as Promise<FuelERC721Gateway>
-      );
+      .then(async (factory) =>
+        deployProxy(
+          factory,
+          [await fuelMessagePortal.getAddress()],
+          proxyOptions
+        )
+      )
+      .then((tx) => tx.waitForDeployment())) as FuelERC721Gateway;
 
     // Mint some dummy token for deposit testing
     for (let i = 0; i < signers.length; i += 1) {
-      await nft.mint(await signers[i].getAddress(), i);
+      await nft.mint(signers[i], i);
     }
 
     return {
@@ -130,7 +126,7 @@ const fixture = deployments.createFixture(
   }
 );
 
-describe('ERC721 Gateway', async () => {
+describe('ERC721 Gateway', () => {
   let env: Env;
 
   // Contract constants
@@ -194,17 +190,14 @@ describe('ERC721 Gateway', async () => {
     env = await fixture();
 
     // get data for building messages
-    gatewayAddress = env.fuelERC721Gateway.address
-      .split('0x')
-      .join('0x000000000000000000000000')
-      .toLowerCase();
-    tokenAddress = env.nft.address;
+    gatewayAddress = zeroPadValue(await env.fuelERC721Gateway.getAddress(), 32);
+    tokenAddress = await env.nft.getAddress();
 
     // message from trusted sender
     messageWithdrawal1 = new Message(
       fuelTokenTarget1,
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[2],
@@ -216,7 +209,7 @@ describe('ERC721 Gateway', async () => {
     messageWithdrawal2 = new Message(
       fuelTokenTarget2,
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[3],
@@ -228,7 +221,7 @@ describe('ERC721 Gateway', async () => {
     messageWithdrawal3 = new Message(
       fuelTokenTarget1,
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[3],
@@ -242,7 +235,7 @@ describe('ERC721 Gateway', async () => {
     messageBadL2Token = new Message(
       randomBytes32(),
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[3],
@@ -255,26 +248,26 @@ describe('ERC721 Gateway', async () => {
     messageBadL1Token = new Message(
       fuelTokenTarget2,
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[3],
         randomAddress(),
         1,
-        ethers.constants.HashZero,
+        ZeroHash,
       ])
     );
     // message from untrusted sender
     messageBadSender = new Message(
       randomBytes32(),
       gatewayAddress,
-      BN.from(0),
+      BigInt(0),
       randomBytes32(),
       env.fuelERC721Gateway.interface.encodeFunctionData('finalizeWithdrawal', [
         env.addresses[3],
         tokenAddress,
         1,
-        ethers.constants.HashZero,
+        ZeroHash,
       ])
     );
 
@@ -321,9 +314,7 @@ describe('ERC721 Gateway', async () => {
   describe('Verify access control', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
     let signer0: string;
     let signer1: string;
     let signer2: string;
@@ -369,7 +360,7 @@ describe('ERC721 Gateway', async () => {
       await expect(
         env.fuelERC721Gateway.grantRole(defaultAdminRole, signer0)
       ).to.be.revertedWith(
-        `AccessControl: account ${env.addresses[0].toLowerCase()} is missing role ${defaultAdminRole}`
+        `AccessControl: account ${signer0.toLowerCase()} is missing role ${defaultAdminRole}`
       );
       expect(
         await env.fuelERC721Gateway.hasRole(defaultAdminRole, signer0)
@@ -429,7 +420,7 @@ describe('ERC721 Gateway', async () => {
           .connect(env.signers[1])
           .grantRole(defaultAdminRole, signer2)
       ).to.be.revertedWith(
-        `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+        `AccessControl: account ${signer1.toLowerCase()} is missing role ${defaultAdminRole}`
       );
       expect(
         await env.fuelERC721Gateway.hasRole(defaultAdminRole, signer2)
@@ -441,7 +432,7 @@ describe('ERC721 Gateway', async () => {
           .connect(env.signers[1])
           .grantRole(pauserRole, signer2)
       ).to.be.revertedWith(
-        `AccessControl: account ${env.addresses[1].toLowerCase()} is missing role ${defaultAdminRole}`
+        `AccessControl: account ${signer1.toLowerCase()} is missing role ${defaultAdminRole}`
       );
       expect(await env.fuelERC721Gateway.hasRole(pauserRole, signer2)).to.equal(
         false
@@ -465,7 +456,7 @@ describe('ERC721 Gateway', async () => {
   describe('Make both valid and invalid ERC721 deposits', async () => {
     it('Should be able to deposit tokens', async () => {
       const testDeposit = async (
-        signer: SignerWithAddress,
+        signer: HardhatEthersSigner,
         fuelTarget: string,
         token: NFT,
         tokenId: BigNumberish
@@ -476,7 +467,7 @@ describe('ERC721 Gateway', async () => {
           fuelTarget,
           tokenAddress.split('0x').join('0x000000000000000000000000'),
           tokenId,
-          signer.address.split('0x').join('0x000000000000000000000000'),
+          zeroPadValue(await signer.getAddress(), 32),
           toAddress,
           1
         );
@@ -484,13 +475,11 @@ describe('ERC721 Gateway', async () => {
           await env.fuelMessagePortal.getNextOutgoingMessageNonce();
         const expectedAmount = 0;
 
-        await env.nft
-          .connect(signer)
-          .approve(env.fuelERC721Gateway.address, tokenId);
+        await env.nft.connect(signer).approve(env.fuelERC721Gateway, tokenId);
         await expect(
           env.fuelERC721Gateway
             .connect(signer)
-            .deposit(toAddress, token.address, fuelTarget, tokenId)
+            .deposit(toAddress, token, fuelTarget, tokenId)
         )
           .to.emit(env.fuelMessagePortal, 'MessageSent')
           .withArgs(
@@ -502,11 +491,11 @@ describe('ERC721 Gateway', async () => {
           );
 
         expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-          env.fuelERC721Gateway.address
+          env.fuelERC721Gateway
         );
 
         expect(
-          await env.fuelERC721Gateway.tokensDeposited(env.nft.address, tokenId)
+          await env.fuelERC721Gateway.tokensDeposited(env.nft, tokenId)
         ).to.be.equal(fuelTarget);
       };
 
@@ -535,7 +524,7 @@ describe('ERC721 Gateway', async () => {
 
     it('Should be able to deposit tokens with data', async () => {
       const testDepositWithData = async (
-        signer: SignerWithAddress,
+        signer: HardhatEthersSigner,
         fuelTarget: string,
         token: NFT,
         tokenId: BigNumberish,
@@ -547,7 +536,7 @@ describe('ERC721 Gateway', async () => {
           fuelTarget,
           tokenAddress.split('0x').join('0x000000000000000000000000'),
           tokenId,
-          signer.address.split('0x').join('0x000000000000000000000000'),
+          zeroPadValue(await signer.getAddress(), 32),
           toAddress,
           1,
           data
@@ -557,19 +546,11 @@ describe('ERC721 Gateway', async () => {
           await env.fuelMessagePortal.getNextOutgoingMessageNonce();
         const expectedAmount = 0;
 
-        await env.nft
-          .connect(signer)
-          .approve(env.fuelERC721Gateway.address, tokenId);
+        await env.nft.connect(signer).approve(env.fuelERC721Gateway, tokenId);
         await expect(
           env.fuelERC721Gateway
             .connect(signer)
-            .depositWithData(
-              toAddress,
-              token.address,
-              fuelTarget,
-              tokenId,
-              data
-            )
+            .depositWithData(toAddress, token, fuelTarget, tokenId, data)
         )
           .to.emit(env.fuelMessagePortal, 'MessageSent')
           .withArgs(
@@ -581,18 +562,18 @@ describe('ERC721 Gateway', async () => {
           );
 
         expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-          env.fuelERC721Gateway.address
+          env.fuelERC721Gateway
         );
 
         expect(
-          await env.fuelERC721Gateway.tokensDeposited(env.nft.address, tokenId)
+          await env.fuelERC721Gateway.tokensDeposited(env.nft, tokenId)
         ).to.be.equal(fuelTarget);
       };
 
       // Deposit to fuelTokenTarget1
       {
         const tokenId = 2;
-        const depositData = [3, 2, 6, 9, 2, 5];
+        const depositData = new Uint8Array([3, 2, 6, 9, 2, 5]);
         await testDepositWithData(
           env.signers[tokenId],
           fuelTokenTarget1,
@@ -605,7 +586,7 @@ describe('ERC721 Gateway', async () => {
       // Deposit to fuelTokenTarget2
       {
         const tokenId = 3;
-        const depositData = [3, 2, 6, 9, 2, 5];
+        const depositData = new Uint8Array([3, 2, 6, 9, 2, 5]);
         await testDepositWithData(
           env.signers[tokenId],
           fuelTokenTarget2,
@@ -618,7 +599,7 @@ describe('ERC721 Gateway', async () => {
 
     it('Should be able to deposit tokens with empty data', async () => {
       const testDepositWithEmptyData = async (
-        signer: SignerWithAddress,
+        signer: HardhatEthersSigner,
         fuelTarget: string,
         token: NFT,
         tokenId: BigNumberish
@@ -629,23 +610,27 @@ describe('ERC721 Gateway', async () => {
           fuelTarget,
           tokenAddress.split('0x').join('0x000000000000000000000000'),
           tokenId,
-          signer.address.split('0x').join('0x000000000000000000000000'),
+          zeroPadValue(await signer.getAddress(), 32),
           toAddress,
           1,
-          []
+          new Uint8Array([])
         );
 
         const expectedNonce =
           await env.fuelMessagePortal.getNextOutgoingMessageNonce();
         const expectedAmount = 0;
 
-        await env.nft
-          .connect(signer)
-          .approve(env.fuelERC721Gateway.address, tokenId);
+        await env.nft.connect(signer).approve(env.fuelERC721Gateway, tokenId);
         await expect(
           env.fuelERC721Gateway
             .connect(signer)
-            .depositWithData(toAddress, token.address, fuelTarget, tokenId, [])
+            .depositWithData(
+              toAddress,
+              token,
+              fuelTarget,
+              tokenId,
+              new Uint8Array([])
+            )
         )
           .to.emit(env.fuelMessagePortal, 'MessageSent')
           .withArgs(
@@ -657,11 +642,11 @@ describe('ERC721 Gateway', async () => {
           );
 
         expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-          env.fuelERC721Gateway.address
+          env.fuelERC721Gateway
         );
 
         expect(
-          await env.fuelERC721Gateway.tokensDeposited(env.nft.address, tokenId)
+          await env.fuelERC721Gateway.tokensDeposited(env.nft, tokenId)
         ).to.be.equal(fuelTarget);
       };
 
@@ -695,8 +680,8 @@ describe('ERC721 Gateway', async () => {
         env.fuelERC721Gateway.finalizeWithdrawal(
           env.addresses[2],
           tokenAddress,
-          BN.from(100),
-          ethers.constants.HashZero
+          BigInt(100),
+          ZeroHash
         )
       ).to.be.revertedWithCustomError(
         env.fuelERC721Gateway,
@@ -706,9 +691,7 @@ describe('ERC721 Gateway', async () => {
 
     it('Should be able to finalize valid withdrawal through portal', async () => {
       const tokenId = 0;
-      expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-        env.fuelERC721Gateway.address
-      );
+      expect(await env.nft.ownerOf(tokenId)).to.be.equal(env.fuelERC721Gateway);
 
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageWithdrawal1,
@@ -735,9 +718,7 @@ describe('ERC721 Gateway', async () => {
 
     it('Should be able to finalize valid withdrawal through portal again', async () => {
       const tokenId = 1;
-      expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-        env.fuelERC721Gateway.address
-      );
+      expect(await env.nft.ownerOf(tokenId)).to.be.equal(env.fuelERC721Gateway);
 
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageWithdrawal2,
@@ -838,9 +819,7 @@ describe('ERC721 Gateway', async () => {
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
       '0x0000000000000000000000000000000000000000000000000000000000000000';
-    const pauserRole = ethers.utils.keccak256(
-      ethers.utils.toUtf8Bytes('PAUSER_ROLE')
-    );
+    const pauserRole = keccak256(toUtf8Bytes('PAUSER_ROLE'));
 
     it('Should be able to grant pauser role', async () => {
       expect(
@@ -943,7 +922,7 @@ describe('ERC721 Gateway', async () => {
           tokenAddress,
           fuelTokenTarget1,
           205,
-          []
+          new Uint8Array([])
         )
       ).to.be.revertedWith('Pausable: paused');
     });
@@ -959,7 +938,7 @@ describe('ERC721 Gateway', async () => {
     it('Should be able to finalize withdrawal when unpaused', async () => {
       const tokenId = 2;
       expect(await env.nft.ownerOf(tokenId)).to.be.equal(
-        env.fuelERC721Gateway.address
+        await env.fuelERC721Gateway.getAddress()
       );
       const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
         messageWithdrawal3,
