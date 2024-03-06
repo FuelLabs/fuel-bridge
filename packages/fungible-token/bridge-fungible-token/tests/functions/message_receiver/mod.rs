@@ -24,8 +24,8 @@ mod success {
         },
     };
     use fuels::types::SizedAsciiString;
-    use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};
     use fuels::types::U256;
+    use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};
 
     #[tokio::test]
     async fn deposit_to_wallet() {
@@ -87,7 +87,7 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
             BridgeFungibleTokenContractConfigurables::new()
                 .with_DECIMALS(proxy_token_decimals)
-                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals)
+                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals),
         );
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -102,8 +102,11 @@ mod success {
         )
         .await;
 
-        assert_eq!(config.amount.test.as_u64(), config.fuel_equivalent_amount(config.amount.test));
-        
+        assert_eq!(
+            config.amount.test.as_u64(),
+            config.fuel_equivalent_amount(config.amount.test)
+        );
+
         let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
@@ -155,7 +158,7 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
             BridgeFungibleTokenContractConfigurables::new()
                 .with_DECIMALS(proxy_token_decimals)
-                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals)
+                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals),
         );
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -170,8 +173,11 @@ mod success {
         )
         .await;
 
-        assert_eq!(config.amount.test.as_u64(), config.fuel_equivalent_amount(config.amount.test));
-        
+        assert_eq!(
+            config.amount.test.as_u64(),
+            config.fuel_equivalent_amount(config.amount.test)
+        );
+
         let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
@@ -226,10 +232,18 @@ mod success {
                 .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals)
                 .with_BRIDGED_TOKEN_GATEWAY(Bits256::from_hex_str(BRIDGED_TOKEN_GATEWAY).unwrap())
                 .with_BRIDGED_TOKEN(Bits256::from_hex_str(BRIDGED_TOKEN).unwrap())
-                .with_NAME(SizedAsciiString::<64>::new(String::from("MY_TOKEN                                                        ")).unwrap())
-                .with_SYMBOL(SizedAsciiString::<32>::new(String::from("MYTKN                           ")).unwrap())
+                .with_NAME(
+                    SizedAsciiString::<64>::new(String::from(
+                        "MY_TOKEN                                                        ",
+                    ))
+                    .unwrap(),
+                )
+                .with_SYMBOL(
+                    SizedAsciiString::<32>::new(String::from("MYTKN                           "))
+                        .unwrap(),
+                ),
         );
-        
+
         let deposit_amount = config.amount.min;
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -243,7 +257,7 @@ mod success {
             None,
         )
         .await;
-        
+
         let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
@@ -284,138 +298,137 @@ mod success {
         assert_eq!(balance, config.fuel_equivalent_amount(deposit_amount));
     }
 
-     // This test is akin to bridging WBTC and and using the standard 9 decimals on Fuel
-     #[tokio::test]
-     async fn deposit_to_wallet_with_8_decimals_and_conversion() {
-         let mut wallet: fuels::accounts::wallet::WalletUnlocked = create_wallet();
-         let proxy_token_decimals = 9u64;
-         let bridged_token_decimals = 8u64;
-         let config = BridgingConfig::new(bridged_token_decimals, proxy_token_decimals);
- 
-         let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
-             BridgeFungibleTokenContractConfigurables::new()
-                 .with_DECIMALS(proxy_token_decimals)
-                 .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals)
-         );
- 
-         let (message, coin, deposit_contract) = create_msg_data(
-             BRIDGED_TOKEN,
-             BRIDGED_TOKEN_ID,
-             FROM,
-             *wallet.address().hash(),
-             config.amount.test,
-             configurables.clone(),
-             false,
-             None,
-         )
-         .await;
-         
-         let (bridge, utxo_inputs) = setup_environment(
-             &mut wallet,
-             vec![coin],
-             vec![message],
-             deposit_contract,
-             None,
-             configurables,
-         )
-         .await;
- 
-         let provider = wallet.provider().expect("Needs provider");
- 
-         // Relay the test message to the bridge contract
-         let tx = relay_message_to_contract(
-             &wallet,
-             utxo_inputs.message[0].clone(),
-             utxo_inputs.contract,
-         )
-         .await;
- 
-         let receipts = provider.tx_status(&tx).await.unwrap().take_receipts();
- 
-         let refund_registered_events = bridge
-             .log_decoder()
-             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
-             .unwrap();
- 
-         assert_eq!(refund_registered_events.len(), 0);
- 
-         let asset_balance =
-             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
- 
-         // Verify the message value was received by the bridge
-         assert_eq!(asset_balance, MESSAGE_AMOUNT);
- 
-         // Check that wallet now has bridged coins
-         assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
-     }
+    // This test is akin to bridging WBTC and and using the standard 9 decimals on Fuel
+    #[tokio::test]
+    async fn deposit_to_wallet_with_8_decimals_and_conversion() {
+        let mut wallet: fuels::accounts::wallet::WalletUnlocked = create_wallet();
+        let proxy_token_decimals = 9u64;
+        let bridged_token_decimals = 8u64;
+        let config = BridgingConfig::new(bridged_token_decimals, proxy_token_decimals);
 
-     // Cannot find an example of a token that has more than 18 decimals
-     #[tokio::test]
-     async fn deposit_to_wallet_with_30_decimals_and_conversion() {
-         let mut wallet: fuels::accounts::wallet::WalletUnlocked = create_wallet();
-         let proxy_token_decimals = 9u64;
-         let bridged_token_decimals = 30u64;
-         let config = BridgingConfig::new(bridged_token_decimals, proxy_token_decimals);
- 
-         let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
-             BridgeFungibleTokenContractConfigurables::new()
-                 .with_DECIMALS(proxy_token_decimals)
-                 .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals)
-         );
- 
-         let (message, coin, deposit_contract) = create_msg_data(
-             BRIDGED_TOKEN,
-             BRIDGED_TOKEN_ID,
-             FROM,
-             *wallet.address().hash(),
-             config.amount.test,
-             configurables.clone(),
-             false,
-             None,
-         )
-         .await;
-         
-         let (bridge, utxo_inputs) = setup_environment(
-             &mut wallet,
-             vec![coin],
-             vec![message],
-             deposit_contract,
-             None,
-             configurables,
-         )
-         .await;
- 
-         let provider = wallet.provider().expect("Needs provider");
- 
-         // Relay the test message to the bridge contract
-         let tx = relay_message_to_contract(
-             &wallet,
-             utxo_inputs.message[0].clone(),
-             utxo_inputs.contract,
-         )
-         .await;
- 
-         let receipts = provider.tx_status(&tx).await.unwrap().take_receipts();
- 
-         let refund_registered_events = bridge
-             .log_decoder()
-             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
-             .unwrap();
- 
-         assert_eq!(refund_registered_events.len(), 0);
- 
-         let asset_balance =
-             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-         let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
- 
-         // Verify the message value was received by the bridge
-         assert_eq!(asset_balance, MESSAGE_AMOUNT);
- 
-         // Check that wallet now has bridged coins
-         assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
-     }
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
+            BridgeFungibleTokenContractConfigurables::new()
+                .with_DECIMALS(proxy_token_decimals)
+                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals),
+        );
 
+        let (message, coin, deposit_contract) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            config.amount.test,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        // Relay the test message to the bridge contract
+        let tx = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let receipts = provider.tx_status(&tx).await.unwrap().take_receipts();
+
+        let refund_registered_events = bridge
+            .log_decoder()
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        assert_eq!(refund_registered_events.len(), 0);
+
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
+    }
+
+    // Cannot find an example of a token that has more than 18 decimals
+    #[tokio::test]
+    async fn deposit_to_wallet_with_30_decimals_and_conversion() {
+        let mut wallet: fuels::accounts::wallet::WalletUnlocked = create_wallet();
+        let proxy_token_decimals = 9u64;
+        let bridged_token_decimals = 30u64;
+        let config = BridgingConfig::new(bridged_token_decimals, proxy_token_decimals);
+
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
+            BridgeFungibleTokenContractConfigurables::new()
+                .with_DECIMALS(proxy_token_decimals)
+                .with_BRIDGED_TOKEN_DECIMALS(bridged_token_decimals),
+        );
+
+        let (message, coin, deposit_contract) = create_msg_data(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            config.amount.test,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        // Relay the test message to the bridge contract
+        let tx = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let receipts = provider.tx_status(&tx).await.unwrap().take_receipts();
+
+        let refund_registered_events = bridge
+            .log_decoder()
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        assert_eq!(refund_registered_events.len(), 0);
+
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
+    }
 
     #[tokio::test]
     async fn deposit_to_wallet_max_amount() {

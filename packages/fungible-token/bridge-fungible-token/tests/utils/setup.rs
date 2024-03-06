@@ -10,6 +10,7 @@ use fuel_core_types::{
     fuel_types::{Nonce, Word},
     fuel_vm::SecretKey,
 };
+use fuels::types::U256;
 use fuels::{
     accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
@@ -20,7 +21,6 @@ use fuels::{
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{input::Input, message::Message, Bits256},
 };
-use fuels::types::U256;
 use sha3::{Digest, Keccak256};
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
@@ -437,9 +437,7 @@ pub(crate) async fn create_msg_data(
     (message, coin, deposit_recipient)
 }
 
-pub(crate) fn parse_output_message_data(
-    data: &[u8],
-) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
+pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();
