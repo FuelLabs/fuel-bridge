@@ -1,13 +1,11 @@
 contract;
 
-mod cast;
 mod data_structures;
 mod errors;
 mod events;
 mod interface;
 mod utils;
 
-use cast::*;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
@@ -47,6 +45,7 @@ use src_20::SRC20;
 
 const DEFAULT_DECIMALS: u8 = 9u8;
 const DEFAULT_BRIDGED_TOKEN_DECIMALS: u8 = 18u8;
+const ZERO_U256 = 0x00u256;
 
 configurable {
     DECIMALS: u64 = 9u64,
@@ -59,7 +58,7 @@ configurable {
 
 storage {
     asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
-    refund_amounts: StorageMap<b256, StorageMap<b256, b256>> = StorageMap {},
+    refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     total_assets: u64 = 0,
 }
@@ -209,19 +208,19 @@ impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
-        let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256);
+        let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
         require(
-            amount != ZERO_B256,
+            amount != ZERO_U256,
             BridgeFungibleTokenError::NoRefundAvailable,
         );
 
         // reset the refund amount to 0
-        storage.refund_amounts.get(from).insert(asset, ZERO_B256);
+        storage.refund_amounts.get(from).insert(asset, ZERO_U256);
 
         // send a message to unlock this amount on the base layer gateway contract
         send_message(
             BRIDGED_TOKEN_GATEWAY,
-            encode_data(from, amount, token_address, token_id),
+            encode_data(from, amount.as_b256(), token_address, token_id),
             0,
         );
 
@@ -349,8 +348,8 @@ fn register_refund(
 ) {
     let asset = sha256((token_address, token_id));
 
-    let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_B256).as_u256();
-    let new_amount: b256 = (amount.as_u256() + previous_amount).into();
+    let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
+    let new_amount = amount.as_u256() + previous_amount;
 
     storage.refund_amounts.get(from).insert(asset, new_amount);
     log(RefundRegisteredEvent {

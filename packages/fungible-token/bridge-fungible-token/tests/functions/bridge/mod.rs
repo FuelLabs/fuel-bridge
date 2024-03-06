@@ -126,7 +126,7 @@ mod success {
 
         assert_eq!(
             claim_event[0].amount,
-            Bits256(encode_hex(config.overflow.two))
+            config.overflow.two
         );
         assert_eq!(claim_event[0].from, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(

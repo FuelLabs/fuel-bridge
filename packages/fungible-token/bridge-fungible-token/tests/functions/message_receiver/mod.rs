@@ -25,7 +25,7 @@ mod success {
     };
     use fuels::types::SizedAsciiString;
     use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};
-    use primitive_types::U256 as Unsigned256;
+    use fuels::types::U256;
 
     #[tokio::test]
     async fn deposit_to_wallet() {
@@ -1408,7 +1408,7 @@ mod success {
         )
         .await;
 
-        let one = Unsigned256::from(1);
+        let one = U256::from(1);
 
         let (message2, _, _) = create_msg_data(
             incorrect_token,

@@ -20,7 +20,7 @@ use fuels::{
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
     types::{input::Input, message::Message, Bits256},
 };
-use primitive_types::U256 as Unsigned256;
+use fuels::types::U256;
 use sha3::{Digest, Keccak256};
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
@@ -50,23 +50,23 @@ pub struct BridgingConfig {
 
 #[derive(Debug)]
 pub struct Adjustment {
-    pub factor: Unsigned256,
+    pub factor: U256,
     pub is_div: bool,
 }
 
 #[derive(Debug)]
 pub struct TxAmount {
-    pub min: Unsigned256,
-    pub max: Unsigned256,
-    pub test: Unsigned256,
-    pub not_enough: Unsigned256,
+    pub min: U256,
+    pub max: U256,
+    pub test: U256,
+    pub not_enough: U256,
 }
 
 #[derive(Debug)]
 pub struct Overflow {
-    pub one: Unsigned256,
-    pub two: Unsigned256,
-    pub three: Unsigned256,
+    pub one: U256,
+    pub two: U256,
+    pub three: U256,
 }
 
 #[derive(Debug)]
@@ -78,20 +78,20 @@ pub struct UTXOInputs {
 
 impl BridgingConfig {
     pub fn new(bridge_decimals: u64, proxy_decimals: u64) -> Self {
-        let bridged_token_decimals = Unsigned256::from(bridge_decimals);
-        let proxy_token_decimals = Unsigned256::from(proxy_decimals);
-        let one = Unsigned256::from(1);
+        let bridged_token_decimals = U256::from(bridge_decimals);
+        let proxy_token_decimals = U256::from(proxy_decimals);
+        let one = U256::from(1);
 
         let adjustment_factor = match (bridged_token_decimals, proxy_token_decimals) {
             (bridged_token_decimals, proxy_token_decimals)
                 if bridged_token_decimals > proxy_token_decimals =>
             {
-                Unsigned256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
+                U256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
             }
             (bridged_token_decimals, proxy_token_decimals)
                 if bridged_token_decimals < proxy_token_decimals =>
             {
-                Unsigned256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
+                U256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
             }
             _ => one,
         };
@@ -99,7 +99,7 @@ impl BridgingConfig {
         let adjustment_is_div = bridged_token_decimals < proxy_token_decimals;
 
         let min_amount = if bridged_token_decimals > proxy_token_decimals {
-            Unsigned256::from(1) * adjustment_factor
+            U256::from(1) * adjustment_factor
         } else {
             one
         };
@@ -108,17 +108,17 @@ impl BridgingConfig {
             (bridged_token_decimals, proxy_token_decimals)
                 if bridged_token_decimals > proxy_token_decimals =>
             {
-                Unsigned256::from(u64::MAX) * adjustment_factor
+                U256::from(u64::MAX) * adjustment_factor
             }
             (bridged_token_decimals, proxy_token_decimals)
                 if bridged_token_decimals < proxy_token_decimals =>
             {
-                Unsigned256::from(u64::MAX) / adjustment_factor
+                U256::from(u64::MAX) / adjustment_factor
             }
             (_, _) => one,
         };
 
-        let test_amount = (min_amount + max_amount) / Unsigned256::from(2);
+        let test_amount = (min_amount + max_amount) / U256::from(2);
         let not_enough = min_amount - one;
         let overflow_1 = max_amount + one;
         let overflow_2 = max_amount + (one << 160);
@@ -143,7 +143,7 @@ impl BridgingConfig {
         }
     }
 
-    pub fn fuel_equivalent_amount(&self, amount: Unsigned256) -> u64 {
+    pub fn fuel_equivalent_amount(&self, amount: U256) -> u64 {
         if self.adjustment.is_div {
             (amount * self.adjustment.factor).as_u64()
         } else {
@@ -392,7 +392,7 @@ pub(crate) fn decode_hex(s: &str) -> Vec<u8> {
     data.unwrap()
 }
 
-pub(crate) fn encode_hex(val: Unsigned256) -> [u8; 32] {
+pub(crate) fn encode_hex(val: U256) -> [u8; 32] {
     let mut arr = [0u8; 32];
     val.to_big_endian(&mut arr);
     arr
@@ -404,7 +404,7 @@ pub(crate) async fn create_msg_data(
     token_id: &str,
     from: &str,
     to: [u8; 32],
-    amount: Unsigned256,
+    amount: U256,
     config: Option<BridgeFungibleTokenContractConfigurables>,
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
@@ -439,13 +439,13 @@ pub(crate) async fn create_msg_data(
 
 pub(crate) fn parse_output_message_data(
     data: &[u8],
-) -> (Vec<u8>, Bits256, Bits256, Unsigned256, Bits256) {
+) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
     let selector = &data[0..4];
     let to: [u8; 32] = data[4..36].try_into().unwrap();
     let token_array: [u8; 32] = data[36..68].try_into().unwrap();
     let token = Bits256(token_array);
     let amount_array: [u8; 32] = data[68..100].try_into().unwrap();
-    let amount: Unsigned256 = Unsigned256::from_big_endian(amount_array.as_ref());
+    let amount: U256 = U256::from_big_endian(amount_array.as_ref());
     let token_id: [u8; 32] = data[100..132].try_into().unwrap();
     (
         selector.to_vec(),
