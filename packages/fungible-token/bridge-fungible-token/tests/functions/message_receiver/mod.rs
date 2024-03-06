@@ -23,8 +23,7 @@ mod success {
             wallet_balance, RefundRegisteredEvent,
         },
     };
-    use fuels::types::SizedAsciiString;
-    use fuels::types::U256;
+    use fuels::types::{SizedAsciiString, U256};
     use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};
 
     #[tokio::test]

@@ -10,7 +10,7 @@ use fuel_core_types::{
     fuel_types::{Nonce, Word},
     fuel_vm::SecretKey,
 };
-use fuels::types::U256;
+
 use fuels::{
     accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
@@ -19,7 +19,7 @@ use fuels::{
         Provider, TxPolicies,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{input::Input, message::Message, Bits256},
+    types::{input::Input, message::Message, Bits256, U256},
 };
 use sha3::{Digest, Keccak256};
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
