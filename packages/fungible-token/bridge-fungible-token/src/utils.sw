@@ -1,6 +1,5 @@
 library;
 
-use ::cast::*;
 use ::data_structures::MessageData;
 use ::errors::BridgeFungibleTokenError;
 use ::events::DepositEvent;
@@ -43,10 +42,7 @@ pub fn adjust_withdrawal_decimals(
         value
     };
 
-    let result: b256 = asm(r1: adjusted) {
-        r1: b256
-    };
-    Result::Ok(result)
+    Result::Ok(adjusted.as_b256())
 }
 
 /// Adjust decimals(precision) on a deposit amount to match this proxy tokens decimals
