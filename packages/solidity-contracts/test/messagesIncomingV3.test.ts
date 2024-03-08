@@ -298,7 +298,7 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
     expect(await fuelMessagePortal.withdrawalsPaused()).to.be.true;
   });
 
-  describe.only('Behaves like V3 - Blacklisting', () => {
+  describe('Behaves like V3 - Blacklisting', () => {
     beforeEach('fixture', async () => {
       const fixt = await fixture();
       const { V2Implementation, V3Implementation } = fixt;
