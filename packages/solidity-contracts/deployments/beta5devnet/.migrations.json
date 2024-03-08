@@ -4,5 +4,6 @@
   "fuel_message_portal_v2_upgrade": 1703178470,
   "fuel_erc20_gateway_v2": 1703253605,
   "fuel_erc721_gateway_v2": 1703253616,
-  "fuel_erc20_gateway_V1": 1703275970
+  "fuel_erc20_gateway_V1": 1703275970,
+  "fuel_message_portal_v3_upgrade": 1709923945
 }
