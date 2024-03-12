@@ -2,7 +2,7 @@ name: 'Build & Plush Docker'
 
 inputs:
   compose-version:
-    description: 'Docker Dompose version'
+    description: 'Docker Compose version'
     default: 2.6.0
   registry:
     description: 'Docker registry service'
