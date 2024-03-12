@@ -1,0 +1,32 @@
+name: Build ad publish Docker image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize]
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-publish-image:
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    if: |
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build and push Ethereum Fuel Explorer Server Only image
+        uses: ./.github/actions/docker-publish
+        id: publish
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: ghcr.io/fuellabs/fuel-bridge:l1-chain
+          context: ./docker/l1-chain
