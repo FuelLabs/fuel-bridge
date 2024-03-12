@@ -29,4 +29,5 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ghcr.io/fuellabs/fuel-bridge
-          context: ./docker/l1-chain
+          dockerfile: ./docker/l1-chain/Dockerfile
+          context: ../
