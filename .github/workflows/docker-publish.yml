@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build and push Ethereum Fuel Explorer Server Only image
+      - name: Build and push Fuel Bridge Ethereum Test Image
         uses: ./.github/actions/docker-publish
         id: publish
         with:
