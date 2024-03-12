@@ -1,0 +1,83 @@
+name: 'Build & Plush Docker'
+
+inputs:
+  compose-version:
+    description: 'Docker Compose version'
+    default: 2.6.0
+  registry:
+    description: 'Docker registry service'
+    default: ghcr.io
+  username:
+    description: 'Username for https://ghcr.io'
+    required: true
+  password:
+    description: 'Password for https://ghcr.io'
+    required: true
+  image:
+    description: 'Image name with provider url'
+    required: true
+  dockerfile:
+    description: 'Path to the Dockerfile'
+    required: true
+  context:
+    description: 'Path to the Context'
+    default: .
+    required: true
+  build-args:
+    description: 'List of build-time variables'
+    required: false
+
+outputs:
+  image:
+    description: 'Image url'
+    value: ${{ steps.imageOuput.outputs.imageUrl }}
+  imageid:
+    description: 'Image ID'
+    value: ${{ steps.publish.outputs.imageId }}
+  digest:
+    description: 'Image digest'
+    value: ${{ steps.publish.outputs.digest }}
+  metadata:
+    description: 'Build result metadata'
+    value: ${{ steps.publish.outputs.metadata }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Log in to the ghcr.io registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ inputs.registry }}
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+
+    - name: Docker meta
+      id: meta
+      uses: docker/metadata-action@v3
+      with:
+        images: |
+          ${{ inputs.image }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix=
+          type=semver,pattern={{raw}}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Build and push the image to ghcr.io
+      uses: docker/build-push-action@v4
+      id: publish
+      with:
+        context: ${{ inputs.context }}
+        file: ${{ inputs.dockerfile }}
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: ${{ inputs.build-args }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    - id: imageOuput
+      shell: bash
+      run: |
+        echo "imageUrl=${{ fromJSON(steps.publish.outputs.metadata)['image.name'] }}" >> $GITHUB_OUTPUT
