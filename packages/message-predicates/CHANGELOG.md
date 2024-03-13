@@ -1,5 +1,16 @@
 # @fuel-bridge/message-predicates
 
+## 0.5.0
+
+### Minor Changes
+
+- Add pnpm audit to CI and migrate dependencies to safe versions, by [@DefiCake](https://github.com/DefiCake) (See [#126](https://github.com/FuelLabs/fuel-bridge/pull/126))
+- Update to forc 0.49.1, by [@DefiCake](https://github.com/DefiCake) (See [#119](https://github.com/FuelLabs/fuel-bridge/pull/119))
+
+### Patch Changes
+
+- Bump fuels to 0.55.0, by [@DefiCake](https://github.com/DefiCake) (See [#122](https://github.com/FuelLabs/fuel-bridge/pull/122))
+
 ## 0.4.0
 
 ### Minor Changes
