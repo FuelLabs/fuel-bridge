@@ -7,8 +7,9 @@ const OFFSET_TOKEN_ID = 64;
 const OFFSET_FROM = 96;
 const OFFSET_TO = 128;
 const OFFSET_AMOUNT = 160;
-pub const ADDRESS_DEPOSIT_DATA_LEN = 192u16;
-pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 193u16;
+const OFFSET_DECIMALS = 192;
+pub const ADDRESS_DEPOSIT_DATA_LEN = 193u16;
+pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN = 194u16;
 
 pub struct MessageData {
     pub amount: b256,
@@ -17,13 +18,14 @@ pub struct MessageData {
     pub to: Identity,
     pub token_address: b256,
     pub token_id: b256,
+    pub decimals: u8,
 }
 
 impl MessageData {
     /// Read the bytes passed as message data into an in-memory representation using the MessageData type.
     ///
-    /// any data beyond 160 bytes means deposit is meant for a contract.
-    /// if data is > 161 bytes, then we also need to call process_message on the destination contract.
+    /// any data beyond ADDRESS_DEPOSIT_DATA_LEN bytes means deposit is meant for a contract.
+    /// if data is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, then we also need to call process_message on the destination contract.
     pub fn parse(msg_idx: u64) -> Self {
         let token_address: b256 = input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into();
         let len = input_message_data_length(msg_idx);
@@ -35,12 +37,15 @@ impl MessageData {
             token_address,
             to: Identity::Address(Address::from(ZERO_B256)),
             token_id: ZERO_B256,
+            decimals: 0u8,
         };
 
         // TODO: Bug, have to mutate this struct for these values or tests fail
         msg_data.amount = input_message_data(msg_idx, OFFSET_AMOUNT).into();
         msg_data.from = input_message_data(msg_idx, OFFSET_FROM).into();
         msg_data.token_id = input_message_data(msg_idx, OFFSET_TOKEN_ID).into();
+        msg_data.decimals = input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap();
+
         let to: b256 = input_message_data(msg_idx, OFFSET_TO).into();
 
         if msg_data.len > ADDRESS_DEPOSIT_DATA_LEN {

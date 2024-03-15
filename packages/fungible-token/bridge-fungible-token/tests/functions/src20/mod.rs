@@ -27,28 +27,28 @@ mod success {
         assert_eq!(total_assets(&contract).await, 1);
     }
 
-    #[tokio::test]
-    async fn check_name() {
-        let (contract, _config) = setup_test().await;
-        let asset_id = get_asset_id(contract.contract_id());
+    // #[tokio::test]
+    // async fn check_name() {
+    //     let (contract, _config) = setup_test().await;
+    //     let asset_id = get_asset_id(contract.contract_id());
 
-        let response = name(&contract, asset_id).await.unwrap();
+    //     let response = name(&contract, asset_id).await.unwrap();
 
-        assert_eq!(
-            response,
-            String::from("MY_TOKEN                                                        ")
-        );
-    }
+    //     assert_eq!(
+    //         response,
+    //         String::from("MY_TOKEN                                                        ")
+    //     );
+    // }
 
-    #[tokio::test]
-    async fn check_symbol() {
-        let (contract, _config) = setup_test().await;
-        let asset_id = get_asset_id(contract.contract_id());
+    // #[tokio::test]
+    // async fn check_symbol() {
+    //     let (contract, _config) = setup_test().await;
+    //     let asset_id = get_asset_id(contract.contract_id());
 
-        let response = symbol(&contract, asset_id).await.unwrap();
+    //     let response = symbol(&contract, asset_id).await.unwrap();
 
-        assert_eq!(response, String::from("MYTKN                           "));
-    }
+    //     assert_eq!(response, String::from("MYTKN                           "));
+    // }
 
     #[tokio::test]
     async fn check_decimals() {

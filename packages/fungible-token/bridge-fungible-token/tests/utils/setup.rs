@@ -405,6 +405,7 @@ pub(crate) async fn create_msg_data(
     from: &str,
     to: [u8; 32],
     amount: U256,
+    decimals: u8,
     config: Option<BridgeFungibleTokenContractConfigurables>,
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
@@ -415,6 +416,7 @@ pub(crate) async fn create_msg_data(
     message_data.append(&mut decode_hex(from));
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
+    message_data.append(&mut vec![decimals]);
 
     let mut deposit_recipient: Option<ContractId> = None;
 
@@ -494,6 +496,7 @@ pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>
         FROM,
         *wallet.address().hash(),
         config.amount.test,
+        BRIDGED_TOKEN_DECIMALS.try_into().unwrap(),
         None,
         false,
         None,
