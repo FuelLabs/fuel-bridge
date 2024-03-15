@@ -6,5 +6,7 @@
   "fuel_message_portal_v2_upgrade": 1704906890,
   "fuel_erc20_gateway_V1": 1704906914,
   "token": 1704906928,
-  "fuel_message_portal_v3_upgrade": 1709941670
+  "fuel_message_portal_v3_upgrade": 1709941670,
+  "blacklist": 1709946124,
+  "unpause_withdrawals": 1709984666
 }
