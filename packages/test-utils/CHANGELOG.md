@@ -1,5 +1,15 @@
 # @fuel-bridge/test-utils
 
+## 0.5.0
+
+### Minor Changes
+
+- Add pnpm audit to CI and migrate dependencies to safe versions, by [@DefiCake](https://github.com/DefiCake) (See [#126](https://github.com/FuelLabs/fuel-bridge/pull/126))
+
+### Patch Changes
+
+- Add CORS to deployment server + update typescript SDK, by [@LuizAsFight](https://github.com/LuizAsFight) (See [#134](https://github.com/FuelLabs/fuel-bridge/pull/134))
+
 ## 0.4.0
 
 ### Minor Changes
