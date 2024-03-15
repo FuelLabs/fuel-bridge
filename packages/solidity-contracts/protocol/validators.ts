@@ -1,9 +1,9 @@
 import type { SigningKey } from 'ethers';
-import { toBeArray } from 'ethers';
+import { zeroPadValue } from 'ethers';
 
-// Sign a messag with a signer, returning the signature object (v, r, s components)
+// Sign a message with a signer, returning the signature object (v, r, s components)
 export function componentSign(signer: SigningKey, message: string) {
-  return signer.sign(toBeArray(message));
+  return signer.sign(zeroPadValue(message, 32));
 }
 
 // Sign a message with as signer, returning a 64-byte compact ECDSA signature
