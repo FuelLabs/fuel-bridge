@@ -19,7 +19,7 @@ mod success {
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
         interface::{
-            bridge::{bridged_token, bridged_token_decimals, bridged_token_gateway, claim_refund},
+            bridge::{bridged_token_gateway, claim_refund},
             src20::total_supply,
         },
         setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
@@ -33,6 +33,7 @@ mod success {
         // then claim and verify output message is created as expected
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -41,6 +42,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -168,6 +170,7 @@ mod success {
         // - Verify that the the receipt of the transaction contains a message for the L1 Portal that allows to withdraw the above mentioned deposit
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
@@ -178,6 +181,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -297,6 +301,7 @@ mod success {
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
         let (message, coin, deposit_contract) = create_msg_data(
@@ -305,6 +310,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.amount.max,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -409,6 +415,7 @@ mod success {
 
         // first make a deposit
         let mut wallet = create_wallet();
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
@@ -418,6 +425,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.amount.min,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -500,27 +508,6 @@ mod success {
     }
 
     #[tokio::test]
-    async fn check_bridged_token() {
-        let contract = create_token().await;
-
-        let response = bridged_token(&contract).await;
-
-        assert_eq!(
-            response,
-            Bits256(*Address::from_str(BRIDGED_TOKEN).unwrap())
-        )
-    }
-
-    #[tokio::test]
-    async fn check_bridged_token_decimals() {
-        let contract = create_token().await;
-
-        let response = bridged_token_decimals(&contract).await;
-
-        assert_eq!(u64::from(response), BRIDGED_TOKEN_DECIMALS)
-    }
-
-    #[tokio::test]
     async fn check_bridged_token_gateway() {
         let contract = create_token().await;
 
@@ -551,6 +538,7 @@ mod revert {
 
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
@@ -560,6 +548,7 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.amount.max,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -612,6 +601,7 @@ mod revert {
         // - Verify that it reverts with an AssetNotFound error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_asset_id: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
@@ -622,6 +612,7 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -654,6 +645,7 @@ mod revert {
         // - Verify that trying to withdraw a completely different asset results in a NoRefundAvailable error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
@@ -666,6 +658,7 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
