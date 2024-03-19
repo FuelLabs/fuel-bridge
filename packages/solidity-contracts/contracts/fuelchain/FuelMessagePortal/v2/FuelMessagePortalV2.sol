@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity 0.8.9;
 
-import "../FuelMessagePortal.sol";
+import "../../FuelMessagePortal.sol";
 
 /// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
 contract FuelMessagePortalV2 is FuelMessagePortal {

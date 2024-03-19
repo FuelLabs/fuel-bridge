@@ -95,7 +95,7 @@ contract FuelMessagePortal is
     bytes32 internal _incomingMessageSender;
 
     /// @notice The Fuel chain state contract
-    FuelChainState private _fuelChainState;
+    FuelChainState internal _fuelChainState;
 
     /// @notice Nonce for the next message to be sent
     uint256 internal _outgoingMessageNonce;
