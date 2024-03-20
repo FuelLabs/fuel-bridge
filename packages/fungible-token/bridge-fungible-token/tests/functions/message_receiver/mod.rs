@@ -452,7 +452,7 @@ mod success {
         let provider = wallet.provider().expect("Needs provider");
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
@@ -917,12 +917,15 @@ mod success {
             contract_balance(&provider.clone(), deposit_contract.contract_id(), asset_id).await;
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
         )
         .await;
+
+        let receipts = provider.tx_status(&_tx_id).await.unwrap();
+        dbg!(receipts);
 
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =

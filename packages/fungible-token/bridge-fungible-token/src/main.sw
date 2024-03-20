@@ -8,7 +8,7 @@ mod utils;
 
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
-use data_structures::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, MessageData};
+use data_structures::deposit_message::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN, DepositMessage};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
@@ -80,7 +80,7 @@ impl MessageReceiver for Contract {
             BridgeFungibleTokenError::UnauthorizedSender,
         );
 
-        let message_data = MessageData::parse(msg_idx);
+        let message_data = DepositMessage::parse(msg_idx);
         require(
             message_data
                 .amount != ZERO_B256,
@@ -155,23 +155,15 @@ impl MessageReceiver for Contract {
                 // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
                 // If msg_data.len is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, 
                 // we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
-                match message_data.len {
-                    ADDRESS_DEPOSIT_DATA_LEN => {
-                        transfer(message_data.to, asset_id, amount);
-                    },
-                    CONTRACT_DEPOSIT_WITHOUT_DATA_LEN => {
-                        transfer(message_data.to, asset_id, amount);
-                    },
-                    _ => {
-                        if let Identity::ContractId(id) = message_data.to {
-                            let dest_contract = abi(MessageReceiver, id.into());
-                            dest_contract
-                                .process_message {
-                                    coins: amount,
-                                    asset_id: asset_id.into(),
-                                }(msg_idx);
-                        };
-                    },
+                if message_data.deposit_and_call {
+                    let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
+                    dest_contract
+                        .process_message {
+                            coins: amount,
+                            asset_id: asset_id.into(),
+                        }(msg_idx);
+                } else {
+                    transfer(message_data.to, asset_id, amount);
                 }
 
                 log(DepositEvent {

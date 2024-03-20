@@ -410,7 +410,9 @@ pub(crate) async fn create_msg_data(
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
 ) -> ((u64, Vec<u8>), (u64, AssetId), Option<ContractId>) {
-    let mut message_data = Vec::with_capacity(5);
+    let mut message_data: Vec<u8> = vec![];
+
+    message_data.append(&mut vec![1u8]);
     message_data.append(&mut decode_hex(token));
     message_data.append(&mut decode_hex(token_id));
     message_data.append(&mut decode_hex(from));
@@ -435,7 +437,7 @@ pub(crate) async fn create_msg_data(
     let message_data = prefix_contract_id(message_data, config).await;
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-
+    
     (message, coin, deposit_recipient)
 }
 
