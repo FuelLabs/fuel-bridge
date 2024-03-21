@@ -3,7 +3,7 @@ use crate::utils::{
         BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS, TO,
     },
     setup::{
-        create_msg_data, create_wallet, relay_message_to_contract, setup_environment,
+        create_deposit_message, create_wallet, relay_message_to_contract, setup_environment,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
@@ -15,15 +15,15 @@ mod success {
 
     use crate::utils::constants::BRIDGED_TOKEN_GATEWAY;
     use crate::utils::interface::src20::total_supply;
-    use crate::utils::setup::get_asset_id;
     use crate::utils::{
         constants::MESSAGE_AMOUNT,
         setup::{
+            create_metadata_message, get_asset_id,
             contract_balance, create_recipient_contract, encode_hex, precalculate_deposit_id,
             wallet_balance, RefundRegisteredEvent,
         },
     };
-    use fuels::{prelude::AssetId, programs::contract::SettableContract, types::Bits256};
+    use fuels::{test_helpers::DEFAULT_COIN_AMOUNT, prelude::AssetId, programs::contract::SettableContract, types::{Bits256, tx_status::TxStatus}};
 
     #[tokio::test]
     async fn deposit_to_wallet() {
@@ -32,7 +32,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -89,7 +89,7 @@ mod success {
                 .with_DECIMALS(proxy_token_decimals)
         );
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -160,7 +160,7 @@ mod success {
                 .with_DECIMALS(proxy_token_decimals)
         );
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -234,7 +234,7 @@ mod success {
 
         let deposit_amount = config.amount.min;
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -300,7 +300,7 @@ mod success {
                 .with_DECIMALS(proxy_token_decimals)
         );
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -366,7 +366,7 @@ mod success {
                 .with_DECIMALS(proxy_token_decimals)
         );
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -426,7 +426,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -480,7 +480,7 @@ mod success {
         let deposit_amount = config.amount.min;
         let fuel_deposit_amount = config.fuel_equivalent_amount(deposit_amount);
 
-        let (first_deposit_message, coin, deposit_contract) = create_msg_data(
+        let (first_deposit_message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -493,7 +493,7 @@ mod success {
         )
         .await;
 
-        let (second_deposit_message, _, _) = create_msg_data(
+        let (second_deposit_message, _, _) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -577,7 +577,7 @@ mod success {
         let max_deposit_amount = config.amount.max;
         let max_fuel_deposit_amount = config.fuel_equivalent_amount(max_deposit_amount);
 
-        let (first_deposit_message, coin, deposit_contract) = create_msg_data(
+        let (first_deposit_message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -590,7 +590,7 @@ mod success {
         )
         .await;
 
-        let (second_deposit_message, _, _) = create_msg_data(
+        let (second_deposit_message, _, _) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -710,7 +710,7 @@ mod success {
         let deposit_amount = config.amount.test;
         let fuel_deposit_amount = config.fuel_equivalent_amount(deposit_amount);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -768,7 +768,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -826,7 +826,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -884,7 +884,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -924,9 +924,6 @@ mod success {
         )
         .await;
 
-        let receipts = provider.tx_status(&_tx_id).await.unwrap();
-        dbg!(receipts);
-
         // Get the balance for the deposit contract after
         let deposit_contract_balance_after =
             contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
@@ -952,7 +949,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -1030,7 +1027,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -1108,7 +1105,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -1186,7 +1183,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -1267,7 +1264,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -1340,6 +1337,91 @@ mod success {
             );
         }
     }
+
+    #[tokio::test]
+    async fn __deposit_to_wallet() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
+        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            config.amount.test,
+            bridged_token_decimals.try_into().unwrap(),
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        // Relay the test message to the bridge contract
+        let _receipts = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let asset_balance =
+            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+
+        // Verify the message value was received by the bridge
+        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.test));
+    }
+
+    #[tokio::test]
+    async fn register_metadata() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let message = create_metadata_message(BRIDGED_TOKEN, configurables.clone()).await;
+
+        let (_, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![(DEFAULT_COIN_AMOUNT, AssetId::default())],
+            vec![(0, message)],
+            None,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let tx_status = provider.tx_status(&tx_id).await.unwrap();
+        
+        // For the time being, let's revert on metadata deposits, it is a TODO
+        assert!(matches!(tx_status, TxStatus::Revert { .. }));
+    }
+
 }
 
 mod revert {
@@ -1356,7 +1438,7 @@ mod revert {
         let bad_sender: &str =
             "0x55555500000000000000000000000000000000000000000000000000005555555";
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,

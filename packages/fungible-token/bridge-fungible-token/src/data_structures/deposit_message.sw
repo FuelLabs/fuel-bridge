@@ -26,7 +26,7 @@ pub struct DepositMessage {
     pub decimals: u8,
     pub deposit_and_call: bool,
 }
-// 0100000000000000000000000000000000000000000000000000000000deadbeef00000000000000000000000000000000000000000000000000000000000000000000000000000000000000008888888888888888888888888888888888888888b1c6067c6663708d831ef3d10edf0aa4d6c14f077fc7f41f5535a30435e7cd7800000000000000000000000000000000000000003b9ac9ffffffffffc465360012
+
 impl DepositMessage {
     /// Read the bytes passed as message data into an in-memory representation using the DepositMessage type.
     ///
@@ -44,7 +44,7 @@ impl DepositMessage {
             to: Identity::Address(Address::from(ZERO_B256)),
             token_id: ZERO_B256,
             decimals: 0u8,
-            deposit_and_call: false
+            deposit_and_call: false,
         };
 
         // TODO: Bug, have to mutate this struct for these values or tests fail

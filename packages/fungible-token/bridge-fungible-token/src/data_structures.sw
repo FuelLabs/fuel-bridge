@@ -1,4 +1,5 @@
 library;
 
 pub mod deposit_message;
-pub mod message_type;
+pub mod metadata_message;
+pub mod message_data;

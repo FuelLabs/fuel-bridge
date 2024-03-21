@@ -5,7 +5,7 @@ use crate::utils::{
     },
     interface::bridge::withdraw,
     setup::{
-        contract_balance, create_msg_data, create_token, create_wallet, decode_hex, encode_hex,
+        contract_balance, create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
         parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
@@ -36,7 +36,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -175,7 +175,7 @@ mod success {
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             incorrect_token,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -304,7 +304,7 @@ mod success {
         let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -419,7 +419,7 @@ mod success {
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -542,7 +542,7 @@ mod revert {
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -606,7 +606,7 @@ mod revert {
         let incorrect_asset_id: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -652,7 +652,7 @@ mod revert {
         let wrong_token: &str =
             "0x2222220000000000000000000000000000000000000000000000000000222222";
 
-        let (message, coin, deposit_contract) = create_msg_data(
+        let (message, coin, deposit_contract) = create_deposit_message(
             incorrect_token,
             BRIDGED_TOKEN_ID,
             FROM,

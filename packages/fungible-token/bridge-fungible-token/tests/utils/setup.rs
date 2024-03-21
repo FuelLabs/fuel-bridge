@@ -399,7 +399,7 @@ pub(crate) fn encode_hex(val: U256) -> [u8; 32] {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn create_msg_data(
+pub(crate) async fn create_deposit_message(
     token: &str,
     token_id: &str,
     from: &str,
@@ -412,7 +412,7 @@ pub(crate) async fn create_msg_data(
 ) -> ((u64, Vec<u8>), (u64, AssetId), Option<ContractId>) {
     let mut message_data: Vec<u8> = vec![];
 
-    message_data.append(&mut vec![1u8]);
+    message_data.append(&mut vec![0u8]);
     message_data.append(&mut decode_hex(token));
     message_data.append(&mut decode_hex(token_id));
     message_data.append(&mut decode_hex(from));
@@ -440,6 +440,17 @@ pub(crate) async fn create_msg_data(
     
     (message, coin, deposit_recipient)
 }
+
+pub(crate) async fn create_metadata_message(
+    _token: &str,
+    config: Option<BridgeFungibleTokenContractConfigurables>,
+) -> Vec<u8> {
+    let message_data: Vec<u8> = vec![];
+
+    let message_data = prefix_contract_id(message_data, config).await;
+    message_data
+}
+
 
 pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
     let selector = &data[0..4];
@@ -492,7 +503,7 @@ pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>
 
     let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
-    let (message, coin, deposit_contract) = create_msg_data(
+    let (message, coin, deposit_contract) = create_deposit_message(
         BRIDGED_TOKEN,
         BRIDGED_TOKEN_ID,
         FROM,
