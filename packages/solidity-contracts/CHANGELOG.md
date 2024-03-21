@@ -1,5 +1,13 @@
 # @fuel-bridge/solidity-contracts
 
+## 0.6.0
+
+### Minor Changes
+
+- Adds FuelMessagePortalV3 with increased granularity on withdrawals control, by [@DefiCake](https://github.com/DefiCake) (See [#148](https://github.com/FuelLabs/fuel-bridge/pull/148))
+- 🐞 Fix ECDSA test flakiness, by [@DefiCake](https://github.com/DefiCake) (See [#144](https://github.com/FuelLabs/fuel-bridge/pull/144))
+- Extract CommonPredicates lib into its own file, by [@DefiCake](https://github.com/DefiCake) (See [#142](https://github.com/FuelLabs/fuel-bridge/pull/142))
+
 ## 0.5.0
 
 ### Minor Changes
