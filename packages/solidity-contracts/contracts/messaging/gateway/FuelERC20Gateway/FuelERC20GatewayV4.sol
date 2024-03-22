@@ -15,7 +15,6 @@ import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeab
 
 /// @title FuelERC20GatewayV4
 /// @notice The L1 side of the general ERC20 gateway with Fuel. Not backwards compatible with previous implementations
-/// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
 contract FuelERC20GatewayV4 is
     Initializable,
     FuelBridgeBase,
@@ -58,22 +57,17 @@ contract FuelERC20GatewayV4 is
     uint256 public constant FUEL_ASSET_DECIMALS = 9;
     uint256 constant NO_DECIMALS = type(uint256).max;
 
-    bytes32 public immutable ASSET_ISSUER_ID;
-
     /////////////
     // Storage //
     /////////////
 
-    /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
     bool public whitelistRequired;
+    bytes32 public assetIssuerId;
+
     mapping(address => uint256) internal _deposits;
     mapping(address => uint256) internal _depositLimits;
     mapping(address => uint256) internal _decimalsCache;
-
-    constructor(bytes32 assetIssuerId) {
-        ASSET_ISSUER_ID = assetIssuerId;
-        _disableInitializers();
-    }
+    mapping(bytes32 => bool) internal _isBridge;
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
@@ -102,8 +96,19 @@ contract FuelERC20GatewayV4 is
         _unpause();
     }
 
+    /// @notice sets the entity on L2 that will mint the tokens
+    function setAssetIssuerId(bytes32 id) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        assetIssuerId = id;
+    }
+
+    /// @notice if enabled, only deposits for tokens allowed through `setGlobalDepositLimit` will be allowed
     function requireWhitelist(bool value) external onlyRole(DEFAULT_ADMIN_ROLE) {
         whitelistRequired = value;
+    }
+
+    /// @notice see `requireWhitelist`
+    function setGlobalDepositLimit(address token, uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        _depositLimits[token] = limit;
     }
 
     /// @notice Allows the admin to rescue ETH sent to this contract by accident
@@ -111,10 +116,6 @@ contract FuelERC20GatewayV4 is
     function rescueETH() external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
         require(success);
-    }
-
-    function setGlobalDepositLimit(address token, uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        _depositLimits[token] = limit;
     }
 
     //////////////////////
@@ -145,7 +146,7 @@ contract FuelERC20GatewayV4 is
 
         bytes memory messageData = abi.encodePacked(
             MessageType.DEPOSIT,
-            ASSET_ISSUER_ID,
+            assetIssuerId,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
@@ -172,7 +173,7 @@ contract FuelERC20GatewayV4 is
 
         bytes memory messageData = abi.encodePacked(
             MessageType.DEPOSIT,
-            ASSET_ISSUER_ID,
+            assetIssuerId,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
@@ -244,7 +245,7 @@ contract FuelERC20GatewayV4 is
             revert CannotWithdrawZero();
         }
 
-        if (messageSender() != ASSET_ISSUER_ID) {
+        if (messageSender() != assetIssuerId) {
             revert InvalidSender();
         }
 
@@ -274,7 +275,12 @@ contract FuelERC20GatewayV4 is
     }
 
     function _adjustDecimals(uint8 tokenDecimals, uint256 amount) internal virtual returns (uint256) {
-        // Most common case: 18 decimals
+        // Most common case: less than 9 decimals (USDT, USDC, WBTC)
+        if (tokenDecimals < 9) {
+            return amount * (10 ** (9 - tokenDecimals));
+        }
+
+        // Next common case: 18 decimals (most ERC20s)
         unchecked {
             if (tokenDecimals > 9) {
                 uint256 precision = 10 ** (tokenDecimals - 9);
@@ -283,11 +289,6 @@ contract FuelERC20GatewayV4 is
                 }
                 return divByNonZero(amount, precision);
             }
-        }
-
-        // Next most common case: less than 9 decimals
-        if (tokenDecimals < 9) {
-            return amount * (10 ** (9 - tokenDecimals));
         }
 
         // Less common case: 9 decimals
