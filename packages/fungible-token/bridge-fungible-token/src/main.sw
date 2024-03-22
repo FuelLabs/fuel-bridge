@@ -9,13 +9,11 @@ mod utils;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{
+    constants::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN},
     message_data::MessageData,
     metadata_message::MetadataMessage,
-    deposit_message::{
-    ADDRESS_DEPOSIT_DATA_LEN,
-    CONTRACT_DEPOSIT_WITHOUT_DATA_LEN,
-    DepositMessage,
-}};
+    deposit_message::DepositMessage,
+};
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;

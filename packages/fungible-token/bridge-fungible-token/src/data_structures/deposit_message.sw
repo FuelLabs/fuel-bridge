@@ -1,20 +1,19 @@
 library;
 
 use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_length}};
-
-/// A message is encoded as
-/// 0x00 => CONTRACT_ID
-/// 0x20 => MESSAGE_TYPE
-/// 0x28 and onwards: payload, with offsets defined as below
-const OFFSET_MESSAGE_TYPE: u64 = 32;
-const OFFSET_TOKEN_ADDRESS: u64 = OFFSET_MESSAGE_TYPE + 1;
-const OFFSET_TOKEN_ID: u64 = OFFSET_TOKEN_ADDRESS + 32;
-const OFFSET_FROM: u64 = OFFSET_TOKEN_ID + 32;
-const OFFSET_TO: u64 = OFFSET_FROM + 32;
-const OFFSET_AMOUNT: u64 = OFFSET_TO + 32;
-const OFFSET_DECIMALS: u64 = OFFSET_AMOUNT + 32;
-pub const ADDRESS_DEPOSIT_DATA_LEN: u64 = OFFSET_DECIMALS + 1;
-pub const CONTRACT_DEPOSIT_WITHOUT_DATA_LEN: u64 = ADDRESS_DEPOSIT_DATA_LEN + 1u64;
+use ::data_structures::{
+    constants::{
+        OFFSET_MESSAGE_TYPE,
+        OFFSET_TOKEN_ADDRESS,
+        OFFSET_TOKEN_ID,
+        OFFSET_FROM,
+        OFFSET_TO,
+        OFFSET_AMOUNT,
+        OFFSET_DECIMALS,
+        ADDRESS_DEPOSIT_DATA_LEN,
+        CONTRACT_DEPOSIT_WITHOUT_DATA_LEN
+    }
+};
 
 pub struct DepositMessage {
     pub amount: b256,
