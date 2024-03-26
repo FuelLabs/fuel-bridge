@@ -33,6 +33,9 @@ use std::{
     inputs::input_message_sender,
     message::send_message,
     primitive_conversions::u64::*,
+    storage::{
+        storage_string::*,
+    },
     string::String,
 };
 use utils::{
@@ -44,22 +47,21 @@ use utils::{
 use src_20::SRC20;
 
 const DEFAULT_DECIMALS: u8 = 9u8;
-const DEFAULT_BRIDGED_TOKEN_DECIMALS: u8 = 18u8;
 const ZERO_U256 = 0x00u256;
 
 configurable {
     DECIMALS: u64 = 9u64,
-    BRIDGED_TOKEN_DECIMALS: u64 = 18u64,
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
-    BRIDGED_TOKEN: b256 = 0x00000000000000000000000000000000000000000000000000000000deadbeef,
-    NAME: str[64] = __to_str_array("MY_TOKEN                                                        "),
-    SYMBOL: str[32] = __to_str_array("MYTKN                           "),
 }
 
 storage {
     asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
+    l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
+    l1_decimals: StorageMap<AssetId, u8> = StorageMap {},
+    l1_symbols: StorageMap<AssetId, StorageString> = StorageMap {},
+    l1_names: StorageMap<AssetId, StorageString> = StorageMap {},
     total_assets: u64 = 0,
 }
 
@@ -85,30 +87,13 @@ impl MessageReceiver for Contract {
             BridgeFungibleTokenError::NoCoinsSent,
         );
 
-        // register a refund if tokens don't match
-        if (message_data.token_address != BRIDGED_TOKEN) {
-            register_refund(
-                message_data
-                    .from,
-                message_data
-                    .token_address,
-                message_data
-                    .token_id,
-                message_data
-                    .amount,
-            );
-            return;
-        };
-
         let res_amount = adjust_deposit_decimals(
             message_data
                 .amount,
             DECIMALS
                 .try_as_u8()
                 .unwrap_or(DEFAULT_DECIMALS),
-            BRIDGED_TOKEN_DECIMALS
-                .try_as_u8()
-                .unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS),
+            message_data.decimals
         );
 
         match res_amount {
@@ -152,12 +137,15 @@ impl MessageReceiver for Contract {
 
                 storage.tokens_minted.insert(asset_id, new_total_supply);
 
+                // Store asset metadata if it is the first time that funds are bridged
                 if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
                 {
                     storage.asset_to_sub_id.insert(asset_id, sub_id);
                     storage
                         .total_assets
                         .write(storage.total_assets.try_read().unwrap_or(0) + 1);
+                    storage.l1_decimals.insert(asset_id, message_data.decimals);
+                    storage.l1_addresses.insert(asset_id, message_data.token_address);
                 };
 
                 // mint tokens & update storage
@@ -197,14 +185,6 @@ impl MessageReceiver for Contract {
 }
 
 impl Bridge for Contract {
-    fn register_bridge() {
-        send_message(
-            BRIDGED_TOKEN_GATEWAY,
-            encode_register_calldata(BRIDGED_TOKEN),
-            0,
-        );
-    }
-
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = sha256((token_address, token_id));
@@ -246,10 +226,9 @@ impl Bridge for Contract {
             DECIMALS
                 .try_as_u8()
                 .unwrap_or(DEFAULT_DECIMALS),
-            BRIDGED_TOKEN_DECIMALS
-                .try_as_u8()
-                .unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS),
+            storage.l1_decimals.get(asset_id).read()
         ).unwrap();
+
         storage
             .tokens_minted
             .insert(
@@ -265,7 +244,12 @@ impl Bridge for Contract {
         let sender = msg_sender().unwrap();
         send_message(
             BRIDGED_TOKEN_GATEWAY,
-            encode_data(to, adjusted_amount, BRIDGED_TOKEN, sub_id),
+            encode_data(
+                to, 
+                adjusted_amount, 
+                storage.l1_addresses.get(asset_id).read(), 
+                sub_id
+            ),
             0,
         );
         log(WithdrawalEvent {
@@ -273,14 +257,6 @@ impl Bridge for Contract {
             from: sender,
             amount: amount,
         });
-    }
-
-    fn bridged_token() -> b256 {
-        BRIDGED_TOKEN
-    }
-
-    fn bridged_token_decimals() -> u8 {
-        BRIDGED_TOKEN_DECIMALS.try_as_u8().unwrap_or(DEFAULT_BRIDGED_TOKEN_DECIMALS)
     }
 
     fn bridged_token_gateway() -> b256 {
@@ -306,18 +282,12 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        match storage.tokens_minted.get(asset).try_read() {
-            Some(_) => Some(String::from_ascii_str(from_str_array(NAME))),
-            None => None,
-        }
+        storage.l1_names.get(asset).read_slice()
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
-        match storage.tokens_minted.get(asset).try_read() {
-            Some(_) => Some(String::from_ascii_str(from_str_array(SYMBOL))),
-            None => None,
-        }
+        storage.l1_symbols.get(asset).read_slice()
     }
 
     #[storage(read)]
