@@ -12,7 +12,7 @@ impl MetadataMessage {
     ///
     /// any data beyond ADDRESS_DEPOSIT_DATA_LEN bytes means deposit is meant for a contract.
     /// if data is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, then we also need to call process_message on the destination contract.
-    pub fn parse(msg_idx: u64) -> Self {
+    pub fn parse(_msg_idx: u64) -> Self {
         let mut msg_data = Self {
             name: String::from_ascii_str("test_TODO"),
             symbol: String::from_ascii_str("test_TODO"),

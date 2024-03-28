@@ -412,7 +412,14 @@ pub(crate) async fn create_deposit_message(
 ) -> ((u64, Vec<u8>), (u64, AssetId), Option<ContractId>) {
     let mut message_data: Vec<u8> = vec![];
 
-    message_data.append(&mut vec![0u8]);
+    let deposit_type: u8 = match (deposit_to_contract, &extra_data) {
+        (false, Some(_)) => unreachable!(),
+        (false, None) => 0,
+        (true, None) => 1,
+        (true, Some(_)) => 2,
+    };
+
+    message_data.append(&mut vec![deposit_type]);
     message_data.append(&mut decode_hex(token));
     message_data.append(&mut decode_hex(token_id));
     message_data.append(&mut decode_hex(from));
@@ -423,10 +430,6 @@ pub(crate) async fn create_deposit_message(
     let mut deposit_recipient: Option<ContractId> = None;
 
     if deposit_to_contract {
-        let hash = keccak_hash("DEPOSIT_TO_CONTRACT");
-        let mut byte: Vec<u8> = vec![0u8];
-        byte.copy_from_slice(&hash[..1]);
-        message_data.append(&mut byte);
         deposit_recipient = Option::Some(ContractId::new(to));
     };
 

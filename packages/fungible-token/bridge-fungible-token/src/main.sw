@@ -9,10 +9,10 @@ mod utils;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{
-    constants::{ADDRESS_DEPOSIT_DATA_LEN, CONTRACT_DEPOSIT_WITHOUT_DATA_LEN},
+    constants::{DEPOSIT, CONTRACT_DEPOSIT, CONTRACT_DEPOSIT_WITH_DATA},
     message_data::MessageData,
     metadata_message::MetadataMessage,
-    deposit_message::DepositMessage,
+    deposit_message::{DepositType, DepositMessage},
 };
 use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
@@ -130,18 +130,6 @@ impl Bridge for Contract {
         let sub_id = _asset_to_sub_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
-        // attempt to adjust amount into base layer decimals and burn the sent tokens
-        let adjusted_amount = adjust_withdrawal_decimals(
-            amount,
-            DECIMALS
-                .try_as_u8()
-                .unwrap_or(DEFAULT_DECIMALS),
-            storage
-                .l1_decimals
-                .get(asset_id)
-                .read(),
-        ).unwrap();
-
         storage
             .tokens_minted
             .insert(
@@ -159,7 +147,7 @@ impl Bridge for Contract {
             BRIDGED_TOKEN_GATEWAY,
             encode_data(
                 to,
-                adjusted_amount,
+                amount.as_u256().as_b256(),
                 storage
                     .l1_addresses
                     .get(asset_id)
@@ -183,6 +171,15 @@ impl Bridge for Contract {
     fn asset_to_sub_id(asset_id: AssetId) -> SubId {
         _asset_to_sub_id(asset_id)
     }
+
+    #[storage(read)]
+    fn asset_to_l1_address(asset_id: AssetId) -> b256 {
+        let sub_id = storage.l1_addresses.get(asset_id).try_read();
+        require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
+        sub_id.unwrap()
+    }
+
+    
 }
 
 impl SRC20 for Contract {
@@ -261,93 +258,73 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         BridgeFungibleTokenError::NoCoinsSent,
     );
 
-    let res_amount = adjust_deposit_decimals(
-        message_data
-            .amount,
-        DECIMALS
-            .try_as_u8()
-            .unwrap_or(DEFAULT_DECIMALS),
-        message_data
-            .decimals,
-    );
-
-    match res_amount {
-        Result::Err(_) => {
-            // register a refund if value can't be adjusted
-            register_refund(
-                message_data
-                    .from,
-                message_data
-                    .token_address,
-                message_data
-                    .token_id,
-                message_data
-                    .amount,
-            );
-        },
-        Result::Ok(amount) => {
-            let sub_id = message_data.token_id;
-            let asset_id = AssetId::new(contract_id(), sub_id);
-
-            let _ = disable_panic_on_overflow();
-
-            let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
-            let new_total_supply = current_total_supply + amount;
-
-            if new_total_supply < current_total_supply {
-                register_refund(
-                    message_data
-                        .from,
-                    message_data
-                        .token_address,
-                    message_data
-                        .token_id,
-                    message_data
-                        .amount,
-                );
+    let amount: u64 = 
+        match <u64 as TryFrom<u256>>::try_from(message_data.amount.as_u256()) {
+            Some(value) => value,
+            None => {
+                register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
                 return;
             }
+        };
+    let sub_id = message_data.token_id;
+    let asset_id = AssetId::new(contract_id(), sub_id);
 
-            let _ = enable_panic_on_overflow();
+    let _ = disable_panic_on_overflow();
+    
+    let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
+    let new_total_supply = current_total_supply + amount;
 
-            storage.tokens_minted.insert(asset_id, new_total_supply);
-
-            // Store asset metadata if it is the first time that funds are bridged
-            if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
-            {
-                storage.asset_to_sub_id.insert(asset_id, sub_id);
-                storage
-                    .total_assets
-                    .write(storage.total_assets.try_read().unwrap_or(0) + 1);
-                storage.l1_decimals.insert(asset_id, message_data.decimals);
-                storage
-                    .l1_addresses
-                    .insert(asset_id, message_data.token_address);
-            };
-
-            // mint tokens & update storage
-            mint(sub_id, amount);
-
-            // when depositing to an address, msg_data.len is ADDRESS_DEPOSIT_DATA_LEN bytes.
-            // when depositing to a contract, msg_data.len is CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes.
-            // If msg_data.len is > CONTRACT_DEPOSIT_WITHOUT_DATA_LEN bytes, 
-            // we must call `process_message()` on the receiving contract, forwarding the newly minted coins with the call.
-            if message_data.deposit_and_call {
-                let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
-                dest_contract
-                    .process_message {
-                        coins: amount,
-                        asset_id: asset_id.into(),
-                    }(msg_idx);
-            } else {
-                transfer(message_data.to, asset_id, amount);
-            }
-
-            log(DepositEvent {
-                to: message_data.to,
-                from: message_data.from,
-                amount: amount,
-            });
-        }
+    if new_total_supply < current_total_supply {
+        register_refund(
+            message_data
+                .from,
+            message_data
+                .token_address,
+            message_data
+                .token_id,
+            message_data
+                .amount,
+        );
+        return;
     }
+
+    let _ = enable_panic_on_overflow();
+
+    storage.tokens_minted.insert(asset_id, new_total_supply);
+    
+
+    // Store asset metadata if it is the first time that funds are bridged
+    if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
+    {
+        storage.asset_to_sub_id.insert(asset_id, sub_id);
+        storage
+            .total_assets
+            .write(storage.total_assets.try_read().unwrap_or(0) + 1);
+        storage.l1_decimals.insert(asset_id, message_data.decimals);
+        storage
+            .l1_addresses
+            .insert(asset_id, message_data.token_address);
+    };
+    // mint tokens & update storage
+    mint(sub_id, amount);
+
+    match message_data.deposit_type {
+        DepositType::Addr | DepositType::Contract => {
+            transfer(message_data.to, asset_id, amount)
+        },
+        DepositType::ContractWithData => {
+            let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
+            dest_contract
+                .process_message {
+                    coins: amount,
+                    asset_id: asset_id.into(),
+                }(msg_idx);
+        }
+    };
+
+    log(DepositEvent {
+        to: message_data.to,
+        from: message_data.from,
+        amount: amount,
+    });
 }
