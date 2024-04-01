@@ -61,6 +61,7 @@ configurable {
 
 storage {
     asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
+    asset_to_token_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
@@ -126,6 +127,7 @@ impl Bridge for Contract {
         let amount = msg_amount();
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
+        let token_id = _asset_to_token_id(asset_id);
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
 
         storage
@@ -150,7 +152,7 @@ impl Bridge for Contract {
                     .l1_addresses
                     .get(asset_id)
                     .read(),
-                sub_id,
+                token_id,
             ),
             0,
         );
@@ -248,6 +250,13 @@ fn _asset_to_sub_id(asset_id: AssetId) -> SubId {
     sub_id.unwrap()
 }
 
+#[storage(read)]
+fn _asset_to_token_id(asset_id: AssetId) -> b256 {
+    let token_id = storage.asset_to_token_id.get(asset_id).try_read();
+    require(token_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
+    token_id.unwrap()
+}
+
 #[storage(read, write)]
 fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     require(
@@ -264,7 +273,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
                 return;
             }
         };
-    let sub_id = message_data.token_id;
+    let sub_id = sha256((message_data.token_address, message_data.token_id));
     let asset_id = AssetId::new(contract_id(), sub_id);
 
     let _ = disable_panic_on_overflow();
@@ -295,6 +304,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
     {
         storage.asset_to_sub_id.insert(asset_id, sub_id);
+        storage.asset_to_token_id.insert(asset_id, message_data.token_id);
         storage
             .total_assets
             .write(storage.total_assets.try_read().unwrap_or(0) + 1);

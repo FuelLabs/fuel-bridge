@@ -84,7 +84,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -220,7 +220,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -262,7 +262,7 @@ mod success {
         assert_eq!(amount, amount);
 
         // Check that supply has decreased by withdrawal_amount
-        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id()))
+        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id(), BRIDGED_TOKEN))
             .await
             .unwrap();
         assert_eq!(supply, 0);
@@ -338,7 +338,7 @@ mod revert {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id())).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);

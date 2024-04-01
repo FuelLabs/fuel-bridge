@@ -67,7 +67,7 @@ mod success {
 
         let eth_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
         let asset_balance = wallet_balance(&wallet, &asset_id).await;
 
         // Verify the message value was received by the bridge
@@ -135,7 +135,7 @@ mod success {
 
         let provider = wallet.provider().expect("Needs provider");
 
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         assert!(total_supply(&bridge, asset_id).await.is_none());
@@ -241,7 +241,7 @@ mod success {
 
         let provider = wallet.provider().expect("Needs provider");
 
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         assert!(total_supply(&bridge, asset_id).await.is_none());
@@ -360,7 +360,7 @@ mod success {
         let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Relay the test message to the bridge contract
         let _tx_id = relay_message_to_contract(
@@ -416,7 +416,7 @@ mod success {
         let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
@@ -474,7 +474,7 @@ mod success {
         let provider = wallet.provider().expect("Needs provider");
 
         let deposit_contract = create_recipient_contract(wallet.clone()).await;
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         let deposit_contract_balance_before =
@@ -582,7 +582,7 @@ mod success {
 
         let eth_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let asset_id = get_asset_id(bridge.contract_id());
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
         let asset_balance = wallet_balance(&wallet, &asset_id).await;
 
         // Verify the message value was received by the bridge
@@ -630,7 +630,118 @@ mod success {
         assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
     }
 
+    #[tokio::test]
+    async fn deposit_different_tokens() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
+
+        let token_one = "0x00000000000000000000000000000000000000000000000000000000deadbeef";
+        let token_two = "0xdeadbeef00000000000000000000000000000000000000000000000000000000";
+        
+        let token_one_amount: u64 = 1;
+        let token_two_amount: u64 = 2;
+
+        let (message_one, coin, deposit_contract) = create_deposit_message(
+            token_one,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(token_one_amount),
+            bridged_token_decimals.try_into().unwrap(),
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (message_two,_,_) = create_deposit_message(
+            token_two,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(token_two_amount),
+            bridged_token_decimals.try_into().unwrap(),
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message_one, message_two],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract.clone(),
+        )
+        .await;
     
+        let tx_status = provider.tx_status(&tx_id).await.unwrap();
+        dbg!(tx_status.clone().take_receipts());
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[1].clone(),
+            utxo_inputs.contract.clone(),
+        )
+        .await;
+    
+        let tx_status = provider.tx_status(&tx_id).await.unwrap();
+        dbg!(tx_status.clone().take_receipts());
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
+    
+    
+        // Token one checks
+        let asset_id = get_asset_id(bridge.contract_id(), token_one);
+        let asset_balance = wallet_balance(&wallet, &asset_id).await;
+
+        // Check that wallet now has bridged coins
+        assert_eq!(asset_balance, token_one_amount);
+
+        // Verify that a L1 token has been registered
+        let token_one_registered_l1_address: Bits256 = bridge
+            .methods()
+            .asset_to_l1_address(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        assert_eq!(token_one_registered_l1_address, Bits256::from_hex_str(token_one).unwrap());
+
+        // // Token two checks
+        let asset_id = get_asset_id(bridge.contract_id(), token_two);
+        let asset_balance = wallet_balance(&wallet, &asset_id).await;
+
+        // // Check that wallet now has bridged coins
+        assert_eq!(asset_balance, token_two_amount);
+
+        // Verify that a L1 token has been registered
+        let token_two_registered_l1_address: Bits256 = bridge
+            .methods()
+            .asset_to_l1_address(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        assert_eq!(token_two_registered_l1_address, Bits256::from_hex_str(token_two).unwrap());
+        assert_ne!(token_one_registered_l1_address, token_two_registered_l1_address);
+    }
 }
 
 mod revert {

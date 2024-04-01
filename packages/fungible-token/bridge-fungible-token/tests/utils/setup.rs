@@ -19,6 +19,7 @@ use fuels::{
         Provider, TxPolicies,
     }, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, tx::Receipt, types::{input::Input, message::Message, Bits256, U256}
 };
+use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
@@ -493,8 +494,18 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
     wallet.get_asset_balance(asset_id).await.unwrap()
 }
 
-pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
-    contract_id.asset_id(&Bits256::zeroed())
+pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
+    
+    let data: Vec<u8> = Bits256::from_hex_str(token)
+        .unwrap().0
+        .iter()
+        .chain(Bits256::zeroed().0.iter())
+        .cloned()
+        .collect();
+
+    let sub_id = sha2::Sha256::digest(data);
+    
+    contract_id.asset_id(&Bits256::from_hex_str(&hex::encode(sub_id)).unwrap())
 }
 
 /// This setup mints tokens so that they are registered as minted assets in the bridge
