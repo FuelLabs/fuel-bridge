@@ -12,16 +12,12 @@ use fuel_core_types::{
 };
 
 use fuels::{
-    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
-    prelude::{
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount}, prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    },
-    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{input::Input, message::Message, Bits256, U256},
+    }, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, tx::Receipt, types::{input::Input, message::Message, Bits256, U256}
 };
-use sha3::{Digest, Keccak256};
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
@@ -527,9 +523,14 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
-    let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+    let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap().take_receipts();
+    assert!(receipts.len() > 0);
 
-    dbg!(receipts);
+    for receipt in receipts {
+        if let Receipt::Revert { .. } = receipt {
+            unreachable!("Transaction should not have reverted");
+        }
+    }
 
     contract
 }
