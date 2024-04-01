@@ -1,6 +1,6 @@
 library;
 
-use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_length}};
+use std::inputs::input_message_data;
 use ::data_structures::{
     constants::{
         OFFSET_MESSAGE_TYPE,

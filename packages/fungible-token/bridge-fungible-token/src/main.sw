@@ -14,7 +14,7 @@ use data_structures::{
     metadata_message::MetadataMessage,
     deposit_message::{DepositType, DepositMessage},
 };
-use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
+use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent, MetadataEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
@@ -87,9 +87,7 @@ impl MessageReceiver for Contract {
 
         match MessageData::parse(msg_idx) {
             MessageData::Deposit(deposit) => _process_deposit(deposit, msg_idx),
-            MessageData::Metadata(_metadata) => {
-                revert(0); // TODO
-            }
+            MessageData::Metadata(metadata) => _process_metadata(metadata),
         };
     }
 }
@@ -326,5 +324,13 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         to: message_data.to,
         from: message_data.from,
         amount: amount,
+    });
+}
+
+#[storage(read, write)]
+fn _process_metadata(metadata: MetadataMessage) {
+
+    log(MetadataEvent {
+        token_address: metadata.token_address,
     });
 }

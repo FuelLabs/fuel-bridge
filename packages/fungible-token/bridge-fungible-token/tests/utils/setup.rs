@@ -5,6 +5,7 @@ use crate::utils::{
         DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
     },
 };
+use ethers::abi::Token;
 use fuel_core_types::{
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
     fuel_types::{Nonce, Word},
@@ -21,7 +22,7 @@ use fuels::{
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM,
+    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
 };
 
 abigen!(
@@ -410,9 +411,9 @@ pub(crate) async fn create_deposit_message(
 
     let deposit_type: u8 = match (deposit_to_contract, &extra_data) {
         (false, Some(_)) => unreachable!(),
-        (false, None) => 0,
-        (true, None) => 1,
-        (true, Some(_)) => 2,
+        (false, None) => DEPOSIT_TO_ADDRESS_FLAG,
+        (true, None) => DEPOSIT_TO_CONTRACT_FLAG,
+        (true, Some(_)) => DEPOSIT_WITH_DATA_FLAG,
     };
 
     message_data.append(&mut vec![deposit_type]);
@@ -441,10 +442,19 @@ pub(crate) async fn create_deposit_message(
 }
 
 pub(crate) async fn create_metadata_message(
-    _token: &str,
+    token: &str,
     config: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> Vec<u8> {
-    let message_data: Vec<u8> = vec![];
+    let mut message_data: Vec<u8> = vec![];
+    message_data.append(&mut vec![METADATA_MESSAGE_FLAG]);
+
+    let items: Vec<Token> = vec![
+        Token::FixedBytes(decode_hex(token)),
+        Token::String(String::from("TKN")),
+        Token::String(String::from("Token")),
+    ];
+    let mut payload = ethers::abi::encode(&items);
+    message_data.append(&mut payload);
 
     let message_data = prefix_contract_id(message_data, config).await;
     message_data

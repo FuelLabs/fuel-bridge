@@ -18,7 +18,7 @@ mod success {
         setup::{
             create_metadata_message, get_asset_id,
             contract_balance, create_recipient_contract, encode_hex, precalculate_deposit_id,
-            wallet_balance, RefundRegisteredEvent,
+            wallet_balance, RefundRegisteredEvent, MetadataEvent
         },
     };
     use fuels::types::U256;
@@ -505,7 +505,7 @@ mod success {
 
         let message = create_metadata_message(BRIDGED_TOKEN, configurables.clone()).await;
 
-        let (_, utxo_inputs) = setup_environment(
+        let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![(DEFAULT_COIN_AMOUNT, AssetId::default())],
             vec![(0, message)],
@@ -524,11 +524,19 @@ mod success {
             utxo_inputs.contract,
         )
         .await;
-
+    
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
-        
-        // For the time being, let's revert on metadata deposits, it is a TODO
-        assert!(matches!(tx_status, TxStatus::Revert { .. }));
+        let receipts = tx_status.clone().take_receipts();
+
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+        let metadata_events = bridge
+            .log_decoder()
+            .decode_logs_with_type::<MetadataEvent>(&receipts)
+            .unwrap();
+
+        assert_eq!(metadata_events.len(), 1);
+        assert_eq!(metadata_events[0].token_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
     }
 
     #[tokio::test]
