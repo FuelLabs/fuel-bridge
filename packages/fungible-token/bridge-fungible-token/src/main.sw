@@ -173,9 +173,9 @@ impl Bridge for Contract {
 
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
-        let sub_id = storage.l1_addresses.get(asset_id).try_read();
-        require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
-        sub_id.unwrap()
+        let l1_address = storage.l1_addresses.get(asset_id).try_read();
+        require(l1_address.is_some(), BridgeFungibleTokenError::AssetNotFound);
+        l1_address.unwrap()
     }
 
     
