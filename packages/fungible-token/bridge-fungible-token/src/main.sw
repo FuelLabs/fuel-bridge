@@ -65,8 +65,8 @@ storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
-    l1_symbols: StorageMap<AssetId, StorageString> = StorageMap {},
-    l1_names: StorageMap<AssetId, StorageString> = StorageMap {},
+    l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
+    l1_names: StorageMap<b256, StorageString> = StorageMap {},
     total_assets: u64 = 0,
 }
 
@@ -173,12 +173,9 @@ impl Bridge for Contract {
 
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
-        let l1_address = storage.l1_addresses.get(asset_id).try_read();
-        require(l1_address.is_some(), BridgeFungibleTokenError::AssetNotFound);
-        l1_address.unwrap()
+        _asset_to_l1_address(asset_id)
     }
 
-    
 }
 
 impl SRC20 for Contract {
@@ -194,12 +191,14 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        storage.l1_names.get(asset).read_slice()
+        let l1_address = storage.l1_addresses.get(asset).read();
+        storage.l1_names.get(l1_address).read_slice()
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
-        storage.l1_symbols.get(asset).read_slice()
+        let l1_address = storage.l1_addresses.get(asset).read();
+        storage.l1_symbols.get(l1_address).read_slice()
     }
 
     #[storage(read)]
@@ -256,6 +255,13 @@ fn _asset_to_token_id(asset_id: AssetId) -> b256 {
     token_id.unwrap()
 }
 
+#[storage(read)]
+fn _asset_to_l1_address(asset_id: AssetId) -> b256 {
+    let l1_address = storage.l1_addresses.get(asset_id).try_read();
+    require(l1_address.is_some(), BridgeFungibleTokenError::AssetNotFound);
+    l1_address.unwrap()
+}
+
 #[storage(read, write)]
 fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     require(
@@ -272,7 +278,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
                 return;
             }
         };
-    let sub_id = sha256((message_data.token_address, message_data.token_id));
+    let sub_id = _generate_sub_id_from_metadata(message_data.token_address, message_data.token_id);
     let asset_id = AssetId::new(contract_id(), sub_id);
 
     let _ = disable_panic_on_overflow();
@@ -338,7 +344,18 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 #[storage(read, write)]
 fn _process_metadata(metadata: MetadataMessage) {
 
+    let sub_id = _generate_sub_id_from_metadata(metadata.token_address, metadata.token_id);
+    let asset_id = AssetId::new(contract_id(), sub_id);
+    let l1_address = _asset_to_l1_address(asset_id);
+
+    storage.l1_names.get(l1_address).write_slice(metadata.name);
+    storage.l1_symbols.get(l1_address).write_slice(metadata.symbol);
+
     log(MetadataEvent {
         token_address: metadata.token_address
     });
+}
+
+fn _generate_sub_id_from_metadata(token_address: b256, token_id: b256) -> b256 {
+    sha256((token_address, token_id))
 }

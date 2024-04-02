@@ -441,18 +441,23 @@ pub(crate) async fn create_deposit_message(
 }
 
 pub(crate) async fn create_metadata_message(
-    token: &str,
+    token_address: &str,
+    token_id: &str,
+    token_name: &str,
+    token_symbol: &str,
     config: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> Vec<u8> {
     let mut message_data: Vec<u8> = vec![];
     message_data.append(&mut vec![METADATA_MESSAGE_FLAG]);
 
     let items: Vec<Token> = vec![
-        Token::FixedBytes(decode_hex(token)),
-        Token::String(String::from("TKN")),
-        Token::String(String::from("Token")),
+        Token::FixedBytes(decode_hex(token_address)),
+        Token::FixedBytes(decode_hex(token_id)),
+        Token::String(String::from(token_name)),
+        Token::String(String::from(token_symbol)),
     ];
     let mut payload = ethers::abi::encode(&items);
+    dbg!(hex::encode(&payload));
     message_data.append(&mut payload);
 
     let message_data = prefix_contract_id(message_data, config).await;

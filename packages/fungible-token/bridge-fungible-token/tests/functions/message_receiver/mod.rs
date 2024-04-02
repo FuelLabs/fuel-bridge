@@ -21,8 +21,9 @@ mod success {
             wallet_balance, RefundRegisteredEvent, MetadataEvent
         },
     };
+    use fuels::tx::Receipt;
     use fuels::types::U256;
-    use fuels::{test_helpers::DEFAULT_COIN_AMOUNT, prelude::AssetId, programs::contract::SettableContract, types::{Bits256, tx_status::TxStatus}};
+    use fuels::{prelude::AssetId, programs::contract::SettableContract, types::{Bits256, tx_status::TxStatus}};
 
     #[tokio::test]
     async fn deposit_to_wallet() {
@@ -489,31 +490,70 @@ mod success {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let message = create_metadata_message(BRIDGED_TOKEN, configurables.clone()).await;
+        let token_id = "0x00000000000000000000000000000000000000";
+        let name = "Token".to_string();
+        let symbol = "TKN".to_string();
+
+        let amount: u64 = u64::MAX;
+        let (deposit_message, coin, _) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(amount),
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let metadata_message = create_metadata_message(
+            BRIDGED_TOKEN, 
+            token_id, 
+            &name,
+            &symbol,
+            configurables.clone()
+        ).await;
 
         let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
-            vec![(DEFAULT_COIN_AMOUNT, AssetId::default())],
-            vec![(0, message)],
+            vec![coin],
+            vec![deposit_message, (0, metadata_message)],
             None,
             None,
             configurables,
         )
         .await;
 
+        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
         let provider = wallet.provider().expect("Needs provider");
 
-        // Relay the test message to the bridge contract
+        // Relay the deposit message
         let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
-            utxo_inputs.contract,
+            utxo_inputs.contract.clone(),
+        )
+        .await;
+        let tx_status = provider.tx_status(&tx_id).await.unwrap();
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+        // Relay the metadata message
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[1].clone(),
+            utxo_inputs.contract.clone(),
         )
         .await;
     
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         let receipts = tx_status.clone().take_receipts();
-
+        dbg!(&receipts);
+        for receipt in receipts.clone() {
+            if let Receipt::LogData {data, ..} = receipt {
+                dbg!(hex::encode(data.unwrap()));
+            }
+        }
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
         let metadata_events = bridge
@@ -523,6 +563,27 @@ mod success {
 
         assert_eq!(metadata_events.len(), 1);
         assert_eq!(metadata_events[0].token_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+
+        let registered_name = bridge
+            .methods()
+            .name(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        assert_eq!(name, registered_name.unwrap());
+
+        let registered_symbol = bridge
+            .methods()
+            .symbol(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        assert_eq!(symbol, registered_symbol.unwrap());
+        
     }
 
     #[tokio::test]
