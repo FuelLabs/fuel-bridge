@@ -28,7 +28,6 @@ mod success {
     async fn deposit_to_wallet() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         
         let amount: u64 = u64::MAX;
 
@@ -38,7 +37,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -93,7 +91,6 @@ mod success {
     async fn deposit_to_wallet_multiple_times() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
 
         let deposit_amount = u64::MAX / 2;
 
@@ -103,7 +100,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -116,7 +112,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -199,7 +194,6 @@ mod success {
     async fn deposit_to_wallet_total_supply_overflow_triggers_refunds() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
 
         let max_deposit_amount = u64::MAX;
 
@@ -209,7 +203,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(max_deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -222,7 +215,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(max_deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -330,7 +322,6 @@ mod success {
         let mut wallet = create_wallet();
         let deposit_contract_id = precalculate_deposit_id().await;
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
 
         let deposit_amount = u64::MAX;
 
@@ -340,7 +331,6 @@ mod success {
             FROM,
             *deposit_contract_id,
             U256::from(deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             true,
             None,
@@ -387,7 +377,6 @@ mod success {
         let mut wallet = create_wallet();
         let deposit_contract_id = precalculate_deposit_id().await;
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let amount = u64::MAX;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -396,7 +385,6 @@ mod success {
             FROM,
             *deposit_contract_id,
             U256::from(amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             true,
             Some(vec![11u8, 42u8, 69u8]),
@@ -445,7 +433,6 @@ mod success {
         let mut wallet = create_wallet();
         let deposit_contract_id = precalculate_deposit_id().await;
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let amount = u64::MAX;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -454,7 +441,6 @@ mod success {
             FROM,
             *deposit_contract_id,
             U256::from(amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             true,
             Some(vec![11u8, 42u8, 69u8]),
@@ -543,7 +529,6 @@ mod success {
     async fn deposit_more_than_u64_max_triggers_refunds() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         
         let deposit_amount: u128 = u64::MAX as u128 + 1;
 
@@ -553,7 +538,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -634,7 +618,6 @@ mod success {
     async fn deposit_different_tokens() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
 
         let token_one = "0x00000000000000000000000000000000000000000000000000000000deadbeef";
         let token_two = "0xdeadbeef00000000000000000000000000000000000000000000000000000000";
@@ -648,7 +631,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(token_one_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -661,7 +643,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(token_two_amount),
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -753,7 +734,6 @@ mod revert {
     async fn verification_fails_with_incorrect_sender() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let bad_sender: &str =
             "0x55555500000000000000000000000000000000000000000000000000005555555";
@@ -764,7 +744,6 @@ mod revert {
             FROM,
             *Address::from_str(TO).unwrap(),
             config.amount.min,
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,

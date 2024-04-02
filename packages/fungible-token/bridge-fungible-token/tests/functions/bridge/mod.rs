@@ -33,7 +33,6 @@ mod success {
         // then claim and verify output message is created as expected
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -42,7 +41,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -175,7 +173,6 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(amount),
-            0.into(),
             configurables.clone(),
             false,
             None,
@@ -299,7 +296,6 @@ mod revert {
 
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
@@ -309,7 +305,6 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.amount.max,
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -362,7 +357,6 @@ mod revert {
         // - Verify that it reverts with an AssetNotFound error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_asset_id: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
@@ -373,7 +367,6 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,
@@ -406,7 +399,6 @@ mod revert {
         // - Verify that trying to withdraw a completely different asset results in a NoRefundAvailable error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let bridged_token_decimals = BRIDGED_TOKEN_DECIMALS;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
@@ -419,7 +411,6 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
-            bridged_token_decimals.try_into().unwrap(),
             configurables.clone(),
             false,
             None,

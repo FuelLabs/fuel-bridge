@@ -65,7 +65,6 @@ storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
-    l1_decimals: StorageMap<AssetId, u8> = StorageMap {},
     l1_symbols: StorageMap<AssetId, StorageString> = StorageMap {},
     l1_names: StorageMap<AssetId, StorageString> = StorageMap {},
     total_assets: u64 = 0,
@@ -308,7 +307,6 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         storage
             .total_assets
             .write(storage.total_assets.try_read().unwrap_or(0) + 1);
-        storage.l1_decimals.insert(asset_id, message_data.decimals);
         storage
             .l1_addresses
             .insert(asset_id, message_data.token_address);
@@ -341,6 +339,6 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 fn _process_metadata(metadata: MetadataMessage) {
 
     log(MetadataEvent {
-        token_address: metadata.token_address,
+        token_address: metadata.token_address
     });
 }

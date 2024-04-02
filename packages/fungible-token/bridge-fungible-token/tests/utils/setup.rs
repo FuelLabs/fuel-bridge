@@ -23,7 +23,7 @@ use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
+    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
 };
 
 abigen!(
@@ -403,7 +403,6 @@ pub(crate) async fn create_deposit_message(
     from: &str,
     to: [u8; 32],
     amount: U256,
-    decimals: u8,
     config: Option<BridgeFungibleTokenContractConfigurables>,
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
@@ -423,7 +422,6 @@ pub(crate) async fn create_deposit_message(
     message_data.append(&mut decode_hex(from));
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
-    message_data.append(&mut vec![decimals]);
 
     let mut deposit_recipient: Option<ContractId> = None;
 
@@ -520,7 +518,6 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
         FROM,
         *wallet.address().hash(),
         U256::from(amount),
-        BRIDGED_TOKEN_DECIMALS.try_into().unwrap(),
         None,
         false,
         None,
