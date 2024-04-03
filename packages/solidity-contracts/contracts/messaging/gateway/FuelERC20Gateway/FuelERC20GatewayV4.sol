@@ -144,16 +144,17 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
-        bytes memory messageData = abi.encodePacked(
+        bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
             MessageType.DEPOSIT,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
             to,
-            l2MintedAmount
+            l2MintedAmount,
+            decimals
         );
-        _deposit(tokenAddress, amount, l2MintedAmount, messageData);
+        _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
     }
 
     /// @notice Deposits the given tokens to a contract on Fuel with optional data
@@ -171,7 +172,7 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
-        bytes memory messageData = abi.encodePacked(
+        bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
             MessageType.DEPOSIT,
             bytes32(uint256(uint160(tokenAddress))),
@@ -179,13 +180,14 @@ contract FuelERC20GatewayV4 is
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount,
+            decimals,
             data
         );
-        _deposit(tokenAddress, amount, l2MintedAmount, messageData);
+        _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
     }
 
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
-        bytes memory messageData = abi.encodePacked(
+        bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
             MessageType.METADATA,
             abi.encode(
@@ -195,7 +197,7 @@ contract FuelERC20GatewayV4 is
                 IERC20MetadataUpgradeable(tokenAddress).name()
             )
         );
-        sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, messageData);
+        sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, metadataMessage);
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
