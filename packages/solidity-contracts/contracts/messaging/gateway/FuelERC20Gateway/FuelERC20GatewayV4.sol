@@ -42,7 +42,9 @@ contract FuelERC20GatewayV4 is
     event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, uint256 amount);
 
     enum MessageType {
-        DEPOSIT,
+        DEPOSIT_TO_ADDRESS,
+        DEPOSIT_TO_CONTRACT,
+        DEPOSIT_WITH_DATA,
         METADATA
     }
 
@@ -146,7 +148,7 @@ contract FuelERC20GatewayV4 is
 
         bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
-            MessageType.DEPOSIT,
+            MessageType.DEPOSIT_TO_ADDRESS,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
@@ -174,7 +176,7 @@ contract FuelERC20GatewayV4 is
 
         bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
-            MessageType.DEPOSIT,
+            data.length == 0 ? MessageType.DEPOSIT_TO_CONTRACT : MessageType.DEPOSIT_WITH_DATA,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
