@@ -426,7 +426,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_deposit_message(
             &l1_token_address,
-            &l1_token_id,
+            l1_token_id,
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
@@ -484,7 +484,7 @@ mod success {
         let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
             .methods()
             .withdraw(to)
-            .call_params(CallParameters::new(deposit_amount - 1, asset_id.clone(), gas))
+            .call_params(CallParameters::new(deposit_amount - 1, asset_id, gas))
             .expect("Call param error")
             .call()
             .await;
@@ -501,7 +501,7 @@ mod success {
         let valid_tx : FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
-            .call_params(CallParameters::new(deposit_amount, asset_id.clone(), gas))
+            .call_params(CallParameters::new(deposit_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
@@ -532,7 +532,7 @@ mod success {
         assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
-        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(l1_token_id).unwrap());
         assert_eq!(amount, U256::from(deposit_amount));
     }
 
@@ -542,13 +542,13 @@ mod success {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let deposit_amount: u64 = 100_000_000_0;
+        let deposit_amount: u64 = 1_000_000_000;
         let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
         let l1_token_id = BRIDGED_TOKEN_ID;
 
         let (message, coin, deposit_contract) = create_deposit_message(
             &l1_token_address,
-            &l1_token_id,
+            l1_token_id,
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
@@ -606,7 +606,7 @@ mod success {
         let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
             .methods()
             .withdraw(to)
-            .call_params(CallParameters::new(deposit_amount - 1, asset_id.clone(), gas))
+            .call_params(CallParameters::new(deposit_amount - 1, asset_id, gas))
             .expect("Call param error")
             .call()
             .await;
@@ -625,7 +625,7 @@ mod success {
         let valid_tx : FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
-            .call_params(CallParameters::new(withdraw_amount, asset_id.clone(), gas))
+            .call_params(CallParameters::new(withdraw_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
@@ -656,7 +656,7 @@ mod success {
         assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
-        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(l1_token_id).unwrap());
         assert_eq!(amount, U256::from(withdraw_amount));
     }
 
@@ -672,7 +672,7 @@ mod success {
 
         let (message, coin, deposit_contract) = create_deposit_message(
             &l1_token_address,
-            &l1_token_id,
+            l1_token_id,
             FROM,
             *wallet.address().hash(),
             U256::from(deposit_amount),
@@ -730,7 +730,7 @@ mod success {
         let valid_tx : FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
-            .call_params(CallParameters::new(deposit_amount, asset_id.clone(), gas))
+            .call_params(CallParameters::new(deposit_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
@@ -761,7 +761,7 @@ mod success {
         assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256(*wallet.address().hash()));
         assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
-        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(l1_token_id).unwrap());
         assert_eq!(amount, U256::from(deposit_amount));
     }
 

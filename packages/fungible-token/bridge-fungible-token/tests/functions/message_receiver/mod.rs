@@ -661,7 +661,7 @@ mod success {
         assert_eq!(utxos.len(), 0);
 
         let supply = total_supply(&bridge, asset_id).await;
-        assert_eq!(supply.is_none(), true);
+        assert!(supply.is_none());
 
         let refund_registered_events = bridge
             .log_decoder()

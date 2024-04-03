@@ -452,8 +452,8 @@ pub(crate) async fn create_metadata_message(
     let mut payload = ethers::abi::encode(&items);
     message_data.append(&mut payload);
 
-    let message_data = prefix_contract_id(message_data, config).await;
-    message_data
+    
+    prefix_contract_id(message_data, config).await
 }
 
 
