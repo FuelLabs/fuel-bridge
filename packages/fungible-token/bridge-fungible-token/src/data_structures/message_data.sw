@@ -1,8 +1,14 @@
 library;
 use ::data_structures::{
-    constants::{OFFSET_MESSAGE_TYPE, DEPOSIT, CONTRACT_DEPOSIT, CONTRACT_DEPOSIT_WITH_DATA, METADATA},
-    deposit_message::DepositMessage, 
-    metadata_message::MetadataMessage
+    constants::{
+        CONTRACT_DEPOSIT,
+        CONTRACT_DEPOSIT_WITH_DATA,
+        DEPOSIT,
+        METADATA,
+        OFFSET_MESSAGE_TYPE,
+    },
+    deposit_message::DepositMessage,
+    metadata_message::MetadataMessage,
 };
 use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_length}};
 

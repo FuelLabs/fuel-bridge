@@ -9,12 +9,19 @@ mod utils;
 use contract_message_receiver::MessageReceiver;
 use errors::BridgeFungibleTokenError;
 use data_structures::{
-    constants::{DEPOSIT, CONTRACT_DEPOSIT, CONTRACT_DEPOSIT_WITH_DATA},
+    constants::{
+        CONTRACT_DEPOSIT,
+        CONTRACT_DEPOSIT_WITH_DATA,
+        DEPOSIT,
+    },
+    deposit_message::{
+        DepositMessage,
+        DepositType,
+    },
     message_data::MessageData,
     metadata_message::MetadataMessage,
-    deposit_message::{DepositType, DepositMessage},
 };
-use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent, MetadataEvent};
+use events::{ClaimRefundEvent, DepositEvent, MetadataEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 use reentrancy::reentrancy_guard;
 use std::{
@@ -137,8 +144,9 @@ impl Bridge for Contract {
         // This prevents loss due to precision when downscaling decimals in L1
         if l1_decimals < l2_decimals {
             require(
-                amount % (10u64 ** (l2_decimals - l1_decimals).as_u32()) == 0, 
-                BridgeFungibleTokenError::InvalidAmount
+                amount % (10u64 ** (l2_decimals - l1_decimals)
+                        .as_u32()) == 0,
+                BridgeFungibleTokenError::InvalidAmount,
             );
         }
 
@@ -157,12 +165,7 @@ impl Bridge for Contract {
         let sender = msg_sender().unwrap();
         send_message(
             BRIDGED_TOKEN_GATEWAY,
-            encode_data(
-                to,
-                amount.as_u256().as_b256(),
-                l1_address,
-                token_id,
-            ),
+            encode_data(to, amount.as_u256().as_b256(), l1_address, token_id),
             0,
         );
         log(WithdrawalEvent {
@@ -186,12 +189,11 @@ impl Bridge for Contract {
         _asset_to_l1_address(asset_id)
     }
 
-    #[storage(read)]    
+    #[storage(read)]
     fn asset_to_l1_decimals(asset_id: AssetId) -> u8 {
         let l1_address = _asset_to_l1_address(asset_id);
         storage.l1_decimals.get(l1_address).read()
     }
-
 }
 
 impl SRC20 for Contract {
@@ -274,7 +276,11 @@ fn _asset_to_token_id(asset_id: AssetId) -> b256 {
 #[storage(read)]
 fn _asset_to_l1_address(asset_id: AssetId) -> b256 {
     let l1_address = storage.l1_addresses.get(asset_id).try_read();
-    require(l1_address.is_some(), BridgeFungibleTokenError::AssetNotFound);
+    require(
+        l1_address
+            .is_some(),
+        BridgeFungibleTokenError::AssetNotFound,
+    );
     l1_address.unwrap()
 }
 
@@ -286,19 +292,27 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         BridgeFungibleTokenError::NoCoinsSent,
     );
 
-    let amount: u64 = 
-        match <u64 as TryFrom<u256>>::try_from(message_data.amount.as_u256()) {
-            Some(value) => value,
-            None => {
-                register_refund(message_data.from, message_data.token_address, message_data.token_id, message_data.amount);
-                return;
-            }
-        };
+    let amount: u64 = match <u64 as TryFrom<u256>>::try_from(message_data.amount.as_u256()) {
+        Some(value) => value,
+        None => {
+            register_refund(
+                message_data
+                    .from,
+                message_data
+                    .token_address,
+                message_data
+                    .token_id,
+                message_data
+                    .amount,
+            );
+            return;
+        }
+    };
     let sub_id = _generate_sub_id_from_metadata(message_data.token_address, message_data.token_id);
     let asset_id = AssetId::new(contract_id(), sub_id);
 
     let _ = disable_panic_on_overflow();
-    
+
     let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
     let new_total_supply = current_total_supply + amount;
 
@@ -319,13 +333,14 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     let _ = enable_panic_on_overflow();
 
     storage.tokens_minted.insert(asset_id, new_total_supply);
-    
 
     // Store asset metadata if it is the first time that funds are bridged
     if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
     {
         storage.asset_to_sub_id.insert(asset_id, sub_id);
-        storage.asset_to_token_id.insert(asset_id, message_data.token_id);
+        storage
+            .asset_to_token_id
+            .insert(asset_id, message_data.token_id);
         storage
             .total_assets
             .write(storage.total_assets.try_read().unwrap_or(0) + 1);
@@ -362,7 +377,6 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 
 #[storage(read, write)]
 fn _process_metadata(metadata: MetadataMessage) {
-
     let sub_id = _generate_sub_id_from_metadata(metadata.token_address, metadata.token_id);
     let asset_id = AssetId::new(contract_id(), sub_id);
 
@@ -371,10 +385,13 @@ fn _process_metadata(metadata: MetadataMessage) {
     let l1_address = _asset_to_l1_address(asset_id);
 
     storage.l1_names.get(l1_address).write_slice(metadata.name);
-    storage.l1_symbols.get(l1_address).write_slice(metadata.symbol);
+    storage
+        .l1_symbols
+        .get(l1_address)
+        .write_slice(metadata.symbol);
 
     log(MetadataEvent {
-        token_address: metadata.token_address
+        token_address: metadata.token_address,
     });
 }
 
