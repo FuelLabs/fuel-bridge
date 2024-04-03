@@ -17,7 +17,7 @@ use fuels::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    }, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, tx::Receipt, types::{input::Input, message::Message, Bits256, U256}
+    }, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
@@ -529,10 +529,18 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
+    let metadata_message = create_metadata_message(
+        BRIDGED_TOKEN, 
+        BRIDGED_TOKEN_ID, 
+        "Token",
+        "TKN",
+        None
+    ).await;
+
     let (contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
-        vec![message],
+        vec![message, (0,metadata_message)],
         deposit_contract,
         None,
         None,
@@ -542,18 +550,23 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     let tx_id = relay_message_to_contract(
         &wallet,
         utxo_inputs.message[0].clone(),
-        utxo_inputs.contract,
+        utxo_inputs.contract.clone(),
+    )
+    .await;
+    let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+    assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+    let tx_id = relay_message_to_contract(
+        &wallet,
+        utxo_inputs.message[1].clone(),
+        utxo_inputs.contract.clone(),
     )
     .await;
 
-    let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap().take_receipts();
-    assert!(receipts.len() > 0);
+    let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+    assert!(matches!(tx_status, TxStatus::Success { .. }));
+    
 
-    for receipt in receipts {
-        if let Receipt::Revert { .. } = receipt {
-            unreachable!("Transaction should not have reverted");
-        }
-    }
 
     contract
 }

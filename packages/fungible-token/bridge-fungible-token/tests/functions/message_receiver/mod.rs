@@ -489,8 +489,7 @@ mod success {
     async fn register_metadata() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-
-        let token_id = "0x00000000000000000000000000000000000000";
+        
         let name = "Token".to_string();
         let symbol = "TKN".to_string();
 
@@ -509,7 +508,7 @@ mod success {
 
         let metadata_message = create_metadata_message(
             BRIDGED_TOKEN, 
-            token_id, 
+            BRIDGED_TOKEN_ID, 
             &name,
             &symbol,
             configurables.clone()

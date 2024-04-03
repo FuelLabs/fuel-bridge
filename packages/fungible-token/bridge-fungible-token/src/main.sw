@@ -191,13 +191,13 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
-        let l1_address = storage.l1_addresses.get(asset).read();
+        let l1_address = _asset_to_l1_address(asset);
         storage.l1_names.get(l1_address).read_slice()
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
-        let l1_address = storage.l1_addresses.get(asset).read();
+        let l1_address = _asset_to_l1_address(asset);
         storage.l1_symbols.get(l1_address).read_slice()
     }
 
@@ -346,6 +346,9 @@ fn _process_metadata(metadata: MetadataMessage) {
 
     let sub_id = _generate_sub_id_from_metadata(metadata.token_address, metadata.token_id);
     let asset_id = AssetId::new(contract_id(), sub_id);
+
+    // Important to note: in order to register metadata for an asset, 
+    // it must have been deposited first
     let l1_address = _asset_to_l1_address(asset_id);
 
     storage.l1_names.get(l1_address).write_slice(metadata.name);

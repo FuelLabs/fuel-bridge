@@ -26,7 +26,6 @@ mod success {
     }
 
     #[tokio::test]
-    #[ignore] // Ignore while we work on the METADATA flows
     async fn check_name() {
         let contract = setup_test().await;
         let asset_id = get_asset_id(contract.contract_id(), BRIDGED_TOKEN);
@@ -35,19 +34,18 @@ mod success {
 
         assert_eq!(
             response,
-            String::from("MY_TOKEN                                                        ")
+            String::from("Token")
         );
     }
 
     #[tokio::test]
-    #[ignore] // Ignore while we work on the METADATA flows
     async fn check_symbol() {
         let contract = setup_test().await;
         let asset_id = get_asset_id(contract.contract_id(), BRIDGED_TOKEN);
 
         let response = symbol(&contract, asset_id).await.unwrap();
 
-        assert_eq!(response, String::from("MYTKN                           "));
+        assert_eq!(response, String::from("TKN"));
     }
 
     #[tokio::test]
