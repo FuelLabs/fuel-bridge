@@ -124,11 +124,23 @@ impl Bridge for Contract {
     #[payable]
     #[storage(read, write)]
     fn withdraw(to: b256) {
-        let amount = msg_amount();
+        let amount: u64 = msg_amount();
+        require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
+
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
         let token_id = _asset_to_token_id(asset_id);
-        require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
+        let l1_address = _asset_to_l1_address(asset_id);
+        let l1_decimals = storage.l1_decimals.get(l1_address).read();
+        let l2_decimals = DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS);
+
+        // This prevents loss due to precision when downscaling decimals in L1
+        if l1_decimals < l2_decimals {
+            require(
+                amount % (10u64 ** (l2_decimals - l1_decimals).as_u32()) == 0, 
+                BridgeFungibleTokenError::InvalidAmount
+            );
+        }
 
         storage
             .tokens_minted
@@ -148,10 +160,7 @@ impl Bridge for Contract {
             encode_data(
                 to,
                 amount.as_u256().as_b256(),
-                storage
-                    .l1_addresses
-                    .get(asset_id)
-                    .read(),
+                l1_address,
                 token_id,
             ),
             0,
@@ -178,9 +187,9 @@ impl Bridge for Contract {
     }
 
     #[storage(read)]    
-    fn asset_to_l1_decimals(asset_id: AssetId) -> Option<u8> {
+    fn asset_to_l1_decimals(asset_id: AssetId) -> u8 {
         let l1_address = _asset_to_l1_address(asset_id);
-        storage.l1_decimals.get(l1_address).try_read()
+        storage.l1_decimals.get(l1_address).read()
     }
 
 }

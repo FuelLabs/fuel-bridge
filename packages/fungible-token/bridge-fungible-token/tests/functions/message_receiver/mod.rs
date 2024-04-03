@@ -548,9 +548,8 @@ mod success {
         let l1_address: Bits256 = bridge.methods().asset_to_l1_address(asset_id).call().await.unwrap().value;
         assert_eq!(l1_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
 
-        let l1_decimals: Option<u8> = bridge.methods().asset_to_l1_decimals(asset_id).call().await.unwrap().value;
-        assert!(l1_decimals.is_some());
-        assert_eq!(l1_decimals.unwrap() as u64, BRIDGED_TOKEN_DECIMALS);
+        let l1_decimals: u8 = bridge.methods().asset_to_l1_decimals(asset_id).call().await.unwrap().value;
+        assert_eq!(l1_decimals as u64, BRIDGED_TOKEN_DECIMALS);
 
 
         // Relay the metadata message

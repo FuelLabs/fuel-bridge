@@ -490,7 +490,6 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
 }
 
 pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
-    
     let data: Vec<u8> = Bits256::from_hex_str(token)
         .unwrap().0
         .iter()

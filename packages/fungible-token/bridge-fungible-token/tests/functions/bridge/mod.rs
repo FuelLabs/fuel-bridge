@@ -24,23 +24,26 @@ mod success {
         },
         setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
+    use fuels::{prelude::Address, programs::{call_response::FuelCallResponse, contract::{CallParameters, SettableContract}}, tx::Receipt, types::U256};
+    use primitive_types::H160;
     use std::str::FromStr;
 
     #[tokio::test]
-    async fn claims_refund() {
+    async fn claims_refund_amount_overflow() {
         // perform a failing deposit first to register a refund & verify it,
         // then claim and verify output message is created as expected
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+
+        let deposit_amount = U256::from(u64::MAX) + U256::from(1u64);
+        let token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
 
         let (message, coin, deposit_contract) = create_deposit_message(
-            BRIDGED_TOKEN,
+            &token_address,
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.overflow.two,
+            deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
@@ -83,7 +86,7 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), &token_address)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -94,11 +97,11 @@ mod success {
         // Check logs
         assert_eq!(
             refund_registered_event[0].amount,
-            Bits256(encode_hex(config.overflow.two))
+            Bits256(encode_hex(deposit_amount))
         );
         assert_eq!(
             refund_registered_event[0].token_address,
-            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+            Bits256::from_hex_str(&token_address).unwrap()
         );
         assert_eq!(
             refund_registered_event[0].from,
@@ -108,7 +111,7 @@ mod success {
         let response = claim_refund(
             &bridge,
             Bits256::from_hex_str(FROM).unwrap(),
-            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap(),
+            Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
         )
         .await;
@@ -125,11 +128,11 @@ mod success {
             .decode_logs_with_type::<ClaimRefundEvent>(&response.receipts)
             .unwrap();
 
-        assert_eq!(claim_event[0].amount, config.overflow.two);
+        assert_eq!(claim_event[0].amount, deposit_amount);
         assert_eq!(claim_event[0].from, Bits256::from_hex_str(FROM).unwrap());
         assert_eq!(
             claim_event[0].token_address,
-            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+            Bits256::from_hex_str(&token_address).unwrap()
         );
         assert_eq!(
             claim_event[0].token_id,
@@ -153,15 +156,159 @@ mod success {
 
         assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
         assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
-        assert_eq!(token, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(token, Bits256::from_hex_str(&token_address).unwrap());
         assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
 
         // Compare the value output in the message with the original value sent
-        assert_eq!(amount, config.overflow.two);
+        assert_eq!(amount, deposit_amount);
     }
 
     #[tokio::test]
-    async fn withdraw_from_bridge() {
+    async fn claims_refund_supply_overflow() {
+        // perform a failing deposit first to register a refund & verify it,
+        // then claim and verify output message is created as expected
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let deposit_amount = U256::from(1);
+
+        let (topping_message, coin, deposit_contract) = create_deposit_message(
+            &token_address,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(u64::MAX),
+            BRIDGED_TOKEN_DECIMALS,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (refundable_message, _, _,) = create_deposit_message(
+            &token_address,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            deposit_amount,
+            BRIDGED_TOKEN_DECIMALS,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![topping_message, refundable_message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract.clone(),
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[1].clone(),
+            utxo_inputs.contract.clone(),
+        )
+        .await;
+
+        let receipts = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status")
+            .take_receipts();
+
+        let refund_registered_event = bridge
+            .log_decoder()
+            .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
+            .unwrap();
+
+        // Check logs
+        assert_eq!(
+            refund_registered_event[0].amount,
+            Bits256(encode_hex(deposit_amount))
+        );
+        assert_eq!(
+            refund_registered_event[0].token_address,
+            Bits256::from_hex_str(&token_address).unwrap()
+        );
+        assert_eq!(
+            refund_registered_event[0].from,
+            Bits256::from_hex_str(FROM).unwrap()
+        );
+
+        let response = claim_refund(
+            &bridge,
+            Bits256::from_hex_str(FROM).unwrap(),
+            Bits256::from_hex_str(&token_address).unwrap(),
+            Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
+        )
+        .await;
+
+        // Verify correct message was sent
+        let message_receipt = response
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
+
+        let claim_event = bridge
+            .log_decoder()
+            .decode_logs_with_type::<ClaimRefundEvent>(&response.receipts)
+            .unwrap();
+
+        assert_eq!(claim_event[0].amount, deposit_amount);
+        assert_eq!(claim_event[0].from, Bits256::from_hex_str(FROM).unwrap());
+        assert_eq!(
+            claim_event[0].token_address,
+            Bits256::from_hex_str(&token_address).unwrap()
+        );
+        assert_eq!(
+            claim_event[0].token_id,
+            Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap()
+        );
+
+        assert_eq!(
+            *bridge.contract_id().hash(),
+            **message_receipt.sender().unwrap()
+        );
+        assert_eq!(
+            &Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap(),
+            message_receipt.recipient().unwrap()
+        );
+        assert_eq!(message_receipt.amount().unwrap(), 0);
+        assert_eq!(message_receipt.len().unwrap(), 132);
+
+        // message data
+        let (selector, to, token, amount, token_id) =
+            parse_output_message_data(message_receipt.data().unwrap());
+
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
+        assert_eq!(to, Bits256::from_hex_str(FROM).unwrap());
+        assert_eq!(token, Bits256::from_hex_str(&token_address).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap());
+
+        // Compare the value output in the message with the original value sent
+        assert_eq!(amount, deposit_amount);
+    }
+
+    #[tokio::test]
+    async fn withdraw_from_bridge_18_decimals() {
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
@@ -268,46 +415,22 @@ mod success {
     }
 
     #[tokio::test]
-    async fn check_bridged_token_gateway() {
-        let contract = create_token().await;
-
-        let response = bridged_token_gateway(&contract).await;
-
-        assert_eq!(
-            response,
-            Bits256(*Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
-        )
-    }
-}
-
-mod revert {
-    use std::str::FromStr;
-
-    use super::*;
-    use crate::utils::setup::get_asset_id;
-    use fuels::types::U256;
-
-    #[tokio::test]
-    #[should_panic(expected = "Revert(0)")]
-    async fn withdraw_fails_with_too_small_value() {
-        // In cases where BRIDGED_TOKEN_DECIMALS == PROXY_TOKEN_DECIMALS or
-        // BRIDGED_TOKEN_DECIMALS > PROXY_TOKEN_DECIMALS,
-        // this test won't fail because it will attempt to withdraw only 1 coin.
-        if BRIDGED_TOKEN_DECIMALS >= PROXY_TOKEN_DECIMALS {
-            panic!("Revert(0)");
-        }
-
+    async fn withdraw_from_bridge_6_decimals() {
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let amount = u64::MAX;
+
+        let deposit_amount: u64 = 1_000_000_000;
+        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_id = BRIDGED_TOKEN_ID;
+
         let (message, coin, deposit_contract) = create_deposit_message(
-            BRIDGED_TOKEN,
-            BRIDGED_TOKEN_ID,
+            &l1_token_address,
+            &l1_token_id,
             FROM,
             *wallet.address().hash(),
-            U256::from(amount),
-            BRIDGED_TOKEN_DECIMALS,
+            U256::from(deposit_amount),
+            6,
             configurables.clone(),
             false,
             None,
@@ -324,34 +447,341 @@ mod revert {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         // Relay the test message to the bridge contract
-        let _tx_id = relay_message_to_contract(
+        let tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract,
         )
         .await;
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
 
-        // Verify the message value was received by the bridge contract
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
+        match tx_status.clone() {
+            fuels::types::tx_status::TxStatus::Success { .. } => {
+                // Do nothing
+            }
+            _ => {
+                panic!("Transaction did not succeed")
+            }
+        }
+
+        let asset_id = get_asset_id(bridge.contract_id(), &l1_token_address);
+        let balance = wallet_balance(&wallet, &asset_id).await;
 
         // Check that wallet now has bridged coins
-        assert_eq!(balance, amount);
+        assert_eq!(balance, deposit_amount);
 
         // Now try to withdraw
-        let withdrawal_amount = 999999999;
-        let gas = 0;
+        let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        // The following withdraw should fail since it doesn't meet the minimum withdraw (underflow error)
-        withdraw(&bridge, to, withdrawal_amount, gas).await;
+        let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
+            .methods()
+            .withdraw(to)
+            .call_params(CallParameters::new(deposit_amount - 1, asset_id.clone(), gas))
+            .expect("Call param error")
+            .call()
+            .await;
+
+        assert!(invalid_tx.is_err());
+        match invalid_tx.unwrap_err() {
+            fuels::types::errors::Error::RevertTransactionError { reason, .. } => {
+                let expected_reason = String::from("InvalidAmount");
+                assert_eq!(reason, expected_reason);
+            },
+            _ => panic!("Wrong error type"),
+        }
+
+        let valid_tx : FuelCallResponse<()> = bridge
+            .methods()
+            .withdraw(to)
+            .call_params(CallParameters::new(deposit_amount, asset_id.clone(), gas))
+            .expect("Call param error")
+            .call()
+            .await
+            .unwrap(); 
+    
+
+        let message_receipt = valid_tx
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
+
+        let (selector, to, token, amount, token_id) =
+            parse_output_message_data(message_receipt.data().unwrap());
+
+        assert_eq!(
+            *bridge.contract_id().hash(),
+            **message_receipt.sender().unwrap()
+        );
+        assert_eq!(
+            &Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap(),
+            message_receipt.recipient().unwrap()
+        );
+        assert_eq!(message_receipt.amount().unwrap(), 0);
+        assert_eq!(message_receipt.len().unwrap(), 132);
+
+        // message data
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
+        assert_eq!(to, Bits256(*wallet.address().hash()));
+        assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(amount, U256::from(deposit_amount));
     }
+
+    #[tokio::test]
+    async fn withdraw_from_bridge_8_decimals() {
+        // perform successful deposit first, verify it, then withdraw and verify balances
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let deposit_amount: u64 = 100_000_000_0;
+        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_id = BRIDGED_TOKEN_ID;
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            &l1_token_address,
+            &l1_token_id,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(deposit_amount),
+            8,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
+
+        match tx_status.clone() {
+            fuels::types::tx_status::TxStatus::Success { .. } => {
+                // Do nothing
+            }
+            _ => {
+                panic!("Transaction did not succeed")
+            }
+        }
+
+        let asset_id = get_asset_id(bridge.contract_id(), &l1_token_address);
+        let balance = wallet_balance(&wallet, &asset_id).await;
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, deposit_amount);
+
+        // Now try to withdraw
+        let gas = 200_000;
+        let to = Bits256(*wallet.address().hash());
+
+        let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
+            .methods()
+            .withdraw(to)
+            .call_params(CallParameters::new(deposit_amount - 1, asset_id.clone(), gas))
+            .expect("Call param error")
+            .call()
+            .await;
+
+        assert!(invalid_tx.is_err());
+        match invalid_tx.unwrap_err() {
+            fuels::types::errors::Error::RevertTransactionError { reason, .. } => {
+                let expected_reason = String::from("InvalidAmount");
+                assert_eq!(reason, expected_reason);
+            },
+            _ => panic!("Wrong error type"),
+        }
+
+        let withdraw_amount = deposit_amount / 10;
+
+        let valid_tx : FuelCallResponse<()> = bridge
+            .methods()
+            .withdraw(to)
+            .call_params(CallParameters::new(withdraw_amount, asset_id.clone(), gas))
+            .expect("Call param error")
+            .call()
+            .await
+            .unwrap(); 
+    
+
+        let message_receipt = valid_tx
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
+
+        let (selector, to, token, amount, token_id) =
+            parse_output_message_data(message_receipt.data().unwrap());
+
+        assert_eq!(
+            *bridge.contract_id().hash(),
+            **message_receipt.sender().unwrap()
+        );
+        assert_eq!(
+            &Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap(),
+            message_receipt.recipient().unwrap()
+        );
+        assert_eq!(message_receipt.amount().unwrap(), 0);
+        assert_eq!(message_receipt.len().unwrap(), 132);
+
+        // message data
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
+        assert_eq!(to, Bits256(*wallet.address().hash()));
+        assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(amount, U256::from(withdraw_amount));
+    }
+
+    #[tokio::test]
+    async fn withdraw_from_bridge_9_decimals() {
+        // perform successful deposit first, verify it, then withdraw and verify balances
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let deposit_amount: u64 = 1_000_000_000;
+        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_id = BRIDGED_TOKEN_ID;
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            &l1_token_address,
+            &l1_token_id,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(deposit_amount),
+            9,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
+
+        match tx_status.clone() {
+            fuels::types::tx_status::TxStatus::Success { .. } => {
+                // Do nothing
+            }
+            _ => {
+                panic!("Transaction did not succeed")
+            }
+        }
+
+        let asset_id = get_asset_id(bridge.contract_id(), &l1_token_address);
+        let balance = wallet_balance(&wallet, &asset_id).await;
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, deposit_amount);
+
+        // Now try to withdraw
+        let gas = 200_000;
+        let to = Bits256(*wallet.address().hash());
+
+        let valid_tx : FuelCallResponse<()> = bridge
+            .methods()
+            .withdraw(to)
+            .call_params(CallParameters::new(deposit_amount, asset_id.clone(), gas))
+            .expect("Call param error")
+            .call()
+            .await
+            .unwrap(); 
+    
+
+        let message_receipt = valid_tx
+            .receipts
+            .iter()
+            .find(|&r| matches!(r, Receipt::MessageOut { .. }))
+            .unwrap();
+
+        let (selector, to, token, amount, token_id) =
+            parse_output_message_data(message_receipt.data().unwrap());
+
+        assert_eq!(
+            *bridge.contract_id().hash(),
+            **message_receipt.sender().unwrap()
+        );
+        assert_eq!(
+            &Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap(),
+            message_receipt.recipient().unwrap()
+        );
+        assert_eq!(message_receipt.amount().unwrap(), 0);
+        assert_eq!(message_receipt.len().unwrap(), 132);
+
+        // message data
+        assert_eq!(selector, decode_hex("0x64a7fad9").to_vec());
+        assert_eq!(to, Bits256(*wallet.address().hash()));
+        assert_eq!(token, Bits256::from_hex_str(&l1_token_address).unwrap());
+        assert_eq!(token_id, Bits256::from_hex_str(&l1_token_id).unwrap());
+        assert_eq!(amount, U256::from(deposit_amount));
+    }
+
+    #[tokio::test]
+    async fn check_bridged_token_gateway() {
+        let contract = create_token().await;
+
+        let response = bridged_token_gateway(&contract).await;
+
+        assert_eq!(
+            response,
+            Bits256(*Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
+        )
+    }
+}
+
+mod revert {
+    use std::str::FromStr;
+
+    use super::*;
 
     #[tokio::test]
     #[should_panic(expected = "AssetNotFound")]
