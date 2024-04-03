@@ -1,4 +1,7 @@
-use crate::utils::{constants::BRIDGED_TOKEN, setup::{get_asset_id, BridgeFungibleTokenContract}};
+use crate::utils::{
+    constants::BRIDGED_TOKEN,
+    setup::{get_asset_id, BridgeFungibleTokenContract},
+};
 use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{CallParameters, TxPolicies},

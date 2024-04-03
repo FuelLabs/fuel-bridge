@@ -1,7 +1,9 @@
 use crate::utils::{
     builder,
     constants::{
-        BRIDGED_TOKEN_DECIMALS, BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY, DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS
+        BRIDGED_TOKEN_DECIMALS, BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
+        CONTRACT_MESSAGE_PREDICATE_BINARY, DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT,
+        MESSAGE_SENDER_ADDRESS,
     },
 };
 use ethers::abi::Token;
@@ -12,17 +14,21 @@ use fuel_core_types::{
 };
 
 use fuels::{
-    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount}, prelude::{
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
+    prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    }, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
+    },
+    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
+    types::{input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
+    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG,
+    DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
 };
 
 abigen!(
@@ -429,7 +435,7 @@ pub(crate) async fn create_deposit_message(
     let message_data = prefix_contract_id(message_data, config).await;
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-    
+
     (message, coin, deposit_recipient)
 }
 
@@ -452,10 +458,8 @@ pub(crate) async fn create_metadata_message(
     let mut payload = ethers::abi::encode(&items);
     message_data.append(&mut payload);
 
-    
     prefix_contract_id(message_data, config).await
 }
-
 
 pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
     let selector = &data[0..4];
@@ -491,14 +495,15 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
 
 pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
     let data: Vec<u8> = Bits256::from_hex_str(token)
-        .unwrap().0
+        .unwrap()
+        .0
         .iter()
         .chain(Bits256::zeroed().0.iter())
         .cloned()
         .collect();
 
     let sub_id = sha2::Sha256::digest(data);
-    
+
     contract_id.asset_id(&Bits256::from_hex_str(&hex::encode(sub_id)).unwrap())
 }
 
@@ -521,18 +526,13 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
-    let metadata_message = create_metadata_message(
-        BRIDGED_TOKEN, 
-        BRIDGED_TOKEN_ID, 
-        "Token",
-        "TKN",
-        None
-    ).await;
+    let metadata_message =
+        create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", None).await;
 
     let (contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
-        vec![message, (0,metadata_message)],
+        vec![message, (0, metadata_message)],
         deposit_contract,
         None,
         None,
@@ -557,8 +557,6 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
 
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
     assert!(matches!(tx_status, TxStatus::Success { .. }));
-    
-
 
     contract
 }

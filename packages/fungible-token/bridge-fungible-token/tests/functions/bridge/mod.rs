@@ -5,9 +5,9 @@ use crate::utils::{
     },
     interface::bridge::withdraw,
     setup::{
-        contract_balance, create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
-        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
-        BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        contract_balance, create_deposit_message, create_token, create_wallet, decode_hex,
+        encode_hex, parse_output_message_data, relay_message_to_contract, setup_environment,
+        wallet_balance, BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
 use fuels::{prelude::AssetId, types::Bits256};
@@ -24,7 +24,15 @@ mod success {
         },
         setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::{call_response::FuelCallResponse, contract::{CallParameters, SettableContract}}, tx::Receipt, types::U256};
+    use fuels::{
+        prelude::Address,
+        programs::{
+            call_response::FuelCallResponse,
+            contract::{CallParameters, SettableContract},
+        },
+        tx::Receipt,
+        types::U256,
+    };
     use primitive_types::H160;
     use std::str::FromStr;
 
@@ -36,7 +44,10 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let deposit_amount = U256::from(u64::MAX) + U256::from(1u64);
-        let token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let token_address = format!(
+            "0x{}",
+            hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
+        );
 
         let (message, coin, deposit_contract) = create_deposit_message(
             &token_address,
@@ -86,7 +97,8 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), &token_address)).await;
+        let balance =
+            wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), &token_address)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -170,7 +182,10 @@ mod success {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let token_address = format!(
+            "0x{}",
+            hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
+        );
         let deposit_amount = U256::from(1);
 
         let (topping_message, coin, deposit_contract) = create_deposit_message(
@@ -186,7 +201,7 @@ mod success {
         )
         .await;
 
-        let (refundable_message, _, _,) = create_deposit_message(
+        let (refundable_message, _, _) = create_deposit_message(
             &token_address,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -366,7 +381,8 @@ mod success {
 
         let asset_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let balance = wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
+        let balance =
+            wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
 
         // Verify the message value was received by the bridge contract
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
@@ -421,7 +437,10 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let deposit_amount: u64 = 1_000_000_000;
-        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_address = format!(
+            "0x{}",
+            hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
+        );
         let l1_token_id = BRIDGED_TOKEN_ID;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -481,7 +500,7 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
+        let invalid_tx: Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
             .methods()
             .withdraw(to)
             .call_params(CallParameters::new(deposit_amount - 1, asset_id, gas))
@@ -494,19 +513,18 @@ mod success {
             fuels::types::errors::Error::RevertTransactionError { reason, .. } => {
                 let expected_reason = String::from("InvalidAmount");
                 assert_eq!(reason, expected_reason);
-            },
+            }
             _ => panic!("Wrong error type"),
         }
 
-        let valid_tx : FuelCallResponse<()> = bridge
+        let valid_tx: FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
             .call_params(CallParameters::new(deposit_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
-            .unwrap(); 
-    
+            .unwrap();
 
         let message_receipt = valid_tx
             .receipts
@@ -543,7 +561,10 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let deposit_amount: u64 = 1_000_000_000;
-        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_address = format!(
+            "0x{}",
+            hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
+        );
         let l1_token_id = BRIDGED_TOKEN_ID;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -603,7 +624,7 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let invalid_tx : Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
+        let invalid_tx: Result<FuelCallResponse<()>, fuels::prelude::Error> = bridge
             .methods()
             .withdraw(to)
             .call_params(CallParameters::new(deposit_amount - 1, asset_id, gas))
@@ -616,21 +637,20 @@ mod success {
             fuels::types::errors::Error::RevertTransactionError { reason, .. } => {
                 let expected_reason = String::from("InvalidAmount");
                 assert_eq!(reason, expected_reason);
-            },
+            }
             _ => panic!("Wrong error type"),
         }
 
         let withdraw_amount = deposit_amount / 10;
 
-        let valid_tx : FuelCallResponse<()> = bridge
+        let valid_tx: FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
             .call_params(CallParameters::new(withdraw_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
-            .unwrap(); 
-    
+            .unwrap();
 
         let message_receipt = valid_tx
             .receipts
@@ -667,7 +687,10 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let deposit_amount: u64 = 1_000_000_000;
-        let l1_token_address = format!("0x{}", hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat()));
+        let l1_token_address = format!(
+            "0x{}",
+            hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
+        );
         let l1_token_id = BRIDGED_TOKEN_ID;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -727,15 +750,14 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let valid_tx : FuelCallResponse<()> = bridge
+        let valid_tx: FuelCallResponse<()> = bridge
             .methods()
             .withdraw(to)
             .call_params(CallParameters::new(deposit_amount, asset_id, gas))
             .expect("Call param error")
             .call()
             .await
-            .unwrap(); 
-    
+            .unwrap();
 
         let message_receipt = valid_tx
             .receipts

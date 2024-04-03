@@ -16,19 +16,23 @@ mod success {
     use crate::utils::{
         constants::MESSAGE_AMOUNT,
         setup::{
-            create_metadata_message, get_asset_id,
-            contract_balance, create_recipient_contract, encode_hex, precalculate_deposit_id,
-            wallet_balance, RefundRegisteredEvent, MetadataEvent
+            contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
+            get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
+            RefundRegisteredEvent,
         },
     };
     use fuels::types::U256;
-    use fuels::{prelude::AssetId, programs::contract::SettableContract, types::{Bits256, tx_status::TxStatus}};
+    use fuels::{
+        prelude::AssetId,
+        programs::contract::SettableContract,
+        types::{tx_status::TxStatus, Bits256},
+    };
 
     #[tokio::test]
     async fn deposit_to_wallet() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        
+
         let amount: u64 = u64::MAX;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -84,10 +88,12 @@ mod success {
             .unwrap()
             .value;
 
-        assert_eq!(registered_l1_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(
+            registered_l1_address,
+            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+        );
     }
 
- 
     #[tokio::test]
     async fn deposit_to_wallet_multiple_times() {
         let mut wallet = create_wallet();
@@ -190,7 +196,10 @@ mod success {
             .unwrap()
             .value;
 
-        assert_eq!(registered_l1_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(
+            registered_l1_address,
+            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+        );
     }
 
     #[tokio::test]
@@ -367,15 +376,9 @@ mod success {
         .await;
 
         // Get the balance for the deposit contract after
-        let balance =
-            contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
+        let balance = contract_balance(provider, deposit_contract.contract_id(), asset_id).await;
 
-        
-
-        assert_eq!(
-            balance,
-            deposit_amount
-        );
+        assert_eq!(balance, deposit_amount);
     }
 
     #[tokio::test]
@@ -496,7 +499,7 @@ mod success {
     async fn register_metadata() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        
+
         let name = "Token".to_string();
         let symbol = "TKN".to_string();
 
@@ -515,12 +518,13 @@ mod success {
         .await;
 
         let metadata_message = create_metadata_message(
-            BRIDGED_TOKEN, 
-            BRIDGED_TOKEN_ID, 
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
             &name,
             &symbol,
-            configurables.clone()
-        ).await;
+            configurables.clone(),
+        )
+        .await;
 
         let (bridge, utxo_inputs) = setup_environment(
             &mut wallet,
@@ -545,12 +549,23 @@ mod success {
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
-        let l1_address: Bits256 = bridge.methods().asset_to_l1_address(asset_id).call().await.unwrap().value;
+        let l1_address: Bits256 = bridge
+            .methods()
+            .asset_to_l1_address(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
         assert_eq!(l1_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
 
-        let l1_decimals: u8 = bridge.methods().asset_to_l1_decimals(asset_id).call().await.unwrap().value;
+        let l1_decimals: u8 = bridge
+            .methods()
+            .asset_to_l1_decimals(asset_id)
+            .call()
+            .await
+            .unwrap()
+            .value;
         assert_eq!(l1_decimals as u64, BRIDGED_TOKEN_DECIMALS);
-
 
         // Relay the metadata message
         let tx_id = relay_message_to_contract(
@@ -559,7 +574,7 @@ mod success {
             utxo_inputs.contract.clone(),
         )
         .await;
-    
+
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         let receipts = tx_status.clone().take_receipts();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
@@ -570,15 +585,12 @@ mod success {
             .unwrap();
 
         assert_eq!(metadata_events.len(), 1);
-        assert_eq!(metadata_events[0].token_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
+        assert_eq!(
+            metadata_events[0].token_address,
+            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+        );
 
-        let registered_name = bridge
-            .methods()
-            .name(asset_id)
-            .call()
-            .await
-            .unwrap()
-            .value;
+        let registered_name = bridge.methods().name(asset_id).call().await.unwrap().value;
 
         assert_eq!(name, registered_name.unwrap());
 
@@ -591,14 +603,13 @@ mod success {
             .value;
 
         assert_eq!(symbol, registered_symbol.unwrap());
-        
     }
 
     #[tokio::test]
     async fn deposit_more_than_u64_max_triggers_refunds() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        
+
         let deposit_amount: u128 = u64::MAX as u128 + 1;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -691,7 +702,7 @@ mod success {
 
         let token_one = "0x00000000000000000000000000000000000000000000000000000000deadbeef";
         let token_two = "0xdeadbeef00000000000000000000000000000000000000000000000000000000";
-        
+
         let token_one_amount: u64 = 1;
         let token_two_amount: u64 = 2;
 
@@ -708,7 +719,7 @@ mod success {
         )
         .await;
 
-        let (message_two,_,_) = create_deposit_message(
+        let (message_two, _, _) = create_deposit_message(
             token_two,
             BRIDGED_TOKEN_ID,
             FROM,
@@ -733,7 +744,6 @@ mod success {
 
         let provider = wallet.provider().expect("Needs provider");
 
-
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
@@ -741,7 +751,7 @@ mod success {
             utxo_inputs.contract.clone(),
         )
         .await;
-    
+
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
@@ -751,11 +761,10 @@ mod success {
             utxo_inputs.contract.clone(),
         )
         .await;
-    
+
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
-    
-    
+
         // Token one checks
         let asset_id = get_asset_id(bridge.contract_id(), token_one);
         let asset_balance = wallet_balance(&wallet, &asset_id).await;
@@ -772,7 +781,10 @@ mod success {
             .unwrap()
             .value;
 
-        assert_eq!(token_one_registered_l1_address, Bits256::from_hex_str(token_one).unwrap());
+        assert_eq!(
+            token_one_registered_l1_address,
+            Bits256::from_hex_str(token_one).unwrap()
+        );
 
         // // Token two checks
         let asset_id = get_asset_id(bridge.contract_id(), token_two);
@@ -790,8 +802,14 @@ mod success {
             .unwrap()
             .value;
 
-        assert_eq!(token_two_registered_l1_address, Bits256::from_hex_str(token_two).unwrap());
-        assert_ne!(token_one_registered_l1_address, token_two_registered_l1_address);
+        assert_eq!(
+            token_two_registered_l1_address,
+            Bits256::from_hex_str(token_two).unwrap()
+        );
+        assert_ne!(
+            token_one_registered_l1_address,
+            token_two_registered_l1_address
+        );
     }
 }
 

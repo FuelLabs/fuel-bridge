@@ -32,10 +32,7 @@ mod success {
 
         let response = name(&contract, asset_id).await.unwrap();
 
-        assert_eq!(
-            response,
-            String::from("Token")
-        );
+        assert_eq!(response, String::from("Token"));
     }
 
     #[tokio::test]

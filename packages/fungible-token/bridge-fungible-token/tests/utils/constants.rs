@@ -21,8 +21,7 @@ pub(crate) const PROXY_TOKEN_DECIMALS: u64 = 9;
 
 pub(crate) const MESSAGE_AMOUNT: u64 = 100;
 
-
 pub(crate) const DEPOSIT_TO_ADDRESS_FLAG: u8 = 0;
 pub(crate) const DEPOSIT_TO_CONTRACT_FLAG: u8 = 1;
 pub(crate) const DEPOSIT_WITH_DATA_FLAG: u8 = 2;
-pub(crate) const METADATA_MESSAGE_FLAG: u8 = 3; 
+pub(crate) const METADATA_MESSAGE_FLAG: u8 = 3;
