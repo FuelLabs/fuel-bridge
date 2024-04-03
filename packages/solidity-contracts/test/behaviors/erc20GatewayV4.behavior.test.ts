@@ -655,5 +655,17 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
         );
       });
     });
+
+    describe('sendMetadata()', () => {
+      describe('when paused', () => {
+        it('reverts');
+      });
+
+      it('works', async () => {
+        const { erc20Gateway, token } = env;
+
+        await erc20Gateway.sendMetadata(token);
+      });
+    });
   });
 }

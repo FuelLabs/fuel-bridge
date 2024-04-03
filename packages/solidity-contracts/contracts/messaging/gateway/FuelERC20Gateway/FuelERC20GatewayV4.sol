@@ -50,8 +50,6 @@ contract FuelERC20GatewayV4 is
     // Constants //
     ///////////////
 
-    bytes1 public constant DEPOSIT_TO_CONTRACT = bytes1(keccak256("DEPOSIT_TO_CONTRACT"));
-
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     uint256 public constant FUEL_ASSET_DECIMALS = 9;
@@ -107,6 +105,7 @@ contract FuelERC20GatewayV4 is
     }
 
     /// @notice see `requireWhitelist`
+    /// @dev param `limit` must be down/up scaled according to _adjustDepositDecimals
     function setGlobalDepositLimit(address token, uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         _depositLimits[token] = limit;
     }
@@ -143,18 +142,18 @@ contract FuelERC20GatewayV4 is
     /// @dev Made payable to reduce gas costs
     function deposit(bytes32 to, address tokenAddress, uint256 amount) external payable virtual whenNotPaused {
         uint8 decimals = _getTokenDecimals(tokenAddress);
+        uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
         bytes memory messageData = abi.encodePacked(
-            MessageType.DEPOSIT,
             assetIssuerId,
+            MessageType.DEPOSIT,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
             to,
-            amount,
-            decimals
+            l2MintedAmount
         );
-        _deposit(tokenAddress, amount, messageData);
+        _deposit(tokenAddress, amount, l2MintedAmount, messageData);
     }
 
     /// @notice Deposits the given tokens to a contract on Fuel with optional data
@@ -170,45 +169,56 @@ contract FuelERC20GatewayV4 is
         bytes calldata data
     ) external payable virtual whenNotPaused {
         uint8 decimals = _getTokenDecimals(tokenAddress);
+        uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
         bytes memory messageData = abi.encodePacked(
-            MessageType.DEPOSIT,
             assetIssuerId,
+            MessageType.DEPOSIT,
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
             to,
-            amount,
-            decimals,
-            DEPOSIT_TO_CONTRACT,
+            l2MintedAmount,
             data
         );
-        _deposit(tokenAddress, amount, messageData);
+        _deposit(tokenAddress, amount, l2MintedAmount, messageData);
     }
 
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
         bytes memory messageData = abi.encodePacked(
+            assetIssuerId,
             MessageType.METADATA,
-            abi.encode(IERC20MetadataUpgradeable(tokenAddress).symbol(), IERC20MetadataUpgradeable(tokenAddress).name())
+            abi.encode(
+                tokenAddress,
+                uint256(0), // token_id = 0 for all erc20 deposits
+                IERC20MetadataUpgradeable(tokenAddress).symbol(),
+                IERC20MetadataUpgradeable(tokenAddress).name()
+            )
         );
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, messageData);
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
     /// @param tokenAddress Address of the token being transferred to Fuel
-    /// @param amount Amount of tokens to deposit
+    /// @param amount tokens that have been deposited
+    /// @param l2MintedAmount tokens that will be minted on L2
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, uint256 amount, bytes memory messageData) internal virtual {
+    function _deposit(
+        address tokenAddress,
+        uint256 amount,
+        uint256 l2MintedAmount,
+        bytes memory messageData
+    ) internal virtual {
         ////////////
         // Checks //
         ////////////
-        if (amount == 0) revert CannotDepositZero();
-        if (amount > uint256(type(uint64).max)) revert CannotDepositZero();
+        if (l2MintedAmount == 0) revert CannotDepositZero();
+        if (l2MintedAmount > uint256(type(uint64).max)) revert CannotDepositZero();
 
         /////////////
         // Effects //
         /////////////
-        uint256 updatedDeposits = _deposits[tokenAddress] + amount;
+        uint256 updatedDeposits = _deposits[tokenAddress] + l2MintedAmount;
         if (updatedDeposits > type(uint64).max) revert BridgeFull();
 
         if (whitelistRequired && updatedDeposits > _depositLimits[tokenAddress]) {
@@ -274,7 +284,7 @@ contract FuelERC20GatewayV4 is
         return uint8(decimals);
     }
 
-    function _adjustDecimals(uint8 tokenDecimals, uint256 amount) internal virtual returns (uint256) {
+    function _adjustDepositDecimals(uint8 tokenDecimals, uint256 amount) internal pure virtual returns (uint256) {
         // Most common case: less than 9 decimals (USDT, USDC, WBTC)
         if (tokenDecimals < 9) {
             return amount * (10 ** (9 - tokenDecimals));
@@ -295,6 +305,28 @@ contract FuelERC20GatewayV4 is
         return amount;
     }
 
+    function _adjustWithdrawalDecimals(uint8 tokenDecimals, uint256 amount) internal pure virtual returns (uint256) {
+        unchecked {
+            if (tokenDecimals < 9) {
+                // Subject to precision losses (dust) in L2
+                // Economic losses due to this are estimated to be less
+                // than other evaluated alternatives, such as:
+                // -    bouncing the deposit back to L2. E.g., in order to lose in the order of 0.01 USD
+                //      BTC price should be sitting at 500k USDBTC
+                // -    storing decimals in L2
+                return divByNonZero(amount, 10 ** (9 - tokenDecimals));
+            }
+        }
+
+        if (tokenDecimals > 9) {
+            uint256 precision = 10 ** (tokenDecimals - 9);
+            return amount * precision;
+        }
+
+        return amount;
+    }
+
+    /// @dev gas efficient division. Must be used with care, `_div` must be non zero
     function divByNonZero(uint256 _num, uint256 _div) internal pure returns (uint256 result) {
         assembly {
             result := div(_num, _div)
