@@ -65,6 +65,7 @@ storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
+    l1_decimals: StorageMap<b256, u8> = StorageMap {},
     l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
     l1_names: StorageMap<b256, StorageString> = StorageMap {},
     total_assets: u64 = 0,
@@ -174,6 +175,12 @@ impl Bridge for Contract {
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
         _asset_to_l1_address(asset_id)
+    }
+
+    #[storage(read)]    
+    fn asset_to_l1_decimals(asset_id: AssetId) -> Option<u8> {
+        let l1_address = _asset_to_l1_address(asset_id);
+        storage.l1_decimals.get(l1_address).try_read()
     }
 
 }
@@ -313,6 +320,9 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         storage
             .total_assets
             .write(storage.total_assets.try_read().unwrap_or(0) + 1);
+        storage
+            .l1_decimals
+            .insert(message_data.token_address, message_data.decimals);
         storage
             .l1_addresses
             .insert(asset_id, message_data.token_address);

@@ -1,8 +1,7 @@
 use crate::utils::{
     builder,
     constants::{
-        BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY,
-        DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
+        BRIDGED_TOKEN_DECIMALS, BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY, DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS
     },
 };
 use ethers::abi::Token;
@@ -138,14 +137,6 @@ impl BridgingConfig {
                 two: overflow_2,
                 three: overflow_3,
             },
-        }
-    }
-
-    pub fn fuel_equivalent_amount(&self, amount: U256) -> u64 {
-        if self.adjustment.is_div {
-            (amount * self.adjustment.factor).as_u64()
-        } else {
-            (amount / self.adjustment.factor).as_u64()
         }
     }
 }
@@ -403,6 +394,7 @@ pub(crate) async fn create_deposit_message(
     from: &str,
     to: [u8; 32],
     amount: U256,
+    decimals: u64,
     config: Option<BridgeFungibleTokenContractConfigurables>,
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
@@ -422,6 +414,7 @@ pub(crate) async fn create_deposit_message(
     message_data.append(&mut decode_hex(from));
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
+    message_data.append(&mut vec![u8::try_from(decimals).unwrap()]);
 
     let mut deposit_recipient: Option<ContractId> = None;
 
@@ -457,7 +450,6 @@ pub(crate) async fn create_metadata_message(
         Token::String(String::from(token_symbol)),
     ];
     let mut payload = ethers::abi::encode(&items);
-    dbg!(hex::encode(&payload));
     message_data.append(&mut payload);
 
     let message_data = prefix_contract_id(message_data, config).await;
@@ -523,6 +515,7 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
         FROM,
         *wallet.address().hash(),
         U256::from(amount),
+        BRIDGED_TOKEN_DECIMALS,
         None,
         false,
         None,

@@ -41,6 +41,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
             None,
@@ -173,6 +174,7 @@ mod success {
             FROM,
             *wallet.address().hash(),
             U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
             None,
@@ -283,6 +285,7 @@ mod revert {
 
     use super::*;
     use crate::utils::setup::get_asset_id;
+    use fuels::types::U256;
 
     #[tokio::test]
     #[should_panic(expected = "Revert(0)")]
@@ -296,15 +299,15 @@ mod revert {
 
         // perform successful deposit first, verify it, then withdraw and verify balances
         let mut wallet = create_wallet();
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-
+        let amount = u64::MAX;
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.amount.max,
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
             None,
@@ -339,7 +342,7 @@ mod revert {
         assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Check that wallet now has bridged coins
-        assert_eq!(balance, config.fuel_equivalent_amount(config.amount.max));
+        assert_eq!(balance, amount);
 
         // Now try to withdraw
         let withdrawal_amount = 999999999;
@@ -367,6 +370,7 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
             None,
@@ -411,6 +415,7 @@ mod revert {
             FROM,
             *wallet.address().hash(),
             config.overflow.two,
+            BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
             false,
             None,

@@ -9,6 +9,7 @@ use ::data_structures::{
         OFFSET_FROM,
         OFFSET_TO,
         OFFSET_AMOUNT,
+        OFFSET_DECIMALS,
         DEPOSIT,
         CONTRACT_DEPOSIT,
         CONTRACT_DEPOSIT_WITH_DATA,
@@ -27,6 +28,7 @@ pub struct DepositMessage {
     pub to: Identity,
     pub token_address: b256,
     pub token_id: b256,
+    pub decimals: u8,
     pub deposit_type: DepositType,
 }
 
@@ -39,6 +41,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::Address(Address::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
             deposit_type: DepositType::Addr
         }
     }
@@ -51,6 +54,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::ContractId(ContractId::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
             deposit_type: DepositType::Contract
         }
     }
@@ -63,6 +67,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::ContractId(ContractId::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
             deposit_type: DepositType::ContractWithData
         }
     }

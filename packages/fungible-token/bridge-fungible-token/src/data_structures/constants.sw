@@ -10,6 +10,7 @@ pub const OFFSET_TOKEN_ID: u64 = OFFSET_TOKEN_ADDRESS + 32;
 pub const OFFSET_FROM: u64 = OFFSET_TOKEN_ID + 32;
 pub const OFFSET_TO: u64 = OFFSET_FROM + 32;
 pub const OFFSET_AMOUNT: u64 = OFFSET_TO + 32;
+pub const OFFSET_DECIMALS: u64 = OFFSET_AMOUNT + 32;
 
 // Type of messages that can be received
 pub const DEPOSIT: u8 = 0;
