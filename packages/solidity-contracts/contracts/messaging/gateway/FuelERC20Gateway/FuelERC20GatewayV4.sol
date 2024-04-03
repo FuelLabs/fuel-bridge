@@ -202,6 +202,36 @@ contract FuelERC20GatewayV4 is
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, metadataMessage);
     }
 
+    /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
+    /// @param to Account to send withdrawn tokens to
+    /// @param tokenAddress Address of the token being withdrawn from Fuel
+    /// @param l2BurntAmount Amount of tokens to withdraw
+    /// @dev Made payable to reduce gas costs
+    function finalizeWithdrawal(
+        address to,
+        address tokenAddress,
+        uint256 l2BurntAmount,
+        uint256
+    ) external payable virtual override whenNotPaused onlyFromPortal {
+        if (l2BurntAmount == 0) {
+            revert CannotWithdrawZero();
+        }
+
+        if (messageSender() != assetIssuerId) {
+            revert InvalidSender();
+        }
+
+        uint8 decimals = _getTokenDecimals(tokenAddress);
+        uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
+
+        //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
+        _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
+        IERC20MetadataUpgradeable(tokenAddress).safeTransfer(to, amount);
+
+        //emit event for successful token withdraw
+        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, amount);
+    }
+
     /// @notice Deposits the given tokens to an account or contract on Fuel
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param amount tokens that have been deposited
@@ -244,33 +274,6 @@ contract FuelERC20GatewayV4 is
         emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, amount);
     }
 
-    /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
-    /// @param to Account to send withdrawn tokens to
-    /// @param tokenAddress Address of the token being withdrawn from Fuel
-    /// @param amount Amount of tokens to withdraw
-    /// @dev Made payable to reduce gas costs
-    function finalizeWithdrawal(
-        address to,
-        address tokenAddress,
-        uint256 amount,
-        uint256
-    ) external payable virtual override whenNotPaused onlyFromPortal {
-        if (amount == 0) {
-            revert CannotWithdrawZero();
-        }
-
-        if (messageSender() != assetIssuerId) {
-            revert InvalidSender();
-        }
-
-        //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        _deposits[tokenAddress] = _deposits[tokenAddress] - amount;
-        IERC20MetadataUpgradeable(tokenAddress).safeTransfer(to, amount);
-
-        //emit event for successful token withdraw
-        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, amount);
-    }
-
     function _getTokenDecimals(address tokenAddress) internal virtual returns (uint8) {
         uint256 decimals = _decimalsCache[tokenAddress];
 
@@ -301,7 +304,7 @@ contract FuelERC20GatewayV4 is
                 if (amount % precision != 0) {
                     revert InvalidAmount();
                 }
-                return divByNonZero(amount, precision);
+                return _divByNonZero(amount, precision);
             }
         }
 
@@ -318,7 +321,7 @@ contract FuelERC20GatewayV4 is
                 // -    bouncing the deposit back to L2. E.g., in order to lose in the order of 0.01 USD
                 //      BTC price should be sitting at 500k USDBTC
                 // -    storing decimals in L2
-                return divByNonZero(amount, 10 ** (9 - tokenDecimals));
+                return _divByNonZero(amount, 10 ** (9 - tokenDecimals));
             }
         }
 
@@ -331,7 +334,7 @@ contract FuelERC20GatewayV4 is
     }
 
     /// @dev gas efficient division. Must be used with care, `_div` must be non zero
-    function divByNonZero(uint256 _num, uint256 _div) internal pure returns (uint256 result) {
+    function _divByNonZero(uint256 _num, uint256 _div) internal pure returns (uint256 result) {
         assembly {
             result := div(_num, _div)
         }
