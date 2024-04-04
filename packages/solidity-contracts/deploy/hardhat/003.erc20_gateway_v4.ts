@@ -1,8 +1,7 @@
-import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
+import { FuelERC20GatewayV4__factory as FuelERC20GatewayV4 } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -12,14 +11,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } = hre;
   const [, deployer] = await ethers.getSigners();
 
-  const { address: fuelChainState } = await get('FuelChainState');
+  const fuelMessagePortal = await get('FuelMessagePortal');
 
   const contract = await deployProxy(
-    new FuelMessagePortal(deployer),
-    [fuelChainState],
+    new FuelERC20GatewayV4(deployer),
+    [fuelMessagePortal.address],
     {
       initializer: 'initialize',
-      constructorArgs: [MaxUint256],
     }
   );
   await contract.waitForDeployment();
@@ -27,8 +25,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
-  console.log('Deployed FuelMessagePortal at', address);
-  await save('FuelMessagePortal', {
+  console.log('Deployed FuelERC20GatewayV4 at', address);
+  await save('FuelERC20Gateway', {
     address,
     abi: [],
     implementation,
@@ -37,6 +35,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['portal', 'message_portal', 'FuelMessagePortal'];
-func.id = 'fuel_message_portal';
+func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV4'];
+func.id = 'fuel_erc20_gateway_v4';
 export default func;

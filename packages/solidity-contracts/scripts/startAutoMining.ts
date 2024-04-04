@@ -1,11 +1,14 @@
-import { ethers } from 'hardhat';
+import { JsonRpcProvider } from 'ethers';
 
 export async function startAutoMining() {
   console.log('Start auto mining...');
   console.log('evm_setAutomine...');
-  await ethers.provider.send('evm_setAutomine', [true]);
+
+  const provider = new JsonRpcProvider(process.env.RPC_URL);
+
+  await provider.send('evm_setAutomine', [true]);
   console.log('evm_setIntervalMining...');
-  await ethers.provider.send('evm_setIntervalMining', [30000]);
+  await provider.send('evm_setIntervalMining', [30000]);
   console.log('finish...');
 }
 

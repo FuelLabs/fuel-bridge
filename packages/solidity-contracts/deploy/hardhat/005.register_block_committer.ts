@@ -3,11 +3,11 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory } from '../../typechain';
 
-const COMMITTER_ADDRESS = '0xd12663Fc8Dad968946EF7c715742B5f3814b618a';
+const COMMITTER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
-  const [deployer] = await ethers.getSigners();
+  const [, deployer] = await ethers.getSigners();
 
   const { address } = await deployments.get('FuelChainState');
 
@@ -23,6 +23,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['portal', 'message_portal', 'FuelMessagePortal'];
-func.id = 'fuel_message_portal';
+func.tags = ['register_committer'];
+func.id = 'register_committer';
 export default func;
