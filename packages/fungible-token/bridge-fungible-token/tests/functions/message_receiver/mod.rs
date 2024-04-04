@@ -21,6 +21,9 @@ mod success {
             RefundRegisteredEvent,
         },
     };
+    use fuel_core_types::fuel_types::canonical::Deserialize;
+    use fuels::tx::Bytes32;
+    use fuels::types::bech32::Bech32Address;
     use fuels::types::U256;
     use fuels::{
         prelude::AssetId,
@@ -29,17 +32,27 @@ mod success {
     };
 
     #[tokio::test]
-    async fn deposit_to_wallet() {
+    async fn deposit_to_wallet_what() {
         let mut wallet = create_wallet();
-        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-
-        let amount: u64 = u64::MAX;
+        
+        let amount: u64 = 10;
+        let token_address = "0x000000000000000000000000fcF38f326CA709b0B04B2215Dbc969fC622775F7";
+        let token_id = BRIDGED_TOKEN_ID;
+        let from_address = "0x00000000000000000000000090F79bf6EB2c4f870365E785982E1f101E93b906";
+        let message_sender = "0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
+        let recipient: Bytes32 = Bytes32::from_bytes(&hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28").unwrap()).unwrap();
+        
+        
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
+            BridgeFungibleTokenContractConfigurables::new()
+                .with_BRIDGED_TOKEN_GATEWAY(Bits256::from_hex_str(message_sender).unwrap())
+        );
 
         let (message, coin, deposit_contract) = create_deposit_message(
-            BRIDGED_TOKEN,
-            BRIDGED_TOKEN_ID,
-            FROM,
-            *wallet.address().hash(),
+            token_address,
+            token_id,
+            from_address,
+            *recipient,
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
             configurables.clone(),
@@ -53,10 +66,12 @@ mod success {
             vec![coin],
             vec![message],
             deposit_contract,
-            None,
+            Some(message_sender),
             configurables,
         )
         .await;
+
+        dbg!(&bridge.contract_id());
 
         let provider = wallet.provider().expect("Needs provider");
 
@@ -67,6 +82,9 @@ mod success {
             utxo_inputs.contract,
         )
         .await;
+
+        let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
 
         let eth_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;

@@ -433,8 +433,10 @@ pub(crate) async fn create_deposit_message(
     };
 
     let message_data = prefix_contract_id(message_data, config).await;
+    dbg!(hex::encode(&message_data));
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
+
 
     (message, coin, deposit_recipient)
 }
