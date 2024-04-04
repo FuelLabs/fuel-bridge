@@ -170,5 +170,7 @@ export async function relayCommonMessage(
     txParams || {}
   );
 
+  console.log(transaction);
+
   return relayer.sendTransaction(transaction);
 }

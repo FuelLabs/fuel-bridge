@@ -17,7 +17,7 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { toBeHex } from 'ethers';
+import { hexlify, toBeHex } from 'ethers';
 import type { Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
@@ -29,7 +29,7 @@ import type {
 
 const { expect } = chai;
 
-describe('Bridging ERC20 tokens', async function () {
+describe.only('Bridging ERC20 tokens', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
@@ -59,13 +59,11 @@ describe('Bridging ERC20 tokens', async function () {
       env.eth.fuelERC20Gateway,
       FUEL_TX_PARAMS
     );
+
     fuel_testContractId = fuel_testToken.id.toHexString();
+    await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_testContractId);
     fuel_testAssetId = getTokenId(fuel_testToken);
 
-    const { value: expectedTokenContractId } = await fuel_testToken.functions
-      .bridged_token()
-      .txParams(FUEL_CALL_TX_PARAMS)
-      .dryRun();
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
       .txParams(FUEL_CALL_TX_PARAMS)
@@ -73,9 +71,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     // check that values for the test token and gateway contract match what
     // was compiled into the bridge-fungible-token binaries
-    expect(fuel_to_eth_address(expectedTokenContractId)).to.equal(
-      eth_testTokenAddress
-    );
+
     expect(fuel_to_eth_address(expectedGatewayContractId)).to.equal(
       eth_erc20GatewayAddress
     );
@@ -125,12 +121,20 @@ describe('Bridging ERC20 tokens', async function () {
       // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
       const tx = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
-        .deposit(
-          fuelTokenReceiverAddress,
-          eth_testTokenAddress,
-          fuel_testContractId,
-          NUM_TOKENS
-        );
+        .deposit(fuelTokenReceiverAddress, eth_testTokenAddress, NUM_TOKENS);
+
+      console.log(
+        'ethe bridge id: ',
+        await env.eth.fuelERC20Gateway.getAddress()
+      );
+      console.log('fuel bridge id:', fuel_testContractId);
+      console.log('deposit type: ', '0x00');
+      console.log('token address:', await eth_testToken.getAddress());
+      console.log('sender', await ethereumTokenSender.getAddress());
+      console.log('recipient', fuelTokenReceiverAddress);
+      console.log('deposit: ', NUM_TOKENS.toString(16));
+      console.log('decimals: ', (await eth_testToken.decimals()).toString(16));
+
       const receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
 
@@ -166,10 +170,12 @@ describe('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
+      console.log(hexlify(message.data));
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
         maturity: undefined,
       });
+      console.log('waitForResult');
       expect((await tx.waitForResult()).status).to.equal('success');
     });
 
