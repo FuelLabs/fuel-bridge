@@ -148,13 +148,13 @@ contract FuelERC20GatewayV4 is
 
         bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
-            MessageType.DEPOSIT_TO_ADDRESS,
+            uint256(MessageType.DEPOSIT_TO_ADDRESS),
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount,
-            decimals
+            uint256(decimals)
         );
         _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
     }
