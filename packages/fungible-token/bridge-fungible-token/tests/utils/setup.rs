@@ -414,13 +414,13 @@ pub(crate) async fn create_deposit_message(
         (true, Some(_)) => DEPOSIT_WITH_DATA_FLAG,
     };
 
-    message_data.append(&mut vec![deposit_type]);
+    message_data.append(&mut encode_hex(U256::from(deposit_type)).to_vec());
     message_data.append(&mut decode_hex(token));
     message_data.append(&mut decode_hex(token_id));
     message_data.append(&mut decode_hex(from));
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
-    message_data.append(&mut vec![u8::try_from(decimals).unwrap()]);
+    message_data.append(&mut encode_hex(U256::from(decimals)).to_vec());
 
     let mut deposit_recipient: Option<ContractId> = None;
 
@@ -433,7 +433,6 @@ pub(crate) async fn create_deposit_message(
     };
 
     let message_data = prefix_contract_id(message_data, config).await;
-    dbg!(hex::encode(&message_data));
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
 
@@ -449,7 +448,7 @@ pub(crate) async fn create_metadata_message(
     config: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> Vec<u8> {
     let mut message_data: Vec<u8> = vec![];
-    message_data.append(&mut vec![METADATA_MESSAGE_FLAG]);
+    message_data.append(&mut encode_hex(U256::from(METADATA_MESSAGE_FLAG)).to_vec());
 
     let items: Vec<Token> = vec![
         Token::FixedBytes(decode_hex(token_address)),

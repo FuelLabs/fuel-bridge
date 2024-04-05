@@ -36,7 +36,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::Address(Address::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
-            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(31).unwrap(),
             deposit_type: DepositType::Addr,
         }
     }
@@ -48,7 +48,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::ContractId(ContractId::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
-            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(31).unwrap(),
             deposit_type: DepositType::Contract,
         }
     }
@@ -60,7 +60,7 @@ impl DepositMessage {
             token_address: input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).into(),
             to: Identity::ContractId(ContractId::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
-            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(0).unwrap(),
+            decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(31).unwrap(),
             deposit_type: DepositType::ContractWithData,
         }
     }

@@ -23,7 +23,7 @@ mod success {
     };
     use fuel_core_types::fuel_types::canonical::Deserialize;
     use fuels::tx::Bytes32;
-    use fuels::types::bech32::Bech32Address;
+    use fuels::types::bech32::{Bech32Address, FUEL_BECH32_HRP};
     use fuels::types::U256;
     use fuels::{
         prelude::AssetId,
@@ -32,7 +32,7 @@ mod success {
     };
 
     #[tokio::test]
-    async fn deposit_to_wallet_what() {
+    async fn deposit_to_wallet() {
         let mut wallet = create_wallet();
         
         let amount: u64 = 10;
@@ -41,7 +41,7 @@ mod success {
         let from_address = "0x00000000000000000000000090F79bf6EB2c4f870365E785982E1f101E93b906";
         let message_sender = "0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
         let recipient: Bytes32 = Bytes32::from_bytes(&hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28").unwrap()).unwrap();
-        
+        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
         
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
             BridgeFungibleTokenContractConfigurables::new()
@@ -71,8 +71,6 @@ mod success {
         )
         .await;
 
-        dbg!(&bridge.contract_id());
-
         let provider = wallet.provider().expect("Needs provider");
 
         // Relay the test message to the bridge contract
@@ -85,12 +83,12 @@ mod success {
 
         let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
-
+        
         let eth_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
-        let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
-        let asset_balance = wallet_balance(&wallet, &asset_id).await;
-
+        let asset_id = get_asset_id(bridge.contract_id(), token_address);
+        let asset_balance = provider.get_asset_balance(&recipient_bech32, asset_id).await.unwrap();
+        
         // Verify the message value was received by the bridge
         assert_eq!(eth_balance, MESSAGE_AMOUNT);
 
@@ -108,7 +106,7 @@ mod success {
 
         assert_eq!(
             registered_l1_address,
-            Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
+            Bits256::from_hex_str(token_address).unwrap()
         );
     }
 

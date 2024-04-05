@@ -6,10 +6,12 @@ use std::constants::ZERO_B256;
 use std::string::String;
 use std::inputs::input_message_data;
 use std::primitive_conversions::u64::*;
-use ::data_structures::constants::{OFFSET_TOKEN_ADDRESS, OFFSET_TOKEN_ID};
-
-const OFFSET_NAME_PTR: u64 = OFFSET_TOKEN_ID + 32;
-const OFFSET_SYMBOL_PTR: u64 = OFFSET_NAME_PTR + 32;
+use ::data_structures::constants::{
+    OFFSET_TOKEN_ADDRESS, 
+    OFFSET_TOKEN_ID,
+    OFFSET_NAME_PTR,
+    OFFSET_SYMBOL_PTR
+};
 
 pub struct MetadataMessage {
     pub token_address: b256,
