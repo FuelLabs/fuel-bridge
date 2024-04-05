@@ -134,7 +134,7 @@ contract FuelERC20GatewayV4 is
     /// @param tokenAddress ERC-20 token address
     /// @return amount of tokens deposited
     function depositLimits(address tokenAddress) public view virtual returns (uint256) {
-        return _deposits[tokenAddress];
+        return _depositLimits[tokenAddress];
     }
 
     /// @notice Deposits the given tokens to an account on Fuel
@@ -176,7 +176,7 @@ contract FuelERC20GatewayV4 is
 
         bytes memory depositMessage = abi.encodePacked(
             assetIssuerId,
-            data.length == 0 ? MessageType.DEPOSIT_TO_CONTRACT : MessageType.DEPOSIT_WITH_DATA,
+            uint256(data.length == 0 ? MessageType.DEPOSIT_TO_CONTRACT : MessageType.DEPOSIT_WITH_DATA),
             bytes32(uint256(uint160(tokenAddress))),
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
@@ -211,7 +211,7 @@ contract FuelERC20GatewayV4 is
         address to,
         address tokenAddress,
         uint256 l2BurntAmount,
-        uint256
+        uint256 /*tokenId*/
     ) external payable virtual override whenNotPaused onlyFromPortal {
         if (l2BurntAmount == 0) {
             revert CannotWithdrawZero();
@@ -247,7 +247,7 @@ contract FuelERC20GatewayV4 is
         // Checks //
         ////////////
         if (l2MintedAmount == 0) revert CannotDepositZero();
-        if (l2MintedAmount > uint256(type(uint64).max)) revert CannotDepositZero();
+        if (l2MintedAmount > uint256(type(uint64).max)) revert InvalidAmount();
 
         /////////////
         // Effects //
@@ -282,7 +282,7 @@ contract FuelERC20GatewayV4 is
                 _decimalsCache[tokenAddress] = returnedDecimals == 0 ? NO_DECIMALS : returnedDecimals;
                 return returnedDecimals;
             } catch {
-                _decimalsCache[tokenAddress] == NO_DECIMALS;
+                _decimalsCache[tokenAddress] = NO_DECIMALS;
                 return 0;
             }
         }
@@ -292,41 +292,21 @@ contract FuelERC20GatewayV4 is
     }
 
     function _adjustDepositDecimals(uint8 tokenDecimals, uint256 amount) internal pure virtual returns (uint256) {
-        // Most common case: less than 9 decimals (USDT, USDC, WBTC)
-        if (tokenDecimals < 9) {
-            return amount * (10 ** (9 - tokenDecimals));
-        }
-
-        // Next common case: 18 decimals (most ERC20s)
-        unchecked {
-            if (tokenDecimals > 9) {
-                uint256 precision = 10 ** (tokenDecimals - 9);
+        if (tokenDecimals > FUEL_ASSET_DECIMALS) {
+            unchecked {
+                uint256 precision = 10 ** (tokenDecimals - FUEL_ASSET_DECIMALS);
                 if (amount % precision != 0) {
                     revert InvalidAmount();
                 }
                 return _divByNonZero(amount, precision);
             }
         }
-
-        // Less common case: 9 decimals
         return amount;
     }
 
     function _adjustWithdrawalDecimals(uint8 tokenDecimals, uint256 amount) internal pure virtual returns (uint256) {
-        unchecked {
-            if (tokenDecimals < 9) {
-                // Subject to precision losses (dust) in L2
-                // Economic losses due to this are estimated to be less
-                // than other evaluated alternatives, such as:
-                // -    bouncing the deposit back to L2. E.g., in order to lose in the order of 0.01 USD
-                //      BTC price should be sitting at 500k USDBTC
-                // -    storing decimals in L2
-                return _divByNonZero(amount, 10 ** (9 - tokenDecimals));
-            }
-        }
-
-        if (tokenDecimals > 9) {
-            uint256 precision = 10 ** (tokenDecimals - 9);
+        if (tokenDecimals > FUEL_ASSET_DECIMALS) {
+            uint256 precision = 10 ** (tokenDecimals - FUEL_ASSET_DECIMALS);
             return amount * precision;
         }
 

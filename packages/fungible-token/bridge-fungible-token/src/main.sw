@@ -72,7 +72,6 @@ storage {
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
     tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
-    l1_decimals: StorageMap<b256, u8> = StorageMap {},
     l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
     l1_names: StorageMap<b256, StorageString> = StorageMap {},
     total_assets: u64 = 0,
@@ -138,17 +137,6 @@ impl Bridge for Contract {
         let sub_id = _asset_to_sub_id(asset_id);
         let token_id = _asset_to_token_id(asset_id);
         let l1_address = _asset_to_l1_address(asset_id);
-        let l1_decimals = storage.l1_decimals.get(l1_address).read();
-        let l2_decimals = DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS);
-
-        // This prevents loss due to precision when downscaling decimals in L1
-        if l1_decimals < l2_decimals {
-            require(
-                amount % (10u64 ** (l2_decimals - l1_decimals)
-                        .as_u32()) == 0,
-                BridgeFungibleTokenError::InvalidAmount,
-            );
-        }
 
         storage
             .tokens_minted
@@ -187,12 +175,6 @@ impl Bridge for Contract {
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
         _asset_to_l1_address(asset_id)
-    }
-
-    #[storage(read)]
-    fn asset_to_l1_decimals(asset_id: AssetId) -> u8 {
-        let l1_address = _asset_to_l1_address(asset_id);
-        storage.l1_decimals.get(l1_address).read()
     }
 }
 
@@ -344,9 +326,6 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         storage
             .total_assets
             .write(storage.total_assets.try_read().unwrap_or(0) + 1);
-        storage
-            .l1_decimals
-            .insert(message_data.token_address, message_data.decimals);
         storage
             .l1_addresses
             .insert(asset_id, message_data.token_address);

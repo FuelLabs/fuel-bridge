@@ -574,15 +574,6 @@ mod success {
             .value;
         assert_eq!(l1_address, Bits256::from_hex_str(BRIDGED_TOKEN).unwrap());
 
-        let l1_decimals: u8 = bridge
-            .methods()
-            .asset_to_l1_decimals(asset_id)
-            .call()
-            .await
-            .unwrap()
-            .value;
-        assert_eq!(l1_decimals as u64, BRIDGED_TOKEN_DECIMALS);
-
         // Relay the metadata message
         let tx_id = relay_message_to_contract(
             &wallet,

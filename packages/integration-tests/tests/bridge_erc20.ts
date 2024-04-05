@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
@@ -18,9 +17,9 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { hexlify, toBeHex } from 'ethers';
+import { toBeHex } from 'ethers';
 import type { Signer } from 'ethers';
-import { Address, BN, AssetId } from 'fuels';
+import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   Contract,

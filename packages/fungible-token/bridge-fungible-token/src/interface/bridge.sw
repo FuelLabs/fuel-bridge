@@ -35,7 +35,4 @@ abi Bridge {
 
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256;
-
-    #[storage(read)]
-    fn asset_to_l1_decimals(asset_id: AssetId) -> u8;
 }
