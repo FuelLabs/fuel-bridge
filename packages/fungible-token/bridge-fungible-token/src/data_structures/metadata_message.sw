@@ -7,10 +7,10 @@ use std::string::String;
 use std::inputs::input_message_data;
 use std::primitive_conversions::u64::*;
 use ::data_structures::constants::{
-    OFFSET_TOKEN_ADDRESS, 
-    OFFSET_TOKEN_ID,
     OFFSET_NAME_PTR,
-    OFFSET_SYMBOL_PTR
+    OFFSET_SYMBOL_PTR,
+    OFFSET_TOKEN_ADDRESS,
+    OFFSET_TOKEN_ID,
 };
 
 pub struct MetadataMessage {

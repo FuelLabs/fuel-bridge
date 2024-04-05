@@ -291,7 +291,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
             .amount != ZERO_B256,
         BridgeFungibleTokenError::NoCoinsSent,
     );
-    
+
     let amount: u64 = match <u64 as TryFrom<u256>>::try_from(message_data.amount.as_u256()) {
         Some(value) => value,
         None => {
