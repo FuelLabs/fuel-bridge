@@ -1,0 +1,14 @@
+[package]
+name = "host"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+ethabi = { workspace = true }
+methods = { workspace = true }
+env_logger = "0.10"
+hex = { workspace = true }
+prover-core = { workspace = true }
+risc0-build = { workspace = true, features = ["guest-list"] }
+risc0-zkvm = { workspace = true, default-features = false, features = ["metal"] }
+tokio = { version = "1.19", features = ["full", "sync"] }

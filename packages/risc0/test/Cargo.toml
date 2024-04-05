@@ -1,0 +1,27 @@
+[package]
+name = "test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { workspace = true }
+fuels={version = "0.54.0", features=["std", "fuel-core-lib"]}
+fuel-core = { version = "0.22.0", default-features = false, features = ["relayer"] }
+fuel-core-chain-config = { version = "0.22.0", default-features = false }
+fuel-core-database = { version = "0.22.0", default-features = false }
+fuel-core-executor = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-importer = { version = "0.22.0", default-features = false }
+fuel-core-poa = { version = "0.22.0", default-features = false }
+fuel-core-services = { version = "0.22.0", default-features = false }
+fuel-core-storage = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-types = { version = "0.22.0", default-features = false, features = ["test-helpers"] }
+fuel-core-txpool = { version = "0.22.0", default-features = false }
+fuel-crypto = { version = "0.43.1",  default-features = false}
+fuel-storage = { version = "0.43.1",  default-features = false}
+fuel-tx = { version = "0.43.1", default-features = false, features = ["builder"]}
+fuel-types = { version = "0.43.1",  default-features = false}
+fuel-vm = { version = "0.43.1",  default-features = false, features = ["serde", "alloc"]}
+prover-core = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
