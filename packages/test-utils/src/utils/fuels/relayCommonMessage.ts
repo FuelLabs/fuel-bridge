@@ -170,9 +170,5 @@ export async function relayCommonMessage(
     txParams || {}
   );
 
-  console.log(transaction);
-  console.log(hexlify((transaction.inputs[0] as any).data!));
-  console.log((transaction.inputs[0] as any).predicate.length);
-
   return relayer.sendTransaction(transaction);
 }

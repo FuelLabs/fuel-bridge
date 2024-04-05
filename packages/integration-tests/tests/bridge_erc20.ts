@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
@@ -19,7 +20,7 @@ import {
 import chai from 'chai';
 import { hexlify, toBeHex } from 'ethers';
 import type { Signer } from 'ethers';
-import { Address, BN } from 'fuels';
+import { Address, BN, AssetId } from 'fuels';
 import type {
   AbstractAddress,
   Contract,
@@ -29,7 +30,7 @@ import type {
 
 const { expect } = chai;
 
-describe.only('Bridging ERC20 tokens', async function () {
+describe('Bridging ERC20 tokens', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
@@ -62,7 +63,7 @@ describe.only('Bridging ERC20 tokens', async function () {
 
     fuel_testContractId = fuel_testToken.id.toHexString();
     await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_testContractId);
-    fuel_testAssetId = getTokenId(fuel_testToken);
+    fuel_testAssetId = getTokenId(fuel_testToken, eth_testTokenAddress);
 
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
@@ -112,7 +113,7 @@ describe.only('Bridging ERC20 tokens', async function () {
       );
     });
 
-    it.only('Bridge ERC20 via FuelERC20Gateway', async () => {
+    it('Bridge ERC20 via FuelERC20Gateway', async () => {
       // approve FuelERC20Gateway to spend the tokens
       await eth_testToken
         .connect(ethereumTokenSender)
@@ -122,18 +123,6 @@ describe.only('Bridging ERC20 tokens', async function () {
       const tx = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
         .deposit(fuelTokenReceiverAddress, eth_testTokenAddress, NUM_TOKENS);
-
-      console.log(
-        'ethe bridge id: ',
-        await env.eth.fuelERC20Gateway.getAddress()
-      );
-      console.log('fuel bridge id:', fuel_testContractId);
-      console.log('deposit type: ', '0x00');
-      console.log('token address:', await eth_testToken.getAddress());
-      console.log('sender', await ethereumTokenSender.getAddress());
-      console.log('recipient', fuelTokenReceiverAddress);
-      console.log('deposit: ', NUM_TOKENS.toString(16));
-      console.log('decimals: ', (await eth_testToken.decimals()).toString(16));
 
       const receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
@@ -150,14 +139,6 @@ describe.only('Bridging ERC20 tokens', async function () {
       fuelTokenMessageNonce = new BN(event.args.nonce.toString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
-      console.log('MESSAGE_SENT EVENT');
-      console.log('Sender', event.args.sender);
-      console.log('Recipient', event.args.recipient);
-      console.log('Nonce', event.args.nonce);
-      console.log('Amount', event.args.amount);
-      console.log('Event data', event.args.data);
-      console.log('ETH block number', event.blockNumber);
-
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await eth_testToken.balanceOf(
         ethereumTokenSenderAddress
@@ -166,7 +147,7 @@ describe.only('Bridging ERC20 tokens', async function () {
         .true;
     });
 
-    it.only('Relay message from Ethereum on Fuel', async () => {
+    it('Relay message from Ethereum on Fuel', async () => {
       // override the default test timeout from 2000ms
       this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
 
@@ -178,13 +159,29 @@ describe.only('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-      console.log(hexlify(message.data));
+
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
         maturity: undefined,
       });
-      // console.log('waitForResult');
-      // expect((await tx.waitForResult()).status).to.equal('success');
+
+      const txResult = await tx.waitForResult();
+
+      expect(txResult.status).to.equal('success');
+      expect(txResult.mintedAssets.length).to.equal(1);
+
+      const [mintedAsset] = txResult.mintedAssets;
+
+      expect(mintedAsset.assetId).to.equal(fuel_testAssetId);
+      expect(mintedAsset.amount.toString()).to.equal(
+        (NUM_TOKENS / DECIMAL_DIFF).toString()
+      );
+    });
+
+    it('Check metadata was registered', async () => {
+      await fuel_testToken.functions
+        .asset_to_l1_address({ value: fuel_testAssetId })
+        .call();
     });
 
     it('Check ERC20 arrived on Fuel', async () => {
@@ -287,13 +284,16 @@ describe.only('Bridging ERC20 tokens', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+
+      await env.eth.fuelMessagePortal
+        .connect(env.eth.signers[0])
+        .relayMessage(
+          relayMessageParams.message,
+          relayMessageParams.rootBlockHeader,
+          relayMessageParams.blockHeader,
+          relayMessageParams.blockInHistoryProof,
+          relayMessageParams.messageInBlockProof
+        );
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {
