@@ -1,7 +1,8 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelERC20GatewayV4__factory as FuelERC20GatewayV4 } from '../../typechain';
+import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
+// import { FuelERC20Gateway__factory as FuelERC20Gateway } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -9,12 +10,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     upgrades: { deployProxy, erc1967 },
     deployments: { get, save },
   } = hre;
-  const [, deployer] = await ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   const fuelMessagePortal = await get('FuelMessagePortal');
 
   const contract = await deployProxy(
-    new FuelERC20GatewayV4(deployer),
+    new FuelERC20Gateway(deployer),
     [fuelMessagePortal.address],
     {
       initializer: 'initialize',

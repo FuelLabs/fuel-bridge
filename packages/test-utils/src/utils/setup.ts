@@ -35,8 +35,8 @@ const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
 
 // Default private keys of the developer mnemonic
 const eth_private_keys: string[] = [
-  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d', // Deployer private key
+  '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // Deployer private key
+  '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d', // Committer private key
   '0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a', // Signer 1 private key
   '0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6', // Signer 2 private key
   '0x47e179ec197488593b187f80a00eb0da91f1b9d0b13f8733639f19c30a34926a',
@@ -47,7 +47,7 @@ const eth_private_keys: string[] = [
   '0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6',
 ];
 
-const def_pk_eth_deployer: string = eth_private_keys[1];
+const def_pk_eth_deployer: string = eth_private_keys[0];
 const def_pk_eth_signer1: string = eth_private_keys[3];
 const def_pk_eth_signer2: string = eth_private_keys[4];
 
