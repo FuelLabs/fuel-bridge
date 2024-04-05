@@ -16,7 +16,6 @@ services:
       - ${DEPLOYMENTS_PORT:-8080}:8081
     stop_grace_period: 1s
 
-
   fuel_core:
     depends_on:
       - l1_chain
