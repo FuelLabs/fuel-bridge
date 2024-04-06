@@ -37,7 +37,7 @@ impl DepositMessage {
             to: Identity::Address(Address::from(b256::from(input_message_data(msg_idx, OFFSET_TO)))),
             token_id: input_message_data(msg_idx, OFFSET_TOKEN_ID).into(),
             decimals: input_message_data(msg_idx, OFFSET_DECIMALS).get(31).unwrap(),
-            deposit_type: DepositType::Addr,
+            deposit_type: DepositType::Address,
         }
     }
     // /// Read the bytes passed as message data into an in-memory representation using the DepositMessage type
