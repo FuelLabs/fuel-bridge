@@ -14,7 +14,7 @@ use ::data_structures::constants::{
     OFFSET_TOKEN_ID,
 };
 pub enum DepositType {
-    Addr: (),
+    Address: (),
     Contract: (),
     ContractWithData: (),
 }
