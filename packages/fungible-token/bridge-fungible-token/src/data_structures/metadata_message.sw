@@ -59,14 +59,12 @@ impl MetadataMessage {
         // to access token_address and token_id
         let (token_address, token_id) = data.split_at(32);
 
-        let mut msg_data = Self {
+        Self {
             token_address: token_address.into(),
             token_id: token_id.into(),
             name,
             symbol,
         };
-
-        msg_data
     }
 }
 
