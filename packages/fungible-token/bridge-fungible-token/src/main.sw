@@ -334,7 +334,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     mint(sub_id, amount);
 
     match message_data.deposit_type {
-        DepositType::Addr | DepositType::Contract => {
+        DepositType::Address | DepositType::Contract => {
             transfer(message_data.to, asset_id, amount)
         },
         DepositType::ContractWithData => {
