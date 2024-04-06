@@ -52,7 +52,7 @@ impl DepositMessage {
             deposit_type: DepositType::Contract,
         }
     }
-    // /// Read the bytes passed as message data into an in-memory representation using the DepositMessage type
+    /// Read the bytes passed as message data into an in-memory representation using the DepositMessage type
     pub fn parse_deposit_to_contract_with_data(msg_idx: u64) -> Self {
         Self {
             amount: input_message_data(msg_idx, OFFSET_AMOUNT).into(),
