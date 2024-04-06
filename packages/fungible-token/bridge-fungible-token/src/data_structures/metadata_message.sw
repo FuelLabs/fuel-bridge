@@ -1,11 +1,13 @@
 library;
 
-use std::alloc::alloc_bytes;
-use std::bytes::*;
-use std::constants::ZERO_B256;
-use std::string::String;
-use std::inputs::input_message_data;
-use std::primitive_conversions::u64::*;
+use std::{
+    alloc::alloc_bytes,
+    bytes::*,
+    constants::ZERO_B256,
+    inputs::input_message_data,
+    primitive_conversions::u64::*,
+    string::String,
+};
 use ::data_structures::constants::{
     OFFSET_NAME_PTR,
     OFFSET_SYMBOL_PTR,
