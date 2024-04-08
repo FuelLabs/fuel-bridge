@@ -11,7 +11,7 @@ import {
 import { behavesLikeErc20GatewayV4 } from './behaviors';
 import { deployProxy } from './utils';
 
-describe.only('erc20GatewayV4', () => {
+describe('erc20GatewayV4', () => {
   const fixture = deployments.createFixture(async ({ ethers, upgrades }) => {
     const { getContractFactory } = ethers;
     const signers = await hre.ethers.getSigners();
