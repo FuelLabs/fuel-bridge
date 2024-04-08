@@ -150,7 +150,7 @@ contract FuelERC20GatewayV4 is
             assetIssuerId,
             uint256(MessageType.DEPOSIT_TO_ADDRESS),
             bytes32(uint256(uint160(tokenAddress))),
-            bytes32(0),
+            uint256(0), // token_id = 0 for all erc20 deposits
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount
@@ -177,7 +177,7 @@ contract FuelERC20GatewayV4 is
             assetIssuerId,
             uint256(data.length == 0 ? MessageType.DEPOSIT_TO_CONTRACT : MessageType.DEPOSIT_WITH_DATA),
             bytes32(uint256(uint160(tokenAddress))),
-            bytes32(0),
+            uint256(0), // token_id = 0 for all erc20 deposits
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount,
