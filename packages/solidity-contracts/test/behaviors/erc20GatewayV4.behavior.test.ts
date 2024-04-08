@@ -11,9 +11,10 @@ import {
 } from 'ethers';
 import type { BytesLike } from 'ethers';
 import hre from 'hardhat';
+import { random } from 'lodash';
 
 import { CONTRACT_MESSAGE_PREDICATE } from '../../protocol/constants';
-import { randomBytes32 } from '../../protocol/utils';
+import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import { CustomToken__factory } from '../../typechain';
 import type {
   MockFuelMessagePortal,
@@ -92,208 +93,6 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
       });
     });
 
-    // describe.skip('finalizeWithdrawal', () => {
-    //   const deposit = async () => {
-    //     const {
-    //       token: _token,
-    //       erc20Gateway,
-    //       fuelMessagePortal,
-    //       signers: [deployer, user],
-    //       assetIssuerId,
-    //     } = env;
-    //     const token = _token.connect(user);
-
-    //     const amount = parseEther(random(0.01, 1, true).toFixed(2));
-    //     const recipient = randomBytes32();
-
-    //     await erc20Gateway
-    //       .connect(deployer)
-    //       .setGlobalDepositLimit(token, amount);
-
-    //     await fuelMessagePortal
-    //       .connect(deployer)
-    //       .setMessageSender(assetIssuerId);
-    //     const impersonatedPortal = await impersonateAccount(
-    //       fuelMessagePortal,
-    //       hre
-    //     );
-
-    //     await token.mint(user, amount);
-    //     await token.approve(erc20Gateway, MaxUint256);
-
-    //     await erc20Gateway.connect(user).deposit(recipient, token, amount);
-
-    //     return { amount, recipient, impersonatedPortal };
-    //   };
-
-    //   it('can withdraw several times and reduces deposited balances', async () => {
-    //     const { amount, impersonatedPortal } = await deposit();
-    //     const withdrawAmount = amount / 4n;
-
-    //     const {
-    //       token,
-    //       fuelMessagePortal,
-    //       erc20Gateway,
-    //       signers: [deployer],
-    //     } = env;
-
-    //     await fuelMessagePortal
-    //       .connect(deployer)
-    //       .setMessageSender(env.assetIssuerId);
-
-    //     // Withdrawal 1
-    //     {
-    //       const recipient = randomAddress();
-    //       const withdrawalTx = erc20Gateway
-    //         .connect(impersonatedPortal)
-    //         .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //       await withdrawalTx;
-
-    //       const expectedTokenTotals = amount - withdrawAmount;
-    //       expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
-    //         expectedTokenTotals
-    //       );
-
-    //       await expect(withdrawalTx).to.changeTokenBalances(
-    //         token,
-    //         [erc20Gateway, recipient],
-    //         [withdrawAmount * -1n, withdrawAmount]
-    //       );
-    //       await expect(withdrawalTx)
-    //         .to.emit(erc20Gateway, 'Withdrawal')
-    //         .withArgs(
-    //           zeroPadValue(recipient, 32).toLowerCase(),
-    //           token,
-    //           withdrawAmount
-    //         );
-    //     }
-
-    //     // Withdrawal 2
-    //     {
-    //       const recipient = randomAddress();
-    //       const withdrawalTx = erc20Gateway
-    //         .connect(impersonatedPortal)
-    //         .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //       await withdrawalTx;
-
-    //       const expectedTokenTotals = amount - withdrawAmount * 2n;
-
-    //       expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
-    //         expectedTokenTotals
-    //       );
-
-    //       await expect(withdrawalTx).to.changeTokenBalances(
-    //         token,
-    //         [erc20Gateway, recipient],
-    //         [withdrawAmount * -1n, withdrawAmount]
-    //       );
-    //       await expect(withdrawalTx)
-    //         .to.emit(erc20Gateway, 'Withdrawal')
-    //         .withArgs(
-    //           zeroPadValue(recipient, 32).toLowerCase(),
-    //           token,
-    //           withdrawAmount
-    //         );
-    //     }
-    //   });
-
-    //   it('reverts if withdrawn amount is 0', async () => {
-    //     const { impersonatedPortal } = await deposit();
-    //     const withdrawAmount = 0;
-
-    //     const {
-    //       token,
-    //       fuelMessagePortal,
-    //       erc20Gateway,
-    //       signers: [deployer],
-    //     } = env;
-
-    //     await fuelMessagePortal
-    //       .connect(deployer)
-    //       .setMessageSender(env.assetIssuerId);
-
-    //     const recipient = randomAddress();
-    //     const withdrawalTx = erc20Gateway
-    //       .connect(impersonatedPortal)
-    //       .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //     await expect(withdrawalTx).to.be.revertedWithCustomError(
-    //       erc20Gateway,
-    //       'CannotWithdrawZero'
-    //     );
-    //   });
-
-    //   it('reverts if trying to withdraw more than initially deposited', async () => {
-    //     const { amount, impersonatedPortal } = await deposit();
-    //     const withdrawAmount = amount + 1n;
-
-    //     const { token, erc20Gateway } = env;
-
-    //     const recipient = randomAddress();
-    //     const withdrawalTx = erc20Gateway
-    //       .connect(impersonatedPortal)
-    //       .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //     await expect(withdrawalTx).to.be.revertedWithPanic(
-    //       UNDERFLOW_PANIC_CODE
-    //     );
-    //   });
-
-    //   it('reverts when paused', async () => {
-    //     const { amount, impersonatedPortal } = await deposit();
-    //     const withdrawAmount = amount;
-
-    //     const {
-    //       token,
-    //       fuelMessagePortal,
-    //       erc20Gateway,
-    //       signers: [deployer],
-    //     } = env;
-
-    //     await fuelMessagePortal
-    //       .connect(deployer)
-    //       .setMessageSender(env.assetIssuerId);
-
-    //     const recipient = randomAddress();
-    //     await erc20Gateway.connect(deployer).pause();
-
-    //     const withdrawalTx = erc20Gateway
-    //       .connect(impersonatedPortal)
-    //       .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //     await expect(withdrawalTx).to.be.revertedWith('Pausable: paused');
-    //   });
-
-    //   it('reverts when called by an unauthorized address', async () => {
-    //     const { amount } = await deposit();
-    //     const withdrawAmount = amount;
-
-    //     const {
-    //       token,
-    //       fuelMessagePortal,
-    //       erc20Gateway,
-    //       signers: [deployer, mallory],
-    //     } = env;
-
-    //     await fuelMessagePortal
-    //       .connect(deployer)
-    //       .setMessageSender(env.assetIssuerId);
-
-    //     const recipient = randomAddress();
-
-    //     const withdrawalTx = erc20Gateway
-    //       .connect(mallory)
-    //       .finalizeWithdrawal(recipient, token, withdrawAmount, TOKEN_ID);
-
-    //     await expect(withdrawalTx).to.be.revertedWithCustomError(
-    //       erc20Gateway,
-    //       'CallerIsNotPortal'
-    //     );
-    //   });
-    // });
-
     describe('initialize', () => {
       it('can only be called once', async () => {
         const {
@@ -349,6 +148,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
         await erc20Gateway.connect(deployer).unpause();
       });
     });
+
     describe('setAssetIssuerId', () => {
       it('can only be called with admin role', async () => {
         const {
@@ -367,6 +167,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
         await erc20Gateway.connect(deployer).setAssetIssuerId(ZeroHash);
       });
     });
+
     describe('requireWhitelist', () => {
       it('can only be called with admin role', async () => {
         const {
@@ -728,6 +529,29 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           );
         });
 
+        it('reverts when the deposit amount cannot be downscaled', async () => {
+          const {
+            erc20Gateway,
+            token,
+            signers: [deployer, user],
+          } = env;
+
+          const depositAmount = parseEther('0.0000000001');
+          const depositTo = randomBytes32();
+
+          await token.connect(deployer).mint(user, depositAmount);
+          await token.connect(user).approve(erc20Gateway, MaxUint256);
+
+          const tx = erc20Gateway
+            .connect(user)
+            .deposit(depositTo, token, depositAmount);
+
+          await expect(tx).to.be.revertedWithCustomError(
+            erc20Gateway,
+            'InvalidAmount'
+          );
+        });
+
         it('calls FuelMessagePortal', async () => {
           const {
             erc20Gateway,
@@ -927,20 +751,243 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           'InvalidSender'
         );
       });
-      describe('with 6 decimals token', () => {
-        it('todo');
+
+      it('reverts when paused', async () => {
+        const {
+          erc20Gateway,
+          fuelMessagePortal,
+          token,
+          signers: [deployer, user],
+        } = env;
+
+        await erc20Gateway.connect(deployer).pause();
+
+        const impersonatedPortal = await impersonateAccount(
+          fuelMessagePortal,
+          hre
+        );
+
+        const tx = erc20Gateway
+          .connect(impersonatedPortal)
+          .finalizeWithdrawal(user, token, MaxUint256, 0);
+
+        await expect(tx).to.be.revertedWith('Pausable: paused');
       });
-      describe('with 8 decimals token', () => {
-        it('todo');
+
+      it('reverts with 0 amount', async () => {
+        const {
+          erc20Gateway,
+          fuelMessagePortal,
+          token,
+          signers: [, user],
+        } = env;
+
+        const impersonatedPortal = await impersonateAccount(
+          fuelMessagePortal,
+          hre
+        );
+
+        const tx = erc20Gateway
+          .connect(impersonatedPortal)
+          .finalizeWithdrawal(user, token, 0, 0);
+
+        await expect(tx).to.be.revertedWithCustomError(
+          erc20Gateway,
+          'CannotWithdrawZero'
+        );
       });
-      describe('with 9 decimals token', () => {
-        it('todo');
-      });
+
+      const DECIMALS = [6, 8, 9];
+
+      for (const decimals of DECIMALS) {
+        describe(`with 9 decimals token`, () => {
+          let token: CustomToken;
+
+          beforeEach('deploy token', async () => {
+            const {
+              deployer,
+              signers: [, user],
+            } = env;
+            token = (
+              await new CustomToken__factory(deployer).deploy(decimals)
+            ).connect(user);
+          });
+
+          it('reduces deposits and transfers out without upscaling', async () => {
+            const {
+              erc20Gateway,
+              fuelMessagePortal,
+              signers: [deployer, user],
+              assetIssuerId,
+            } = env;
+
+            const amount = parseUnits(random(0.01, 1, true).toFixed(decimals));
+            const recipient = randomBytes32();
+
+            await fuelMessagePortal
+              .connect(deployer)
+              .setMessageSender(assetIssuerId);
+
+            const impersonatedPortal = await impersonateAccount(
+              fuelMessagePortal,
+              hre
+            );
+
+            await token.mint(user, amount);
+            await token.approve(erc20Gateway, MaxUint256);
+
+            await erc20Gateway.connect(user).deposit(recipient, token, amount);
+            const withdrawAmount = amount / 4n;
+
+            // Withdrawal 1
+            {
+              const recipient = randomAddress();
+              const withdrawalTx = erc20Gateway
+                .connect(impersonatedPortal)
+                .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+              await withdrawalTx;
+
+              const expectedTokenTotals = amount - withdrawAmount;
+              expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+                expectedTokenTotals
+              );
+
+              await expect(withdrawalTx).to.changeTokenBalances(
+                token,
+                [erc20Gateway, recipient],
+                [withdrawAmount * -1n, withdrawAmount]
+              );
+              await expect(withdrawalTx)
+                .to.emit(erc20Gateway, 'Withdrawal')
+                .withArgs(
+                  zeroPadValue(recipient, 32).toLowerCase(),
+                  token,
+                  withdrawAmount
+                );
+            }
+
+            // Withdrawal 2
+            {
+              const recipient = randomAddress();
+              const withdrawalTx = erc20Gateway
+                .connect(impersonatedPortal)
+                .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+              await withdrawalTx;
+
+              const expectedTokenTotals = amount - withdrawAmount * 2n;
+
+              expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+                expectedTokenTotals
+              );
+
+              await expect(withdrawalTx).to.changeTokenBalances(
+                token,
+                [erc20Gateway, recipient],
+                [withdrawAmount * -1n, withdrawAmount]
+              );
+              await expect(withdrawalTx)
+                .to.emit(erc20Gateway, 'Withdrawal')
+                .withArgs(
+                  zeroPadValue(recipient, 32).toLowerCase(),
+                  token,
+                  withdrawAmount
+                );
+            }
+          });
+        });
+      }
+
       describe('with 18 decimals token', () => {
-        it('todo');
-      });
-      describe('with no decimals token', () => {
-        it('todo');
+        it('reduces deposits and transfers out without upscaling', async () => {
+          const {
+            token: _token,
+            erc20Gateway,
+            fuelMessagePortal,
+            signers: [deployer, user],
+            assetIssuerId,
+          } = env;
+          const token = _token.connect(user);
+          const amount = parseUnits(random(0.01, 1, true).toFixed(2));
+          const recipient = randomBytes32();
+
+          await fuelMessagePortal
+            .connect(deployer)
+            .setMessageSender(assetIssuerId);
+
+          const impersonatedPortal = await impersonateAccount(
+            fuelMessagePortal,
+            hre
+          );
+
+          await token.mint(user, amount);
+          await token.approve(erc20Gateway, MaxUint256);
+
+          await erc20Gateway.connect(user).deposit(recipient, token, amount);
+
+          const upscaling = 10n ** 9n;
+          const withdrawAmount = amount / 4n;
+          const l2BurntAmount = withdrawAmount / upscaling;
+
+          // Withdrawal 1
+          {
+            const recipient = randomAddress();
+            const withdrawalTx = erc20Gateway
+              .connect(impersonatedPortal)
+              .finalizeWithdrawal(recipient, token, l2BurntAmount, 0);
+
+            await withdrawalTx;
+
+            const expectedTokenTotals = (amount - withdrawAmount) / upscaling;
+            expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+              expectedTokenTotals
+            );
+
+            await expect(withdrawalTx).to.changeTokenBalances(
+              token,
+              [erc20Gateway, recipient],
+              [withdrawAmount * -1n, withdrawAmount]
+            );
+            await expect(withdrawalTx)
+              .to.emit(erc20Gateway, 'Withdrawal')
+              .withArgs(
+                zeroPadValue(recipient, 32).toLowerCase(),
+                token,
+                withdrawAmount
+              );
+          }
+
+          // Withdrawal 2
+          {
+            const recipient = randomAddress();
+            const withdrawalTx = erc20Gateway
+              .connect(impersonatedPortal)
+              .finalizeWithdrawal(recipient, token, l2BurntAmount, 0);
+
+            await withdrawalTx;
+
+            const expectedTokenTotals =
+              (amount - withdrawAmount * 2n) / upscaling;
+
+            expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+              expectedTokenTotals
+            );
+
+            await expect(withdrawalTx).to.changeTokenBalances(
+              token,
+              [erc20Gateway, recipient],
+              [withdrawAmount * -1n, withdrawAmount]
+            );
+            await expect(withdrawalTx)
+              .to.emit(erc20Gateway, 'Withdrawal')
+              .withArgs(
+                zeroPadValue(recipient, 32).toLowerCase(),
+                token,
+                withdrawAmount
+              );
+          }
+        });
       });
     });
   });
