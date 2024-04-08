@@ -153,8 +153,7 @@ contract FuelERC20GatewayV4 is
             bytes32(0),
             bytes32(uint256(uint160(msg.sender))),
             to,
-            l2MintedAmount,
-            uint256(decimals)
+            l2MintedAmount
         );
         _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
     }
@@ -182,7 +181,6 @@ contract FuelERC20GatewayV4 is
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount,
-            decimals,
             data
         );
         _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
