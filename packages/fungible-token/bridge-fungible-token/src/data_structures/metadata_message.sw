@@ -64,7 +64,7 @@ impl MetadataMessage {
             token_id: token_id.into(),
             name,
             symbol,
-        };
+        }
     }
 }
 
