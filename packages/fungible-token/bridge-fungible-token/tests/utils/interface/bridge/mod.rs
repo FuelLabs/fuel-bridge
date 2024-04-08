@@ -45,30 +45,6 @@ pub(crate) async fn withdraw(
         .unwrap()
 }
 
-// pub(crate) async fn bridged_token(
-//     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
-// ) -> Bits256 {
-//     contract
-//         .methods()
-//         .bridged_token()
-//         .call()
-//         .await
-//         .unwrap()
-//         .value
-// }
-
-// pub(crate) async fn bridged_token_decimals(
-//     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
-// ) -> u8 {
-//     contract
-//         .methods()
-//         .bridged_token_decimals()
-//         .call()
-//         .await
-//         .unwrap()
-//         .value
-// }
-
 pub(crate) async fn bridged_token_gateway(
     contract: &BridgeFungibleTokenContract<WalletUnlocked>,
 ) -> Bits256 {
