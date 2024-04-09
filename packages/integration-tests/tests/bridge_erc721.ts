@@ -29,7 +29,8 @@ import type {
 
 const { expect } = chai;
 
-describe('Bridging ERC721 tokens', async function () {
+// TODO: develop new version of ERC721 gateway
+describe.skip('Bridging ERC721 tokens', async function () {
   // Timeout 6 minutes 40 seconds
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;

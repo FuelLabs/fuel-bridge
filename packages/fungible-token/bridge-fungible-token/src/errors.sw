@@ -8,4 +8,5 @@ pub enum BridgeFungibleTokenError {
     OverflowError: (),
     UnderflowError: (),
     AssetNotFound: (),
+    InvalidAmount: (),
 }

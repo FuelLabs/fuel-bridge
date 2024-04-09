@@ -59,13 +59,11 @@ describe('Bridging ERC20 tokens', async function () {
       env.eth.fuelERC20Gateway,
       FUEL_TX_PARAMS
     );
-    fuel_testContractId = fuel_testToken.id.toHexString();
-    fuel_testAssetId = getTokenId(fuel_testToken);
 
-    const { value: expectedTokenContractId } = await fuel_testToken.functions
-      .bridged_token()
-      .txParams(FUEL_CALL_TX_PARAMS)
-      .dryRun();
+    fuel_testContractId = fuel_testToken.id.toHexString();
+    await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_testContractId);
+    fuel_testAssetId = getTokenId(fuel_testToken, eth_testTokenAddress);
+
     const { value: expectedGatewayContractId } = await fuel_testToken.functions
       .bridged_token_gateway()
       .txParams(FUEL_CALL_TX_PARAMS)
@@ -73,9 +71,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     // check that values for the test token and gateway contract match what
     // was compiled into the bridge-fungible-token binaries
-    expect(fuel_to_eth_address(expectedTokenContractId)).to.equal(
-      eth_testTokenAddress
-    );
+
     expect(fuel_to_eth_address(expectedGatewayContractId)).to.equal(
       eth_erc20GatewayAddress
     );
@@ -125,12 +121,8 @@ describe('Bridging ERC20 tokens', async function () {
       // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
       const tx = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
-        .deposit(
-          fuelTokenReceiverAddress,
-          eth_testTokenAddress,
-          fuel_testContractId,
-          NUM_TOKENS
-        );
+        .deposit(fuelTokenReceiverAddress, eth_testTokenAddress, NUM_TOKENS);
+
       const receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
 
@@ -166,11 +158,29 @@ describe('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
+
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
         maturity: undefined,
       });
-      expect((await tx.waitForResult()).status).to.equal('success');
+
+      const txResult = await tx.waitForResult();
+
+      expect(txResult.status).to.equal('success');
+      expect(txResult.mintedAssets.length).to.equal(1);
+
+      const [mintedAsset] = txResult.mintedAssets;
+
+      expect(mintedAsset.assetId).to.equal(fuel_testAssetId);
+      expect(mintedAsset.amount.toString()).to.equal(
+        (NUM_TOKENS / DECIMAL_DIFF).toString()
+      );
+    });
+
+    it('Check metadata was registered', async () => {
+      await fuel_testToken.functions
+        .asset_to_l1_address({ value: fuel_testAssetId })
+        .call();
     });
 
     it('Check ERC20 arrived on Fuel', async () => {
@@ -273,13 +283,16 @@ describe('Bridging ERC20 tokens', async function () {
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+
+      await env.eth.fuelMessagePortal
+        .connect(env.eth.signers[0])
+        .relayMessage(
+          relayMessageParams.message,
+          relayMessageParams.rootBlockHeader,
+          relayMessageParams.blockHeader,
+          relayMessageParams.blockInHistoryProof,
+          relayMessageParams.messageInBlockProof
+        );
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {

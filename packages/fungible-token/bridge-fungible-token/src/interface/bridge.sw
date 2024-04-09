@@ -26,12 +26,6 @@ abi Bridge {
     #[storage(read, write)]
     fn withdraw(to: b256);
 
-    /// Get the bridged token
-    fn bridged_token() -> b256;
-
-    /// Get the bridged token decimals
-    fn bridged_token_decimals() -> u8;
-
     /// Get the address of the gateway that holds the bridged tokens
     fn bridged_token_gateway() -> b256;
 
@@ -39,6 +33,6 @@ abi Bridge {
     #[storage(read)]
     fn asset_to_sub_id(asset_id: AssetId) -> SubId;
 
-    /// Sends a message to the L1 gateway to inform of capabilities to receive funds
-    fn register_bridge();
+    #[storage(read)]
+    fn asset_to_l1_address(asset_id: AssetId) -> b256;
 }

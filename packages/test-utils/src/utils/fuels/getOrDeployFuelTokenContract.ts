@@ -5,19 +5,11 @@ import {
 import type { NFT, Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { AddressLike } from 'ethers';
 import type { TxParams } from 'fuels';
-import { ContractFactory, bn, Contract, TransactionStatus } from 'fuels';
+import { ContractFactory, Contract } from 'fuels';
 
-import {
-  createRelayMessageParams,
-  waitForBlockCommit,
-  waitForBlockFinalization,
-} from '../ethers';
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
 import type { TestEnvironment } from '../setup';
-
-import { getBlock } from './getBlock';
-import { getMessageOutReceipt } from './getMessageOutReceipt';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
@@ -35,9 +27,7 @@ export async function getOrDeployFuelTokenContract(
         : await ethTokenGateway.getAddress();
   }
 
-  const tokenAddress = (await ethTestToken.getAddress()).replace('0x', '');
   const tokenGateway = ethTokenGateway.replace('0x', '');
-  const ethAcct = env.eth.signers[0];
   const fuelAcct = env.fuel.signers[1];
 
   let fuelTestToken: Contract = null;
@@ -67,13 +57,8 @@ export async function getOrDeployFuelTokenContract(
       env.fuel.deployer
     );
 
-    const BRIDGED_TOKEN_DECIMALS: number =
-      'decimals' in ethTestToken ? Number(await ethTestToken.decimals()) : 0;
-
     const configurableConstants: any = {
-      BRIDGED_TOKEN_DECIMALS,
       BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGateway),
-      BRIDGED_TOKEN: eth_address_to_b256(tokenAddress),
     };
 
     if (DECIMALS !== undefined) configurableConstants['DECIMALS'] = DECIMALS;
@@ -105,58 +90,6 @@ export async function getOrDeployFuelTokenContract(
 
     const [fuelSigner] = env.fuel.signers;
     fuelTestToken.account = fuelSigner;
-
-    await fuelTestToken.functions
-      .register_bridge()
-      .txParams({
-        gasPrice: bn(fuelTxParams.gasPrice),
-        gasLimit: bn(10_000),
-      })
-      .callParams({
-        gasLimit: bn(10_000),
-      })
-      .fundWithRequiredCoins(maxFee)
-      .then((scope) => scope.getTransactionRequest())
-      .then((txRequest) => fuelTestToken.account.sendTransaction(txRequest))
-      .then((txResponse) => txResponse.waitForResult())
-      .then((txResult) =>
-        txResult.status === TransactionStatus.success
-          ? Promise.all([
-              txResult,
-              getBlock(env.fuel.provider.url, txResult.blockId!),
-            ])
-          : Promise.reject('register_bridge() transaction failed')
-      )
-      .then(([txResult, block]) =>
-        Promise.all([txResult, waitForBlockCommit(env, block.header.height)])
-      )
-      .then(([txResult, commitHash]) => {
-        const { nonce } = getMessageOutReceipt(txResult.receipts);
-
-        return env.fuel.provider.getMessageProof(
-          txResult.id!,
-          nonce,
-          commitHash
-        );
-      })
-      .then((messageProof) =>
-        Promise.all([
-          createRelayMessageParams(messageProof),
-          waitForBlockFinalization(env, messageProof),
-        ])
-      )
-      .then(([relayMessageParams]) =>
-        env.eth.fuelMessagePortal
-          .connect(ethAcct)
-          .relayMessage(
-            relayMessageParams.message,
-            relayMessageParams.rootBlockHeader,
-            relayMessageParams.blockHeader,
-            relayMessageParams.blockInHistoryProof,
-            relayMessageParams.messageInBlockProof
-          )
-      )
-      .then((tx) => tx.wait());
 
     debug('Set up bridge contract');
   }

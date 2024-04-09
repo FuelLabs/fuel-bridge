@@ -39,6 +39,7 @@ const config: HardhatUserConfig = {
       accounts: {
         count: 128,
       },
+      deploy: ['deploy/hardhat'],
     },
     localhost: {
       url: 'http://127.0.0.1:8545/',

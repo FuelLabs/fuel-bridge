@@ -1,4 +1,7 @@
-use crate::utils::setup::{get_asset_id, BridgeFungibleTokenContract};
+use crate::utils::{
+    constants::BRIDGED_TOKEN,
+    setup::{get_asset_id, BridgeFungibleTokenContract},
+};
 use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{CallParameters, TxPolicies},
@@ -28,7 +31,7 @@ pub(crate) async fn withdraw(
 ) -> FuelCallResponse<()> {
     let tx_policies = TxPolicies::new(Some(0), None, Some(0), None, Some(gas));
     let contract_id = contract.contract_id();
-    let asset_id = get_asset_id(contract_id);
+    let asset_id = get_asset_id(contract_id, BRIDGED_TOKEN);
     let call_params = CallParameters::new(amount, asset_id, gas);
 
     contract
@@ -40,30 +43,6 @@ pub(crate) async fn withdraw(
         .call()
         .await
         .unwrap()
-}
-
-pub(crate) async fn bridged_token(
-    contract: &BridgeFungibleTokenContract<WalletUnlocked>,
-) -> Bits256 {
-    contract
-        .methods()
-        .bridged_token()
-        .call()
-        .await
-        .unwrap()
-        .value
-}
-
-pub(crate) async fn bridged_token_decimals(
-    contract: &BridgeFungibleTokenContract<WalletUnlocked>,
-) -> u8 {
-    contract
-        .methods()
-        .bridged_token_decimals()
-        .call()
-        .await
-        .unwrap()
-        .value
 }
 
 pub(crate) async fn bridged_token_gateway(

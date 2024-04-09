@@ -18,6 +18,10 @@ pub(crate) const FROM: &str = "0x00000000000000000000000088888888888888888888888
 
 pub(crate) const BRIDGED_TOKEN_DECIMALS: u64 = 18;
 pub(crate) const PROXY_TOKEN_DECIMALS: u64 = 9;
-pub(crate) const PRECISION: u64 = 10u64.pow((BRIDGED_TOKEN_DECIMALS - PROXY_TOKEN_DECIMALS) as u32);
 
 pub(crate) const MESSAGE_AMOUNT: u64 = 100;
+
+pub(crate) const DEPOSIT_TO_ADDRESS_FLAG: u8 = 0;
+pub(crate) const DEPOSIT_TO_CONTRACT_FLAG: u8 = 1;
+pub(crate) const DEPOSIT_WITH_DATA_FLAG: u8 = 2;
+pub(crate) const METADATA_MESSAGE_FLAG: u8 = 3;

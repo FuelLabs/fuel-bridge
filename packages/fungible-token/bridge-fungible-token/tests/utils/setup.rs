@@ -1,10 +1,12 @@
 use crate::utils::{
     builder,
     constants::{
-        BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, CONTRACT_MESSAGE_PREDICATE_BINARY,
-        DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT, MESSAGE_SENDER_ADDRESS,
+        BRIDGED_TOKEN_DECIMALS, BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
+        CONTRACT_MESSAGE_PREDICATE_BINARY, DEPOSIT_RECIPIENT_CONTRACT_BINARY, MESSAGE_AMOUNT,
+        MESSAGE_SENDER_ADDRESS,
     },
 };
+use ethers::abi::Token;
 use fuel_core_types::{
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
     fuel_types::{Nonce, Word},
@@ -19,13 +21,14 @@ use fuels::{
         Provider, TxPolicies,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{input::Input, message::Message, Bits256, U256},
+    types::{input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
-use sha3::{Digest, Keccak256};
+use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
+    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG,
+    DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
 };
 
 abigen!(
@@ -140,14 +143,6 @@ impl BridgingConfig {
                 two: overflow_2,
                 three: overflow_3,
             },
-        }
-    }
-
-    pub fn fuel_equivalent_amount(&self, amount: U256) -> u64 {
-        if self.adjustment.is_div {
-            (amount * self.adjustment.factor).as_u64()
-        } else {
-            (amount / self.adjustment.factor).as_u64()
         }
     }
 }
@@ -399,30 +394,37 @@ pub(crate) fn encode_hex(val: U256) -> [u8; 32] {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub(crate) async fn create_msg_data(
+pub(crate) async fn create_deposit_message(
     token: &str,
     token_id: &str,
     from: &str,
     to: [u8; 32],
     amount: U256,
+    decimals: u64,
     config: Option<BridgeFungibleTokenContractConfigurables>,
     deposit_to_contract: bool,
     extra_data: Option<Vec<u8>>,
 ) -> ((u64, Vec<u8>), (u64, AssetId), Option<ContractId>) {
-    let mut message_data = Vec::with_capacity(5);
+    let mut message_data: Vec<u8> = vec![];
+
+    let deposit_type: u8 = match (deposit_to_contract, &extra_data) {
+        (false, Some(_)) => unreachable!(),
+        (false, None) => DEPOSIT_TO_ADDRESS_FLAG,
+        (true, None) => DEPOSIT_TO_CONTRACT_FLAG,
+        (true, Some(_)) => DEPOSIT_WITH_DATA_FLAG,
+    };
+
+    message_data.append(&mut encode_hex(U256::from(deposit_type)).to_vec());
     message_data.append(&mut decode_hex(token));
     message_data.append(&mut decode_hex(token_id));
     message_data.append(&mut decode_hex(from));
     message_data.append(&mut to.to_vec());
     message_data.append(&mut encode_hex(amount).to_vec());
+    message_data.append(&mut encode_hex(U256::from(decimals)).to_vec());
 
     let mut deposit_recipient: Option<ContractId> = None;
 
     if deposit_to_contract {
-        let hash = keccak_hash("DEPOSIT_TO_CONTRACT");
-        let mut byte: Vec<u8> = vec![0u8];
-        byte.copy_from_slice(&hash[..1]);
-        message_data.append(&mut byte);
         deposit_recipient = Option::Some(ContractId::new(to));
     };
 
@@ -434,7 +436,30 @@ pub(crate) async fn create_msg_data(
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
 
+
     (message, coin, deposit_recipient)
+}
+
+pub(crate) async fn create_metadata_message(
+    token_address: &str,
+    token_id: &str,
+    token_name: &str,
+    token_symbol: &str,
+    config: Option<BridgeFungibleTokenContractConfigurables>,
+) -> Vec<u8> {
+    let mut message_data: Vec<u8> = vec![];
+    message_data.append(&mut encode_hex(U256::from(METADATA_MESSAGE_FLAG)).to_vec());
+
+    let items: Vec<Token> = vec![
+        Token::FixedBytes(decode_hex(token_address)),
+        Token::FixedBytes(decode_hex(token_id)),
+        Token::String(String::from(token_name)),
+        Token::String(String::from(token_symbol)),
+    ];
+    let mut payload = ethers::abi::encode(&items);
+    message_data.append(&mut payload);
+
+    prefix_contract_id(message_data, config).await
 }
 
 pub(crate) fn parse_output_message_data(data: &[u8]) -> (Vec<u8>, Bits256, Bits256, U256, Bits256) {
@@ -469,53 +494,70 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
     wallet.get_asset_balance(asset_id).await.unwrap()
 }
 
-fn keccak_hash<B>(data: B) -> Bytes32
-where
-    B: AsRef<[u8]>,
-{
-    let mut hasher = Keccak256::new();
-    hasher.update(data);
-    <[u8; Bytes32::LEN]>::from(hasher.finalize()).into()
-}
+pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
+    let data: Vec<u8> = Bits256::from_hex_str(token)
+        .unwrap()
+        .0
+        .iter()
+        .chain(Bits256::zeroed().0.iter())
+        .cloned()
+        .collect();
 
-pub(crate) fn get_asset_id(contract_id: &Bech32ContractId) -> AssetId {
-    contract_id.asset_id(&Bits256::zeroed())
+    let sub_id = sha2::Sha256::digest(data);
+
+    contract_id.asset_id(&Bits256::from_hex_str(&hex::encode(sub_id)).unwrap())
 }
 
 /// This setup mints tokens so that they are registered as minted assets in the bridge
-pub(crate) async fn setup_test() -> (BridgeFungibleTokenContract<WalletUnlocked>, BridgingConfig) {
+pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> {
     let mut wallet = create_wallet();
 
-    let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
+    let amount = u64::MAX;
 
-    let (message, coin, deposit_contract) = create_msg_data(
+    let (message, coin, deposit_contract) = create_deposit_message(
         BRIDGED_TOKEN,
         BRIDGED_TOKEN_ID,
         FROM,
         *wallet.address().hash(),
-        config.amount.test,
+        U256::from(amount),
+        BRIDGED_TOKEN_DECIMALS,
         None,
         false,
         None,
     )
     .await;
 
+    let metadata_message =
+        create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", None).await;
+
     let (contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
-        vec![message],
+        vec![message, (0, metadata_message)],
         deposit_contract,
         None,
         None,
     )
     .await;
 
-    let _receipts = relay_message_to_contract(
+    let tx_id = relay_message_to_contract(
         &wallet,
         utxo_inputs.message[0].clone(),
-        utxo_inputs.contract,
+        utxo_inputs.contract.clone(),
+    )
+    .await;
+    let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+    assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+    let tx_id = relay_message_to_contract(
+        &wallet,
+        utxo_inputs.message[1].clone(),
+        utxo_inputs.contract.clone(),
     )
     .await;
 
-    (contract, config)
+    let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+    assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+    contract
 }

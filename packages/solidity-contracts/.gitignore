@@ -4,6 +4,7 @@ node_modules
 .openzeppelin/unknown*
 
 # local deployments
+deployments/localhost
 deployments/deployments.local.json
 
 coverage

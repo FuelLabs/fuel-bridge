@@ -1,5 +1,7 @@
 library;
 
+use std::string::String;
+
 pub struct RefundRegisteredEvent {
     pub amount: b256,
     pub token_address: b256,
@@ -24,4 +26,11 @@ pub struct ClaimRefundEvent {
     pub from: b256,
     pub token_address: b256,
     pub token_id: b256,
+}
+
+pub struct MetadataEvent {
+    pub token_address: b256,
+    // TODO: SDK does not support decoding these types
+    // pub symbol: String,
+    // pub name: String
 }

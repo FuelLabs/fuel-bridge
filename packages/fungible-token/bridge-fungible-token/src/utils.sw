@@ -1,6 +1,6 @@
 library;
 
-use ::data_structures::MessageData;
+use ::data_structures::deposit_message::DepositMessage;
 use ::errors::BridgeFungibleTokenError;
 use ::events::DepositEvent;
 use std::{
