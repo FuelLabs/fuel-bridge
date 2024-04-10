@@ -85,10 +85,9 @@ impl MessageReceiver for Contract {
         // Protect against reentrancy attacks that could allow replaying messages
         reentrancy_guard();
 
-        let input_sender = input_message_sender(msg_idx);
+        let input_sender: b256 = input_message_sender(msg_idx).into();
         require(
-            input_sender
-                .value == BRIDGED_TOKEN_GATEWAY,
+            input_sender == BRIDGED_TOKEN_GATEWAY,
             BridgeFungibleTokenError::UnauthorizedSender,
         );
 
