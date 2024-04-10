@@ -29,7 +29,10 @@ import { resourcesToInputs } from './transaction';
 // Details for relaying common messages with certain predicate roots
 function getCommonRelayableMessages(provider: Provider) {
   // Create a predicate for common messages
-  const predicate = new Predicate(contractMessagePredicate, provider);
+  const predicate = new Predicate({
+    bytecode: contractMessagePredicate,
+    provider,
+  });
 
   // Details for relaying common messages with certain predicate roots
   const relayableMessages: CommonMessageDetails[] = [
