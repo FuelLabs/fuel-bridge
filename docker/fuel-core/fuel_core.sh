@@ -62,4 +62,4 @@ exec /root/fuel-core run \
     --poa-instant true \
     --debug \
     --min-gas-price 1 \
-    --chain ./chainConfig.json
+    --snapshot ./

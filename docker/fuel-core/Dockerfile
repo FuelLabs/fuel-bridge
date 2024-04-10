@@ -1,4 +1,4 @@
-FROM ghcr.io/fuellabs/fuel-core:v0.22.0
+FROM ghcr.io/fuellabs/fuel-core:v0.24.2
 
 ARG FUEL_IP=0.0.0.0
 ARG FUEL_PORT=4001
@@ -10,7 +10,9 @@ RUN apt update && apt install -y curl jq && rm -rf /var/lib/apt/lists/*
 
 # copy chain config
 WORKDIR /fuel
-COPY ./chainConfig.json .
+COPY ./chain_config.json .
+COPY ./metadata.json .
+COPY ./state_config.json .
 
 # expose fuel node port
 ENV FUEL_IP="${FUEL_IP}"
