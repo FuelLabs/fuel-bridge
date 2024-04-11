@@ -12,7 +12,9 @@ use std::str::FromStr;
 
 mod success {
     use super::*;
+    use crate::utils::constants::BRIDGED_TOKEN_GATEWAY;
     use crate::utils::interface::src20::total_supply;
+    use crate::utils::setup::setup_environment_with_proxy;
     use crate::utils::{
         constants::MESSAGE_AMOUNT,
         setup::{
@@ -30,6 +32,116 @@ mod success {
         programs::contract::SettableContract,
         types::{tx_status::TxStatus, Bits256},
     };
+
+    #[tokio::test]
+    async fn deposit_to_wallet_with_proxy() {
+        let mut wallet = create_wallet();
+        
+        let amount: u64 = 10;
+        let token_address = "0x000000000000000000000000fcF38f326CA709b0B04B2215Dbc969fC622775F7";
+        let token_id = BRIDGED_TOKEN_ID;
+        let from_address = "0x00000000000000000000000090F79bf6EB2c4f870365E785982E1f101E93b906";
+        let message_sender = "0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
+        let recipient: Bytes32 = Bytes32::from_bytes(&hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28").unwrap()).unwrap();
+        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
+        
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = Some(
+            BridgeFungibleTokenContractConfigurables::default()
+                .with_BRIDGED_TOKEN_GATEWAY(Bits256::from_hex_str(message_sender).unwrap())
+                .unwrap()
+        );
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            token_address,
+            token_id,
+            from_address,
+            *recipient,
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
+            configurables.clone(),
+            false,
+            None,
+        )
+        .await;
+
+        let (bridge, implementation, target_id, utxo_inputs) = setup_environment_with_proxy(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            Some(message_sender),
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        let impl_double_value = implementation.methods().double_value(42).call().await.unwrap().value;
+        assert_eq!(impl_double_value, (42 * 2));
+
+        let proxy_double_value = bridge.methods()
+            .double_value(42)
+            .with_contract_ids(&[target_id.clone().into()])
+            .call().await.unwrap().value;
+
+        assert_eq!(proxy_double_value, (42 * 2));
+
+        let impl_bridged_token_gateway = implementation.methods()
+            .bridged_token_gateway()
+            .call().await.unwrap().value;
+        assert_eq!(impl_bridged_token_gateway, Bits256::from_hex_str(message_sender).unwrap());
+
+        let proxy_bridged_token_gateway = bridge.methods()
+            .bridged_token_gateway()
+            .with_contract_ids(&[target_id.clone().into()])
+            .call().await.unwrap().value;
+        assert_eq!(proxy_bridged_token_gateway, Bits256::from_hex_str(message_sender).unwrap());
+
+        // let result = bridge.methods()
+        //     .bridged_token_gateway()
+        //     .with_contract_ids(&[target_id.clone().into(), bridge.contract_id().into()])
+        //     .call()
+        //     .await
+        //     .unwrap();
+
+        // // Relay the test message to the bridge contract
+        // let tx_id = relay_message_to_contract(
+        //     &wallet,
+        //     utxo_inputs.message[0].clone(),
+        //     utxo_inputs.contract,
+        // )
+        // .await;
+
+        // let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+        // dbg!(tx_status.clone().take_receipts());
+        // assert!(matches!(tx_status, TxStatus::Success { .. }));
+        
+        // let eth_balance =
+        //     contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+        // let asset_id = get_asset_id(bridge.contract_id(), token_address);
+        // let asset_balance = provider.get_asset_balance(&recipient_bech32, asset_id).await.unwrap();
+        
+        // // Verify the message value was received by the bridge
+        // assert_eq!(eth_balance, MESSAGE_AMOUNT);
+
+        // // Check that wallet now has bridged coins
+        // assert_eq!(asset_balance, amount);
+
+        // // Verify that a L1 token has been registered
+        // let registered_l1_address: Bits256 = bridge
+        //     .methods()
+        //     .asset_to_l1_address(asset_id)
+        //     .call()
+        //     .await
+        //     .unwrap()
+        //     .value;
+
+        // assert_eq!(
+        //     registered_l1_address,
+        //     Bits256::from_hex_str(token_address).unwrap()
+        // );
+    }
+
 
     #[tokio::test]
     async fn deposit_to_wallet() {

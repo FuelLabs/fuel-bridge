@@ -35,6 +35,7 @@ dependencies = ["std"]
 name = "proxy"
 source = "member"
 dependencies = [
+    "contract_message_receiver",
     "interface",
     "src_20",
     "std",

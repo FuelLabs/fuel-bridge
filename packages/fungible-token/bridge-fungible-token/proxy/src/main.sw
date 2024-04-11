@@ -6,12 +6,14 @@ use std::{
     string::String,
 };
 use src_20::SRC20;
+use contract_message_receiver::MessageReceiver;
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 
 
 configurable {
     TARGET: ContractId = ContractId::from(ZERO_B256)
 }
+
 
 
 impl Bridge for Contract {
@@ -39,31 +41,45 @@ impl Bridge for Contract {
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
         run_external(TARGET)
     }
-}
 
-impl SRC20 for Contract {
-    #[storage(read)]
-    fn total_assets() -> u64 {
-        run_external(TARGET)
-    }
-
-    #[storage(read)]
-    fn total_supply(asset: AssetId) -> Option<u64> {
-        run_external(TARGET)
-    }
-
-    #[storage(read)]
-    fn name(asset: AssetId) -> Option<String> {
-        run_external(TARGET)
-    }
-
-    #[storage(read)]
-    fn symbol(asset: AssetId) -> Option<String> {
-        run_external(TARGET)
-    }
-
-    #[storage(read)]
-    fn decimals(asset: AssetId) -> Option<u8> {
+    fn double_value(foo: u64) -> u64 {
         run_external(TARGET)
     }
 }
+
+impl MessageReceiver for Contract {
+    #[payable]
+    #[storage(read, write)]
+    fn process_message(msg_idx: u64) {
+        run_external(TARGET)
+    }
+}
+
+// // Uncomment this and compiler fails
+
+// impl SRC20 for Contract {
+//     #[storage(read)]
+//     fn total_assets() -> u64 {
+//         run_external(TARGET)
+//     }
+
+//     #[storage(read)]
+//     fn total_supply(asset: AssetId) -> Option<u64> {
+//         run_external(TARGET)
+//     }
+
+//     #[storage(read)]
+//     fn name(asset: AssetId) -> Option<String> {
+//         run_external(TARGET)
+//     }
+
+//     #[storage(read)]
+//     fn symbol(asset: AssetId) -> Option<String> {
+//         run_external(TARGET)
+//     }
+
+//     #[storage(read)]
+//     fn decimals(asset: AssetId) -> Option<u8> {
+//         run_external(TARGET)
+//     }
+// }

@@ -12,33 +12,33 @@ use fuel_core_types::{
 };
 
 use fuels::{
-    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
-    prelude::{
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount}, prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    },
-    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
+    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG,
-    DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
+    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
 };
 
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "packages/fungible-token/bridge-fungible-token/implementation/out/release/bridge_fungible_token-abi.json",
+        abi = "packages/fungible-token/bridge-fungible-token/implementation/out/debug/bridge_fungible_token-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",
         abi =
-            "packages/fungible-token/test-deposit-recipient-contract/out/release/test_deposit_recipient_contract-abi.json",
+            "packages/fungible-token/test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract-abi.json",
     ),
+    Contract(
+        name = "BridgeProxy",
+        abi = "packages/fungible-token/bridge-fungible-token/proxy/out/debug/proxy-abi.json",
+    )
 );
 
 /// Used for setting up tests with various message values
@@ -208,19 +208,30 @@ pub(crate) async fn setup_environment(
     wallet.set_provider(provider);
 
     // Set up the bridge contract instance
-    let load_configuration = match configurables {
+    let implementation_config = match configurables {
         Some(config) => LoadConfiguration::default().with_configurables(config),
         None => LoadConfiguration::default(),
     };
-
-    let test_contract_id =
-        Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, load_configuration)
+    
+    let implementation_contract_id =
+        Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
             .unwrap()
             .deploy(&wallet.clone(), TxPolicies::default())
             .await
             .unwrap();
 
-    let bridge = BridgeFungibleTokenContract::new(test_contract_id.clone(), wallet.clone());
+    // let proxy_configurables
+    let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
+    let proxy_config = LoadConfiguration::default().with_configurables(proxy_configurables);
+    let proxy_contract_id = 
+        Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
+            .unwrap()
+            .deploy(&wallet.clone(), TxPolicies::default())
+            .await
+            .unwrap();
+
+
+    let bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs = all_coins
@@ -246,7 +257,7 @@ pub(crate) async fn setup_environment(
         Bytes32::zeroed(),
         Bytes32::zeroed(),
         TxPointer::default(),
-        test_contract_id.into(),
+        proxy_contract_id.into(),
     )];
 
     if let Some(id) = deposit_contract {
@@ -261,6 +272,135 @@ pub(crate) async fn setup_environment(
 
     (
         bridge,
+        UTXOInputs {
+            contract: contract_inputs,
+            coin: coin_inputs,
+            message: message_inputs,
+        },
+    )
+}
+
+
+/// Sets up a test fuel environment with a funded wallet
+pub(crate) async fn setup_environment_with_proxy(
+    wallet: &mut WalletUnlocked,
+    coins: Vec<(Word, AssetId)>,
+    messages: Vec<(Word, Vec<u8>)>,
+    deposit_contract: Option<ContractId>,
+    sender: Option<&str>,
+    configurables: Option<BridgeFungibleTokenContractConfigurables>,
+) -> (BridgeFungibleTokenContract<WalletUnlocked>, BridgeFungibleTokenContract<WalletUnlocked>, Bech32ContractId,  UTXOInputs) {
+    // Generate coins for wallet
+    let asset_configs: Vec<AssetConfig> = coins
+        .iter()
+        .map(|coin| AssetConfig {
+            id: coin.1,
+            num_coins: 1,
+            coin_amount: coin.0,
+        })
+        .collect();
+    let all_coins = setup_custom_assets_coins(wallet.address(), &asset_configs[..]);
+
+    // Generate message
+    let mut message_nonce = Nonce::zeroed();
+    let message_sender = match sender {
+        Some(v) => Address::from_str(v).unwrap(),
+        None => Address::from_str(MESSAGE_SENDER_ADDRESS).unwrap(),
+    };
+
+    let predicate = Predicate::load_from(CONTRACT_MESSAGE_PREDICATE_BINARY).unwrap();
+    let predicate_root = predicate.address();
+
+    let mut all_messages: Vec<Message> = Vec::with_capacity(messages.len());
+    for msg in messages {
+        all_messages.push(setup_single_message(
+            &message_sender.into(),
+            predicate_root,
+            msg.0,
+            message_nonce,
+            msg.1.clone(),
+        ));
+        message_nonce[0] += 1;
+    }
+
+    // Create a provider with the coins and messages
+    let provider = setup_test_provider(all_coins.clone(), all_messages.clone(), None, None)
+        .await
+        .unwrap();
+
+    wallet.set_provider(provider);
+
+    // Set up the bridge contract instance
+    let implementation_config = match configurables {
+        Some(config) => 
+            LoadConfiguration::default()
+                .with_configurables(config)
+                .with_storage_configuration(StorageConfiguration::default().with_autoload(false)),
+        None => LoadConfiguration::default(),
+    };
+    
+    let implementation_contract_id =
+        Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
+            .unwrap()
+            .deploy(&wallet.clone(), TxPolicies::default())
+            .await
+            .unwrap();
+
+    // let proxy_configurables
+    let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
+    let proxy_config = LoadConfiguration::default().with_configurables(proxy_configurables);
+    let proxy_contract_id = 
+        Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
+            .unwrap()
+            .deploy(&wallet.clone(), TxPolicies::default())
+            .await
+            .unwrap();
+
+
+    let bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
+    let implementation = BridgeFungibleTokenContract::new(implementation_contract_id.clone(), wallet.clone());
+
+    // Build inputs for provided coins
+    let coin_inputs = all_coins
+        .into_iter()
+        .map(|coin| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(coin)))
+        .collect();
+
+    // Build inputs for provided messages
+    let message_inputs = all_messages
+        .into_iter()
+        .map(|message| {
+            Input::resource_predicate(
+                fuels::types::coin_type::CoinType::Message(message),
+                predicate.code().clone(),
+                Default::default(),
+            )
+        })
+        .collect();
+
+    // Build contract inputs
+    let mut contract_inputs = vec![Input::contract(
+        UtxoId::new(Bytes32::zeroed(), 0u16),
+        Bytes32::zeroed(),
+        Bytes32::zeroed(),
+        TxPointer::default(),
+        proxy_contract_id.into(),
+    )];
+
+    if let Some(id) = deposit_contract {
+        contract_inputs.push(Input::contract(
+            UtxoId::new(Bytes32::zeroed(), 0u16),
+            Bytes32::zeroed(),
+            Bytes32::zeroed(),
+            TxPointer::default(),
+            id,
+        ));
+    }
+
+    (
+        bridge,
+        implementation,
+        implementation_contract_id,
         UTXOInputs {
             contract: contract_inputs,
             coin: coin_inputs,

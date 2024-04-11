@@ -35,4 +35,6 @@ abi Bridge {
 
     #[storage(read)]
     fn asset_to_l1_address(asset_id: AssetId) -> b256;
+
+    fn double_value(foo: u64) -> u64;
 }
