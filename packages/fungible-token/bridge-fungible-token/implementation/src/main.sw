@@ -3,7 +3,6 @@ contract;
 mod data_structures;
 mod errors;
 mod events;
-mod interface;
 mod utils;
 
 use contract_message_receiver::MessageReceiver;
