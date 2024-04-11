@@ -179,7 +179,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check metadata was registered', async () => {
       await fuel_testToken.functions
-        .asset_to_l1_address({ value: fuel_testAssetId })
+        .asset_to_l1_address({ bits: fuel_testAssetId })
         .call();
     });
 
