@@ -32,7 +32,7 @@ use super::constants::{
 abigen!(
     Contract(
         name = "BridgeFungibleTokenContract",
-        abi = "packages/fungible-token/bridge-fungible-token/out/release/bridge_fungible_token-abi.json",
+        abi = "packages/fungible-token/bridge-fungible-token/implementation/out/release/bridge_fungible_token-abi.json",
     ),
     Contract(
         name = "DepositRecipientContract",
