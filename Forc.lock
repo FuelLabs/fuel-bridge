@@ -36,6 +36,7 @@ name = "proxy"
 source = "member"
 dependencies = [
     "interface",
+    "src_20",
     "std",
 ]
 
