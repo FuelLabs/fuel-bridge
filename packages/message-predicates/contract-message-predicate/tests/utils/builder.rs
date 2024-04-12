@@ -11,11 +11,9 @@ use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{ScriptTransaction, TxPolicies},
     types::{
-        coin_type::CoinType,
-        input::Input,
-        transaction_builders::{
+        coin::Coin, coin_type::CoinType, input::Input, transaction_builders::{
             BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder,
-        },
+        }
     },
 };
 
@@ -36,21 +34,18 @@ pub async fn build_contract_message_tx(
     // Loop through inputs and add to lists
     let mut change = HashMap::new();
 
-    let fetched_gas_coins: Vec<Input> = provider
+    let fetched_gas_coins: Vec<Coin> = provider
         .get_coins(wallet.address(), Default::default())
         .await
-        .unwrap()
-        .iter()
-        .map(|el| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(el.clone())))
-        .collect();
+        .unwrap();
 
     let funding_utx0 = fetched_gas_coins.first().unwrap().to_owned();
-
-    tx_inputs.push(funding_utx0.clone());
+    
+    tx_inputs.push(Input::resource_signed(CoinType::Coin(funding_utx0.clone())));
     tx_outputs.push(Output::Change {
         to: wallet.address().into(),
-        amount: funding_utx0.amount().unwrap_or_default(),
-        asset_id: funding_utx0.asset_id().unwrap_or_default(),
+        amount: funding_utx0.amount,
+        asset_id: funding_utx0.asset_id
     });
 
     for input in inputs {
@@ -63,7 +58,7 @@ pub async fn build_contract_message_tx(
             }
             Input::Contract { .. } => {
                 let contract_output = Contract {
-                    input_index: tx_inputs.len() as u8,
+                    input_index: tx_inputs.len() as u16,
                     balance_root: Bytes32::zeroed(),
                     state_root: Bytes32::zeroed(),
                 };
@@ -138,7 +133,7 @@ pub async fn build_invalid_contract_message_tx(
             }
             Input::Contract { .. } => {
                 let contract_output = Contract {
-                    input_index: tx_inputs.len() as u8,
+                    input_index: tx_inputs.len() as u16,
                     balance_root: Bytes32::zeroed(),
                     state_root: Bytes32::zeroed(),
                 };
