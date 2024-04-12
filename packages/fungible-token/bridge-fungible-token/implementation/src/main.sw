@@ -65,7 +65,9 @@ configurable {
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
 }
 
+#[namespace(bridge)]
 storage {
+    l1_gateway: b256 = 0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0,
     asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
     asset_to_token_id: StorageMap<AssetId, b256> = StorageMap {},
     refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
@@ -161,8 +163,9 @@ impl Bridge for Contract {
         });
     }
 
+    #[storage(read)]
     fn bridged_token_gateway() -> b256 {
-        BRIDGED_TOKEN_GATEWAY
+        storage.l1_gateway.try_read().unwrap_or(0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0)
     }
 
     #[storage(read)]

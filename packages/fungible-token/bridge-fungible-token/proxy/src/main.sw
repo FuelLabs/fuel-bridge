@@ -28,6 +28,7 @@ impl Bridge for Contract {
         run_external(TARGET)
     }
 
+    #[storage(read)]
     fn bridged_token_gateway() -> b256 {
         run_external(TARGET)
     }

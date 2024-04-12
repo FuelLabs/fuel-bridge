@@ -86,11 +86,13 @@ mod success {
 
         assert_eq!(proxy_double_value, (42 * 2));
 
+        // Works
         let impl_bridged_token_gateway = implementation.methods()
             .bridged_token_gateway()
             .call().await.unwrap().value;
         assert_eq!(impl_bridged_token_gateway, Bits256::from_hex_str(message_sender).unwrap());
 
+        // Does not work
         let proxy_bridged_token_gateway = bridge.methods()
             .bridged_token_gateway()
             .with_contract_ids(&[target_id.clone().into()])
