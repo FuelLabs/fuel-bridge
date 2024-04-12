@@ -232,11 +232,6 @@ describe('Bridging ERC20 tokens', async function () {
           },
         });
 
-      // const txRequestNotFunded = await scope.getTransactionRequest();
-      // const { maxFee } = await fuelTokenSender.provider.getTransactionCost(
-      //   txRequestNotFunded
-      // );
-
       const scopeFunded = await scope.fundWithRequiredCoins();
       const transactionRequest = await scopeFunded.getTransactionRequest();
 
