@@ -81,7 +81,7 @@ fn get_string_from_evm_bytes(evm_bytes: Bytes) -> String {
             let (_, str_bytes) = evm_bytes.split_at(32);
             let new_str = alloc_bytes(len);
             str_bytes.ptr().copy_bytes_to(new_str, len);
-            String::from_ascii(Bytes::from(raw_slice::from_parts::<u8>(new_str, len)))
+            String::from(raw_slice::from_parts::<u8>(new_str, len))
         },
     }
 }
