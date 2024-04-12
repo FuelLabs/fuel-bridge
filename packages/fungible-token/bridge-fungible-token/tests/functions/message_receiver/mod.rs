@@ -34,7 +34,7 @@ mod success {
     };
 
     #[tokio::test]
-    async fn deposit_to_wallet_with_proxy() {
+    async fn proxy() {
         let mut wallet = create_wallet();
         
         let amount: u64 = 10;
