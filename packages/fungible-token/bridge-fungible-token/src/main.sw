@@ -58,11 +58,10 @@ use utils::{
 };
 use src_20::SRC20;
 
-const DEFAULT_DECIMALS: u8 = 9u8;
+const FUEL_ASSET_DECIMALS: u8 = 9u8;
 const ZERO_U256 = 0x00u256;
 
 configurable {
-    DECIMALS: u64 = 9u64,
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
 }
 
@@ -74,6 +73,7 @@ storage {
     l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
     l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
     l1_names: StorageMap<b256, StorageString> = StorageMap {},
+    decimals: StorageMap<b256, u8> = StorageMap {},
     total_assets: u64 = 0,
 }
 
@@ -203,8 +203,8 @@ impl SRC20 for Contract {
 
     #[storage(read)]
     fn decimals(asset: AssetId) -> Option<u8> {
-        match storage.tokens_minted.get(asset).try_read() {
-            Some(_) => Some(DECIMALS.try_as_u8().unwrap_or(DEFAULT_DECIMALS)),
+        match storage.l1_addresses.get(asset).try_read() {
+            Some(l1_address) => storage.decimals.get(l1_address).try_read(),
             None => None,
         }
     }
@@ -329,6 +329,15 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         storage
             .l1_addresses
             .insert(asset_id, message_data.token_address);
+        if message_data.decimals < FUEL_ASSET_DECIMALS {
+            storage
+                .decimals
+                .insert(message_data.token_address, message_data.decimals);
+        } else {
+            storage
+                .decimals
+                .insert(message_data.token_address, FUEL_ASSET_DECIMALS);
+        }
     };
     // mint tokens & update storage
     mint(sub_id, amount);
