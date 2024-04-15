@@ -20,12 +20,16 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         withdrawalsPaused = true;
     }
 
-    function unpauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
+    function unpauseWithdrawals() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         withdrawalsPaused = false;
     }
 
-    function setMessageBlacklist(bytes32 messageId, bool value) external payable onlyRole(PAUSER_ROLE) {
-        messageIsBlacklisted[messageId] = value;
+    function addMessageToBlacklist(bytes32 messageId) external payable onlyRole(PAUSER_ROLE) {
+        messageIsBlacklisted[messageId] = true;
+    }
+
+    function removeMessageFromBlacklist(bytes32 messageId) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+        messageIsBlacklisted[messageId] = false;
     }
 
     ///////////////////////////////////////
