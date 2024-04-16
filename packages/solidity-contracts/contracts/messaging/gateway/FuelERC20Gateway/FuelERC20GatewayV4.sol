@@ -191,7 +191,7 @@ contract FuelERC20GatewayV4 is
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
         bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
-            MessageType.METADATA,
+            uint256(MessageType.METADATA),
             abi.encode(
                 tokenAddress,
                 uint256(0), // token_id = 0 for all erc20 deposits
