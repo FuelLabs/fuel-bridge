@@ -30,6 +30,7 @@ struct Message {
 
 /// @title FuelMessagePortal
 /// @notice The Fuel Message Portal contract sends messages to and from Fuel
+/// @custom:deprecation THIS CONTRACT IS DEPRECATED. CHECK FuelMessagePortalV3
 contract FuelMessagePortal is
     Initializable,
     PausableUpgradeable,
