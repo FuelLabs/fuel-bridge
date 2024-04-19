@@ -7,13 +7,14 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {FuelBridgeBase} from "./FuelBridgeBase.sol";
-import {FuelMessagePortal, CommonPredicates} from "../../fuelchain/FuelMessagePortal.sol";
-import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
+import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
+import {FuelMessagePortal, CommonPredicates} from "../../../fuelchain/FuelMessagePortal.sol";
+import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
 
 /// @title FuelERC20Gateway
 /// @notice The L1 side of the general ERC20 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
+/// @custom:deprecation THIS CONTRACT IS DEPRECATED. CHECK FuelERC20GatewayV4
 contract FuelERC20Gateway is
     Initializable,
     FuelBridgeBase,

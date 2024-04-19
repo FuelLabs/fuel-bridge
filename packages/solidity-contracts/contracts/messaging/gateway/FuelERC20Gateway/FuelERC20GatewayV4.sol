@@ -7,10 +7,9 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {FuelERC20GatewayV3} from "../v3/FuelERC20GatewayV3.sol";
 import {CommonPredicates} from "../../../lib/CommonPredicates.sol";
 import {FuelMessagePortal} from "../../../fuelchain/FuelMessagePortal.sol";
-import {FuelBridgeBase} from "../FuelBridgeBase.sol";
+import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
 import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
 
 /// @title FuelERC20GatewayV4

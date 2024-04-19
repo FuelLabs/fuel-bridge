@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-import "../v2/FuelERC20GatewayV2.sol";
+import "./FuelERC20GatewayV2.sol";
 
+/// @custom:deprecation THIS CONTRACT IS DEPRECATED. CHECK FuelERC20GatewayV4
 contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
     using SafeERC20Upgradeable for IERC20Upgradeable;
 
@@ -14,12 +15,7 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
     mapping(address => uint256) public depositLimitGlobal;
     mapping(address => uint256) public depositTotals;
 
-    function setGlobalDepositLimit(address token, uint256 limit)
-        external
-        payable
-        virtual
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setGlobalDepositLimit(address token, uint256 limit) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         depositLimitGlobal[token] = limit;
     }
 
@@ -28,11 +24,12 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
     /// @param amount Amount of tokens to deposit
     /// @param messageData The data of the message to send for deposit
-    function _deposit(address tokenAddress, bytes32 fuelContractId, uint256 amount, bytes memory messageData)
-        internal
-        virtual
-        override
-    {
+    function _deposit(
+        address tokenAddress,
+        bytes32 fuelContractId,
+        uint256 amount,
+        bytes memory messageData
+    ) internal virtual override {
         ////////////
         // Checks //
         ////////////
@@ -68,13 +65,12 @@ contract FuelERC20GatewayV3 is FuelERC20GatewayV2 {
     /// @param amount Amount of tokens to withdraw
     /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC20, it must be 0
     /// @dev Made payable to reduce gas costs
-    function finalizeWithdrawal(address to, address tokenAddress, uint256 amount, uint256 tokenId)
-        external
-        payable
-        override
-        whenNotPaused
-        onlyFromPortal
-    {
+    function finalizeWithdrawal(
+        address to,
+        address tokenAddress,
+        uint256 amount,
+        uint256 tokenId
+    ) external payable override whenNotPaused onlyFromPortal {
         ////////////
         // Checks //
         ////////////
