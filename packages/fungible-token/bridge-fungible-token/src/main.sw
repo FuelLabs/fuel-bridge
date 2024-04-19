@@ -379,6 +379,8 @@ fn _process_metadata(metadata: MetadataMessage) {
 
     log(MetadataEvent {
         token_address: metadata.token_address,
+        // symbol: metadata.symbol,
+        // name: metadata.name
     });
 }
 

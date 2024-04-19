@@ -86,7 +86,7 @@ describe('Bridging ERC20 tokens', async function () {
     await eth_testToken.mint(await env.eth.signers[1].getAddress(), 10_000);
   });
 
-  describe('Bridge ERC20 to Fuel', async () => {
+  describe.only('Bridge ERC20 to Fuel', async () => {
     const NUM_TOKENS = 10_000_000_000n;
     let ethereumTokenSender: Signer;
     let ethereumTokenSenderAddress: string;
@@ -159,6 +159,8 @@ describe('Bridging ERC20 tokens', async function () {
       );
       expect(message).to.not.be.null;
 
+      console.log(message.data.length);
+
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
         maturity: undefined,
@@ -181,6 +183,12 @@ describe('Bridging ERC20 tokens', async function () {
       await fuel_testToken.functions
         .asset_to_l1_address({ bits: fuel_testAssetId })
         .call();
+
+      const { value: l2_decimals } = await fuel_testToken.functions
+        .decimals({ bits: fuel_testAssetId })
+        .get();
+
+      expect(l2_decimals).to.be.equal(9);
     });
 
     it('Check ERC20 arrived on Fuel', async () => {
@@ -194,6 +202,53 @@ describe('Bridging ERC20 tokens', async function () {
           fuelTokenReceiverBalance.add(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
         )
       ).to.be.true;
+    });
+
+    it('Bridge metadata', async () => {
+      // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
+      const receipt = await env.eth.fuelERC20Gateway
+        .connect(ethereumTokenSender)
+        .sendMetadata(eth_testTokenAddress)
+        .then((tx) => tx.wait());
+
+      // parse events from logs
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          env.eth.fuelMessagePortal.filters.MessageSent,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      const nonce = new BN(event.args.nonce.toString());
+      const fuelReceiver = Address.fromB256(event.args.recipient);
+
+      // relay the message ourselves
+      const message = await waitForMessage(
+        env.fuel.provider,
+        fuelReceiver,
+        nonce,
+        FUEL_MESSAGE_TIMEOUT_MS
+      );
+      expect(message).to.not.be.null;
+
+      const tx = await relayCommonMessage(env.fuel.deployer, message, {
+        ...FUEL_TX_PARAMS,
+        maturity: undefined,
+      });
+
+      const txResult = await tx.waitForResult();
+
+      expect(txResult.status).to.equal('success');
+      console.log('Receipts', txResult.receipts);
+      console.log('Logs', txResult.logs);
+      console.log('Address', eth_testTokenAddress);
+
+      // Check that the relayed info has been correctly stored
+      const { value } = await fuel_testToken.functions
+        .name({ bits: fuel_testAssetId })
+        .get();
+      console.log('value: ', value);
     });
   });
 
