@@ -1,3 +1,4 @@
+import {time} from "@nomicfoundation/hardhat-network-helpers"
 import chai from 'chai';
 import { keccak256, toBeHex, toUtf8Bytes } from 'ethers';
 import { ethers } from 'hardhat';
@@ -27,7 +28,7 @@ function createBlock(height: number): BlockHeader {
   return header;
 }
 
-describe('Fuel Chain State', async () => {
+describe.only('Fuel Chain State', async () => {
   let env: HarnessObject;
 
   // Contract constants
@@ -255,6 +256,7 @@ describe('Fuel Chain State', async () => {
       ).to.not.be.reverted;
       expect(await env.fuelChainState.blockHashAtCommit(9)).to.equal(blockHash);
     });
+
   });
 
   describe('Verify valid blocks', async () => {
@@ -277,6 +279,29 @@ describe('Fuel Chain State', async () => {
       ).to.be.revertedWithCustomError(env.fuelChainState, 'UnknownBlock');
     });
   });
+
+  describe("Verify recommit cooldown", () => {
+    it("Should revert when trying to recommit to a warm slot", async () => {
+      const blockHash = randomBytes32();
+      const slot = 10;
+      await env.fuelChainState.connect(env.signers[1]).commit(blockHash, slot)
+
+      expect(await env.fuelChainState.blockHashAtCommit(slot)).to.equal(blockHash);
+
+      const cooldown = await env.fuelChainState.COMMIT_COOLDOWN();
+      const currentTime = await ethers.provider.getBlock("latest").then(block => block.timestamp);
+      await time.setNextBlockTimestamp(cooldown + BigInt(currentTime) - 1n);
+
+      const tx = env.fuelChainState.connect(env.signers[1]).commit(blockHash, slot);
+
+      await expect(tx).to.be.revertedWithCustomError(env.fuelChainState, "CannotRecommit");
+      await time.setNextBlockTimestamp(cooldown + BigInt(currentTime));
+
+      const newBlockHash = randomBytes32()
+      await env.fuelChainState.connect(env.signers[1]).commit(newBlockHash, slot);
+      expect(await env.fuelChainState.blockHashAtCommit(slot)).to.equal(newBlockHash);
+    })
+  })
 
   describe('Verify pause and unpause', async () => {
     const defaultAdminRole =
