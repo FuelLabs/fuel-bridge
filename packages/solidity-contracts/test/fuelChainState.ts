@@ -28,7 +28,7 @@ function createBlock(height: number): BlockHeader {
   return header;
 }
 
-describe.only('Fuel Chain State', async () => {
+describe('Fuel Chain State', async () => {
   let env: HarnessObject;
 
   // Contract constants
