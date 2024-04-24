@@ -18,6 +18,7 @@ import type {
   FuelMessagePortalV3,
 } from '../typechain';
 
+import { createRandomWalletWithFunds } from './utils';
 import { addressToB256, b256ToAddress } from './utils/addressConversion';
 import { createBlock } from './utils/createBlock';
 import type { TreeNode } from './utils/merkle';
@@ -389,7 +390,31 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       });
     });
 
-    describe('setMessageBlacklist', () => {
+    describe('addMessageToBlacklist', () => {
+      it('can only be called by pauser role', async () => {
+        const mallory = await createRandomWalletWithFunds();
+
+        const [msgID] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        const PAUSER_ROLE = await fuelMessagePortal.PAUSER_ROLE();
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .addMessageToBlacklist(msgID);
+
+        const expectedErrorMsg =
+          `AccessControl: account ${mallory.address.toLowerCase()} ` +
+          `is missing role ${PAUSER_ROLE}`;
+
+        await expect(tx).to.be.revertedWith(expectedErrorMsg);
+      });
+
       it('prevents withdrawals', async () => {
         // Blacklisted message
         {
@@ -402,7 +427,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
               messageNodes
             );
 
-          await fuelMessagePortal.setMessageBlacklist(msgID, true);
+          await fuelMessagePortal.addMessageToBlacklist(msgID);
 
           const relayTx = fuelMessagePortal.relayMessage(
             messageEOA,
@@ -440,7 +465,31 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           );
           await expect(relayTx).to.not.be.reverted;
         }
+      });
+    });
 
+    describe('removeMessageFromBlacklist', () => {
+      it('can only be called by admin role', async () => {
+        const mallory = await createRandomWalletWithFunds();
+        const [msgID] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        const ADMIN_ROLE = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .removeMessageFromBlacklist(msgID);
+
+        const expectedErrorMsg =
+          `AccessControl: account ${mallory.address.toLowerCase()} ` +
+          `is missing role ${ADMIN_ROLE}`;
+        expect(tx).to.be.revertedWith(expectedErrorMsg);
+      });
+      it('restores ability to withdraw', async () => {
         // Whitelist back the blacklisted message
         {
           const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
@@ -457,7 +506,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           await fuelMessagePortal.depositETH(messageEOA.recipient, {
             value: depositedAmount,
           });
-          await fuelMessagePortal.setMessageBlacklist(msgID, false);
+          await fuelMessagePortal.removeMessageFromBlacklist(msgID);
 
           const relayTx = fuelMessagePortal.relayMessage(
             messageEOA,

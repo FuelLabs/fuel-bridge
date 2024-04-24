@@ -207,12 +207,7 @@ describe.skip('Bridging ERC721 tokens', async function () {
           },
         });
 
-      const txRequestNotFunded = await scope.getTransactionRequest();
-      const { maxFee } = await fuelTokenSender.provider.getTransactionCost(
-        txRequestNotFunded
-      );
-
-      const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
+      const scopeFunded = await scope.fundWithRequiredCoins();
       const transactionRequest = await scopeFunded.getTransactionRequest();
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
 

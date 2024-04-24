@@ -8,14 +8,12 @@ use fuels::{
         LoadConfiguration, TxPolicies,
     },
     test_helpers::{setup_single_message, setup_test_provider},
-    tx::Bytes32,
     types::{
         coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
-        TxPointer, UtxoId,
     },
 };
 
-use fuel_tx::{TxId, Word};
+use fuel_tx::{Bytes32, TxId, TxPointer, UtxoId, Word};
 
 use super::builder;
 

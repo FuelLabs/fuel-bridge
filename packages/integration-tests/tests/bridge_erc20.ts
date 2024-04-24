@@ -179,8 +179,14 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check metadata was registered', async () => {
       await fuel_testToken.functions
-        .asset_to_l1_address({ value: fuel_testAssetId })
+        .asset_to_l1_address({ bits: fuel_testAssetId })
         .call();
+
+      const { value: l2_decimals } = await fuel_testToken.functions
+        .decimals({ bits: fuel_testAssetId })
+        .get();
+
+      expect(l2_decimals).to.be.equal(9);
     });
 
     it('Check ERC20 arrived on Fuel', async () => {
@@ -194,6 +200,44 @@ describe('Bridging ERC20 tokens', async function () {
           fuelTokenReceiverBalance.add(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
         )
       ).to.be.true;
+    });
+
+    it('Bridge metadata', async () => {
+      // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
+      const receipt = await env.eth.fuelERC20Gateway
+        .connect(ethereumTokenSender)
+        .sendMetadata(eth_testTokenAddress)
+        .then((tx) => tx.wait());
+
+      // parse events from logs
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          env.eth.fuelMessagePortal.filters.MessageSent,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      const nonce = new BN(event.args.nonce.toString());
+      const fuelReceiver = Address.fromB256(event.args.recipient);
+
+      // relay the message ourselves
+      const message = await waitForMessage(
+        env.fuel.provider,
+        fuelReceiver,
+        nonce,
+        FUEL_MESSAGE_TIMEOUT_MS
+      );
+      expect(message).to.not.be.null;
+
+      const tx = await relayCommonMessage(env.fuel.deployer, message, {
+        ...FUEL_TX_PARAMS,
+        maturity: undefined,
+      });
+
+      const txResult = await tx.waitForResult();
+
+      expect(txResult.status).to.equal('success');
     });
   });
 
@@ -232,13 +276,7 @@ describe('Bridging ERC20 tokens', async function () {
           },
         });
 
-      const txRequestNotFunded = await scope.getTransactionRequest();
-
-      const { maxFee } = await fuelTokenSender.provider.getTransactionCost(
-        txRequestNotFunded
-      );
-
-      const scopeFunded = await scope.fundWithRequiredCoins(maxFee);
+      const scopeFunded = await scope.fundWithRequiredCoins();
       const transactionRequest = await scopeFunded.getTransactionRequest();
 
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
