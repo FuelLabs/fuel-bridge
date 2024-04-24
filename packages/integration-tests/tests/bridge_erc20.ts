@@ -86,7 +86,7 @@ describe('Bridging ERC20 tokens', async function () {
     await eth_testToken.mint(await env.eth.signers[1].getAddress(), 10_000);
   });
 
-  describe.only('Bridge ERC20 to Fuel', async () => {
+  describe('Bridge ERC20 to Fuel', async () => {
     const NUM_TOKENS = 10_000_000_000n;
     let ethereumTokenSender: Signer;
     let ethereumTokenSenderAddress: string;
@@ -158,8 +158,6 @@ describe('Bridging ERC20 tokens', async function () {
         FUEL_MESSAGE_TIMEOUT_MS
       );
       expect(message).to.not.be.null;
-
-      console.log(message.data.length);
 
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
@@ -240,15 +238,6 @@ describe('Bridging ERC20 tokens', async function () {
       const txResult = await tx.waitForResult();
 
       expect(txResult.status).to.equal('success');
-      console.log('Receipts', txResult.receipts);
-      console.log('Logs', txResult.logs);
-      console.log('Address', eth_testTokenAddress);
-
-      // Check that the relayed info has been correctly stored
-      const { value } = await fuel_testToken.functions
-        .name({ bits: fuel_testAssetId })
-        .get();
-      console.log('value: ', value);
     });
   });
 

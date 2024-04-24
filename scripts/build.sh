@@ -1,5 +1,5 @@
 #!/bin/bash
 
-forc build --release --experimental-new-encoding
+forc build --release
 cargo run
 turbo run build
