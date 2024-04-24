@@ -8,9 +8,7 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
-    fuel_types::{Nonce, Word},
-    fuel_vm::SecretKey,
+    fuel_crypto::SecretKey, fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId}, fuel_types::{Nonce, Word}
 };
 
 use fuels::{
@@ -21,7 +19,7 @@ use fuels::{
         Provider, TxPolicies,
     },
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
+    types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
@@ -244,7 +242,7 @@ pub(crate) async fn setup_environment(
 
     // Build contract inputs
     let mut contract_inputs = vec![Input::contract(
-        UtxoId::new(Bytes32::zeroed(), 0u8),
+        UtxoId::new(Bytes32::zeroed(), 0u16),
         Bytes32::zeroed(),
         Bytes32::zeroed(),
         TxPointer::default(),
@@ -253,7 +251,7 @@ pub(crate) async fn setup_environment(
 
     if let Some(id) = deposit_contract {
         contract_inputs.push(Input::contract(
-            UtxoId::new(Bytes32::zeroed(), 0u8),
+            UtxoId::new(Bytes32::zeroed(), 0u16),
             Bytes32::zeroed(),
             Bytes32::zeroed(),
             TxPointer::default(),
@@ -279,20 +277,14 @@ pub(crate) async fn relay_message_to_contract(
 ) -> TxId {
     let provider = wallet.provider().expect("Wallet has no provider");
 
-    let gas_price = provider
-        .node_info()
-        .await
-        .expect("Could not get node info")
-        .min_gas_price;
+    let gas_price: u64 = 1; // NodeInfo.min_gas_price is no longer available
+        
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
-    let fetched_gas_coins: Vec<Input> = provider
-        .get_coins(wallet.address(), Default::default())
-        .await
-        .unwrap()
-        .iter()
-        .map(|coin| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(coin.clone())))
-        .collect();
+    let fetched_gas_coins: Vec<Coin> = 
+        provider.get_coins(wallet.address(), Default::default())
+            .await
+            .unwrap();
 
     let tx = builder::build_contract_message_tx(
         message,
