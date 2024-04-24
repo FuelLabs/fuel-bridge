@@ -4,7 +4,7 @@ import {
 } from '@fuel-bridge/fungible-token';
 import type { NFT, Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { AddressLike } from 'ethers';
-import type { JsonAbi, TxParams } from 'fuels';
+import type { TxParams } from 'fuels';
 import { ContractFactory, Contract } from 'fuels';
 
 import { debug } from '../logs';
@@ -35,7 +35,7 @@ export async function getOrDeployFuelTokenContract(
     try {
       fuelTestToken = new Contract(
         FUEL_FUNGIBLE_TOKEN_ADDRESS,
-        fungibleTokenABI as JsonAbi,
+        fungibleTokenABI,
         fuelAcct
       );
       await fuelTestToken.functions.name().dryRun();
@@ -53,7 +53,7 @@ export async function getOrDeployFuelTokenContract(
     debug('Deploy contract on Fuel');
     const factory = new ContractFactory(
       bytecodeHex,
-      fungibleTokenABI as JsonAbi,
+      fungibleTokenABI,
       env.fuel.deployer
     );
 
