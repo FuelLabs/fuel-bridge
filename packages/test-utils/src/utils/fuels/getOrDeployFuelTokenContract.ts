@@ -74,7 +74,13 @@ export async function getOrDeployFuelTokenContract(
     );
     const { maxFee, requiredQuantities } =
       await fuelAcct.provider.getTransactionCost(transactionRequest);
-    await fuelAcct.fund(transactionRequest, requiredQuantities, maxFee);
+
+    await fuelAcct.fund(transactionRequest, {
+      requiredQuantities,
+      maxFee,
+      estimatedPredicates: [],
+      addedSignatures: 0,
+    });
     // send transaction
     const response = await fuelAcct.sendTransaction(transactionRequest);
     await response.wait();

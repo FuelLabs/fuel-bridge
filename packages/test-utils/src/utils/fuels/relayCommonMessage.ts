@@ -44,11 +44,7 @@ function getCommonRelayableMessages(provider: Provider) {
       buildTx: async (
         relayer: FuelWallet,
         message: Message,
-        details: CommonMessageDetails,
-        txParams: Pick<
-          ScriptTransactionRequestLike,
-          'gasLimit' | 'gasPrice' | 'maturity'
-        >
+        details: CommonMessageDetails
       ): Promise<ScriptTransactionRequest> => {
         const script = arrayify(details.script);
         const predicateBytecode = arrayify(details.predicate);
@@ -104,7 +100,6 @@ function getCommonRelayableMessages(provider: Provider) {
 
         transaction.witnesses.push('0x');
 
-        transaction.gasPrice = bn(txParams.gasPrice);
         transaction.gasLimit = bn(10_000);
 
         debug(
@@ -136,10 +131,7 @@ type CommonMessageDetails = {
     relayer: FuelWallet,
     message: Message,
     details: CommonMessageDetails,
-    txParams: Pick<
-      ScriptTransactionRequestLike,
-      'gasLimit' | 'gasPrice' | 'maturity'
-    >
+    txParams: Pick<ScriptTransactionRequestLike, 'gasLimit' | 'maturity'>
   ) => Promise<ScriptTransactionRequest>;
 };
 
@@ -147,10 +139,7 @@ type CommonMessageDetails = {
 export async function relayCommonMessage(
   relayer: FuelWallet,
   message: Message,
-  txParams?: Pick<
-    ScriptTransactionRequestLike,
-    'gasLimit' | 'gasPrice' | 'maturity'
-  >
+  txParams?: Pick<ScriptTransactionRequestLike, 'gasLimit' | 'maturity'>
 ): Promise<TransactionResponse> {
   // find the relay details for the specified message
   let messageRelayDetails: CommonMessageDetails = null;

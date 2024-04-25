@@ -61,5 +61,5 @@ exec /root/fuel-core run \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
     --poa-instant true \
     --debug \
-    --min-gas-price 1 \
+    --min-gas-price 0 \
     --snapshot ./
