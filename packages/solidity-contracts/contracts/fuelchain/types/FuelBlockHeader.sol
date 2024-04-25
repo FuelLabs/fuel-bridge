@@ -28,6 +28,10 @@ struct FuelBlockHeader {
     bytes32 txRoot;
     // Merkle root of output messages in this block
     bytes32 outputMessagesRoot;
+    // Version of consensus parameters
+    uint32 consensusParametersVersion;
+    // Version of state transition bytecode
+    uint32 stateTransitionBytecodeVersion;
 }
 
 /// @title Block Header Library
@@ -47,7 +51,9 @@ library FuelBlockHeaderLib {
                 header.txCount,
                 header.outputMessagesCount,
                 header.txRoot,
-                header.outputMessagesRoot
+                header.outputMessagesRoot,
+                header.consensusParametersVersion,
+                header.stateTransitionBytecodeVersion
             );
     }
 

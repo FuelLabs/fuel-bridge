@@ -1,0 +1,419 @@
+Run the Fuel client node locally
+
+Usage: fuel-core run [OPTIONS]
+
+Options:
+      --ip <IP>
+          [env: IP=]
+          [default: 127.0.0.1]
+
+      --port <PORT>
+          [env: PORT=]
+          [default: 4000]
+
+      --service-name <SERVICE_NAME>
+          Vanity name for node, used in telemetry
+          
+          [env: SERVICE_NAME=]
+          [default: fuel-core]
+
+      --max-database-cache-size <MAX_DATABASE_CACHE_SIZE>
+          The maximum database cache size in bytes
+          
+          [env: MAX_DATABASE_CACHE_SIZE=]
+          [default: 1073741824]
+
+      --db-path <DB_PATH>
+          [env: DB_PATH=]
+          [default: /Users/mad/.fuel/db]
+
+      --db-type <DATABASE_TYPE>
+          [env: DATABASE_TYPE=]
+          [default: rocks-db]
+          [possible values: in-memory, rocks-db]
+
+      --snapshot <SNAPSHOT>
+          Snapshot from which to do (re)genesis. Defaults to local testnet configuration
+          
+          [env: SNAPSHOT=]
+
+      --db-prune
+          Prunes the db. Genesis is done from the provided snapshot or the local testnet configuration
+          
+          [env: DB_PRUNE=]
+
+      --debug
+          Should be used for local development only. Enabling debug mode: - Allows GraphQL Endpoints to arbitrarily advance blocks. - Enables debugger GraphQL Endpoints. - Allows setting `utxo_validation` to `false`
+          
+          [env: DEBUG=]
+
+      --vm-backtrace
+          Enable logging of backtraces from vm errors
+          
+          [env: VM_BACKTRACE=]
+
+      --utxo-validation
+          Enable full utxo stateful validation disabled by default until downstream consumers stabilize
+          
+          [env: UTXO_VALIDATION=]
+
+      --min-gas-price <MIN_GAS_PRICE>
+          The minimum allowed gas price
+          
+          [env: MIN_GAS_PRICE=]
+          [default: 0]
+
+      --consensus-key <CONSENSUS_KEY>
+          The signing key used when producing blocks. Setting via the `CONSENSUS_KEY_SECRET` ENV var is preferred
+          
+          [env: CONSENSUS_KEY=]
+
+      --poa-instant <INSTANT>
+          Use instant block production mode. Newly submitted txs will immediately trigger the production of the next block. Cannot be combined with other poa flags
+          
+          [env: INSTANT=]
+          [default: true]
+          [possible values: true, false]
+
+      --poa-interval-period <PERIOD>
+          Interval trigger option. Produces blocks on a fixed interval regardless of txpool activity. Cannot be combined with other poa flags
+          
+          [env: PERIOD=]
+
+      --coinbase-recipient <COINBASE_RECIPIENT>
+          The block's fee recipient public key.
+          
+          If not set, `consensus_key` is used as the provider of the `Address`.
+          
+          [env: COINBASE_RECIPIENT=]
+
+      --tx-pool-ttl <TX_POOL_TTL>
+          The max time to live of the transaction inside of the `TxPool`
+          
+          [env: TX_POOL_TTL=]
+          [default: 5m]
+
+      --tx-max-number <TX_MAX_NUMBER>
+          The max number of transactions that the `TxPool` can simultaneously store
+          
+          [env: TX_MAX_NUMBER=]
+          [default: 4064]
+
+      --tx-max-depth <TX_MAX_DEPTH>
+          The max depth of the dependent transactions that supported by the `TxPool`
+          
+          [env: TX_MAX_DEPTH=]
+          [default: 10]
+
+      --tx-number-active-subscriptions <TX_NUMBER_ACTIVE_SUBSCRIPTIONS>
+          The maximum number of active subscriptions that supported by the `TxPool`
+          
+          [env: TX_NUMBER_ACTIVE_SUBSCRIPTIONS=]
+          [default: 4064]
+
+      --tx-blacklist-addresses <TX_BLACKLIST_ADDRESSES>
+          The list of banned addresses ignored by the `TxPool`
+          
+          [env: TX_BLACKLIST_ADDRESSES=]
+
+      --tx-blacklist-coins <TX_BLACKLIST_COINS>
+          The list of banned coins ignored by the `TxPool`
+          
+          [env: TX_BLACKLIST_COINS=]
+
+      --tx-blacklist-messages <TX_BLACKLIST_MESSAGES>
+          The list of banned messages ignored by the `TxPool`
+          
+          [env: TX_BLACKLIST_MESSAGES=]
+
+      --tx-blacklist-contracts <TX_BLACKLIST_CONTRACTS>
+          The list of banned contracts ignored by the `TxPool`
+          
+          [env: TX_BLACKLIST_CONTRACTS=]
+
+      --enable-relayer
+          Enable the Relayer. By default, the Relayer is disabled, even when the binary is compiled with the "relayer" feature flag. Providing `--enable-relayer` will enable the relayer service
+
+      --relayer <RELAYER>
+          Uri address to ethereum client. It can be in format of `http://localhost:8545/` or `ws://localhost:8545/`. If not set relayer will not start
+          
+          [env: RELAYER=]
+
+      --relayer-v2-listening-contracts <ETH_V2_LISTENING_CONTRACTS>
+          Ethereum contract address. Create EthAddress into fuel_types
+          
+          [env: ETH_V2_LISTENING_CONTRACTS=]
+
+      --relayer-da-deploy-height <DA_DEPLOY_HEIGHT>
+          Number of da block that the contract is deployed at
+          
+          [env: DA_DEPLOY_HEIGHT=]
+          [default: 0]
+
+      --relayer-log-page-size <LOG_PAGE_SIZE>
+          Number of pages or blocks containing logs that should be downloaded in a single call to the da layer
+          
+          [env: LOG_PAGE_SIZE=]
+          [default: 10000]
+
+      --relayer-min-duration-s <SYNC_MINIMUM_DURATION_SECS>
+          The minimum number of seconds that the relayer polling loop will take before running again. If this is too low the DA layer risks being spammed
+          
+          [env: SYNC_MINIMUM_DURATION_SECS=]
+          [default: 5]
+
+      --relayer-eth-sync-call-freq-s <SYNCING_CALL_FREQUENCY_SECS>
+          [env: SYNCING_CALL_FREQUENCY_SECS=]
+          [default: 5]
+
+      --relayer-eth-sync-log-freq-s <SYNCING_LOG_FREQUENCY_SECS>
+          [env: SYNCING_LOG_FREQUENCY_SECS=]
+          [default: 60]
+
+      --enable-p2p
+          Enable P2P. By default, P2P is disabled, even when the binary is compiled with the "p2p" feature flag. Providing `--enable-p2p` will enable the P2P service
+
+      --keypair <KEYPAIR>
+          Peering secret key. Supports either a hex encoded secret key inline or a path to bip32 mnemonic encoded secret file
+          
+          [env: KEYPAIR=]
+
+      --address <ADDRESS>
+          p2p network's IP Address
+          
+          [env: ADDRESS=]
+
+      --public-address <PUBLIC_ADDRESS>
+          Optional address of your local node made reachable for other nodes in the network
+          
+          [env: PUBLIC_ADDRESS=]
+
+      --peering-port <PEERING_PORT>
+          p2p network's TCP Port
+          
+          [env: PEERING_PORT=]
+          [default: 30333]
+
+      --max-block-size <MAX_BLOCK_SIZE>
+          Max Block size
+          
+          [env: MAX_BLOCK_SIZE=]
+          [default: 18874368]
+
+      --max-headers-per-request <MAX_HEADERS_PER_REQUEST>
+          Max number of headers in a single headers request response
+          
+          [env: MAX_HEADERS_PER_REQUEST=]
+          [default: 100]
+
+      --bootstrap-nodes <BOOTSTRAP_NODES>
+          Addresses of the bootstrap nodes They should contain PeerId within their `Multiaddr`
+          
+          [env: BOOTSTRAP_NODES=]
+
+      --reserved-nodes <RESERVED_NODES>
+          Addresses of the reserved nodes They should contain PeerId within their `Multiaddr`
+          
+          [env: RESERVED_NODES=]
+
+      --reserved-nodes-only-mode
+          With this set to `true` you create a guarded node that is only ever connected to trusted, reserved nodes
+          
+          [env: RESERVED_NODES_ONLY_MODE=]
+
+      --enable-mdns
+          Allow nodes to be discoverable on the local network
+          
+          [env: ENABLE_MDNS=]
+
+      --max-peers-connected <MAX_PEERS_CONNECTED>
+          Max number of unique peers connected This number should be at least number of `mesh_n` from `Gossipsub` configuration. The total number of connections will be `(max_peers_connected + reserved_nodes.len()) * max_connections_per_peer`
+          
+          [env: MAX_PEERS_CONNECTED=]
+          [default: 50]
+
+      --max-connections-per-peer <MAX_CONNECTIONS_PER_PEER>
+          Max number of connections per single peer The total number of connections will be `(max_peers_connected + reserved_nodes.len()) * max_connections_per_peer`
+          
+          [env: MAX_CONNECTIONS_PER_PEER=]
+          [default: 3]
+
+      --random-walk <RANDOM_WALK>
+          Set the delay between random walks for p2p node discovery in seconds. If it's not set the random walk will be disabled. Also if `reserved_nodes_only_mode` is set to `true`, the random walk will be disabled
+          
+          [env: RANDOM_WALK=]
+          [default: 0]
+
+      --allow-private-addresses
+          Choose to include private IPv4/IPv6 addresses as discoverable except for the ones stored in `bootstrap_nodes`
+          
+          [env: ALLOW_PRIVATE_ADDRESSES=]
+
+      --connection-idle-timeout <CONNECTION_IDLE_TIMEOUT>
+          Choose how long will connection keep alive if idle
+          
+          [env: CONNECTION_IDLE_TIMEOUT=]
+          [default: 120]
+
+      --info-interval <INFO_INTERVAL>
+          Choose how often to receive PeerInfo from other nodes
+          
+          [env: INFO_INTERVAL=]
+          [default: 3]
+
+      --identify-interval <IDENTIFY_INTERVAL>
+          Choose the interval at which identification requests are sent to the remote on established connections after the first request
+          
+          [env: IDENTIFY_INTERVAL=]
+          [default: 5]
+
+      --max-mesh-size <MAX_MESH_SIZE>
+          Choose max mesh size for gossipsub protocol
+          
+          [env: MAX_MESH_SIZE=]
+          [default: 12]
+
+      --min-mesh-size <MIN_MESH_SIZE>
+          Choose min mesh size for gossipsub protocol
+          
+          [env: MIN_MESH_SIZE=]
+          [default: 4]
+
+      --ideal-mesh-size <IDEAL_MESH_SIZE>
+          Choose ideal mesh size for gossipsub protocol
+          
+          [env: IDEAL_MESH_SIZE=]
+          [default: 6]
+
+      --history-length <HISTORY_LENGTH>
+          Number of heartbeats to keep in the gossipsub `memcache`
+          
+          [env: HISTORY_LENGTH=]
+          [default: 5]
+
+      --history-gossip <HISTORY_GOSSIP>
+          Number of past heartbeats to gossip about
+          
+          [env: HISTORY_GOSSIP=]
+          [default: 3]
+
+      --gossip-heartbeat-interval <GOSSIP_HEARTBEAT_INTERVAL>
+          Time between each gossipsub heartbeat, in milliseconds
+          
+          [env: GOSSIP_HEARTBEAT_INTERVAL=]
+          [default: 500ms]
+
+      --max-transmit-size <MAX_TRANSMIT_SIZE>
+          The maximum byte size for each gossip (default is 18 MiB)
+          
+          [env: MAX_TRANSMIT_SIZE=]
+          [default: 18874368]
+
+      --request-timeout <REQUEST_TIMEOUT>
+          Choose timeout for sent requests in RequestResponse protocol
+          
+          [env: REQUEST_TIMEOUT=]
+          [default: 20]
+
+      --connection-keep-alive <CONNECTION_KEEP_ALIVE>
+          Choose how long RequestResponse protocol connections will live if idle
+          
+          [env: CONNECTION_KEEP_ALIVE=]
+          [default: 20]
+
+      --heartbeat-send-duration <HEARTBEAT_SEND_DURATION>
+          Sending of `BlockHeight` should not take longer than this duration, in seconds
+          
+          [env: HEARTBEAT_SEND_DURATION=]
+          [default: 2]
+
+      --heartbeat-idle-duration <HEARTBEAT_IDLE_DURATION>
+          Idle time in seconds before sending next `BlockHeight`
+          
+          [env: HEARTBEAT_IDLE_DURATION=]
+          [default: 1]
+
+      --heartbeat-max-failures <HEARTBEAT_MAX_FAILURES>
+          Max failures allowed at `Heartbeat` protocol. If reached, the protocol will request disconnect. Cannot be zero
+          
+          [env: HEARTBEAT_MAX_FAILURES=]
+          [default: 5]
+
+      --heartbeat-check-interval <HEARTBEAT_CHECK_INTERVAL>
+          For peer reputations, the interval at which to check heartbeat health for all peers
+          
+          [env: HEARTBEAT_CHECK_INTERVAL=]
+          [default: 5]
+
+      --heartbeat-max-avg-interval <HEARTBEAT_MAX_AVG_INTERVAL>
+          For peer reputations, the maximum average interval between heartbeats for a peer before penalty
+          
+          [env: HEARTBEAT_MAX_AVG_INTERVAL=]
+          [default: 20]
+
+      --heartbeat-max-time-since-last <HEARTBEAT_MAX_TIME_SINCE_LAST>
+          For peer reputations, the maximum time since last heartbeat before penalty
+          
+          [env: HEARTBEAT_MAX_TIME_SINCE_LAST=]
+          [default: 40]
+
+      --sync-block-stream-buffer-size <BLOCK_STREAM_BUFFER_SIZE>
+          The maximum number of get transaction requests to make in a single batch
+          
+          [env: BLOCK_STREAM_BUFFER_SIZE=]
+          [default: 10]
+
+      --sync-header-batch-size <HEADER_BATCH_SIZE>
+          The maximum number of headers to request in a single batch
+          
+          [env: HEADER_BATCH_SIZE=]
+          [default: 10]
+
+      --metrics
+          [env: METRICS=]
+
+      --verify-max-da-lag <MAX_DA_LAG>
+          [env: MAX_DA_LAG=]
+          [default: 10]
+
+      --verify-max-relayer-wait <MAX_WAIT_TIME>
+          [env: MAX_WAIT_TIME=]
+          [default: 30s]
+
+      --min-connected-reserved-peers <MIN_CONNECTED_RESERVED_PEERS>
+          The number of reserved peers to connect to before starting to sync
+          
+          [env: MIN_CONNECTED_RESERVED_PEERS=]
+          [default: 0]
+
+      --time-until-synced <TIME_UNTIL_SYNCED>
+          Time to wait after receiving the latest block before considered to be Synced
+          
+          [env: TIME_UNTIL_SYNCED=]
+          [default: 0s]
+
+      --query-log-threshold-time <QUERY_LOG_THRESHOLD_TIME>
+          Time to wait after submitting a query before debug info will be logged about query
+          
+          [env: QUERY_LOG_THRESHOLD_TIME=]
+          [default: 2s]
+
+      --api-request-timeout <API_REQUEST_TIMEOUT>
+          Timeout before drop the request
+          
+          [env: API_REQUEST_TIMEOUT=]
+          [default: 30m]
+
+      --pyroscope-url <PYROSCOPE_URL>
+          Enables realtime profiling with pyroscope if set, and streams results to the pyroscope endpoint. For best results, the binary should be built with debug symbols included
+          
+          [env: PYROSCOPE_URL=]
+
+      --pprof-sample-rate <PPROF_SAMPLE_RATE>
+          Pyroscope sample frequency in hertz. A higher sample rate improves profiling granularity at the cost of additional measurement overhead
+          
+          [env: PPROF_SAMPLE_RATE=]
+          [default: 100]
+
+  -h, --help
+          Print help (see a summary with '-h')

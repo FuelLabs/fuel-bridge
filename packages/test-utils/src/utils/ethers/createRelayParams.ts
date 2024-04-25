@@ -28,6 +28,10 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     txRoot: header.transactionsRoot,
     outputMessagesRoot: header.messageOutboxRoot,
     outputMessagesCount: header.messageReceiptCount.toString(),
+    consensusParametersVersion: BigInt(header.consensusParametersVersion),
+    stateTransitionBytecodeVersion: BigInt(
+      header.stateTransitionBytecodeVersion
+    ),
   };
   const messageProof = withdrawMessageProof.messageProof;
   // Create the message proof object

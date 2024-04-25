@@ -10,7 +10,7 @@ const query = `
         height
         daHeight
         transactionsCount
-        messageReceiptRoot
+        messageOutboxRoot
         messageReceiptCount
         time
         id
@@ -31,7 +31,7 @@ export interface Header {
   transactionsRoot: string;
   height: string;
   daHeight: string;
-  messageReceiptRoot: string;
+  messageOutboxRoot: string;
   messageReceiptCount: string;
   time: string;
   id: string;

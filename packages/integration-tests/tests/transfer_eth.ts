@@ -1,3 +1,4 @@
+import { FuelBlockHeaderTester__factory } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
@@ -187,8 +188,11 @@ describe('Transferring ETH', async function () {
 
     it('Relay Message from Fuel on Ethereum', async () => {
       // wait for block finalization
+
       await waitForBlockFinalization(env, withdrawMessageProof);
 
+      console.log('Proof');
+      console.log(withdrawMessageProof);
       // construct relay message proof data
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 

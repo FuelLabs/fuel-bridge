@@ -6,3 +6,7 @@ export const ZERO =
 
 export const CONTRACT_MESSAGE_PREDICATE =
   '0xb12658c759d8bae2cdc523ebd7aa8637912f32b1763d242ad3618448057b79cd';
+
+// From application header: https://github.com/FuelLabs/fuel-specs/blob/master/src/protocol/block-header.md
+export const CONSENSUS_PARAMETERS_VERSION = 0n;
+export const STATE_TRANSITION_BYTECODE_VERSION = 0n;

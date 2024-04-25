@@ -15,20 +15,24 @@ class BlockHeader {
     public txCount: string,
     public outputMessagesCount: string,
     public txRoot: string,
-    public outputMessagesRoot: string
+    public outputMessagesRoot: string,
+    public consensusParametersVersion: bigint,
+    public stateTransitionBytecodeVersion: bigint
   ) {}
 }
 
 // Serialize a block application header.
 export function serializeApplicationHeader(blockHeader: BlockHeader): string {
   return solidityPacked(
-    ['uint64', 'uint64', 'uint64', 'bytes32', 'bytes32'],
+    ['uint64', 'uint64', 'uint64', 'bytes32', 'bytes32', 'uint32', 'uint32'],
     [
       blockHeader.daHeight,
       blockHeader.txCount,
       blockHeader.outputMessagesCount,
       blockHeader.txRoot,
       blockHeader.outputMessagesRoot,
+      blockHeader.consensusParametersVersion,
+      blockHeader.stateTransitionBytecodeVersion,
     ]
   );
 }

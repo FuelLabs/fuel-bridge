@@ -4,7 +4,11 @@ import { ethers } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
 import { computeBlockId } from '../protocol/blockHeader';
-import { EMPTY } from '../protocol/constants';
+import {
+  CONSENSUS_PARAMETERS_VERSION,
+  EMPTY,
+  STATE_TRANSITION_BYTECODE_VERSION,
+} from '../protocol/constants';
 import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import { randomBytes32, tai64Time } from '../protocol/utils';
@@ -22,6 +26,8 @@ function createBlock(height: number): BlockHeader {
     outputMessagesCount: '0',
     txRoot: EMPTY,
     outputMessagesRoot: EMPTY,
+    consensusParametersVersion: CONSENSUS_PARAMETERS_VERSION,
+    stateTransitionBytecodeVersion: STATE_TRANSITION_BYTECODE_VERSION,
   };
 
   return header;
