@@ -41,7 +41,7 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
 
     // If the chain is a local testnet, speed up the process
     // by trying to produce blocks and reach the desired height quickly
-    if (name === 'local_testnet') {
+    if (name === 'Upgradable Testnet') {
       await env.fuel.provider
         .produceBlocks(Number(blocksPerCommitInterval))
         .catch(); // If the request fails it is probably because --debug was not enabled

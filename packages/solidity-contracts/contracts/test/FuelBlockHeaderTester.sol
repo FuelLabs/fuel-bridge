@@ -12,28 +12,28 @@ contract FuelBlockHeaderTester {
     /// @notice Serialize a block application header.
     /// @param header The block header structure.
     /// @return The serialized block application header.
-    function serializeApplicationHeader(FuelBlockHeader memory header) internal pure returns (bytes memory) {
+    function _serializeApplicationHeader(FuelBlockHeader memory header) public pure returns (bytes memory) {
         return header.serializeApplicationHeader();
     }
 
     /// @notice Produce the block application header hash.
     /// @param header The block header structure.
     /// @return The block application header hash.
-    function computeApplicationHeaderHash(FuelBlockHeader memory header) internal pure returns (bytes32) {
+    function _computeApplicationHeaderHash(FuelBlockHeader memory header) public pure returns (bytes32) {
         return CryptographyLib.hash(header.serializeApplicationHeader());
     }
 
     /// @notice Serialize a block consensus header.
     /// @param header The block header structure.
     /// @return The serialized block consensus header.
-    function serializeConsensusHeader(FuelBlockHeader memory header) internal pure returns (bytes memory) {
+    function _serializeConsensusHeader(FuelBlockHeader memory header) public pure returns (bytes memory) {
         return header.serializeConsensusHeader();
     }
 
     /// @notice Produce the block consensus header hash.
     /// @param header The block header structure.
     /// @return The block consensus header hash.
-    function computeConsensusHeaderHash(FuelBlockHeader memory header) internal pure returns (bytes32) {
+    function _computeConsensusHeaderHash(FuelBlockHeader memory header) public pure returns (bytes32) {
         return CryptographyLib.hash(header.serializeConsensusHeader());
     }
 }

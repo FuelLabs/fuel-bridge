@@ -24,7 +24,7 @@ class BlockHeader {
 // Serialize a block application header.
 export function serializeApplicationHeader(blockHeader: BlockHeader): string {
   return solidityPacked(
-    ['uint64', 'uint64', 'uint64', 'bytes32', 'bytes32', 'uint32', 'uint32'],
+    ['uint64', 'uint64', 'uint64', 'bytes32', 'bytes32', 'uint64', 'uint64'],
     [
       blockHeader.daHeight,
       blockHeader.txCount,

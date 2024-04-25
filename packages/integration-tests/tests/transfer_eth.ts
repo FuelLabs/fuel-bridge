@@ -175,6 +175,11 @@ describe('Transferring ETH', async function () {
         commitHashAtL1
       );
 
+      console.log('message params');
+      console.log(fWithdrawTx.id);
+      console.log(messageOutReceipt.nonce);
+      console.log(commitHashAtL1);
+
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
 
@@ -188,6 +193,32 @@ describe('Transferring ETH', async function () {
 
     it('Relay Message from Fuel on Ethereum', async () => {
       // wait for block finalization
+
+      const whatever = await new FuelBlockHeaderTester__factory(
+        env.eth.deployer
+      ).deploy();
+
+      const header = {
+        prevRoot: withdrawMessageProof.commitBlockHeader.prevRoot,
+        height: withdrawMessageProof.commitBlockHeader.height.toString(),
+        timestamp: withdrawMessageProof.commitBlockHeader.time,
+        daHeight: withdrawMessageProof.commitBlockHeader.daHeight.toString(),
+        txCount:
+          withdrawMessageProof.commitBlockHeader.transactionsCount.toString(),
+        outputMessagesCount:
+          withdrawMessageProof.commitBlockHeader.messageReceiptCount.toString(),
+        txRoot: withdrawMessageProof.commitBlockHeader.transactionsRoot,
+        outputMessagesRoot:
+          withdrawMessageProof.commitBlockHeader.messageOutboxRoot,
+        consensusParametersVersion: 0,
+        stateTransitionBytecodeVersion: 0,
+      };
+      const applicationHeaderSerialization =
+        await whatever._serializeApplicationHeader(header);
+      const applicationHeaderHash =
+        await whatever._computeApplicationHeaderHash(header);
+      console.log('Application header hash', applicationHeaderHash);
+      console.log('Application Header payload', applicationHeaderSerialization);
 
       await waitForBlockFinalization(env, withdrawMessageProof);
 
