@@ -241,7 +241,7 @@ describe('Bridging ERC20 tokens', async function () {
     });
   });
 
-  describe.skip('Bridge ERC20 from Fuel', async () => {
+  describe('Bridge ERC20 from Fuel', async () => {
     const NUM_TOKENS = 10_000_000_000n;
     let fuelTokenSender: FuelWallet;
     let ethereumTokenReceiver: Signer;
@@ -268,7 +268,11 @@ describe('Bridging ERC20 tokens', async function () {
       );
       const transactionRequest = await fuel_testToken.functions
         .withdraw(paddedAddress)
-        .txParams(FUEL_CALL_TX_PARAMS)
+        .txParams({
+          tip: 0,
+          gasLimit: 1_000_000,
+          maxFee: 0,
+        })
         .callParams({
           forward: {
             amount: fuelTokenSenderBalance,
