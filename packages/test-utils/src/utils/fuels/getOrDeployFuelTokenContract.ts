@@ -2,7 +2,6 @@ import {
   fungibleTokenBinary,
   fungibleTokenABI,
 } from '@fuel-bridge/fungible-token';
-import type { NFT, Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { AddressLike } from 'ethers';
 import type { TxParams } from 'fuels';
 import { ContractFactory, Contract } from 'fuels';
@@ -15,7 +14,6 @@ const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
 export async function getOrDeployFuelTokenContract(
   env: TestEnvironment,
-  ethTestToken: Token | NFT,
   ethTokenGateway: AddressLike,
   fuelTxParams: TxParams,
   DECIMALS?: number

@@ -56,7 +56,6 @@ describe.skip('Bridging ERC721 tokens', async function () {
     ).toLowerCase();
     fuel_testToken = await getOrDeployFuelTokenContract(
       env,
-      eth_testToken,
       env.eth.fuelERC721Gateway,
       FUEL_TX_PARAMS,
       0
