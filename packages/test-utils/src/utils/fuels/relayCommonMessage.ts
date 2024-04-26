@@ -100,7 +100,9 @@ function getCommonRelayableMessages(provider: Provider) {
 
         transaction.witnesses.push('0x');
 
-        transaction.gasLimit = bn(10_000);
+        transaction.gasLimit = bn(1_000_000);
+
+        transaction.maxFee = bn(0);
 
         debug(
           '-------------------------------------------------------------------'
@@ -162,5 +164,7 @@ export async function relayCommonMessage(
     txParams || {}
   );
 
-  return relayer.sendTransaction(transaction);
+  const estimated_tx = await relayer.provider.estimatePredicates(transaction);
+
+  return relayer.sendTransaction(estimated_tx);
 }

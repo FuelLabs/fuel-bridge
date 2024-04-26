@@ -29,7 +29,7 @@ import type {
 
 const { expect } = chai;
 
-describe.skip('Bridging ERC20 tokens', async function () {
+describe('Bridging ERC20 tokens', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
@@ -241,7 +241,7 @@ describe.skip('Bridging ERC20 tokens', async function () {
     });
   });
 
-  describe('Bridge ERC20 from Fuel', async () => {
+  describe.skip('Bridge ERC20 from Fuel', async () => {
     const NUM_TOKENS = 10_000_000_000n;
     let fuelTokenSender: FuelWallet;
     let ethereumTokenReceiver: Signer;
