@@ -18,6 +18,7 @@
     "node:clean": "make -C ./docker clean",
     "node:logs": "make -C ./docker logs",
     "test": "sh ./scripts/test.sh",
+    "test:integration": "DEBUG=true pnpm --filter @fuel-bridge/integration-tests test",
     "lint:check": "eslint . --ext .ts,.js",
     "lint:fix": "pnpm lint:check --fix",
     "prettier:check": "prettier --check .",

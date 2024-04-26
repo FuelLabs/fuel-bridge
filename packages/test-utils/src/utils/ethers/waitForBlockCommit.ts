@@ -41,12 +41,15 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
 
     // If the chain is a local testnet, speed up the process
     // by trying to produce blocks and reach the desired height quickly
-    if (name === 'Upgradable Testnet') {
-      await env.fuel.provider
-        .produceBlocks(Number(blocksPerCommitInterval))
-        .catch(); // If the request fails it is probably because --debug was not enabled
-    }
-    debug(`Block is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`);
+    // if (name === 'Upgradable Testnet') {
+    //   debug(`Forwarding fuel chain ${blocksPerCommitInterval} blocks`);
+    //   await env.fuel.provider
+    //     .produceBlocks(Number(blocksPerCommitInterval))
+    //     .catch(); // If the request fails it is probably because --debug was not enabled
+    // }
+    debug(
+      `Block ${block.header.id} is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`
+    );
     await delay(RETRY_DELAY);
     return waitForBlockCommit(env, height);
   }
