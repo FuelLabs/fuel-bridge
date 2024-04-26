@@ -20,6 +20,7 @@ import {
   OutputType,
   Predicate,
   bn,
+  BN,
 } from 'fuels';
 
 import { debug } from '../logs';

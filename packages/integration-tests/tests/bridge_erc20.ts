@@ -159,13 +159,16 @@ describe('Bridging ERC20 tokens', async function () {
       );
       expect(message).to.not.be.null;
 
+      console.log('what');
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
-        ...FUEL_TX_PARAMS,
+        gasLimit: 30000000,
         maturity: undefined,
       });
 
+      console.log('the');
       const txResult = await tx.waitForResult();
 
+      console.log('fuck');
       expect(txResult.status).to.equal('success');
       expect(txResult.mintedAssets.length).to.equal(1);
 

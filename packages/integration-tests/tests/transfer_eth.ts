@@ -1,4 +1,3 @@
-import { FuelBlockHeaderTester__factory } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
@@ -14,7 +13,7 @@ import {
 import chai from 'chai';
 import type { Signer } from 'ethers';
 import { parseEther } from 'ethers';
-import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
+import { Address, BN, ZeroBytes32, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
@@ -56,7 +55,7 @@ describe('Transferring ETH', async function () {
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
       fuelETHReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        BaseAssetId
+        ZeroBytes32
       );
     });
 
@@ -114,7 +113,7 @@ describe('Transferring ETH', async function () {
       // check that the recipient balance has increased by the expected amount
       const newReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        BaseAssetId
+        ZeroBytes32
       );
       expect(
         newReceiverBalance.eq(
@@ -135,7 +134,7 @@ describe('Transferring ETH', async function () {
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
-      fuelETHSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
+      fuelETHSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
       ethereumETHReceiverBalance = await env.eth.provider.getBalance(
@@ -175,13 +174,8 @@ describe('Transferring ETH', async function () {
         commitHashAtL1
       );
 
-      console.log('message params');
-      console.log(fWithdrawTx.id);
-      console.log(messageOutReceipt.nonce);
-      console.log(commitHashAtL1);
-
       // check that the sender balance has decreased by the expected amount
-      const newSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
+      const newSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
 
       // Get just the first 3 digits of the balance to compare to the expected balance
       // this is required because the payment of gas fees is not deterministic
@@ -193,37 +187,8 @@ describe('Transferring ETH', async function () {
 
     it('Relay Message from Fuel on Ethereum', async () => {
       // wait for block finalization
-
-      const whatever = await new FuelBlockHeaderTester__factory(
-        env.eth.deployer
-      ).deploy();
-
-      const header = {
-        prevRoot: withdrawMessageProof.commitBlockHeader.prevRoot,
-        height: withdrawMessageProof.commitBlockHeader.height.toString(),
-        timestamp: withdrawMessageProof.commitBlockHeader.time,
-        daHeight: withdrawMessageProof.commitBlockHeader.daHeight.toString(),
-        txCount:
-          withdrawMessageProof.commitBlockHeader.transactionsCount.toString(),
-        outputMessagesCount:
-          withdrawMessageProof.commitBlockHeader.messageReceiptCount.toString(),
-        txRoot: withdrawMessageProof.commitBlockHeader.transactionsRoot,
-        outputMessagesRoot:
-          withdrawMessageProof.commitBlockHeader.messageOutboxRoot,
-        consensusParametersVersion: 0,
-        stateTransitionBytecodeVersion: 0,
-      };
-      const applicationHeaderSerialization =
-        await whatever._serializeApplicationHeader(header);
-      const applicationHeaderHash =
-        await whatever._computeApplicationHeaderHash(header);
-      console.log('Application header hash', applicationHeaderHash);
-      console.log('Application Header payload', applicationHeaderSerialization);
-
       await waitForBlockFinalization(env, withdrawMessageProof);
 
-      console.log('Proof');
-      console.log(withdrawMessageProof);
       // construct relay message proof data
       const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
