@@ -92,7 +92,7 @@ const config: HardhatUserConfig = {
             mnemonic:
               'test test test test test test test test test test test junk',
           },
-      deploy: ['deploy/devnet'],
+      deploy: ['deploy/testnet'],
       chainId: 11155111,
     },
   },

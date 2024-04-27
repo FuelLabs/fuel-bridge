@@ -23,6 +23,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['portal', 'message_portal', 'FuelMessagePortal'];
-func.id = 'fuel_message_portal';
+func.tags = ['register_committer'];
+func.id = 'register_committer';
 export default func;

@@ -1,7 +1,7 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelERC20GatewayV2__factory as FuelERC20GatewayV2 } from '../../typechain';
+import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -14,7 +14,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const fuelMessagePortal = await get('FuelMessagePortal');
 
   const contract = await deployProxy(
-    new FuelERC20GatewayV2(deployer),
+    new FuelERC20Gateway(deployer),
     [fuelMessagePortal.address],
     {
       initializer: 'initialize',
@@ -25,16 +25,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
-  console.log('Deployed FuelERC20GatewayV2 at', address);
-  await save('FuelERC20GatewayV2', {
+  console.log('Deployed FuelERC20GatewayV4 at', address);
+  await save('FuelERC20GatewayV4', {
     address,
-    abi: [],
+    abi: [...FuelERC20Gateway.abi],
     implementation,
   });
 
   return true;
 };
 
-func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV2'];
-func.id = 'fuel_erc20_gateway_v2';
+func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV4'];
+func.id = 'fuel_erc20_gateway_v4';
 export default func;
