@@ -1,0 +1,21 @@
+[[package]]
+name = "base-asset-contract"
+source = "member"
+dependencies = [
+    "standards",
+    "std",
+]
+
+[[package]]
+name = "core"
+source = "path+from-root-FD1D6328C399C137"
+
+[[package]]
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
+dependencies = ["std"]
+
+[[package]]
+name = "std"
+source = "git+https://github.com/fuellabs/sway?rev#ec22cb6c456a232f98bc850f145962e4e543a64f"
+dependencies = ["core"]
