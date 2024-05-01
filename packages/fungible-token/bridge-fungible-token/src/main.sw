@@ -110,7 +110,7 @@ impl MessageReceiver for Contract {
 impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
-        let asset = sha256((token_address, token_id));
+        let asset = _generate_sub_id_from_metadata(token_address, token_id);
         let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
         require(
             amount != ZERO_U256,
@@ -236,7 +236,7 @@ fn register_refund(
     token_id: b256,
     amount: b256,
 ) {
-    let asset = sha256((token_address, token_id));
+    let asset = _generate_sub_id_from_metadata(token_address, token_id);
 
     let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
     let new_amount = amount.as_u256() + previous_amount;
