@@ -1,5 +1,14 @@
 contract;
 
+// This contract receives messages sent from an instance of FuelERC20Gateway
+// deployed at the L1. The messages are relayed by the message predicate.
+// Upon processing a message, funds are mint to the receiver.
+
+// Hexens FUEL1-21: This contract might be able to receive BASE_ASSET and
+// without a rescue function, the BASE_ASSET funds might get stuck.
+// Special care must be put when sending messages from the gateway to this
+// contract so that they do not cointain BASE_ASSET funds
+
 mod data_structures;
 mod errors;
 mod events;
