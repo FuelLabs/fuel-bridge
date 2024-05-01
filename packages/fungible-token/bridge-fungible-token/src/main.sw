@@ -146,6 +146,7 @@ impl Bridge for Contract {
         let token_id = _asset_to_token_id(asset_id);
         let l1_address = _asset_to_l1_address(asset_id);
 
+        // Hexens Fuel1-4: Might benefit from a custom error message
         storage
             .tokens_minted
             .insert(
