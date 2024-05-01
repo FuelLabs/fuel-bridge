@@ -7,8 +7,7 @@ use fuel_core_types::fuel_tx::{Bytes32, Output};
 use fuels::{
     prelude::*,
     types::{
-        input::Input,
-        transaction_builders::{ScriptTransactionBuilder, TransactionBuilder},
+        coin::Coin, coin_type::CoinType, input::Input, transaction_builders::{ScriptTransactionBuilder, TransactionBuilder}
     },
 };
 
@@ -20,7 +19,7 @@ const CONTRACT_MESSAGE_SCRIPT_BINARY: &str =
 pub async fn build_contract_message_tx(
     message: Input,
     contracts: Vec<Input>,
-    gas_coins: &[Input],
+    gas_coins: &[Coin],
     optional_outputs: &[Output],
     tx_policies: TxPolicies,
     wallet: &WalletUnlocked,
@@ -41,29 +40,31 @@ pub async fn build_contract_message_tx(
     }
 
     // Start building tx list of outputs
-    tx_outputs.push(Output::contract(1u8, Bytes32::zeroed(), Bytes32::zeroed()));
+    tx_outputs.push(Output::contract(1u16, Bytes32::zeroed(), Bytes32::zeroed()));
 
     // If there is more than 1 contract input, it means this is a deposit to contract.
     if number_of_contracts > 1usize {
-        tx_outputs.push(Output::contract(2u8, Bytes32::zeroed(), Bytes32::zeroed()));
+        tx_outputs.push(Output::contract(2u16, Bytes32::zeroed(), Bytes32::zeroed()));
     };
 
     // Build a change output for the owner of the first provided coin input
     if !gas_coins.is_empty() {
         // Append provided inputs
-        tx_inputs.append(&mut gas_coins.to_vec());
+        let mut wtf = 
+            gas_coins.to_vec()
+            .iter()
+            .map(|coin| Input::resource_signed(CoinType::Coin(coin.clone()))).collect();
+        tx_inputs.append(&mut wtf);
     }
 
     // When funding the transaction with gas_coins, we need return the change of the UTXO
     // back to the wallet
     for gas_coin in gas_coins {
-        if let Input::ResourceSigned { resource } = gas_coin {
-            tx_outputs.push(Output::Change {
-                to: wallet.address().into(),
-                amount: 0,
-                asset_id: resource.asset_id(),
-            });
-        }
+        tx_outputs.push(Output::Change {
+            to: wallet.address().into(),
+            amount: 0,
+            asset_id: gas_coin.asset_id,
+        });
     }
 
     // Append provided outputs

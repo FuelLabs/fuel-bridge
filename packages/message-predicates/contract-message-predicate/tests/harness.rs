@@ -9,10 +9,10 @@ mod success {
     use std::str::FromStr;
 
     use crate::utils::{builder, environment as env};
+    use fuel_tx::Bytes32;
     use fuels::{
         prelude::{Address, AssetId, ContractId},
         test_helpers::DEFAULT_COIN_AMOUNT,
-        tx::Bytes32,
         types::Bits256,
     };
 
@@ -181,7 +181,6 @@ mod fail {
                 block_created: 0,
                 asset_id: AssetId::default(),
                 utxo_id: predicate_coin.utxo_id,
-                maturity: 0,
                 owner: predicate_root.into(),
                 status: Unspent,
             }),
@@ -306,10 +305,10 @@ mod fail {
         .await;
 
         match provider.send_transaction(tx).await.unwrap_err() {
-            fuels::types::errors::Error::IOError(error) => {
+            fuels::types::errors::Error::Transaction(error) => {
                 let stringified_error = error.to_string();
                 let expected_error = String::from(
-                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                    "validation: PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
                 );
                 assert_eq!(stringified_error, expected_error);
             }
@@ -335,10 +334,10 @@ mod fail {
         .await;
 
         match provider.send_transaction(tx).await.unwrap_err() {
-            fuels::types::errors::Error::IOError(error) => {
+            fuels::types::errors::Error::Transaction(error) => {
                 let stringified_error = error.to_string();
                 let expected_error = String::from(
-                    "Response errors; PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
+                    "validation: PredicateVerificationFailed(Panic(PredicateReturnedNonOne))",
                 );
                 assert_eq!(stringified_error, expected_error);
             }
