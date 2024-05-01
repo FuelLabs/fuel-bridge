@@ -238,7 +238,7 @@ contract FuelERC20GatewayV4 is
     /// @param amount tokens that have been deposited
     /// @param l2MintedAmount tokens that will be minted on L2
     /// @param messageData The data of the message to send for deposit
-    /// @dev
+    /// @dev Hexens 1-12: Not compatible with fee-on-transfer tokens
     function _deposit(
         address tokenAddress,
         uint256 amount,
