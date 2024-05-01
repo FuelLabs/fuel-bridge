@@ -88,7 +88,7 @@ pub fn encode_data(to: b256, amount: b256, bridged_token: b256, token_id: b256) 
 
     // first, we push the selector 1 byte at a time
     // the function selector for finalizeWithdrawal on the base layer gateway contract:
-    // finalizeWithdrawal(address,address,uint256,bytes32) = 0x64a7fad9
+    // finalizeWithdrawal(address,address,uint256,uint256) = 0x64a7fad9
     data.push(0x64u8);
     data.push(0xa7u8);
     data.push(0xfau8);
