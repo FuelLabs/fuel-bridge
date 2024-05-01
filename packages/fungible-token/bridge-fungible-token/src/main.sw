@@ -356,7 +356,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         },
         DepositType::ContractWithData => {
             let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
-            // TODO: Hexens Fuel1-12, if this call fails, funds may get stuck
+            // TODO: Hexens Fuel1-20, if this call fails, funds may get stuck
             dest_contract
                 .process_message {
                     coins: amount,
