@@ -165,6 +165,7 @@ contract FuelERC721Gateway is
     /// @param tokenId Discriminator for ERC721 / ERC1155 tokens
     /// @dev Made payable to reduce gas costs.
     /// @dev Could remove the amount param to further reduce cost, but that implies changes in the Fuel contract
+    /// @dev Hexens Fuel1-5: safeTransferFrom is intentionally avoided
     function finalizeWithdrawal(
         address to,
         address tokenAddress,
