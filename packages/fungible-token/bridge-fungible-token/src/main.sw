@@ -2,7 +2,7 @@ contract;
 
 // This contract receives messages sent from an instance of FuelERC20Gateway
 // deployed at the L1. The messages are relayed by the message predicate.
-// Upon processing a message, funds are mint to the receiver.
+// Upon processing a message, funds are minted to the receiver.
 
 // Hexens FUEL1-21: This contract might be able to receive BASE_ASSET and
 // without a rescue function, the BASE_ASSET funds might get stuck.
