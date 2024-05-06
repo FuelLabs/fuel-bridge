@@ -32,6 +32,7 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     stateTransitionBytecodeVersion: BigInt(
       header.stateTransitionBytecodeVersion
     ),
+    eventInboxRoot: header.eventInboxRoot,
   };
   const messageProof = withdrawMessageProof.messageProof;
   // Create the message proof object

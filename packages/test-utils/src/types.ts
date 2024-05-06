@@ -10,6 +10,7 @@ export type MessageBlockHeader = {
   outputMessagesRoot: string;
   consensusParametersVersion: bigint;
   stateTransitionBytecodeVersion: bigint;
+  eventInboxRoot: string;
 };
 
 // The BlockHeader structure.
