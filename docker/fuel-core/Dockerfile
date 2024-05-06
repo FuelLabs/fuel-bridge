@@ -1,4 +1,4 @@
-FROM ghcr.io/fuellabs/fuel-core:v0.24.3
+FROM ghcr.io/fuellabs/fuel-core:v0.26.0
 
 ARG FUEL_IP=0.0.0.0
 ARG FUEL_PORT=4001
@@ -13,6 +13,10 @@ WORKDIR /fuel
 COPY ./chain_config.json .
 COPY ./metadata.json .
 COPY ./state_config.json .
+RUN curl \
+    https://github.com/FuelLabs/fuel-core/raw/v0.26.0/bin/fuel-core/chainspec/testnet/ \
+    -o ./state_transition_bytecode.wasm
+
 
 # expose fuel node port
 ENV FUEL_IP="${FUEL_IP}"
