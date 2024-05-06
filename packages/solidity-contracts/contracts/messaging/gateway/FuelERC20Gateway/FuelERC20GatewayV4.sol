@@ -13,7 +13,10 @@ import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
 import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
 
 /// @title FuelERC20GatewayV4
-/// @notice The L1 side of the general ERC20 gateway with Fuel. Not backwards compatible with previous implementations
+/// @notice The L1 side of the general ERC20 gateway with Fuel.
+/// @notice Not backwards compatible with previous implementations
+/// @notice Hexens Fuel1-12: Not compatible with fee-on-transfer erc20 tokens
+/// @notice Hexens Fuel1-18: Payable modifiers are intentionally used
 contract FuelERC20GatewayV4 is
     Initializable,
     FuelBridgeBase,
@@ -236,6 +239,7 @@ contract FuelERC20GatewayV4 is
     /// @param amount tokens that have been deposited
     /// @param l2MintedAmount tokens that will be minted on L2
     /// @param messageData The data of the message to send for deposit
+    /// @dev Hexens 1-12: Not compatible with fee-on-transfer tokens
     function _deposit(
         address tokenAddress,
         uint256 amount,
