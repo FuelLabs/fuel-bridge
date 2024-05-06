@@ -7,7 +7,10 @@ use fuel_core_types::fuel_tx::{Bytes32, Output};
 use fuels::{
     prelude::*,
     types::{
-        coin::Coin, coin_type::CoinType, input::Input, transaction_builders::{ScriptTransactionBuilder, TransactionBuilder}
+        coin::Coin,
+        coin_type::CoinType,
+        input::Input,
+        transaction_builders::{ScriptTransactionBuilder, TransactionBuilder},
     },
 };
 
@@ -50,10 +53,11 @@ pub async fn build_contract_message_tx(
     // Build a change output for the owner of the first provided coin input
     if !gas_coins.is_empty() {
         // Append provided inputs
-        let mut wtf = 
-            gas_coins.to_vec()
+        let mut wtf = gas_coins
+            .to_vec()
             .iter()
-            .map(|coin| Input::resource_signed(CoinType::Coin(coin.clone()))).collect();
+            .map(|coin| Input::resource_signed(CoinType::Coin(coin.clone())))
+            .collect();
         tx_inputs.append(&mut wtf);
     }
 
