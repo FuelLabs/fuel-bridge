@@ -8,7 +8,9 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_crypto::SecretKey, fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId}, fuel_types::{Nonce, Word}
+    fuel_crypto::SecretKey,
+    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
+    fuel_types::{Nonce, Word},
 };
 
 use fuels::{
@@ -278,13 +280,13 @@ pub(crate) async fn relay_message_to_contract(
     let provider = wallet.provider().expect("Wallet has no provider");
 
     let gas_price: u64 = 1; // NodeInfo.min_gas_price is no longer available
-        
+
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
-    let fetched_gas_coins: Vec<Coin> = 
-        provider.get_coins(wallet.address(), Default::default())
-            .await
-            .unwrap();
+    let fetched_gas_coins: Vec<Coin> = provider
+        .get_coins(wallet.address(), Default::default())
+        .await
+        .unwrap();
 
     let tx = builder::build_contract_message_tx(
         message,
@@ -427,7 +429,6 @@ pub(crate) async fn create_deposit_message(
     let message_data = prefix_contract_id(message_data, config).await;
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-
 
     (message, coin, deposit_recipient)
 }

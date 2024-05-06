@@ -133,7 +133,6 @@ async fn handle_watcher_threads(
     ethereum_thread: JoinHandle<()>,
     alert_sender: UnboundedSender<AlertParams>,
 ) -> Result<()> {
-
     if let Err(e) = actions_thread.await {
         send_alert(
             &alert_sender.clone(),

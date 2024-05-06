@@ -14,8 +14,8 @@ use crate::ethereum_watcher::state_contract::StateContractTrait;
 
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 use tokio::sync::Mutex;
-use tokio::time::timeout;
 use tokio::task::JoinHandle;
+use tokio::time::timeout;
 
 pub static THREAD_CONNECTIONS_ERR: &str = "Connections to the ethereum actions thread have all closed";
 
@@ -249,10 +249,9 @@ mod tests {
         expected_description: &str,
         expected_level: AlertLevel,
     ) {
-
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from(expected_name), 
+        let expected_alert = AlertParams::new(
+            String::from(expected_name),
             String::from(expected_description),
             expected_level,
         );
@@ -294,7 +293,7 @@ mod tests {
 
         // Start the action handling thread
         let _ = actions.start_action_handling_thread().await;
-    
+
         send_action(&action_sender, EthereumAction::PauseState, Some(AlertLevel::Info));
 
         assert_alert_received(

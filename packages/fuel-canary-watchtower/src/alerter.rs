@@ -36,7 +36,7 @@ impl AlertParams {
 }
 
 /// `alert_cache`: A shared (Arc) and thread-safe (Mutex) hashmap that acts as a cache for alerts.
-/// 
+///
 /// The hashmap keys are `String` type, which typically represent unique identifiers or names for the alerts. These
 /// would be the AlertParams.name which are unique to each alert type.
 /// The values are `Instant` type, which are timestamps indicating when each alert was last processed or sent.

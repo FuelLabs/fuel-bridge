@@ -81,7 +81,7 @@ impl FuelChainTrait for FuelChain {
 
         if current_timestamp < last_block_timestamp {
             Ok(0)
-        }else {
+        } else {
             Ok((current_timestamp - last_block_timestamp) as u32)
         }
     }

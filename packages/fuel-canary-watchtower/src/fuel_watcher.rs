@@ -278,8 +278,8 @@ mod tests {
         check_fuel_chain_connection(&fuel_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Fuel Chain: Failed to check connection"), 
+        let expected_alert = AlertParams::new(
+            String::from("Fuel Chain: Failed to check connection"),
             String::from("Error: Connection error"),
             AlertLevel::Warn,
         );
@@ -428,8 +428,8 @@ mod tests {
         check_fuel_block_production(&fuel_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Fuel Chain: Failed to check get latest block"), 
+        let expected_alert = AlertParams::new(
+            String::from("Fuel Chain: Failed to check get latest block"),
             String::from("Error: Error fetching block time"),
             AlertLevel::Error,
         );
@@ -476,8 +476,8 @@ mod tests {
         check_fuel_block_production(&fuel_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Fuel Chain: block is taking longer than 60 seconds"), 
+        let expected_alert = AlertParams::new(
+            String::from("Fuel Chain: block is taking longer than 60 seconds"),
             String::from("Last block was 70 seconds ago"),
             AlertLevel::Warn,
         );
@@ -567,8 +567,8 @@ mod tests {
         check_fuel_base_asset_withdrawals(&fuel_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Fuel Chain: Failed to check fuel chain for base asset ETH withdrawals"), 
+        let expected_alert = AlertParams::new(
+            String::from("Fuel Chain: Failed to check fuel chain for base asset ETH withdrawals"),
             String::from("Error: Error fetching withdrawal amount"),
             AlertLevel::Error,
         );

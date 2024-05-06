@@ -701,8 +701,8 @@ mod tests {
         check_eth_chain_connection(&ethereum_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Failed to check connection"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Failed to check connection"),
             String::from("Error: connection failed"),
             AlertLevel::Warn,
         );
@@ -785,8 +785,8 @@ mod tests {
         check_eth_block_production(&ethereum_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: block is taking longer than 20 seconds"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: block is taking longer than 20 seconds"),
             String::from("Last block was 25 seconds ago"),
             AlertLevel::Warn,
         );
@@ -837,8 +837,8 @@ mod tests {
         check_eth_block_production(&ethereum_chain, action_sender, alert_sender, &watch_config).await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Failed to check get latest block"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Failed to check get latest block"),
             String::from("Error: Failed to get block time"),
             AlertLevel::Error,
         );
@@ -972,8 +972,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Ethereum account 0x123 is low on funds"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Ethereum account 0x123 is low on funds"),
             String::from("Current balance: 500"),
             AlertLevel::Warn,
         );
@@ -1320,8 +1320,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Failed to check state contract"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Failed to check state contract"),
             String::from("Error: Error fetching commits"),
             AlertLevel::Error,
         );
@@ -1476,8 +1476,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: ETH is above deposit threshold 100ETH for a period of 60 seconds"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: ETH is above deposit threshold 100ETH for a period of 60 seconds"),
             String::from("Amount deposited: 150ETH"),
             AlertLevel::Warn,
         );
@@ -1547,8 +1547,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Failed to check portal contract for ETH deposits"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Failed to check portal contract for ETH deposits"),
             String::from("Error: mock error"),
             AlertLevel::Error,
         );
@@ -1673,8 +1673,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: ETH is above withdrawal threshold 100ETH for a period of 60 seconds"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: ETH is above withdrawal threshold 100ETH for a period of 60 seconds"),
             String::from("Amount withdrawn: 150ETH"),
             AlertLevel::Warn,
         );
@@ -1744,8 +1744,8 @@ mod tests {
         .await;
 
         // Create the expected alert we will compare the actual one too.
-        let  expected_alert = AlertParams::new(
-            String::from("Ethereum Chain: Failed to check portal contract for ETH withdrawals"), 
+        let expected_alert = AlertParams::new(
+            String::from("Ethereum Chain: Failed to check portal contract for ETH withdrawals"),
             String::from("Error: mock error"),
             AlertLevel::Error,
         );

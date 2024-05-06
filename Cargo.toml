@@ -2,7 +2,8 @@
 resolver = "2"
 members = [
     "packages/message-predicates/contract-message-predicate",
-    "packages/fungible-token/bridge-fungible-token"
+    "packages/fungible-token/bridge-fungible-token",
+    "packages/fuel-canary-watchtower"
 ]
 
 [workspace.package]
