@@ -1,0 +1,149 @@
+{
+  "watchtower_system_name": "Testing Canary",
+  "fuel_graphql": "https://<fuel_graphql>",
+  "ethereum_rpc": "https://<ethereum_rpc>",
+  "state_contract_address": "0xbe7aB12653e705642eb42EF375fd0d35Cfc45b03",
+  "portal_contract_address": "0x03f2901Db5723639978deBed3aBA66d4EA03aF73",
+  "gateway_contract_address": "0x07cf0FF4fdD5d73C4ea5E96bb2cFaa324A348269",
+  "min_duration_from_start_to_err": {
+    "secs": 300000,
+    "nanos": 0
+  },
+  "duplicate_alert_delay": 900,
+  "alert_cache_expiry": {
+    "secs": 300000,
+    "nanos": 0
+  },
+  "fuel_client_watcher": {
+    "connection_alert": {
+      "alert_level": "Warn"
+    },
+    "query_alert": {
+      "alert_level": "Warn"
+    },
+    "block_production_alert": {
+      "alert_level": "Warn",
+      "max_block_time": 10 
+    },
+    "portal_withdrawal_alerts": [
+      {
+        "alert_level": "Info",
+        "time_frame": 60,
+        "amount": 10
+      },
+      {
+        "alert_level": "Info",
+        "time_frame": 300,
+        "amount": 250
+      }
+    ],
+    "gateway_withdrawal_alerts": [
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0x6c1d19D4a2e9Eb0cE3606eB4A0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "time_frame": 60,
+        "amount": 1000
+      },
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0x6c1d19D4a2e9Eb0cE3606eB4A0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "time_frame": 300,
+        "amount": 25000
+      }
+    ]
+  },
+  "ethereum_client_watcher": {
+    "connection_alert": {
+      "alert_level": "Warn"
+    },
+    "query_alert": {
+      "alert_level": "Warn"
+    },
+    "block_production_alert": {
+      "alert_level": "Warn",
+      "max_block_time": 15 
+    },
+    "account_funds_alert": {
+      "alert_level": "Warn",
+      "min_balance": 0.1
+    },
+    "invalid_state_commit_alert": {
+      "alert_level": "Error",
+      "alert_action": "PauseAll"
+    },
+    "portal_deposit_alerts": [
+      {
+        "alert_level": "Info",
+        "time_frame": 60,
+        "token_name": "ETH",
+        "token_address": "0x0000000000000000000000000000000000000000",
+        "token_decimals": 18,
+        "amount": 10
+      },
+      {
+        "alert_level": "Info",
+        "token_name": "ETH",
+        "token_address": "0x0000000000000000000000000000000000000000",
+        "token_decimals": 18,
+        "time_frame": 300,
+        "amount": 250
+      }
+    ],
+    "portal_withdrawal_alerts": [
+      {
+        "alert_level": "Info",
+        "token_name": "ETH",
+        "token_address": "0x0000000000000000000000000000000000000000",
+        "token_decimals": 18,
+        "time_frame": 60,
+        "amount": 10
+      },
+      {
+        "alert_level": "Info",
+        "token_name": "ETH",
+        "token_address": "0x0000000000000000000000000000000000000000",
+        "token_decimals": 18,
+        "time_frame": 300,
+        "amount": 250
+      }
+    ],
+    "gateway_deposit_alerts": [
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "token_decimals": 18,
+        "time_frame": 60,
+        "amount": 1000
+      },
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "token_decimals": 18,
+        "time_frame": 300,
+        "amount": 25000
+      }
+    ],
+    "gateway_withdrawal_alerts": [
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "token_decimals": 18,
+        "time_frame": 60,
+        "amount": 1000
+      },
+      {
+        "alert_level": "Info",
+        "token_name": "USDC",
+        "token_address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "token_decimals": 18,
+        "time_frame": 300,
+        "amount": 25000
+      }
+    ]
+  }
+}

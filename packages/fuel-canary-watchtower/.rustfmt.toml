@@ -1,0 +1,9 @@
+unstable_features = true
+max_width = 120
+normalize_comments = true
+imports_layout = "HorizontalVertical"
+imports_granularity = "Module"
+trailing_semicolon = false
+edition = "2021"
+use_try_shorthand = true
+use_field_init_shorthand = true
