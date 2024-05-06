@@ -28,6 +28,7 @@ function createBlock(height: number): BlockHeader {
     outputMessagesRoot: EMPTY,
     consensusParametersVersion: CONSENSUS_PARAMETERS_VERSION,
     stateTransitionBytecodeVersion: STATE_TRANSITION_BYTECODE_VERSION,
+    eventInboxRoot: EMPTY,
   };
 
   return header;

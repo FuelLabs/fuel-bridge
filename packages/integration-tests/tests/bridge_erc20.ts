@@ -269,7 +269,7 @@ describe('Bridging ERC20 tokens', async function () {
         .txParams({
           tip: 0,
           gasLimit: 1_000_000,
-          maxFee: 0,
+          maxFee: 1,
         })
         .callParams({
           forward: {

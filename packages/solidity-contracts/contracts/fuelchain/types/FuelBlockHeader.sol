@@ -11,8 +11,6 @@ struct FuelBlockHeader {
     ///////////////
     // Merkle root of all previous consensus header hashes (not including this block)
     bytes32 prevRoot;
-    // Height of this block
-    uint32 height;
     // Time this block was created, in TAI64 format
     uint64 timestamp;
     /////////////////
@@ -20,18 +18,22 @@ struct FuelBlockHeader {
     /////////////////
     //Height of the data availability layer up to which (inclusive) input messages are processed
     uint64 daHeight;
-    // Number of transactions in this block
-    uint64 txCount;
     // Number of output messages in this block
-    uint64 outputMessagesCount;
+    uint32 outputMessagesCount;
+    // Version of consensus parameters
+    uint32 consensusParametersVersion;
+    // Version of state transition bytecode
+    uint32 stateTransitionBytecodeVersion;
+    // Height of this block
+    uint32 height;
     // Merkle root of transactions in this block
     bytes32 txRoot;
     // Merkle root of output messages in this block
     bytes32 outputMessagesRoot;
-    // Version of consensus parameters
-    uint64 consensusParametersVersion;
-    // Version of state transition bytecode
-    uint64 stateTransitionBytecodeVersion;
+    // Merkle root of incoming messages in this block
+    bytes32 eventInboxRoot;
+    // Number of transactions in this block
+    uint16 txCount;
 }
 
 /// @title Block Header Library
@@ -48,12 +50,13 @@ library FuelBlockHeaderLib {
         return
             abi.encodePacked(
                 header.daHeight,
+                header.consensusParametersVersion,
+                header.stateTransitionBytecodeVersion,
                 header.txCount,
                 header.outputMessagesCount,
                 header.txRoot,
                 header.outputMessagesRoot,
-                header.consensusParametersVersion,
-                header.stateTransitionBytecodeVersion
+                header.eventInboxRoot
             );
     }
 

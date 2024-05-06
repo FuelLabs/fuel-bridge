@@ -25,6 +25,7 @@ export function createBlock(
     outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
     consensusParametersVersion: CONSENSUS_PARAMETERS_VERSION,
     stateTransitionBytecodeVersion: STATE_TRANSITION_BYTECODE_VERSION,
+    eventInboxRoot: EMPTY,
   };
   return header;
 }
