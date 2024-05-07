@@ -12,7 +12,7 @@ export const FUEL_TX_PARAMS = {
   gasPrice: process.env.FUEL_GAS_PRICE || FUEL_GAS_PRICE,
 };
 export const FUEL_CALL_TX_PARAMS = {
-  gasLimit: bn(10_000),
+  gasLimit: bn(64_933),
   gasPrice: FUEL_TX_PARAMS.gasPrice,
 };
 export const FUEL_MESSAGE_TIMEOUT_MS = 1_000_000;

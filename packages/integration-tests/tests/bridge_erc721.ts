@@ -56,7 +56,6 @@ describe.skip('Bridging ERC721 tokens', async function () {
     ).toLowerCase();
     fuel_testToken = await getOrDeployFuelTokenContract(
       env,
-      eth_testToken,
       env.eth.fuelERC721Gateway,
       FUEL_TX_PARAMS,
       0
@@ -197,7 +196,7 @@ describe.skip('Bridging ERC721 tokens', async function () {
       fuel_testToken.account = fuelTokenSender;
       const paddedAddress =
         '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
-      const scope = await fuel_testToken.functions
+      const transactionRequest = await fuel_testToken.functions
         .withdraw(paddedAddress)
         .txParams(FUEL_CALL_TX_PARAMS)
         .callParams({
@@ -205,10 +204,9 @@ describe.skip('Bridging ERC721 tokens', async function () {
             amount: 1,
             assetId: fuel_testAssetId,
           },
-        });
+        })
+        .fundWithRequiredCoins();
 
-      const scopeFunded = await scope.fundWithRequiredCoins();
-      const transactionRequest = await scopeFunded.getTransactionRequest();
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
 
       const fWithdrawTxResult = await tx.waitForResult();

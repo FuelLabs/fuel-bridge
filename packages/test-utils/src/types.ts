@@ -8,6 +8,9 @@ export type MessageBlockHeader = {
   outputMessagesCount: string;
   txRoot: string;
   outputMessagesRoot: string;
+  consensusParametersVersion: bigint;
+  stateTransitionBytecodeVersion: bigint;
+  eventInboxRoot: string;
 };
 
 // The BlockHeader structure.
