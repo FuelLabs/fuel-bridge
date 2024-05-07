@@ -13,7 +13,7 @@ import {
 import chai from 'chai';
 import type { Signer } from 'ethers';
 import { parseEther } from 'ethers';
-import { Address, BN, BaseAssetId, padFirst12BytesOfEvmAddress } from 'fuels';
+import { Address, BN, ZeroBytes32, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
@@ -55,7 +55,7 @@ describe('Transferring ETH', async function () {
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
       fuelETHReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        BaseAssetId
+        ZeroBytes32
       );
     });
 
@@ -113,7 +113,7 @@ describe('Transferring ETH', async function () {
       // check that the recipient balance has increased by the expected amount
       const newReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        BaseAssetId
+        ZeroBytes32
       );
       expect(
         newReceiverBalance.eq(
@@ -134,7 +134,7 @@ describe('Transferring ETH', async function () {
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
-      fuelETHSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
+      fuelETHSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
       ethereumETHReceiverBalance = await env.eth.provider.getBalance(
@@ -175,7 +175,7 @@ describe('Transferring ETH', async function () {
       );
 
       // check that the sender balance has decreased by the expected amount
-      const newSenderBalance = await fuelETHSender.getBalance(BaseAssetId);
+      const newSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
 
       // Get just the first 3 digits of the balance to compare to the expected balance
       // this is required because the payment of gas fees is not deterministic

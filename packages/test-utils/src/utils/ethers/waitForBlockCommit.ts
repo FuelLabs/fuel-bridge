@@ -1,12 +1,11 @@
+import type { FuelChainState } from '@fuel-bridge/solidity-contracts/typechain';
+import { ZeroHash } from 'ethers';
+import type { Provider } from 'fuels';
 import { bn } from 'fuels';
 
-import { delay } from '../delay';
 import { getBlock } from '../fuels/getBlock';
 import { debug } from '../logs';
 import type { TestEnvironment } from '../setup';
-
-// 5 seconds
-const RETRY_DELAY = 5 * 1000;
 
 export async function waitForBlockCommit(env: TestEnvironment, height: string) {
   debug('Check block is commited on L1...');
@@ -29,29 +28,82 @@ export async function waitForBlockCommit(env: TestEnvironment, height: string) {
   const commitHashAtL1 = await fuelChainState.blockHashAtCommit(
     commitHeight.toString()
   );
+
+  const commitSlotIsEmpty = commitHashAtL1 === ZeroHash;
+
+  // If the commit is missing, wait for a new commit
+  if (commitSlotIsEmpty) {
+    debug(`Commit height ${commitHeight} does not exist`);
+
+    await tryToForwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
+
+    debug(`Waiting for a new L1 commit ${commitHeight.toString()}`);
+    await waitForCommitEvent(fuelChainState, commitHeight.toString());
+    return waitForBlockCommit(env, height);
+  }
+
   // As we only have a limited amount of slots, the slot can contain
   // a block that was committed before we need to check if the block
   // height at the slot is greater than or equal to the target block height
   const block = await getBlock(env.fuel.provider.url, commitHashAtL1);
-  const isCommited = bn(block?.header.height).gte(nextBlockHeight);
+  const isCommited = bn(block.header.height).gte(nextBlockHeight);
 
-  // If not commited, wait for TIMOUT_RETRY seconds and try again
+  // If the commit is missing, wait for a new commit
   if (!isCommited) {
-    const { name } = await env.fuel.provider.fetchChain();
+    debug(`Block ${block.header.id} is not commited on L1`);
 
-    // If the chain is a local testnet, speed up the process
-    // by trying to produce blocks and reach the desired height quickly
-    if (name === 'local_testnet') {
-      await env.fuel.provider
-        .produceBlocks(Number(blocksPerCommitInterval))
-        .catch(); // If the request fails it is probably because --debug was not enabled
-    }
-    debug(`Block is not commited on L1. Auto-retry in ${RETRY_DELAY}ms...`);
-    await delay(RETRY_DELAY);
+    await tryToForwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
+
+    debug(`Waiting for a new L1 commit ${commitHeight.toString()}`);
+    await waitForCommitEvent(fuelChainState, commitHeight.toString());
     return waitForBlockCommit(env, height);
   }
 
   // Return if is finalized
   debug('Block is commited on L1');
   return commitHashAtL1;
+}
+
+export async function waitForCommitEvent(
+  fuelChainState: FuelChainState,
+  commitHeight: string
+) {
+  const filter =
+    fuelChainState.filters['CommitSubmitted(uint256,bytes32)'](commitHeight);
+
+  const events = await fuelChainState.queryFilter(filter);
+
+  if (events.length === 0) {
+    return waitForCommitEvent(fuelChainState, commitHeight);
+  }
+
+  if (events.length > 1) {
+    throw new Error(
+      `
+      Commit at height ${commitHeight} was duplicated,
+      this most probably means there is a block committer issue
+      `
+    );
+  }
+
+  const [height, hash] = events[0].args;
+
+  debug(`Commit submitted: height=${height} hash=${hash}`);
+}
+
+export async function tryToForwardFuelChain(
+  provider: Provider,
+  blocksToForward: string
+) {
+  const { name } = await provider.fetchChain();
+
+  // If the chain is a local testnet, speed up the process
+  // by trying to produce blocks and reach the desired height quickly
+  if (name === 'Upgradable Testnet') {
+    debug(`Forwarding fuel chain ${blocksToForward} blocks`);
+
+    // If the request fails it is probably because --debug was not enabled
+    // when initiating fuel-core
+    await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
+  }
 }

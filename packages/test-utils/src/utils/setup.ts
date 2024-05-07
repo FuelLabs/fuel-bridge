@@ -31,7 +31,7 @@ dotenv.config();
 // Default config values
 const def_http_eth: string = 'http://127.0.0.1:8545';
 const def_http_deployer: string = 'http://127.0.0.1:8080';
-const def_http_fuel: string = 'http://127.0.0.1:4000/graphql';
+const def_http_fuel: string = 'http://127.0.0.1:4000/v1/graphql';
 
 // Default private keys of the developer mnemonic
 const eth_private_keys: string[] = [

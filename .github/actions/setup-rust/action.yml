@@ -2,9 +2,9 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
-    default: 1.77.0
+    default: 1.77.2
   forc-components:
-    default: 'forc@0.53.0, fuel-core@0.23.0'
+    default: 'forc@0.54.0, fuel-core@0.26.0'
 
 runs:
   using: 'composite'
