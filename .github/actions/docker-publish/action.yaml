@@ -41,6 +41,7 @@ outputs:
     description: 'Build result metadata'
     value: ${{ steps.publish.outputs.metadata }}
 
+description: 'Build and push Docker image to ghcr.io'
 runs:
   using: 'composite'
   steps:

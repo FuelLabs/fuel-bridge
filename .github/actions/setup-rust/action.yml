@@ -2,10 +2,13 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
+    description: 'Rust toolchain version'
     default: 1.77.0
   forc-components:
+    description: 'Forc components'
     default: 'forc@0.53.0, fuel-core@0.23.0'
 
+description: 'Setup Rust and Fuel toolchain'
 runs:
   using: 'composite'
   steps:
