@@ -36,7 +36,7 @@ HELTH_CHECK_OUTPUT=""
 MAX_CHECK_ATTEMPTS=50
 
 waitForNodesToBeReady() {
-    NODE_URL="http://localhost:4000/playground";
+    NODE_URL="http://localhost:4000/v1/playground";
 
     printf "\rWaiting for node.${HELTH_CHECK_OUTPUT}"
 

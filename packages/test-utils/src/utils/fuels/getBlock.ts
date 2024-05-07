@@ -1,3 +1,5 @@
+import { debug } from '../logs';
+
 const query = `
   query Block($id: BlockId!) {
     block(id: $id) {
@@ -10,7 +12,7 @@ const query = `
         height
         daHeight
         transactionsCount
-        messageReceiptRoot
+        messageOutboxRoot
         messageReceiptCount
         time
         id
@@ -31,13 +33,14 @@ export interface Header {
   transactionsRoot: string;
   height: string;
   daHeight: string;
-  messageReceiptRoot: string;
+  messageOutboxRoot: string;
   messageReceiptCount: string;
   time: string;
   id: string;
 }
 
 export function getBlock(providerUrl: string, blockId: string): Promise<Block> {
+  debug(`Fetching block with id ${blockId}`);
   return fetch(providerUrl, {
     method: 'POST',
     headers: {
@@ -51,5 +54,9 @@ export function getBlock(providerUrl: string, blockId: string): Promise<Block> {
     }),
   })
     .then((res) => res.json())
-    .then((res) => res.data.block);
+    .then((res) => {
+      if (!res.data.block)
+        throw new Error(`Could not fetch block with id ${blockId}`);
+      return res.data.block;
+    });
 }
