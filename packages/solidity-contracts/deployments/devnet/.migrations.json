@@ -4,5 +4,8 @@
   "fuel_erc20_gateway_v4": 1714255717,
   "token": 1714255743,
   "register_committer": 1714731217,
-  "portal_unpause": 1715106411
+  "fuel_message_portal_redeploy": 1715106411,
+  "portal_unpause": 1715106411,
+  "state_redeploy": 1715107035,
+  "state_unpause": 1715107035
 }
