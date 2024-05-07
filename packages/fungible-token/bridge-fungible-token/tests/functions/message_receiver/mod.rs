@@ -34,20 +34,24 @@ mod success {
     #[tokio::test]
     async fn deposit_to_wallet() {
         let mut wallet = create_wallet();
-        
+
         let amount: u64 = 10;
         let token_address = "0x000000000000000000000000fcF38f326CA709b0B04B2215Dbc969fC622775F7";
         let token_id = BRIDGED_TOKEN_ID;
         let from_address = "0x00000000000000000000000090F79bf6EB2c4f870365E785982E1f101E93b906";
         let message_sender = "0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
-        let recipient: Bytes32 = Bytes32::from_bytes(&hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28").unwrap()).unwrap();
-        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
-        
-        let configurables: BridgeFungibleTokenContractConfigurables = 
+        let recipient: Bytes32 = Bytes32::from_bytes(
+            &hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28")
+                .unwrap(),
+        )
+        .unwrap();
+        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient);
+
+        let configurables: BridgeFungibleTokenContractConfigurables =
             BridgeFungibleTokenContractConfigurables::default()
                 .with_BRIDGED_TOKEN_GATEWAY(Bits256::from_hex_str(message_sender).unwrap())
                 .unwrap();
-        
+
         let (message, coin, deposit_contract) = create_deposit_message(
             token_address,
             token_id,
@@ -83,12 +87,15 @@ mod success {
 
         let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
-        
+
         let eth_balance =
             contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let asset_id = get_asset_id(bridge.contract_id(), token_address);
-        let asset_balance = provider.get_asset_balance(&recipient_bech32, asset_id).await.unwrap();
-        
+        let asset_balance = provider
+            .get_asset_balance(&recipient_bech32, asset_id)
+            .await
+            .unwrap();
+
         // Verify the message value was received by the bridge
         assert_eq!(eth_balance, MESSAGE_AMOUNT);
 

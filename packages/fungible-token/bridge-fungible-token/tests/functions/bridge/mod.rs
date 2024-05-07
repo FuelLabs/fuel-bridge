@@ -24,12 +24,7 @@ mod success {
         },
         setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{
-        prelude::Address,
-        programs::contract::SettableContract,
-        tx::Receipt,
-        types::U256,
-    };
+    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
     use primitive_types::H160;
     use std::str::FromStr;
 
