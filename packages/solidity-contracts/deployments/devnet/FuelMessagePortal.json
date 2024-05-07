@@ -59,6 +59,11 @@
     },
     {
       "inputs": [],
+      "name": "MessageRelayFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "UnfinalizedBlock",
       "type": "error"
     },
@@ -684,11 +689,6 @@
               "type": "bytes32"
             },
             {
-              "internalType": "uint32",
-              "name": "height",
-              "type": "uint32"
-            },
-            {
               "internalType": "uint64",
               "name": "timestamp",
               "type": "uint64"
@@ -699,14 +699,24 @@
               "type": "uint64"
             },
             {
-              "internalType": "uint64",
-              "name": "txCount",
-              "type": "uint64"
+              "internalType": "uint32",
+              "name": "outputMessagesCount",
+              "type": "uint32"
             },
             {
-              "internalType": "uint64",
-              "name": "outputMessagesCount",
-              "type": "uint64"
+              "internalType": "uint32",
+              "name": "consensusParametersVersion",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "stateTransitionBytecodeVersion",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "height",
+              "type": "uint32"
             },
             {
               "internalType": "bytes32",
@@ -717,6 +727,16 @@
               "internalType": "bytes32",
               "name": "outputMessagesRoot",
               "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "eventInboxRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint16",
+              "name": "txCount",
+              "type": "uint16"
             }
           ],
           "internalType": "struct FuelBlockHeader",
@@ -921,6 +941,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 1,
+  "numDeployments": 2,
   "implementation": "0xC9C453fA30cd0c6A2f09Af5e1C32F839Ff7a3DD0"
 }
