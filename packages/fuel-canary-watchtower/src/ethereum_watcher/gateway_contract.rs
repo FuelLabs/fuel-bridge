@@ -205,7 +205,7 @@ mod tests {
 
     use crate::{
         ethereum_watcher::gateway_contract::GatewayContractTrait,
-        test_utils::test_utils::{setup_gateway_contract, setup_wallet_and_provider},
+        test_utils::{setup_gateway_contract, setup_wallet_and_provider},
     };
 
     #[tokio::test]

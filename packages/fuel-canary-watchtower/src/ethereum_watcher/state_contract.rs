@@ -126,7 +126,7 @@ impl<P: Middleware + 'static> StateContractTrait for StateContract<P> {
 mod tests {
     use crate::{
         ethereum_watcher::state_contract::StateContractTrait,
-        test_utils::test_utils::{setup_state_contract, setup_wallet_and_provider},
+        test_utils::{setup_state_contract, setup_wallet_and_provider},
     };
     use ethers::prelude::*;
 

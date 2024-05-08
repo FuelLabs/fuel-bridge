@@ -169,7 +169,7 @@ impl<P: Middleware + 'static> PortalContractTrait for PortalContract<P> {
 mod tests {
     use crate::{
         ethereum_watcher::portal_contract::PortalContractTrait,
-        test_utils::test_utils::{setup_portal_contract, setup_wallet_and_provider},
+        test_utils::{setup_portal_contract, setup_wallet_and_provider},
     };
     use ethers::abi::Token;
     use ethers::prelude::*;

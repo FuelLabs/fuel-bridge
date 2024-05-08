@@ -1,5 +1,3 @@
-#[cfg(test)]
-pub mod test_utils {
     use anyhow::Result;
     use ethers::prelude::k256::ecdsa::SigningKey;
     use ethers::prelude::{MockProvider, MockResponse, Provider, Wallet, U64};
@@ -25,6 +23,7 @@ pub mod test_utils {
     const PAUSED_RESPONSE_HEX: &str = "0x0000000000000000000000000000000000000000000000000000000000000000";
     const READ_ONLY: bool = false;
 
+    #[allow(clippy::type_complexity)]
     pub fn setup_wallet_and_provider(
     ) -> Result<(Arc<Provider<MockProvider>>, Arc<MockProvider>, Wallet<SigningKey>), anyhow::Error> {
         let chain_id = U64::from(1337);
@@ -99,4 +98,3 @@ pub mod test_utils {
         // Create and return the WatchtowerAlerter
         WatchtowerAlerter::new(&config, Some(mock_pagerduty_client))
     }
-}

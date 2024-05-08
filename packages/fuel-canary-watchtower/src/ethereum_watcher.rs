@@ -480,6 +480,7 @@ async fn check_eth_token_withdrawals(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub async fn start_ethereum_watcher(
     config: &WatchtowerConfig,
     action_sender: UnboundedSender<ActionParams>,

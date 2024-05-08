@@ -33,6 +33,7 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     // Time to fianlize in seconds
     // TIME_TO_FINALIZE = target interval in minutes * 60
     uint256 public constant TIME_TO_FINALIZE = 10800;
+    uint32 public constant COMMIT_COOLDOWN = uint32(TIME_TO_FINALIZE) * 8;
 
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -50,6 +51,7 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     ////////////
 
     error UnknownBlock();
+    error CannotRecommit();
 
     /////////////
     // Storage //
@@ -95,16 +97,18 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     }
 
     /// @notice Commits a block header.
-    /// @dev Committing to the same commitHeight twice would have the effect of delaying
-    /// finality, as the timestamp of the committed slot is taken from the ETH block
-    /// timestamp. TODO: it might be reasonable to put a require here to disallow overwriting
-    /// In the future we will want this to be challenge-able, and rewriting the slot
-    /// could open for foul play during IVG
     /// @param blockHash The hash of a block
     /// @param commitHeight The height of the commit
     function commit(bytes32 blockHash, uint256 commitHeight) external whenNotPaused onlyRole(COMMITTER_ROLE) {
         uint256 slot = commitHeight % NUM_COMMIT_SLOTS;
         Commit storage commitSlot = _commitSlots[slot];
+
+        unchecked {
+            if (commitSlot.timestamp + COMMIT_COOLDOWN > uint32(block.timestamp)) {
+                revert CannotRecommit();
+            }
+        }
+
         commitSlot.blockHash = blockHash;
         commitSlot.timestamp = uint32(block.timestamp);
 

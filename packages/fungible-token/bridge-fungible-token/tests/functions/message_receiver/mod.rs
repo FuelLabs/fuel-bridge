@@ -45,8 +45,7 @@ mod success {
                 .unwrap(),
         )
         .unwrap();
-        let recipient_bech32: Bech32Address =
-            Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
+        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient);
 
         let configurables: BridgeFungibleTokenContractConfigurables =
             BridgeFungibleTokenContractConfigurables::default()
