@@ -1,15 +1,14 @@
-use fuel_asm::{op, GTFArgs, RegId};
-use sha2::{Digest, Sha256};
 
-const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message(u64)";
+use fuel_asm::{op, GTFArgs, RegId};
+
+const PROCESS_MESSAGE_FUNCTION_SIGNATURE: &str = "process_message";
 const BYTES_PER_INSTR: u16 = 4;
 
 // Gets the bytecode for the message-to-contract script
 pub fn bytecode() -> Vec<u8> {
-    //calculate function selector
-    let mut fn_sel_hasher = Sha256::new();
-    fn_sel_hasher.update(PROCESS_MESSAGE_FUNCTION_SIGNATURE);
-    let fn_sel_hash: [u8; 32] = fn_sel_hasher.finalize().into();
+    let mut fn_selector_bytes = fuels::core::codec::encode_fn_selector(PROCESS_MESSAGE_FUNCTION_SIGNATURE);
+    const FN_SEL_BYTES_LEN: u16 = 23; // new encoding: len of the function signature as u64 (8 bytes) + 15 bytes of function signature ("process_message" has 15 characters)
+    assert_eq!(fn_selector_bytes.len() as u16, FN_SEL_BYTES_LEN);
 
     //register names
     const REG_MEMORY_START_PTR: u8 = 0x10;
@@ -33,9 +32,9 @@ pub fn bytecode() -> Vec<u8> {
     let mut script: Vec<u8> = vec![
         //extend stack for contract call data
         op::move_(REG_MEMORY_START_PTR, RegId::SP), //REG_MEMORY_START_PTR = stack pointer
-        op::cfei(32 + 32 + 8 + 8), //extends current call frame stack by 32+32+8+8 bytes [base asset id, contract id, param1, param2]
+        op::cfei(32 + 32 + 23 + 8), //extends current call frame stack by 32+32+23+8 bytes [base asset id, contract id, fn_selector, param2]
         op::addi(REG_DATA_PTR, REG_MEMORY_START_PTR, 32), //REG_DATA_PTR = REG_MEMORY_START_PTR + 32bytes [memory start pointer + 32]
-        op::addi(REG_DATA_FN_SEL_PTR, REG_DATA_PTR, 32 + 4), //REG_DATA_FN_SEL_PTR = REG_DATA_PTR + 32bytes + 4bytes [call data start pointer + 32 + 4]
+        op::addi(REG_DATA_FN_SEL_PTR, REG_DATA_PTR, 32), //REG_DATA_FN_SEL_PTR = REG_DATA_PTR + 32bytes [call data start pointer + 32]
         //prep call parameters
         op::gtf(
             REG_MSG_AMOUNT,
@@ -49,7 +48,7 @@ pub fn bytecode() -> Vec<u8> {
         ), //REG_CONTRACT_ADDR_PTR = memory location of the message data from input[0]
         op::addi(REG_FN_SELECTOR_PTR, RegId::IS, REF_DATA_START_PTR), //REG_FN_SELECTOR_PTR = function selector at end of program
         op::mcpi(REG_DATA_PTR, REG_CONTRACT_ADDR_PTR, 32), //32 bytes at REG_DATA_PTR = the 32 bytes at REG_CONTRACT_ADDR_PTR
-        op::mcpi(REG_DATA_FN_SEL_PTR, REG_FN_SELECTOR_PTR, 4), //4 bytes at REG_DATA_FN_SEL_PTR = the 4 bytes at REG_FN_SELECTOR_PTR
+        op::mcpi(REG_DATA_FN_SEL_PTR, REG_FN_SELECTOR_PTR, FN_SEL_BYTES_LEN), //23 bytes at REG_DATA_FN_SEL_PTR = the 23 bytes at REG_FN_SELECTOR_PTR
         //make contract call
         op::call(REG_DATA_PTR, REG_MSG_AMOUNT, REG_ASSET_PTR, RegId::CGAS),
         op::ret(RegId::ZERO),
@@ -60,6 +59,6 @@ pub fn bytecode() -> Vec<u8> {
     .collect();
 
     //add referenced data (function selector)
-    script.append(&mut fn_sel_hash[0..4].to_vec());
+    script.append(&mut fn_selector_bytes);
     script
 }

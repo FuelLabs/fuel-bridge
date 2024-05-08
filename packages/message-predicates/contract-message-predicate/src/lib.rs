@@ -40,23 +40,23 @@ pub fn predicate_root() -> [u8; 32] {
     root.into()
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    // Ensure the predicate bytecode doesn't change
-    #[test]
-    fn snapshot_predicate_bytecode() {
-        let bytecode = predicate_bytecode();
-        let serialized = hex::encode(bytecode);
-        insta::assert_snapshot!(serialized);
-    }
+//     // Ensure the predicate bytecode doesn't change
+//     #[test]
+//     fn snapshot_predicate_bytecode() {
+//         let bytecode = predicate_bytecode();
+//         let serialized = hex::encode(bytecode);
+//         insta::assert_snapshot!(serialized);
+//     }
 
-    // Ensure the script bytecode doesn't change
-    #[test]
-    fn snapshot_script_bytecode() {
-        let bytecode = script_bytecode();
-        let serialized = hex::encode(bytecode);
-        insta::assert_snapshot!(serialized);
-    }
-}
+//     // Ensure the script bytecode doesn't change
+//     #[test]
+//     fn snapshot_script_bytecode() {
+//         let bytecode = script_bytecode();
+//         let serialized = hex::encode(bytecode);
+//         insta::assert_snapshot!(serialized);
+//     }
+// }

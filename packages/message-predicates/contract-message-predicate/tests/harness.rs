@@ -39,13 +39,17 @@ mod success {
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
-        let _receipts = env::relay_message_to_contract(
+        let tx_id = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
             vec![contract_input.clone()],
             &[],
         )
         .await;
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap().take_receipts();
+
+        dbg!(receipts);
 
         // Verify test contract received the message with the correct data
         let test_contract_id: ContractId = test_contract.contract_id().into();

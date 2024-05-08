@@ -41,27 +41,33 @@ impl MessageReceiver for Contract {
     #[storage(read, write)]
     #[payable]
     fn process_message(msg_idx: u64) {
-        storage.counter.write(0); // Temporary fix for: https://github.com/FuelLabs/sway/issues/4634
-        storage.counter.write(storage.counter.read() + 1);
 
-        // Parse the message data
-        let data_length = input_message_data_length(msg_idx);
-        if (data_length >= 32u16) {
-            let contract_id: b256 = input_message_data(msg_idx, 0).into();
-            storage.data1.write(ContractId::from(contract_id));
-        }
-        if (data_length >= 32u16 + 8u16) {
-            let num: u64 = into_u64(input_message_data(msg_idx, 32));
-            storage.data2.write(num);
-        }
-        if (data_length >= 32u16 + 8u16 + 32u16) {
-            let big_num: b256 = input_message_data(msg_idx, 32 + 8).into();
-            storage.data3.write(big_num);
-        }
-        if (data_length >= 32u16 + 8u16 + 32u16 + 32u16) {
-            let address: b256 = input_message_data(msg_idx, 32 + 8 + 32).into();
-            storage.data4.write(Address::from(address));
-        }
+        log(255);
+        log(255);
+        log(255);
+        log(255);
+
+        // storage.counter.write(0); // Temporary fix for: https://github.com/FuelLabs/sway/issues/4634
+        // storage.counter.write(storage.counter.read() + 1);
+
+        // // Parse the message data
+        // let data_length = input_message_data_length(msg_idx);
+        // if (data_length >= 32u16) {
+        //     let contract_id: b256 = input_message_data(msg_idx, 0).into();
+        //     storage.data1.write(ContractId::from(contract_id));
+        // }
+        // if (data_length >= 32u16 + 8u16) {
+        //     let num: u64 = into_u64(input_message_data(msg_idx, 32));
+        //     storage.data2.write(num);
+        // }
+        // if (data_length >= 32u16 + 8u16 + 32u16) {
+        //     let big_num: b256 = input_message_data(msg_idx, 32 + 8).into();
+        //     storage.data3.write(big_num);
+        // }
+        // if (data_length >= 32u16 + 8u16 + 32u16 + 32u16) {
+        //     let address: b256 = input_message_data(msg_idx, 32 + 8 + 32).into();
+        //     storage.data4.write(Address::from(address));
+        // }
     }
 }
 
