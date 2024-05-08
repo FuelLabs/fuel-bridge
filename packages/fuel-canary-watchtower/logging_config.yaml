@@ -2,12 +2,12 @@ appenders:
   watchtower_stdout:
     kind: console
     encoder:
-      pattern: "{h({d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] - {m}{n})}"
+      pattern: '{h({d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] - {m}{n})}'
   watchtower_file_logger:
     kind: file
-    path: "log/output.log"
+    path: 'log/output.log'
     encoder:
-      pattern: "{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] - {m}{n}"
+      pattern: '{d(%Y-%m-%d %H:%M:%S %Z)(utc)} [{l}] - {m}{n}'
 root:
   level: info
   appenders:

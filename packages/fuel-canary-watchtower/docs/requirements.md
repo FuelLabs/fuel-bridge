@@ -34,7 +34,7 @@ A separate application that runs alongside the canary fuel-core node. The watcht
 
 ## Alerting App
 
-“*[Quis custodiet ipsos custodes?](https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes%3F)”*
+“_[Quis custodiet ipsos custodes?](https://en.wikipedia.org/wiki/Quis_custodiet_ipsos_custodes%3F)”_
 
 The alerting app will be a separate process that monitors the operational behavior of the canary and alerts the operator if there are any problems.
 

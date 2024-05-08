@@ -3,6 +3,7 @@
 A tool to monitor both the Fuel and Ethereum chains and the bridge activities occurring between the two chains.
 
 ## Project Layout
+
 <pre>
 ├── <a href="./src/fuel_watcher.rs">fuel_watcher</a>: handles a thread that watches the Fuel chain
 │   ├── <a href="./src/fuel_watcher/fuel_chain.rs">fuel_chain</a>: reads basic data from the Fuel chain
@@ -44,6 +45,7 @@ export WATCHTOWER_ETH_PRIVATE_KEY=KEY-HERE
 ```
 
 Build the project and run it:
+
 ```sh
 cargo build
 cargo run
@@ -52,6 +54,7 @@ cargo run
 ### Config File
 
 An example config file can be found at [watchtower_config.json.example](./watchtower_config.json.example). You can configure alerts by alert level and by action here is an example portal deposit alert:
+
 ```json
 "portal_deposit_alerts": [
     {
@@ -73,9 +76,9 @@ In the above configuration, ETH has exceeded the threshold of `250ETH` being dep
 The abi is generated from compiling the [fuel-bridge contracts](https://github.com/FuelLabs/fuel-bridge)
 
 ### Alerts Module
+
 The alerts module is responsible for pushing alerts through to some monitoring service as well as logging data to a log file. Logging is configured in [logging_config.yaml](./logging_config.yaml).
 
 ### Might Want to Add
+
 - We currently only check that committed blocks match what's in the fuel chain. This does not protect us from a bug in the client that might screw up MessageOut receipts and allow for more ETH or tokens to be withdrawn than should be. We might want a setup that keeps a running log of all asset balances that have been approved for withdrawal and then trigger a pause if more are somehow withdrawn than expected. This would require some kind of persistent data store to work efficiently (like the current "alert" concept but with a timing window that spans from the start of the chain to now).
-
-
