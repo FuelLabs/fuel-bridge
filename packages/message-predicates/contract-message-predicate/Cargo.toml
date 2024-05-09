@@ -26,6 +26,7 @@ tokio = { workspace = true }
 [build-dependencies]
 sha2 = "0.10.6"
 fuels = { workspace = true, features = ["fuel-core-lib"] }
+hex = { workspace = true }
 
 # Dependencies from the `fuel-vm` repository:
 fuel-asm = { workspace = true }
