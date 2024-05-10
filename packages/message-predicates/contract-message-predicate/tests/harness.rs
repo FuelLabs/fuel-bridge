@@ -124,10 +124,10 @@ mod success {
 // predicate script failing to validate the transaction requirements
 mod fail {
     use std::str::FromStr;
+    use fuel_core_types::fuel_tx::{PanicReason, Receipt};
 
     use crate::utils::{builder, environment as env};
 
-    use fuel_tx::{PanicReason, Receipt};
     use fuels::{
         accounts::Account,
         prelude::{Address, AssetId, Salt, TxPolicies},
@@ -136,7 +136,6 @@ mod fail {
             coin::{Coin, CoinStatus::Unspent},
             coin_type::CoinType,
             input::Input,
-            unresolved_bytes::UnresolvedBytes,
         },
     };
 
@@ -185,7 +184,7 @@ mod fail {
                 status: Unspent,
             }),
             code: predicate_bytecode,
-            data: UnresolvedBytes::new(vec![]),
+            data: vec![],
         };
 
         let tx = builder::build_contract_message_tx(

@@ -1,4 +1,5 @@
 use std::{mem::size_of, num::ParseIntError, str::FromStr, vec};
+use fuel_core_types::fuel_tx::{Bytes32, TxId, TxPointer, UtxoId, Word};
 
 use fuel_core_types::fuel_vm::SecretKey;
 use fuels::{
@@ -9,11 +10,11 @@ use fuels::{
     },
     test_helpers::{setup_single_message, setup_test_provider},
     types::{
-        coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
+        coin_type::CoinType, input::Input, message::Message,
     },
 };
 
-use fuel_tx::{Bytes32, TxId, TxPointer, UtxoId, Word};
+// use fuel_tx::{Bytes32, TxId, TxPointer, UtxoId, Word};
 
 use super::builder;
 
@@ -111,7 +112,7 @@ pub async fn setup_environment(
             Input::resource_predicate(
                 CoinType::Message(message),
                 predicate_bytecode.clone(),
-                UnresolvedBytes::default(),
+                vec![],
             )
         })
         .collect();
