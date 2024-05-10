@@ -4,7 +4,7 @@ use ethers::prelude::k256::ecdsa::SigningKey;
 use ethers::prelude::{GasEscalatorMiddleware, Log, Signer, Wallet};
 use ethers::providers::{Http, Middleware, Provider};
 use ethers::types::U256;
-use fuels::tx::Bytes32;
+use fuels::types::Bytes32;
 use std::convert::TryFrom;
 use std::ops::Mul;
 use std::sync::Arc;

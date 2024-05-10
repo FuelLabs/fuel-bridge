@@ -1,0 +1,19 @@
+version: '3.4'
+
+services:
+  fuel_canary_watchtower:
+    image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
+    build:
+      dockerfile: ./docker/l1-chain/Dockerfile
+      # Use build context of the root directory
+      # to allow coping solidity-contracts on Dockerfile
+      context: ../
+    env_file:
+      - ./envs/l1_chain.env
+    ports:
+      # expose the service to the host for integration testing
+      - ${L1_CHAIN_HTTP_PORT:-8545}:9545
+      - ${DEPLOYMENTS_PORT:-8080}:8081
+    stop_grace_period: 1s
+    profiles:
+      - watchtower

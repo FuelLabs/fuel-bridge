@@ -53,7 +53,7 @@ cargo run
 
 ### Config File
 
-An example config file can be found at [watchtower_config.json.example](./watchtower_config.json.example). You can configure alerts by alert level and by action here is an example portal deposit alert:
+An example config file can be found at [watchtower_config.json.example](./watchtower_config.json). You can configure alerts by alert level and by action here is an example portal deposit alert:
 
 ```json
 "portal_deposit_alerts": [
