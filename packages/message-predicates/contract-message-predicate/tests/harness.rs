@@ -11,7 +11,9 @@ mod success {
     use crate::utils::{builder, environment as env};
     use fuel_tx::Bytes32;
     use fuels::{
-        prelude::{Address, AssetId, ContractId}, test_helpers::DEFAULT_COIN_AMOUNT, types::Bits256
+        prelude::{Address, AssetId, ContractId},
+        test_helpers::DEFAULT_COIN_AMOUNT,
+        types::Bits256,
     };
 
     pub const RANDOM_WORD: u64 = 54321u64;

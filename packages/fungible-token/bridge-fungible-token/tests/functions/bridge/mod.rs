@@ -1,13 +1,12 @@
 use crate::utils::{
     constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM,
-        PROXY_TOKEN_DECIMALS,
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
     },
     interface::bridge::withdraw,
     setup::{
-        create_deposit_message, create_token, create_wallet, decode_hex,
-        encode_hex, parse_output_message_data, relay_message_to_contract, setup_environment,
-        wallet_balance, BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
+        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
+        BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
 use fuels::{prelude::AssetId, types::Bits256};

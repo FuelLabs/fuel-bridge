@@ -13,12 +13,10 @@ use std::str::FromStr;
 mod success {
     use super::*;
     use crate::utils::interface::src20::total_supply;
-    use crate::utils::
-        setup::{
-            contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
-            get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
-            RefundRegisteredEvent,
-        
+    use crate::utils::setup::{
+        contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
+        get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
+        RefundRegisteredEvent,
     };
     use fuel_core_types::fuel_types::canonical::Deserialize;
 
