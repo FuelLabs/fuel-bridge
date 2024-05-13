@@ -539,7 +539,11 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
         utxo_inputs.contract.clone(),
     )
     .await;
+
+
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
+
+    dbg!(&tx_status);
     assert!(matches!(tx_status, TxStatus::Success { .. }));
 
     let tx_id = relay_message_to_contract(
