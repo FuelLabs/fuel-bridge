@@ -540,7 +540,6 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
-
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
 
     dbg!(&tx_status);

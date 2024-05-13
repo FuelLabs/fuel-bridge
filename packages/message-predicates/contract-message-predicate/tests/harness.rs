@@ -130,7 +130,6 @@ mod fail {
 
     use crate::utils::{builder, environment as env};
 
-    use fuel_core_types::fuel_tx::{PanicReason, Receipt};
     use fuels::{
         accounts::Account,
         prelude::{Address, AssetId, Salt, TxPolicies},
