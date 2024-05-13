@@ -14,6 +14,7 @@ mod success {
         prelude::{Address, AssetId, ContractId},
         test_helpers::DEFAULT_COIN_AMOUNT,
         types::Bits256,
+        types::errors::Result,
     };
 
     pub const RANDOM_WORD: u64 = 54321u64;
@@ -71,7 +72,7 @@ mod success {
     }
 
     #[tokio::test]
-    async fn relay_message_with_other_dataless_message_as_input() {
+    async fn relay_message_with_other_dataless_message_as_input() -> Result<()> {
         let data_word = RANDOM_WORD2;
         let data_bytes = Bits256(Bytes32::from_str(RANDOM_SALT2).unwrap().into());
         let data_address = Address::from_str(RANDOM_SALT3).unwrap();
@@ -100,7 +101,7 @@ mod success {
         // Verify test contract received the message with the correct data
         let test_contract_id: ContractId = test_contract.contract_id().into();
         let methods = test_contract.methods();
-        let test_contract_counter = methods.test_counter().call().await.unwrap().value;
+        let test_contract_counter = methods.test_counter().call().await?.value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;
         let test_contract_data2 = methods.test_data2().call().await.unwrap().value;
         let test_contract_data3 = methods.test_data3().call().await.unwrap().value;
@@ -117,6 +118,7 @@ mod success {
             .await
             .unwrap();
         assert_eq!(test_contract_balance, 100);
+        Ok(())
     }
 }
 
@@ -127,7 +129,7 @@ mod fail {
 
     use crate::utils::{builder, environment as env};
 
-    use fuel_tx::{PanicReason, Receipt};
+    use fuel_core_types::fuel_tx::{PanicReason, Receipt};
     use fuels::{
         accounts::Account,
         prelude::{Address, AssetId, Salt, TxPolicies},
@@ -136,7 +138,6 @@ mod fail {
             coin::{Coin, CoinStatus::Unspent},
             coin_type::CoinType,
             input::Input,
-            unresolved_bytes::UnresolvedBytes,
         },
     };
 
@@ -185,7 +186,7 @@ mod fail {
                 status: Unspent,
             }),
             code: predicate_bytecode,
-            data: UnresolvedBytes::new(vec![]),
+            data: vec![],
         };
 
         let tx = builder::build_contract_message_tx(

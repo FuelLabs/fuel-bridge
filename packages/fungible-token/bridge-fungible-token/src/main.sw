@@ -32,7 +32,7 @@ use data_structures::{
 };
 use events::{ClaimRefundEvent, DepositEvent, MetadataEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
-use reentrancy::reentrancy_guard;
+use sway_libs::reentrancy::reentrancy_guard;
 use std::{
     asset::{
         burn,
@@ -40,7 +40,6 @@ use std::{
         transfer,
     },
     call_frames::{
-        contract_id,
         msg_asset_id,
     },
     constants::ZERO_B256,
@@ -65,7 +64,8 @@ use utils::{
     encode_data,
     encode_register_calldata,
 };
-use src_20::SRC20;
+
+use standards::src20::SRC20;
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
 const ZERO_U256 = 0x00u256;
@@ -300,7 +300,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         }
     };
     let sub_id = _generate_sub_id_from_metadata(message_data.token_address, message_data.token_id);
-    let asset_id = AssetId::new(contract_id(), sub_id);
+    let asset_id = AssetId::new(ContractId::this(), sub_id);
 
     let _ = disable_panic_on_overflow();
 
@@ -376,7 +376,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 #[storage(read, write)]
 fn _process_metadata(metadata: MetadataMessage) {
     let sub_id = _generate_sub_id_from_metadata(metadata.token_address, metadata.token_id);
-    let asset_id = AssetId::new(contract_id(), sub_id);
+    let asset_id = AssetId::new(ContractId::this(), sub_id);
 
     // Important to note: in order to register metadata for an asset, 
     // it must have been deposited first
