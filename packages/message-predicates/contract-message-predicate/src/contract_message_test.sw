@@ -4,7 +4,6 @@ use contract_message_receiver::MessageReceiver;
 use std::bytes::Bytes;
 use std::constants::ZERO_B256;
 use std::inputs::{input_message_data, input_message_data_length};
-use std::call_frames::{first_param, second_param, called_method};
 
 storage {
     counter: u64 = 0,
@@ -42,7 +41,6 @@ impl MessageReceiver for Contract {
     #[storage(read, write)]
     #[payable]
     fn process_message(msg_idx: u64) {
-        log(msg_idx);
         storage.counter.write(0); // Temporary fix for: https://github.com/FuelLabs/sway/issues/4634
         storage.counter.write(storage.counter.read() + 1);
 
@@ -93,21 +91,4 @@ impl VerifyMessageData for Contract {
     fn test_data4() -> Address {
         storage.data4.read()
     }
-}
-
-#[fallback, storage(read)]
-fn fallback() {
-    log(255u64);
-    log(254u64);
-    log(253u64);
-
-    let first_param = first_param();
-    log(first_param);
-
-    let second_param = second_param();
-    log(second_param);
-    
-    let called_method = called_method();
-
-    log(called_method);
 }
