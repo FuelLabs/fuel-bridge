@@ -7,10 +7,10 @@ use ethers::prelude::{abigen, SignerMiddleware};
 use ethers::providers::Middleware;
 use ethers::signers::Wallet;
 use ethers::types::{Filter, H160};
-use fuels::tx::Bytes32;
 
 use async_trait::async_trait;
 
+use fuels::types::Bytes32;
 use std::str::FromStr;
 use std::sync::Arc;
 

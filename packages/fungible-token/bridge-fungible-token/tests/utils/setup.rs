@@ -298,8 +298,6 @@ pub(crate) async fn relay_message_to_contract(
     )
     .await;
 
-    dbg!(&tx);
-
     provider
         .send_transaction(tx)
         .await
@@ -522,11 +520,6 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     )
     .await;
 
-    dbg!(message.clone());
-
-    dbg!(coin.clone());
-    dbg!(deposit_contract.clone());
-
     let metadata_message =
         create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", None).await;
 
@@ -546,14 +539,7 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
         utxo_inputs.contract.clone(),
     )
     .await;
-
-    dbg!(tx_id.clone());
-
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
-
-    dbg!(tx_status.clone());
-
-
     assert!(matches!(tx_status, TxStatus::Success { .. }));
 
     let tx_id = relay_message_to_contract(

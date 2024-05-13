@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use fuel_asm::Word;
+use fuel_core_types::fuel_tx::output::contract::Contract;
 use fuel_core_types::{
-    fuel_tx::{Output},
+    fuel_tx::Output,
     fuel_types::{Address, AssetId, Bytes32},
 };
-use fuel_core_types::fuel_tx::output::contract::Contract;
 
 use fuels::{
     accounts::wallet::WalletUnlocked,

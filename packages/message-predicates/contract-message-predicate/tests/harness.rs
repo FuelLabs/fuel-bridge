@@ -13,8 +13,8 @@ mod success {
     use fuels::{
         prelude::{Address, AssetId, ContractId},
         test_helpers::DEFAULT_COIN_AMOUNT,
-        types::Bits256,
         types::errors::Result,
+        types::Bits256,
     };
 
     pub const RANDOM_WORD: u64 = 54321u64;
@@ -125,6 +125,7 @@ mod success {
 // Test the cases where the transaction should panic due to the
 // predicate script failing to validate the transaction requirements
 mod fail {
+    use fuel_core_types::fuel_tx::{PanicReason, Receipt};
     use std::str::FromStr;
 
     use crate::utils::{builder, environment as env};

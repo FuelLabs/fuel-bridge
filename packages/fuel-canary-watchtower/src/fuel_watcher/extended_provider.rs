@@ -9,7 +9,7 @@ use fuel_core_client::client::{
     },
     FuelClient,
 };
-use fuels::accounts::fuel_crypto;
+use fuels::crypto::PublicKey;
 
 #[derive(cynic::QueryFragment, Debug)]
 #[cynic(
@@ -58,7 +58,7 @@ pub struct FullBlock {
 
 impl FullBlock {
     /// Returns the block producer public key, if any.
-    pub fn block_producer(&self) -> Option<fuel_crypto::PublicKey> {
+    pub fn block_producer(&self) -> Option<PublicKey> {
         let message = self.header.id.clone().into_message();
         match &self.consensus {
             Consensus::Genesis(_) => Some(Default::default()),

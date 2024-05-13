@@ -610,7 +610,7 @@ mod tests {
         fuel_watcher::fuel_chain::MockFuelChainTrait,
     };
     use ethers::types::U256;
-    use fuels::tx::Bytes32;
+    use fuels::types::Bytes32;
     use tokio::sync::mpsc::unbounded_channel;
 
     #[tokio::test]

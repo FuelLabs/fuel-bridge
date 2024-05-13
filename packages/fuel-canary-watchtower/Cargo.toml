@@ -15,12 +15,14 @@ async-trait = "0.1.74"
 cynic = "2.2"
 ethers = "2.0.10"
 eyre = "0.3.7"
-fuel-core-client = "0.20"
-fuels = { git = "https://github.com/VitalyVolozhinov/fuels-rs.git", branch = "master", features = ["fuel-core-lib"] }
+fuel-core-client = "0.26"  # TODO: Maybe we could remove fuel-core-client
+fuels = { workspace = true }
 log = "0.4.17"
 log4rs = "1.2.0"
-mockall = "0.11.4"
 reqwest = "0.11.22"
 serde = "1.0.152"
 serde_json = "1.0.91"
 tokio = { workspace = true }
+
+[dev-dependencies]
+mockall = "0.12.1"

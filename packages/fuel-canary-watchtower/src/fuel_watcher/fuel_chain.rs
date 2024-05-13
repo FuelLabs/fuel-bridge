@@ -13,12 +13,12 @@ use fuels::{
         traits::{Parameterize, Tokenizable},
     },
     macros::{Parameterize, Tokenizable},
-    tx::Bytes32,
     types::{Bits256, Identity},
 };
 
 use async_trait::async_trait;
 
+use fuels::types::Bytes32;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -47,7 +47,7 @@ pub trait FuelChainTrait: Send + Sync {
 
 #[derive(Clone, Debug)]
 pub struct FuelChain {
-    provider: Arc<FuelClient>,
+    provider: Arc<FuelClient>, // Todo: Change to fuels::accounts::provider::Provider
 }
 
 impl FuelChain {
@@ -58,6 +58,7 @@ impl FuelChain {
 
 #[async_trait]
 impl FuelChainTrait for FuelChain {
+    // Todo: add Backoff
     async fn check_connection(&self) -> Result<()> {
         for _ in 0..FUEL_CONNECTION_RETRIES {
             if self.provider.chain_info().await.is_ok() {
@@ -101,14 +102,14 @@ impl FuelChainTrait for FuelChain {
 
     async fn get_base_amount_withdrawn(&self, timeframe: u32) -> Result<u64> {
         let adjusted_timeframe = timeframe / FUEL_BLOCK_TIME as u32;
-        let num_blocks = usize::try_from(adjusted_timeframe).map_err(|e| anyhow::anyhow!("{e}"))?;
+        let num_blocks = usize::try_from(adjusted_timeframe).map_err(|e| anyhow::anyhow!("{e}"))?; //Todo: Fix this
 
         // Fetch and process missing blocks
         let mut total_from_blocks = 0;
         for i in 0..FUEL_CONNECTION_RETRIES {
             let req = PaginationRequest {
                 cursor: None,
-                results: num_blocks,
+                results: num_blocks as i32,
                 direction: PageDirection::Backward,
             };
             match self.provider.full_blocks(req).await {
@@ -143,25 +144,21 @@ impl FuelChainTrait for FuelChain {
             None => return Ok(0),
         };
 
-        // Check if the status is a success, if not we return.
-        if !matches!(status, TransactionStatus::SuccessStatus { .. }) {
-            return Ok(0);
-        }
-
-        // Check if there are receipts assigned.
-        let receipts = match &tx.receipts {
-            Some(receipts) => receipts,
-            None => return Ok(0),
-        };
-
         // Fetch the receipts from the transaction.
-        for receipt in receipts {
-            if let ReceiptType::MessageOut = receipt.receipt_type {
-                let amount = match &receipt.amount {
-                    Some(amount) => amount.0,
-                    None => 0,
-                };
-                total_amount += amount;
+        match status {
+            TransactionStatus::SuccessStatus(success_status) => {
+                success_status.receipts.iter().for_each(|receipt| {
+                    if let ReceiptType::MessageOut = receipt.receipt_type {
+                        let amount = match &receipt.amount {
+                            Some(amount) => amount.0,
+                            None => 0,
+                        };
+                        total_amount += amount;
+                    }
+                });
+            }
+            _ => {
+                return Ok(0);
             }
         }
 
@@ -177,7 +174,7 @@ impl FuelChainTrait for FuelChain {
         for i in 0..FUEL_CONNECTION_RETRIES {
             let req = PaginationRequest {
                 cursor: None,
-                results: num_blocks,
+                results: num_blocks as i32,
                 direction: PageDirection::Backward,
             };
             match self.provider.full_blocks(req).await {
@@ -212,15 +209,11 @@ impl FuelChainTrait for FuelChain {
             None => return Ok(0),
         };
 
-        // Check if the status is a success, if not we return.
-        if !matches!(status, TransactionStatus::SuccessStatus { .. }) {
-            return Ok(0);
-        }
-
-        // Check if there are receipts assigned.
-        let receipts = match &tx.receipts {
-            Some(receipts) => receipts,
-            None => return Ok(0),
+        let receipts = match status {
+            TransactionStatus::SuccessStatus(success_status) => success_status.clone().receipts,
+            _ => {
+                return Ok(0);
+            }
         };
 
         // Fetch the receipts from the transaction.
@@ -228,8 +221,8 @@ impl FuelChainTrait for FuelChain {
         for receipt in receipts {
             if let ReceiptType::Burn = receipt.receipt_type {
                 // Skip this receipt if contract is None
-                let contract_id = match &receipt.contract {
-                    Some(contract) => contract.id.to_string(),
+                let contract_id = match &receipt.contract_id {
+                    Some(id) => id.to_string(),
                     None => continue,
                 };
 
@@ -246,8 +239,8 @@ impl FuelChainTrait for FuelChain {
                 }
 
                 // Skip this receipt if contract is None
-                let contract_id = match &receipt.contract {
-                    Some(contract) => contract.id.to_string(),
+                let contract_id = match &receipt.contract_id {
+                    Some(id) => id.to_string(),
                     None => continue,
                 };
 
@@ -294,30 +287,38 @@ impl FuelChainTrait for FuelChain {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::fuel_watcher::fuel_chain::{FuelChain, FuelChainTrait};
+    use fuel_core_client::client::FuelClient;
     use fuels::prelude::*;
+    use fuels::types::errors::error;
+    use std::sync::Arc;
 
     #[tokio::test]
-    async fn test_check_connection() {
+    async fn test_check_connection() -> Result<()> {
         // Start a local Fuel node
-        let server = FuelService::start(Config::default()).await.unwrap();
+        let server = FuelService::start(NodeConfig::default(), ChainConfig::default(), StateConfig::default())
+            .await
+            .unwrap();
         let addr_str = format!("http://{}", server.bound_address());
 
         // Create a provider pointing to the local node
-        let provider = FuelClient::new(addr_str).unwrap();
-        let provider = Arc::new(provider);
+        let provider = Arc::new(FuelClient::new(&addr_str).map_err(|e| error!(Provider, "{e}"))?);
 
         // Initialize the FuelChain with the local provider
         let fuel_chain = FuelChain::new(provider).unwrap();
 
         // Test the check_connection function
         assert!(fuel_chain.check_connection().await.is_ok());
+
+        Ok(())
     }
 
     #[tokio::test]
     async fn test_get_seconds_since_last_block() {
         // Start a local Fuel node
-        let server = FuelService::start(Config::default()).await.unwrap();
+        let server = FuelService::start(NodeConfig::default(), ChainConfig::default(), StateConfig::default())
+            .await
+            .unwrap();
         let addr_str = format!("http://{}", server.bound_address());
 
         // Create a provider pointing to the local node
@@ -339,7 +340,9 @@ mod tests {
     #[tokio::test]
     async fn test_fetch_chain_info() {
         // Start a local Fuel node
-        let server = FuelService::start(Config::default()).await.unwrap();
+        let server = FuelService::start(NodeConfig::default(), ChainConfig::default(), StateConfig::default())
+            .await
+            .unwrap();
         let addr_str = format!("http://{}", server.bound_address());
 
         // Create a provider pointing to the local node
