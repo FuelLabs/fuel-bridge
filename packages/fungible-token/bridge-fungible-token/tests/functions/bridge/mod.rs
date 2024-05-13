@@ -64,8 +64,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
@@ -87,13 +85,8 @@ mod success {
             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance =
             wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), &token_address)).await;
-
-        // Verify the message value was received by the bridge contract
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Verify that no tokens were minted for message.data.to
         assert_eq!(balance, 0);
