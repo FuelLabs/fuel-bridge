@@ -28,57 +28,6 @@ abi VerifyMessageData {
     fn test_data4() -> Address;
 }
 
-abi MyCallerContract {
-    #[storage(read,write)]
-    fn call_low_level_call(
-        target: ContractId,
-        function_selector: Bytes,
-        calldata: Bytes,
-    );
-}
-
-impl MyCallerContract for Contract {
-    
-    #[storage(read,write)]
-    fn call_low_level_call(
-        target: ContractId,
-        function_selector: Bytes,
-        calldata: Bytes,
-    ) {
-        let payload = create_payload(target, function_selector, calldata);
-
-        log(function_selector);
-        log(calldata);
-        log(payload);
-
-    }
-    
-}
-
-fn create_payload(
-    target: ContractId,
-    function_selector: Bytes,
-    call_data: Bytes,
-) -> Bytes {
-    /*
-    packs args according to spec (https://github.com/FuelLabs/fuel-specs/blob/master/src/vm/instruction_set.md#call-call-contract) :
-
-    bytes   type        value   description
-    32	    byte[32]    to      Contract ID to call.
-    8	    byte[8]	    param1  First parameter (function selector pointer)
-    8	    byte[8]	    param2  Second parameter (encoded arguments pointer)
-    */
-    Bytes::from(encode((
-        target,
-        asm(a: function_selector.ptr()) {
-            a: u64
-        },
-        asm(a: call_data.ptr()) {
-            a: u64
-        },
-    )))
-}
-
 // Converts a Bytes type to u64
 // TODO: remove once an [into(self) -> u64] is added for the Bytes type
 fn into_u64(b: Bytes) -> u64 {
