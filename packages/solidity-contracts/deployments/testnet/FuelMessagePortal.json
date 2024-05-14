@@ -1,5 +1,5 @@
 {
-  "address": "0x768f9459E3339A1F7d59CcF24C80Eb4A711a01FB",
+  "address": "0x01855B78C1f8868DE70e84507ec735983bf262dA",
   "abi": [
     {
       "inputs": [
@@ -55,11 +55,6 @@
     {
       "inputs": [],
       "name": "MessageDataTooLarge",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "MessageRelayFailed",
       "type": "error"
     },
     {
@@ -689,6 +684,11 @@
               "type": "bytes32"
             },
             {
+              "internalType": "uint32",
+              "name": "height",
+              "type": "uint32"
+            },
+            {
               "internalType": "uint64",
               "name": "timestamp",
               "type": "uint64"
@@ -699,24 +699,14 @@
               "type": "uint64"
             },
             {
-              "internalType": "uint32",
+              "internalType": "uint64",
+              "name": "txCount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
               "name": "outputMessagesCount",
-              "type": "uint32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "consensusParametersVersion",
-              "type": "uint32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "stateTransitionBytecodeVersion",
-              "type": "uint32"
-            },
-            {
-              "internalType": "uint32",
-              "name": "height",
-              "type": "uint32"
+              "type": "uint64"
             },
             {
               "internalType": "bytes32",
@@ -727,16 +717,6 @@
               "internalType": "bytes32",
               "name": "outputMessagesRoot",
               "type": "bytes32"
-            },
-            {
-              "internalType": "bytes32",
-              "name": "eventInboxRoot",
-              "type": "bytes32"
-            },
-            {
-              "internalType": "uint16",
-              "name": "txCount",
-              "type": "uint16"
             }
           ],
           "internalType": "struct FuelBlockHeader",
@@ -941,6 +921,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 2,
+  "numDeployments": 1,
   "implementation": "0xC9C453fA30cd0c6A2f09Af5e1C32F839Ff7a3DD0"
 }

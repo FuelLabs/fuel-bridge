@@ -1,15 +1,10 @@
 {
-  "address": "0x8097500F4168240f4334589170d99fE8797b6fF8",
+  "address": "0x404F391F96798B14C5e99BBB4a9C858da9Cf63b5",
   "abi": [
     {
       "inputs": [],
       "stateMutability": "nonpayable",
       "type": "constructor"
-    },
-    {
-      "inputs": [],
-      "name": "CannotRecommit",
-      "type": "error"
     },
     {
       "inputs": [],
@@ -215,19 +210,6 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "COMMIT_COOLDOWN",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
         }
       ],
       "stateMutability": "view",
@@ -541,6 +523,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 2,
+  "numDeployments": 1,
   "implementation": "0xba98eDC9AC0B6191180562bF68CE001B1D71C11D"
 }
