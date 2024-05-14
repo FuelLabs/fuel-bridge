@@ -3,7 +3,7 @@ name = "bridge_fungible_token"
 source = "member"
 dependencies = [
     "contract_message_receiver",
-    "src_20",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.4#a001d3c248595112aae67e5633a06ef9bc0536ae",
     "std",
     "sway_libs",
 ]
@@ -26,13 +26,13 @@ name = "core"
 source = "path+from-root-EE4FC085C06BAAEB"
 
 [[package]]
-name = "src_20"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.2.2#6989cf8224b0d8aabea62f3d3c648fc754948705"
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
 dependencies = ["std"]
 
 [[package]]
 name = "standards"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.4#a001d3c248595112aae67e5633a06ef9bc0536ae"
 dependencies = ["std"]
 
 [[package]]
@@ -44,7 +44,7 @@ dependencies = ["core"]
 name = "sway_libs"
 source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.21.0#6a227ed34c86fe1ebd334dbdfeccf66c43e3915b"
 dependencies = [
-    "standards",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
     "std",
 ]
 
