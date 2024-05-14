@@ -4,6 +4,7 @@ use contract_message_receiver::MessageReceiver;
 use std::bytes::Bytes;
 use std::constants::ZERO_B256;
 use std::inputs::{input_message_data, input_message_data_length};
+use std::call_frames::{first_param, second_param, called_method};
 
 storage {
     counter: u64 = 0,
@@ -27,6 +28,57 @@ abi VerifyMessageData {
     fn test_data4() -> Address;
 }
 
+abi MyCallerContract {
+    #[storage(read,write)]
+    fn call_low_level_call(
+        target: ContractId,
+        function_selector: Bytes,
+        calldata: Bytes,
+    );
+}
+
+impl MyCallerContract for Contract {
+    
+    #[storage(read,write)]
+    fn call_low_level_call(
+        target: ContractId,
+        function_selector: Bytes,
+        calldata: Bytes,
+    ) {
+        let payload = create_payload(target, function_selector, calldata);
+
+        log(function_selector);
+        log(calldata);
+        log(payload);
+
+    }
+    
+}
+
+fn create_payload(
+    target: ContractId,
+    function_selector: Bytes,
+    call_data: Bytes,
+) -> Bytes {
+    /*
+    packs args according to spec (https://github.com/FuelLabs/fuel-specs/blob/master/src/vm/instruction_set.md#call-call-contract) :
+
+    bytes   type        value   description
+    32	    byte[32]    to      Contract ID to call.
+    8	    byte[8]	    param1  First parameter (function selector pointer)
+    8	    byte[8]	    param2  Second parameter (encoded arguments pointer)
+    */
+    Bytes::from(encode((
+        target,
+        asm(a: function_selector.ptr()) {
+            a: u64
+        },
+        asm(a: call_data.ptr()) {
+            a: u64
+        },
+    )))
+}
+
 // Converts a Bytes type to u64
 // TODO: remove once an [into(self) -> u64] is added for the Bytes type
 fn into_u64(b: Bytes) -> u64 {
@@ -41,6 +93,7 @@ impl MessageReceiver for Contract {
     #[storage(read, write)]
     #[payable]
     fn process_message(msg_idx: u64) {
+        log(msg_idx);
         storage.counter.write(0); // Temporary fix for: https://github.com/FuelLabs/sway/issues/4634
         storage.counter.write(storage.counter.read() + 1);
 
@@ -91,4 +144,21 @@ impl VerifyMessageData for Contract {
     fn test_data4() -> Address {
         storage.data4.read()
     }
+}
+
+#[fallback, storage(read)]
+fn fallback() {
+    log(255u64);
+    log(254u64);
+    log(253u64);
+
+    let first_param = first_param();
+    log(first_param);
+
+    let second_param = second_param();
+    log(second_param);
+    
+    let called_method = called_method();
+
+    log(called_method);
 }

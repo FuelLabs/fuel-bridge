@@ -39,9 +39,7 @@ use std::{
         mint,
         transfer,
     },
-    call_frames::{
-        msg_asset_id,
-    },
+    call_frames::msg_asset_id,
     constants::ZERO_B256,
     context::msg_amount,
     flags::{

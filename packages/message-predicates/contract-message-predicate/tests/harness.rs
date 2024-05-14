@@ -6,15 +6,12 @@ mod utils {
 // Test that input messages can be relayed to a contract
 // and that the contract can successfully parse the message data
 mod success {
-    use std::str::FromStr;
+    use std::{str::FromStr, u64};
 
     use crate::utils::{builder, environment as env};
-    use fuel_tx::Bytes32;
+    use fuel_tx::{Bytes32, Receipt};
     use fuels::{
-        prelude::{Address, AssetId, ContractId},
-        test_helpers::DEFAULT_COIN_AMOUNT,
-        types::errors::Result,
-        types::Bits256,
+        core::codec::calldata, prelude::{Address, AssetId, ContractId}, programs::call_response::FuelCallResponse, test_helpers::DEFAULT_COIN_AMOUNT, types::{transaction_builders::{BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder}, Bits256, Bytes}
     };
 
     pub const RANDOM_WORD: u64 = 54321u64;
@@ -40,7 +37,7 @@ mod success {
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
-        let _receipts = env::relay_message_to_contract(
+        let tx_id = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
             vec![contract_input.clone()],
@@ -48,8 +45,42 @@ mod success {
         )
         .await;
 
+        // let call_handler = test_contract.methods().process_message(u64::MAX);
+        // let mut tb: ScriptTransactionBuilder = call_handler.transaction_builder().await.unwrap();
+
+        // dbg!(hex::encode(tb.script));
+        // dbg!(hex::encode(tb.script_data));
+
+        // let fn_selector_bytes = fuels::core::codec::encode_fn_selector("process_message");
+        // dbg!(hex::encode(fn_selector_bytes.clone()));
+
+
+        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap().take_receipts();
+
+        for receipt in receipts.clone() {
+            if let Receipt::LogData{data, ..} = receipt {
+                dbg!(hex::encode(data.unwrap()));
+            }
+        }
+        dbg!(&receipts);
+
         // Verify test contract received the message with the correct data
         let test_contract_id: ContractId = test_contract.contract_id().into();
+        // dbg!(hex::encode(test_contract_id.clone()));
+
+        // let low_level_call_receipts = test_contract.methods().call_low_level_call(
+        //     test_contract_id,
+        //     Bytes(fn_selector_bytes),
+        //     Bytes(calldata!(u64::MAX).unwrap())
+        // ).call().await.unwrap().receipts;
+
+        // for receipt in low_level_call_receipts.clone() {
+        //     if let Receipt::LogData{data, ..} = receipt {
+        //         dbg!(hex::encode(data.unwrap()));
+        //     }
+        // }
+        // // dbg!(&low_level_call_receipts);
+
         let methods = test_contract.methods();
         let test_contract_counter = methods.test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;

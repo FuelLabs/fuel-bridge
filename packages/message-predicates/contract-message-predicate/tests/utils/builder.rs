@@ -86,7 +86,7 @@ pub async fn build_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
-    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(300_000));
 
     let mut builder = ScriptTransactionBuilder::default()
         .with_inputs(tx_inputs.clone())
