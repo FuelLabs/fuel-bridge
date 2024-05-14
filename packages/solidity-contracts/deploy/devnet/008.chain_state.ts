@@ -6,19 +6,26 @@ import { FuelChainState__factory as FuelChainState } from '../../typechain';
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
-    upgrades: { deployProxy, erc1967 },
-    deployments: { save, execute },
+    upgrades: { upgradeProxy, erc1967 },
+    deployments: { save, execute, get },
   } = hre;
   const [deployer] = await ethers.getSigners();
 
-  const contract = await deployProxy(new FuelChainState(deployer), [], {
-    initializer: 'initialize',
-  });
+  const { address: fuelChainStateAddress } = await get('FuelChainState');
+
+  console.log('Upgrading FuelChainState...');
+  const contract = await upgradeProxy(
+    fuelChainStateAddress,
+    new FuelChainState(deployer)
+  );
   await contract.waitForDeployment();
+  const tx = contract.deploymentTransaction();
+  await tx.wait();
+
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
-  console.log('Deployed FuelChainState at', address);
+  console.log('Deployed new implementation at', implementation);
   await save('FuelChainState', {
     address,
     abi: [...FuelChainState.abi],
@@ -28,12 +35,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await execute(
     'FuelChainState',
     { log: true, from: deployer.address },
-    'pause'
+    'unpause'
   );
 
   return true;
 };
 
-func.tags = ['state', 'chain-state', 'chain_state', 'FuelChainState'];
-func.id = 'chain_state';
+func.tags = ['state_redeploy'];
+func.id = 'state_redeploy';
 export default func;

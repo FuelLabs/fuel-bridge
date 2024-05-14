@@ -7,22 +7,24 @@ import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typecha
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
-    upgrades: { deployProxy, erc1967 },
-    deployments: { get, save, execute },
+    upgrades: { upgradeProxy, erc1967 },
+    deployments: { get, save },
   } = hre;
   const [deployer] = await ethers.getSigners();
 
-  const { address: fuelChainState } = await get('FuelChainState');
+  const { address: fuelMessagePortalAddress } = await get('FuelMessagePortal');
 
-  const contract = await deployProxy(
+  const contract = await upgradeProxy(
+    fuelMessagePortalAddress,
     new FuelMessagePortal(deployer),
-    [fuelChainState],
     {
-      initializer: 'initialize',
       constructorArgs: [MaxUint256],
     }
   );
   await contract.waitForDeployment();
+
+  const tx = contract.deploymentTransaction();
+  await tx.wait();
 
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
@@ -34,15 +36,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     implementation,
   });
 
-  await execute(
-    'FuelMessagePortal',
-    { log: true, from: deployer.address },
-    'pause'
-  );
-
   return true;
 };
 
-func.tags = ['portal', 'message_portal', 'FuelMessagePortal'];
-func.id = 'fuel_message_portal';
+func.tags = ['portal_redeploy'];
+func.id = 'fuel_message_portal_redeploy';
 export default func;

@@ -1,19 +1,44 @@
 {
-  "address": "0x8097500F4168240f4334589170d99fE8797b6fF8",
+  "address": "0xbdf7256C718FCede6f0af19e86D4aBDdc4DC2Ff2",
   "abi": [
     {
       "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
-      "inputs": [],
-      "name": "CannotRecommit",
+      "name": "BridgeFull",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "UnknownBlock",
+      "name": "CallerIsNotPortal",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CannotDepositZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CannotWithdrawZero",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "GlobalDepositLimit",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidAmount",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidMessageSender",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidSender",
       "type": "error"
     },
     {
@@ -53,18 +78,24 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "uint256",
-          "name": "commitHeight",
-          "type": "uint256"
+          "internalType": "bytes32",
+          "name": "sender",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
         },
         {
           "indexed": false,
-          "internalType": "bytes32",
-          "name": "blockHash",
-          "type": "bytes32"
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
         }
       ],
-      "name": "CommitSubmitted",
+      "name": "Deposit",
       "type": "event"
     },
     {
@@ -195,43 +226,29 @@
       "type": "event"
     },
     {
-      "inputs": [],
-      "name": "BLOCKS_PER_COMMIT_INTERVAL",
-      "outputs": [
+      "anonymous": false,
+      "inputs": [
         {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "recipient",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
-          "name": "",
+          "name": "amount",
           "type": "uint256"
         }
       ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "COMMITTER_ROLE",
-      "outputs": [
-        {
-          "internalType": "bytes32",
-          "name": "",
-          "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "COMMIT_COOLDOWN",
-      "outputs": [
-        {
-          "internalType": "uint32",
-          "name": "",
-          "type": "uint32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
+      "name": "Withdrawal",
+      "type": "event"
     },
     {
       "inputs": [],
@@ -248,7 +265,7 @@
     },
     {
       "inputs": [],
-      "name": "NUM_COMMIT_SLOTS",
+      "name": "FUEL_ASSET_DECIMALS",
       "outputs": [
         {
           "internalType": "uint256",
@@ -274,26 +291,7 @@
     },
     {
       "inputs": [],
-      "name": "TIME_TO_FINALIZE",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "commitHeight",
-          "type": "uint256"
-        }
-      ],
-      "name": "blockHashAtCommit",
+      "name": "assetIssuerId",
       "outputs": [
         {
           "internalType": "bytes32",
@@ -308,39 +306,108 @@
       "inputs": [
         {
           "internalType": "bytes32",
-          "name": "blockHash",
+          "name": "to",
           "type": "bytes32"
         },
         {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
           "internalType": "uint256",
-          "name": "commitHeight",
+          "name": "amount",
           "type": "uint256"
         }
       ],
-      "name": "commit",
+      "name": "deposit",
       "outputs": [],
-      "stateMutability": "nonpayable",
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "depositLimits",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
       "inputs": [
         {
           "internalType": "bytes32",
-          "name": "blockHash",
+          "name": "to",
           "type": "bytes32"
         },
         {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
           "internalType": "uint256",
-          "name": "blockHeight",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "depositWithData",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "to",
+          "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "l2BurntAmount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "",
           "type": "uint256"
         }
       ],
-      "name": "finalized",
+      "name": "finalizeWithdrawal",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "fuelMessagePortal",
       "outputs": [
         {
-          "internalType": "bool",
+          "internalType": "address",
           "name": "",
-          "type": "bool"
+          "type": "address"
         }
       ],
       "stateMutability": "view",
@@ -408,7 +475,13 @@
       "type": "function"
     },
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "contract FuelMessagePortal",
+          "name": "fuelMessagePortal",
+          "type": "address"
+        }
+      ],
       "name": "initialize",
       "outputs": [],
       "stateMutability": "nonpayable",
@@ -468,6 +541,26 @@
     {
       "inputs": [
         {
+          "internalType": "bool",
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "name": "requireWhitelist",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rescueETH",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -486,6 +579,50 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "sendMetadata",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "id",
+          "type": "bytes32"
+        }
+      ],
+      "name": "setAssetIssuerId",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "limit",
+          "type": "uint256"
+        }
+      ],
+      "name": "setGlobalDepositLimit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes4",
           "name": "interfaceId",
           "type": "bytes4"
@@ -497,6 +634,25 @@
           "internalType": "bool",
           "name": "",
           "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        }
+      ],
+      "name": "tokensDeposited",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -539,8 +695,21 @@
       "outputs": [],
       "stateMutability": "payable",
       "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "whitelistRequired",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     }
   ],
-  "numDeployments": 2,
-  "implementation": "0xba98eDC9AC0B6191180562bF68CE001B1D71C11D"
+  "numDeployments": 1,
+  "implementation": "0xdF018d3163FA9FC70FD6eD79D3E0E3770A034756"
 }
