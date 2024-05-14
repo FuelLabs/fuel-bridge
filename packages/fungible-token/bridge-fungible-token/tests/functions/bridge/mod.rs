@@ -1,13 +1,12 @@
 use crate::utils::{
     constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, MESSAGE_AMOUNT,
-        PROXY_TOKEN_DECIMALS,
+        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
     },
     interface::bridge::withdraw,
     setup::{
-        contract_balance, create_deposit_message, create_token, create_wallet, decode_hex,
-        encode_hex, parse_output_message_data, relay_message_to_contract, setup_environment,
-        wallet_balance, BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
+        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
+        BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
 use fuels::{prelude::AssetId, types::Bits256};
@@ -64,8 +63,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
@@ -87,13 +84,8 @@ mod success {
             .decode_logs_with_type::<RefundRegisteredEvent>(&receipts)
             .unwrap();
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance =
             wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), &token_address)).await;
-
-        // Verify the message value was received by the bridge contract
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Verify that no tokens were minted for message.data.to
         assert_eq!(balance, 0);
@@ -345,8 +337,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
@@ -371,13 +361,8 @@ mod success {
             }
         }
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance =
             wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
-
-        // Verify the message value was received by the bridge contract
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, amount);

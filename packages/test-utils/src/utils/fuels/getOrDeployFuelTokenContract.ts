@@ -70,12 +70,12 @@ export async function getOrDeployFuelTokenContract(
         storageSlots: [],
       }
     );
-    const { maxFee, requiredQuantities } =
-      await fuelAcct.provider.getTransactionCost(transactionRequest);
+    const { requiredQuantities } = await fuelAcct.provider.getTransactionCost(
+      transactionRequest
+    );
 
     await fuelAcct.fund(transactionRequest, {
       requiredQuantities,
-      maxFee,
       estimatedPredicates: [],
       addedSignatures: 0,
     });

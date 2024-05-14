@@ -102,7 +102,7 @@ function getCommonRelayableMessages(provider: Provider) {
 
         transaction.gasLimit = bn(1_000_000);
 
-        transaction.maxFee = bn(0);
+        transaction.maxFee = bn(1);
 
         debug(
           '-------------------------------------------------------------------'
@@ -141,7 +141,10 @@ type CommonMessageDetails = {
 export async function relayCommonMessage(
   relayer: FuelWallet,
   message: Message,
-  txParams?: Pick<ScriptTransactionRequestLike, 'gasLimit' | 'maturity'>
+  txParams?: Pick<
+    ScriptTransactionRequestLike,
+    'gasLimit' | 'maturity' | 'maxFee'
+  >
 ): Promise<TransactionResponse> {
   // find the relay details for the specified message
   let messageRelayDetails: CommonMessageDetails = null;

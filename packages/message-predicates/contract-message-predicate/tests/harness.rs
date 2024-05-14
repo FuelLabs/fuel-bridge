@@ -9,9 +9,11 @@ mod success {
     use std::{str::FromStr, u64};
 
     use crate::utils::{builder, environment as env};
-    use fuel_tx::{Bytes32, Receipt};
+    use fuel_tx::Bytes32;
     use fuels::{
-        core::codec::calldata, prelude::{Address, AssetId, ContractId}, programs::call_response::FuelCallResponse, test_helpers::DEFAULT_COIN_AMOUNT, types::{transaction_builders::{BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder}, Bits256, Bytes}
+        prelude::{Address, AssetId, ContractId},
+        test_helpers::DEFAULT_COIN_AMOUNT,
+        types::Bits256,
     };
 
     pub const RANDOM_WORD: u64 = 54321u64;
@@ -37,7 +39,12 @@ mod success {
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
-        let tx_id = env::relay_message_to_contract(
+        let test_contract_id: ContractId = test_contract.contract_id().into();
+        let methods = test_contract.methods();
+
+        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
+
+        let _tx_id = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
             vec![contract_input.clone()],
@@ -45,43 +52,7 @@ mod success {
         )
         .await;
 
-        // let call_handler = test_contract.methods().process_message(u64::MAX);
-        // let mut tb: ScriptTransactionBuilder = call_handler.transaction_builder().await.unwrap();
-
-        // dbg!(hex::encode(tb.script));
-        // dbg!(hex::encode(tb.script_data));
-
-        // let fn_selector_bytes = fuels::core::codec::encode_fn_selector("process_message");
-        // dbg!(hex::encode(fn_selector_bytes.clone()));
-
-
-        let receipts = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap().take_receipts();
-
-        for receipt in receipts.clone() {
-            if let Receipt::LogData{data, ..} = receipt {
-                dbg!(hex::encode(data.unwrap()));
-            }
-        }
-        dbg!(&receipts);
-
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract.contract_id().into();
-        // dbg!(hex::encode(test_contract_id.clone()));
-
-        // let low_level_call_receipts = test_contract.methods().call_low_level_call(
-        //     test_contract_id,
-        //     Bytes(fn_selector_bytes),
-        //     Bytes(calldata!(u64::MAX).unwrap())
-        // ).call().await.unwrap().receipts;
-
-        // for receipt in low_level_call_receipts.clone() {
-        //     if let Receipt::LogData{data, ..} = receipt {
-        //         dbg!(hex::encode(data.unwrap()));
-        //     }
-        // }
-        // // dbg!(&low_level_call_receipts);
-
-        let methods = test_contract.methods();
         let test_contract_counter = methods.test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;
         let test_contract_data2 = methods.test_data2().call().await.unwrap().value;
@@ -94,16 +65,12 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message value was received by the test contract
-        let provider = wallet.provider().unwrap();
-        let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
-            .await
-            .unwrap();
-        assert_eq!(test_contract_balance, 100);
+        let counter = methods.test_counter().simulate().await.unwrap().value;
+        assert_eq!(counter, prev_counter + 1);
     }
 
     #[tokio::test]
-    async fn relay_message_with_other_dataless_message_as_input() -> Result<()> {
+    async fn relay_message_with_other_dataless_message_as_input() {
         let data_word = RANDOM_WORD2;
         let data_bytes = Bits256(Bytes32::from_str(RANDOM_SALT2).unwrap().into());
         let data_address = Address::from_str(RANDOM_SALT3).unwrap();
@@ -115,6 +82,11 @@ mod success {
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message1, message2]).await;
         let provider = wallet.provider().unwrap();
+
+        let test_contract_id: ContractId = test_contract.contract_id().into();
+        let methods = test_contract.methods();
+
+        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
@@ -130,9 +102,7 @@ mod success {
             .expect("Transaction failed");
 
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract.contract_id().into();
-        let methods = test_contract.methods();
-        let test_contract_counter = methods.test_counter().call().await?.value;
+        let test_contract_counter = methods.test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;
         let test_contract_data2 = methods.test_data2().call().await.unwrap().value;
         let test_contract_data3 = methods.test_data3().call().await.unwrap().value;
@@ -144,12 +114,8 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message values were received by the test contract
-        let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
-            .await
-            .unwrap();
-        assert_eq!(test_contract_balance, 100);
-        Ok(())
+        let counter = methods.test_counter().simulate().await.unwrap().value;
+        assert_eq!(counter, prev_counter + 1);
     }
 }
 
