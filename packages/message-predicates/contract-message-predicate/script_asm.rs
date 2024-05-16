@@ -21,7 +21,13 @@ pub fn bytecode() -> Vec<u8> {
 
     //referenced data start pointer
     const REF_DATA_START_PTR: u16 = 13 * BYTES_PER_INSTR;
-
+    
+    /* The following assembly code is intended to
+     * Call the function `process_message` on the contract with ID that matches
+     * the first 32 bytes in the message data field. It won't forward the possible value
+     * stored in the message. L1 entities sending messages here MUST NOT attach
+     * a base asset amount, or it will be permanently lost.
+     */
     let mut script: Vec<u8> = vec![
         op::move_(REG_MEMORY_START_PTR, RegId::SP), //REG_MEMORY_START_PTR = stack pointer
         op::cfei(32 + 32 + 8 + 8), //extends current call frame stack by 32+32+8+8 bytes [base asset id, contract id, param1, param2]
