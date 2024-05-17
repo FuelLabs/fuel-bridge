@@ -5,16 +5,17 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {IERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
-import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {FuelBridgeBase} from "./FuelBridgeBase.sol";
-import {FuelMessagePortal, CommonPredicates} from "../../fuelchain/FuelMessagePortal.sol";
-import {FuelMessagesEnabledUpgradeable} from "../FuelMessagesEnabledUpgradeable.sol";
+import {IERC721Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
+import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
+import {FuelMessagePortal, CommonPredicates} from "../../../fuelchain/FuelMessagePortal.sol";
+import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
 
-/// @title FuelERC20Gateway
-/// @notice The L1 side of the general ERC20 gateway with Fuel
+/// @title FuelERC721Gateway
+/// @notice The L1 side of the general ERC721 gateway with Fuel
 /// @dev This contract can be used as a template for future gateways to Fuel
-contract FuelERC20Gateway is
+
+/// @custom:deprecation THIS CONTRACT IS DEPRECATED. CHECK FuelERC20GatewayV4
+contract FuelERC721Gateway is
     Initializable,
     FuelBridgeBase,
     FuelMessagesEnabledUpgradeable,
@@ -22,21 +23,24 @@ contract FuelERC20Gateway is
     AccessControlUpgradeable,
     UUPSUpgradeable
 {
-    using SafeERC20Upgradeable for IERC20Upgradeable;
-
     ////////////
     // Events //
     ////////////
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenAddress, bytes32 indexed fuelContractId, uint256 amount);
+    event Deposit(
+        bytes32 indexed sender,
+        address indexed tokenAddress,
+        bytes32 indexed fuelContractId,
+        uint256 tokenId
+    );
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
     event Withdrawal(
         bytes32 indexed recipient,
         address indexed tokenAddress,
         bytes32 indexed fuelContractId,
-        uint256 amount
+        uint256 tokenId
     );
 
     ///////////////
@@ -53,8 +57,8 @@ contract FuelERC20Gateway is
     // Storage //
     /////////////
 
-    /// @notice Maps ERC20 tokens to Fuel tokens to balance of the ERC20 tokens deposited
-    mapping(address => mapping(bytes32 => uint256)) internal _deposits;
+    /// @notice Maps ERC721 tokens to its fuel bridge counterpart
+    mapping(address => mapping(uint256 => bytes32)) internal _deposits;
 
     /////////////////////////////
     // Constructor/Initializer //
@@ -83,12 +87,12 @@ contract FuelERC20Gateway is
     // Admin Functions //
     /////////////////////
 
-    /// @notice Pause ERC20 transfers
+    /// @notice Pause ERC721 transfers
     function pause() external onlyRole(PAUSER_ROLE) {
         _pause();
     }
 
-    /// @notice Unpause ERC20 transfers
+    /// @notice Unpause ERC721 transfers
     function unpause() external onlyRole(DEFAULT_ADMIN_ROLE) {
         _unpause();
     }
@@ -97,93 +101,85 @@ contract FuelERC20Gateway is
     // Public Functions //
     //////////////////////
 
-    /// @notice Gets the amount of tokens deposited to a corresponding token on Fuel
-    /// @param tokenAddress ERC-20 token address
-    /// @param fuelContractId ID of the corresponding token on Fuel
-    /// @return amount of tokens deposited
-    function tokensDeposited(address tokenAddress, bytes32 fuelContractId) public view virtual returns (uint256) {
-        return _deposits[tokenAddress][fuelContractId];
+    /// @notice Gets the FuelContractId of an ERC-721 token
+    /// @param tokenAddress ERC-721 token address
+    /// @param tokenId tokenId
+    /// @return fuelContractId ID of the Fuel contract
+    function tokensDeposited(address tokenAddress, uint256 tokenId) public view returns (bytes32) {
+        return _deposits[tokenAddress][tokenId];
     }
 
     /// @notice Deposits the given tokens to an account on Fuel
     /// @param to Fuel address to deposit tokens to
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @dev Made payable to reduce gas costs
     function deposit(
         bytes32 to,
         address tokenAddress,
         bytes32 fuelContractId,
-        uint256 amount
-    ) external payable virtual whenNotPaused {
+        uint256 tokenId
+    ) external payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-            bytes32(0), // OFFSET_TOKEN_ID = 64
+            tokenId,
             bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
             to, // OFFSET_TO = 128
-            amount // OFFSET_AMOUNT = 160
+            uint256(1) // OFFSET_AMOUNT = 160
         );
-        _deposit(tokenAddress, fuelContractId, amount, messageData);
+        _deposit(tokenAddress, fuelContractId, tokenId, messageData);
     }
 
     /// @notice Deposits the given tokens to a contract on Fuel with optional data
     /// @param to Fuel account or contract to deposit tokens to
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @param data Optional data to send with the deposit
     /// @dev Made payable to reduce gas costs
     function depositWithData(
         bytes32 to,
         address tokenAddress,
         bytes32 fuelContractId,
-        uint256 amount,
+        uint256 tokenId,
         bytes calldata data
-    ) external payable virtual whenNotPaused {
+    ) external payable whenNotPaused {
         bytes memory messageData = abi.encodePacked(
             fuelContractId,
             bytes32(uint256(uint160(tokenAddress))), // OFFSET_TOKEN_ADDRESS = 32
-            bytes32(0), // OFFSET_TOKEN_ID = 64
+            tokenId, // OFFSET_TOKEN_ID = 64
             bytes32(uint256(uint160(msg.sender))), //from, OFFSET_FROM = 96
             to, // OFFSET_TO = 128
-            amount, // OFFSET_AMOUNT = 160
+            uint256(1), // OFFSET_AMOUNT = 160
             DEPOSIT_TO_CONTRACT, // OFFSET_ROLE = 161
             data
         );
-        _deposit(tokenAddress, fuelContractId, amount, messageData);
+        _deposit(tokenAddress, fuelContractId, tokenId, messageData);
     }
 
     /// @notice Finalizes the withdrawal process from the Fuel side gateway contract
     /// @param to Account to send withdrawn tokens to
     /// @param tokenAddress Address of the token being withdrawn from Fuel
-    /// @param amount Amount of tokens to withdraw
-    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens. For ERC20, it must be 0
-    /// @dev Made payable to reduce gas costs
+    /// @param tokenId Discriminator for ERC721 / ERC1155 tokens
+    /// @dev Made payable to reduce gas costs.
+    /// @dev Could remove the amount param to further reduce cost, but that implies changes in the Fuel contract
+    /// @dev Hexens Fuel1-5: safeTransferFrom is intentionally avoided
     function finalizeWithdrawal(
         address to,
         address tokenAddress,
-        uint256 amount,
+        uint256 /*amount*/,
         uint256 tokenId
-    ) external payable virtual override whenNotPaused onlyFromPortal {
-        require(amount > 0, "Cannot withdraw zero");
-        require(tokenId == 0, "Fungible tokens cannot have a tokenId");
+    ) external payable override whenNotPaused onlyFromPortal {
         bytes32 fuelContractId = messageSender();
+        require(_deposits[tokenAddress][tokenId] == fuelContractId, "Fuel bridge does not own this token");
 
-        //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
-        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] - amount;
-        IERC20Upgradeable(tokenAddress).safeTransfer(to, amount);
+        delete _deposits[tokenAddress][tokenId];
 
+        IERC721Upgradeable(tokenAddress).transferFrom(address(this), to, tokenId);
         //emit event for successful token withdraw
-        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, amount);
-    }
-
-    /// @notice Allows the admin to rescue ETH sent to this contract by accident
-    /// @dev Made payable to reduce gas costs
-    function rescueETH() external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
-        require(success);
+        emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, fuelContractId, 1);
     }
 
     ////////////////////////
@@ -193,25 +189,25 @@ contract FuelERC20Gateway is
     /// @notice Deposits the given tokens to an account or contract on Fuel
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param fuelContractId ID of the contract on Fuel that manages the deposited tokens
-    /// @param amount Amount of tokens to deposit
+    /// @param tokenId tokenId to deposit
     /// @param messageData The data of the message to send for deposit
     function _deposit(
         address tokenAddress,
         bytes32 fuelContractId,
-        uint256 amount,
+        uint256 tokenId,
         bytes memory messageData
     ) internal virtual {
-        require(amount > 0, "Cannot deposit zero");
-
-        //transfer tokens to this contract and update deposit balance
-        IERC20Upgradeable(tokenAddress).safeTransferFrom(msg.sender, address(this), amount);
-        _deposits[tokenAddress][fuelContractId] = _deposits[tokenAddress][fuelContractId] + amount;
+        // TODO: this check might be unnecessary. If the token is conformant to ERC721
+        // it should not be possible to deposit the same token again
+        require(_deposits[tokenAddress][tokenId] == 0, "tokenId is already owned by another fuel bridge");
+        _deposits[tokenAddress][tokenId] = fuelContractId;
 
         //send message to gateway on Fuel to finalize the deposit
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, messageData);
 
+        IERC721Upgradeable(tokenAddress).transferFrom(msg.sender, address(this), tokenId);
         //emit event for successful token deposit
-        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, fuelContractId, amount);
+        emit Deposit(bytes32(uint256(uint160(msg.sender))), tokenAddress, fuelContractId, tokenId);
     }
 
     /// @notice Executes a message in the given header

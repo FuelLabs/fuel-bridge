@@ -84,6 +84,17 @@ const config: HardhatUserConfig = {
       deploy: ['deploy/devnet'],
       chainId: 11155111,
     },
+    testnet: {
+      url: RPC_URL,
+      accounts: CONTRACTS_DEPLOYER_KEY
+        ? [CONTRACTS_DEPLOYER_KEY]
+        : {
+            mnemonic:
+              'test test test test test test test test test test test junk',
+          },
+      deploy: ['deploy/testnet'],
+      chainId: 11155111,
+    },
   },
   typechain: {
     outDir: 'typechain',

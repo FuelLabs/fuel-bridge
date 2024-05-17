@@ -8,7 +8,9 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_crypto::SecretKey, fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId}, fuel_types::{Nonce, Word}
+    fuel_crypto::SecretKey,
+    fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
+    fuel_types::{Nonce, Word},
 };
 
 use fuels::{
@@ -16,7 +18,9 @@ use fuels::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
+    },
+    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
+    types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
@@ -418,13 +422,13 @@ pub(crate) async fn relay_message_to_contract(
     let provider = wallet.provider().expect("Wallet has no provider");
 
     let gas_price: u64 = 1; // NodeInfo.min_gas_price is no longer available
-        
+
     let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
 
-    let fetched_gas_coins: Vec<Coin> = 
-        provider.get_coins(wallet.address(), Default::default())
-            .await
-            .unwrap();
+    let fetched_gas_coins: Vec<Coin> = provider
+        .get_coins(wallet.address(), Default::default())
+        .await
+        .unwrap();
 
     let tx = builder::build_contract_message_tx(
         message,
@@ -567,7 +571,6 @@ pub(crate) async fn create_deposit_message(
     let message_data = prefix_contract_id(message_data, config).await;
     let message = (MESSAGE_AMOUNT, message_data);
     let coin = (DEFAULT_COIN_AMOUNT, AssetId::default());
-
 
     (message, coin, deposit_recipient)
 }

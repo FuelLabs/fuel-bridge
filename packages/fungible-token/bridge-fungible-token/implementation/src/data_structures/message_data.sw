@@ -20,7 +20,6 @@ pub enum MessageData {
 impl MessageData {
     pub fn parse(msg_idx: u64) -> Self {
         let message_type: u8 = input_message_data(msg_idx, OFFSET_MESSAGE_TYPE).get(31).unwrap(); // Get the last byte
-
         match message_type {
             DEPOSIT => MessageData::Deposit(DepositMessage::parse_deposit_to_address(msg_idx)),
             CONTRACT_DEPOSIT => MessageData::Deposit(DepositMessage::parse_deposit_to_contract(msg_idx)),

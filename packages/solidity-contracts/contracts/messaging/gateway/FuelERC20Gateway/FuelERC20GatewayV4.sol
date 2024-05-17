@@ -7,14 +7,16 @@ import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/acce
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import {FuelERC20GatewayV3} from "../v3/FuelERC20GatewayV3.sol";
 import {CommonPredicates} from "../../../lib/CommonPredicates.sol";
 import {FuelMessagePortal} from "../../../fuelchain/FuelMessagePortal.sol";
-import {FuelBridgeBase} from "../FuelBridgeBase.sol";
+import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
 import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
 
 /// @title FuelERC20GatewayV4
-/// @notice The L1 side of the general ERC20 gateway with Fuel. Not backwards compatible with previous implementations
+/// @notice The L1 side of the general ERC20 gateway with Fuel.
+/// @notice Not backwards compatible with previous implementations
+/// @notice Hexens Fuel1-12: Not compatible with fee-on-transfer erc20 tokens
+/// @notice Hexens Fuel1-18: Payable modifiers are intentionally used
 contract FuelERC20GatewayV4 is
     Initializable,
     FuelBridgeBase,
@@ -153,7 +155,8 @@ contract FuelERC20GatewayV4 is
             uint256(0), // token_id = 0 for all erc20 deposits
             bytes32(uint256(uint160(msg.sender))),
             to,
-            l2MintedAmount
+            l2MintedAmount,
+            uint256(decimals)
         );
         _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
     }
@@ -181,6 +184,7 @@ contract FuelERC20GatewayV4 is
             bytes32(uint256(uint160(msg.sender))),
             to,
             l2MintedAmount,
+            uint256(decimals),
             data
         );
         _deposit(tokenAddress, amount, l2MintedAmount, depositMessage);
@@ -189,7 +193,7 @@ contract FuelERC20GatewayV4 is
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
         bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
-            MessageType.METADATA,
+            uint256(MessageType.METADATA),
             abi.encode(
                 tokenAddress,
                 uint256(0), // token_id = 0 for all erc20 deposits
@@ -235,6 +239,7 @@ contract FuelERC20GatewayV4 is
     /// @param amount tokens that have been deposited
     /// @param l2MintedAmount tokens that will be minted on L2
     /// @param messageData The data of the message to send for deposit
+    /// @dev Hexens 1-12: Not compatible with fee-on-transfer tokens
     function _deposit(
         address tokenAddress,
         uint256 amount,

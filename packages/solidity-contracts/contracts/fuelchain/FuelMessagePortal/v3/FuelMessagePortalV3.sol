@@ -10,6 +10,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
     error MessageBlacklisted();
     error WithdrawalsPaused();
+    error MessageRelayFailed();
 
     bool public withdrawalsPaused;
     mapping(bytes32 => bool) public messageIsBlacklisted;
@@ -20,12 +21,16 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         withdrawalsPaused = true;
     }
 
-    function unpauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
+    function unpauseWithdrawals() external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         withdrawalsPaused = false;
     }
 
-    function setMessageBlacklist(bytes32 messageId, bool value) external payable onlyRole(PAUSER_ROLE) {
-        messageIsBlacklisted[messageId] = value;
+    function addMessageToBlacklist(bytes32 messageId) external payable onlyRole(PAUSER_ROLE) {
+        messageIsBlacklisted[messageId] = true;
+    }
+
+    function removeMessageFromBlacklist(bytes32 messageId) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+        messageIsBlacklisted[messageId] = false;
     }
 
     ///////////////////////////////////////
@@ -87,6 +92,52 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
         //execute message
         _executeMessage(messageId, message);
+    }
+
+    /// @notice Executes a message in the given header
+    /// @param messageId The id of message to execute
+    /// @param message The message to execute
+    function _executeMessage(bytes32 messageId, Message calldata message) internal virtual override nonReentrant {
+        if (_incomingMessageSuccessful[messageId]) revert AlreadyRelayed();
+
+        //set message sender for receiving contract to reference
+        _incomingMessageSender = message.sender;
+
+        // v2: update accounting if the message carries an amount
+        bool success;
+        bytes memory result;
+        if (message.amount > 0) {
+            uint256 withdrawnAmount = message.amount * PRECISION;
+
+            // Underflow check enabled since the amount is coded in `message`
+            totalDeposited -= withdrawnAmount;
+
+            (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
+        } else {
+            (success, result) = address(uint160(uint256(message.recipient))).call(message.data);
+        }
+
+        if (!success) {
+            // Look for revert reason and bubble it up if present
+            if (result.length > 0) {
+                // The easiest way to bubble the revert reason is using memory via assembly
+                /// @solidity memory-safe-assembly
+                assembly {
+                    let returndata_size := mload(result)
+                    revert(add(32, result), returndata_size)
+                }
+            }
+            revert MessageRelayFailed();
+        }
+
+        //unset message sender reference
+        _incomingMessageSender = NULL_MESSAGE_SENDER;
+
+        //keep track of successfully relayed messages
+        _incomingMessageSuccessful[messageId] = true;
+
+        //emit event for successful message relay
+        emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
     }
 
     /**

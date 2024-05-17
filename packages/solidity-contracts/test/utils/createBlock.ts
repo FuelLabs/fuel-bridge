@@ -1,5 +1,10 @@
 import type BlockHeader from '../../protocol/blockHeader';
-import { ZERO, EMPTY } from '../../protocol/constants';
+import {
+  ZERO,
+  EMPTY,
+  CONSENSUS_PARAMETERS_VERSION,
+  STATE_TRANSITION_BYTECODE_VERSION,
+} from '../../protocol/constants';
 
 // Create a simple block
 export function createBlock(
@@ -18,6 +23,9 @@ export function createBlock(
     outputMessagesCount: outputMessagesCount ? outputMessagesCount : '0',
     txRoot: EMPTY,
     outputMessagesRoot: outputMessagesRoot ? outputMessagesRoot : ZERO,
+    consensusParametersVersion: CONSENSUS_PARAMETERS_VERSION,
+    stateTransitionBytecodeVersion: STATE_TRANSITION_BYTECODE_VERSION,
+    eventInboxRoot: EMPTY,
   };
   return header;
 }

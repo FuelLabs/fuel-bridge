@@ -11,7 +11,10 @@ use fuels::{
     accounts::wallet::WalletUnlocked,
     prelude::{ScriptTransaction, TxPolicies},
     types::{
-        coin::Coin, coin_type::CoinType, input::Input, transaction_builders::{
+        coin::Coin,
+        coin_type::CoinType,
+        input::Input,
+        transaction_builders::{
             BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder,
         }
     },
@@ -40,12 +43,12 @@ pub async fn build_contract_message_tx(
         .unwrap();
 
     let funding_utx0 = fetched_gas_coins.first().unwrap().to_owned();
-    
+
     tx_inputs.push(Input::resource_signed(CoinType::Coin(funding_utx0.clone())));
     tx_outputs.push(Output::Change {
         to: wallet.address().into(),
         amount: funding_utx0.amount,
-        asset_id: funding_utx0.asset_id
+        asset_id: funding_utx0.asset_id,
     });
 
     for input in inputs {
@@ -83,7 +86,7 @@ pub async fn build_contract_message_tx(
         asset_id: AssetId::default(),
     });
 
-    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(30_000));
+    let tx_policies = TxPolicies::new(Some(0), None, None, None, Some(300_000));
 
     let mut builder = ScriptTransactionBuilder::default()
         .with_inputs(tx_inputs.clone())

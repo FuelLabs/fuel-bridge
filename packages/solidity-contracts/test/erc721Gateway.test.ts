@@ -11,6 +11,7 @@ import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
+import { CONTRACT_MESSAGE_PREDICATE } from '../protocol/constants';
 import type { HarnessObject } from '../protocol/harness';
 import Message, { computeMessageId } from '../protocol/message';
 import {
@@ -27,9 +28,6 @@ import type {
 } from '../typechain';
 
 import { createBlock } from './utils/createBlock';
-
-const CONTRACT_MESSAGE_PREDICATE =
-  '0xb12658c759d8bae2cdc523ebd7aa8637912f32b1763d242ad3618448057b79cd';
 
 const { expect } = chai;
 

@@ -16,7 +16,7 @@
     "build:watch": "tsup --watch"
   },
   "peerDependencies": {
-    "fuels": "0.0.0-rc-2045-20240411194225",
+   "fuels": "0.85.0",
     "ethers": "6.11.0"
   },
   "devDependencies": {
