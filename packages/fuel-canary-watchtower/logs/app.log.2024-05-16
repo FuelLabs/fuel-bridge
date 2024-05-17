@@ -1,0 +1,21 @@
+2024-05-16T13:41:09.404515Z  INFO 33: Using config file: watchtower_config.json
+2024-05-16T13:41:09.404952Z ERROR 204: WATCHTOWER_PAGERDUTY_KEY environment variable not specified. Alerting on PagerDuty has been disabled    
+2024-05-16T13:41:09.414402Z ERROR 53: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T13:41:14.826892Z  INFO 33: Using config file: watchtower_config.json
+2024-05-16T13:41:14.827336Z ERROR 204: WATCHTOWER_PAGERDUTY_KEY environment variable not specified. Alerting on PagerDuty has been disabled    
+2024-05-16T13:41:14.836517Z ERROR 53: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T13:51:11.445474Z  INFO 35: Using config file: watchtower_config.json
+2024-05-16T13:51:11.445910Z ERROR 320: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-16T13:51:11.455332Z ERROR 55: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T13:52:11.839084Z  INFO 35: Using config file: watchtower_config.json
+2024-05-16T13:52:11.839507Z ERROR 217: WATCHTOWER_PAGERDUTY_KEY environment variable not specified. Alerting on PagerDuty has been disabled    
+2024-05-16T13:52:11.848683Z ERROR 55: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T13:53:18.426585Z  INFO 35: Using config file: watchtower_config.json
+2024-05-16T13:53:18.427099Z ERROR 320: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-16T13:53:18.436562Z ERROR 55: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T14:01:17.239142Z  INFO 35: Using config file: watchtower_config.json
+2024-05-16T14:01:17.239647Z ERROR 320: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-16T14:01:17.249198Z ERROR 55: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-16T14:26:53.062952Z  INFO 35: Using config file: watchtower_config.json
+2024-05-16T14:26:53.063385Z ERROR 333: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-16T14:26:53.072771Z ERROR 55: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)

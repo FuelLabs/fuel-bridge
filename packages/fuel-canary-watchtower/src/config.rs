@@ -2,9 +2,18 @@ use crate::alerter::AlertLevel;
 use crate::ethereum_actions::EthereumAction;
 
 use anyhow::Result;
+use clap::Parser;
+use config::{Config, File};
 use ethers::types::U256;
 use serde::Deserialize;
+use std::path::PathBuf;
 use std::{env, fs, time::Duration};
+use tracing::{error, info, warn};
+use tracing_appender::rolling::{RollingFileAppender, Rotation};
+use tracing_subscriber::fmt::layer;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::{EnvFilter, Layer};
 
 pub static PRIVATE_KEY_ENV_VAR: &str = "WATCHTOWER_ETH_PRIVATE_KEY";
 pub static PAGERDUTY_KEY_ENV_VAR: &str = "WATCHTOWER_PAGERDUTY_KEY";
@@ -164,41 +173,20 @@ pub fn load_config(file_path: &str) -> Result<WatchtowerConfig> {
     let json_string = fs::read_to_string(file_path)?;
     let mut config: WatchtowerConfig = serde_json::from_str(&json_string)?;
 
-    // Fill in the ethereum wallet key
-    if config.ethereum_wallet_key.is_some() {
-        log::warn!("Specifying the ethereum private key in the config file is not safe. Please use the {} environment variable instead", PRIVATE_KEY_ENV_VAR);
-    } else {
-        config.ethereum_wallet_key = match env::var(PRIVATE_KEY_ENV_VAR) {
-            Ok(wallet_key) => Some(wallet_key),
-            Err(_) => {
-                log::warn!(
-                    "{} environment variable not specified. Some alerts and actions have been disabled",
-                    PRIVATE_KEY_ENV_VAR
-                );
-                None
-            }
-        };
-    }
+    retrieve_key_from_env(
+        &mut config.ethereum_wallet_key,
+        PRIVATE_KEY_ENV_VAR,
+        "Specifying the ethereum private key in the config file is not safe. Please use the {} environment variable instead",
+        Some("Environment variable not specified. Some alerts and actions have been disabled"),
+    );
 
-    // Fill in the pagerduty api key
-    if config.pagerduty_api_key.is_some() {
-        log::warn!(
-            "Specifying the pagerduty api key in the config file is not safe. Please use the {} environment variable instead",
-            PAGERDUTY_KEY_ENV_VAR,
-        );
-    } else {
-        // We alert with an error here as this watchtower is ineffective if people aren't alerted.
-        config.pagerduty_api_key = match env::var(PAGERDUTY_KEY_ENV_VAR) {
-            Ok(wallet_key) => Some(wallet_key),
-            Err(_) => {
-                log::error!(
-                    "{} environment variable not specified. Alerting on PagerDuty has been disabled",
-                    PAGERDUTY_KEY_ENV_VAR
-                );
-                None
-            }
-        };
-    }
+    retrieve_key_from_env(
+        &mut config.pagerduty_api_key,
+        PAGERDUTY_KEY_ENV_VAR,
+        "Specifying the pagerduty api key in the config file is not safe. Please use the {} environment variable instead",
+        Some("Environment variable not specified. Alerting on PagerDuty has been disabled"),
+    );
+
     Ok(config)
 }
 
@@ -214,4 +202,124 @@ pub fn convert_to_decimal_u64(amt: u64, decimals: u8) -> String {
     let amt_decimal = amt as f64 / conversion_factor as f64;
     let formatted_amt = format!("{:.6}", amt_decimal); // Format with up to 6 decimal places
     formatted_amt.trim_end_matches('0').trim_end_matches('.').to_string()
+}
+
+#[derive(Parser, Debug)]
+#[command(
+    name = "fuel-canary-watchtower",
+    version,
+    about,
+    propagate_version = true,
+    arg_required_else_help(true)
+)]
+pub struct Cli {
+    #[arg(
+        value_name = "WATCHTOWER_CONFIG_FILE",
+        help = "Path to the watchtower config file",
+        env = "WATCHTOWER_CONFIG_FILE"
+    )]
+    watchtower_config_file: PathBuf,
+    #[arg(
+        value_name = "LOGGING_CONFIG_FILE",
+        help = "Path to the logging config file",
+        env = "LOGGING_CONFIG_FILE"
+    )]
+    watchtower_eth_private_key: Option<String>,
+    #[arg(
+        value_name = "WATCHTOWER_PAGERDUTY_KEY",
+        help = "Watchtower pagerduty key",
+        env = "WATCHTOWER_PAGERDUTY_KEY"
+    )]
+    watchtower_pagerduty_key: Option<String>,
+}
+
+pub fn parse() -> crate::errors::Result<WatchtowerConfig> {
+    let cli = Cli::parse();
+
+    let watchtower_config: WatchtowerConfig = Config::builder()
+        .add_source(File::from(cli.watchtower_config_file.clone()))
+        .build()
+        .map_err(crate::errors::Error::from)?
+        .try_deserialize()
+        .map_err(|e| {
+            crate::errors::Error::Parsing(format!("{} in {}", e, cli.watchtower_config_file.to_string_lossy()))
+        })?;
+    info!("Using config file: {}", cli.watchtower_config_file.to_string_lossy());
+
+    retrieve_key_from_env(
+        &watchtower_config.ethereum_wallet_key,
+        PRIVATE_KEY_ENV_VAR,
+        "Specifying the ethereum private key in the config file is not safe. Please use the {} environment variable instead",
+        Some("Environment variable not specified. Some alerts and actions have been disabled"),
+    );
+
+    retrieve_key_from_env(
+        &watchtower_config.pagerduty_api_key,
+        PAGERDUTY_KEY_ENV_VAR,
+        "Specifying the pagerduty api key in the config file is not safe. Please use the {} environment variable instead",
+        Some("Environment variable not specified. Alerting on PagerDuty has been disabled"),
+    );
+
+    Ok(watchtower_config)
+}
+
+fn retrieve_key_from_env(
+    config_key: &Option<String>,
+    env_var: &str,
+    warning_msg: &str,
+    error_msg: Option<&str>,
+) -> Option<String> {
+    if config_key.is_some() {
+        warn!(warning_msg, env_var);
+        config_key.clone()
+    } else {
+        match env::var(env_var) {
+            Ok(key) => Some(key),
+            Err(_) => {
+                if let Some(msg) = error_msg {
+                    error!(msg, env_var);
+                } else {
+                    warn!(
+                        "{} environment variable not specified. Some alerts and actions have been disabled",
+                        env_var
+                    );
+                }
+                None
+            }
+        }
+    }
+}
+
+pub const LOG_FILTER: &str = "RUST_LOG";
+
+pub fn init_logger() {
+    let filter_string = match env::var_os(LOG_FILTER) {
+        Some(_) => env::var(LOG_FILTER).expect("Invalid `RUST_LOG` provided"),
+        None => "info".to_string(),
+    };
+
+    let file_appender = RollingFileAppender::new(Rotation::DAILY, "logs", "app.log");
+
+    let stdout_layer = layer()
+        .with_target(false)
+        .with_writer(std::io::stdout)
+        .with_level(true)
+        .with_line_number(true)
+        .with_ansi(true)
+        .with_filter(EnvFilter::new(filter_string.clone()));
+
+    // Create the file layer
+    let file_layer = layer()
+        .with_writer(file_appender)
+        .with_target(false)
+        .with_level(true)
+        .with_line_number(true)
+        .with_ansi(false)
+        .with_filter(EnvFilter::new(filter_string));
+
+    // Build the subscriber with the formatting layer
+    tracing_subscriber::registry()
+        .with(stdout_layer)
+        .with(file_layer)
+        .init();
 }

@@ -3,8 +3,9 @@ use fuel_core_client::client::FuelClient;
 use std::sync::Arc;
 
 pub async fn setup_fuel_provider(fuels_graphql: &str) -> Result<Arc<FuelClient>> {
-    let provider = FuelClient::new(fuels_graphql).unwrap();
-    let provider_result = provider.chain_info().await;
+    let provider = FuelClient::new(fuels_graphql)?; //todo: map errors
+    let provider_result = provider.chain_info().await; //todo: add ? map errors
+
     match provider_result {
         Ok(_) => Ok(Arc::new(provider)),
         Err(e) => Err(anyhow!("Failed to get chain ID: {e}")),

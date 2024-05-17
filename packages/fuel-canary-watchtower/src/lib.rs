@@ -3,6 +3,7 @@ pub mod test_utils;
 
 mod alerter;
 mod config;
+mod errors;
 mod ethereum_actions;
 mod ethereum_watcher;
 mod fuel_watcher;
@@ -17,7 +18,8 @@ use crate::ethereum_watcher::{
 };
 use alerter::{send_alert, AlertLevel, AlertParams, WatchtowerAlerter};
 use anyhow::Result;
-pub use config::{load_config, WatchtowerConfig};
+pub use config::{init_logger, load_config, parse, Cli, WatchtowerConfig};
+pub use errors::{Error, Result as WatchtowerResult};
 use ethereum_actions::WatchtowerEthereumActions;
 use ethereum_watcher::{
     ethereum_chain::{EthereumChain, EthereumChainTrait},
