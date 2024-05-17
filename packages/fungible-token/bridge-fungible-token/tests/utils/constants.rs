@@ -3,11 +3,11 @@ pub(crate) const CONTRACT_MESSAGE_PREDICATE_BINARY: &str =
 pub(crate) const MESSAGE_SENDER_ADDRESS: &str =
     "0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe";
 pub(crate) const BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
-    "../bridge-fungible-token/implementation/out/debug/bridge_fungible_token.bin";
+    "../bridge-fungible-token/implementation/out/release/bridge_fungible_token.bin";
 pub(crate) const DEPOSIT_RECIPIENT_CONTRACT_BINARY: &str =
-    "../test-deposit-recipient-contract/out/debug/test_deposit_recipient_contract.bin";
+    "../test-deposit-recipient-contract/out/release/test_deposit_recipient_contract.bin";
 pub(crate) const BRIDGE_PROXY_BINARY: &str =
-    "../bridge-fungible-token/proxy/out/debug/proxy.bin";
+    "../bridge-fungible-token/proxy/out/release/proxy.bin";
 
 pub(crate) const BRIDGED_TOKEN: &str =
     "0x00000000000000000000000000000000000000000000000000000000deadbeef";
