@@ -1,5 +1,14 @@
 contract;
 
+// This contract receives messages sent from an instance of FuelERC20Gateway
+// deployed at the L1. The messages are relayed by the message predicate.
+// Upon processing a message, funds are minted to the receiver.
+
+// Hexens FUEL1-21: This contract might be able to receive BASE_ASSET and
+// without a rescue function, the BASE_ASSET funds might get stuck.
+// Special care must be put when sending messages from the gateway to this
+// contract so that they do not cointain BASE_ASSET funds
+
 mod data_structures;
 mod errors;
 mod events;
@@ -23,17 +32,14 @@ use data_structures::{
 };
 use events::{ClaimRefundEvent, DepositEvent, MetadataEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
-use reentrancy::reentrancy_guard;
+use sway_libs::reentrancy::reentrancy_guard;
 use std::{
     asset::{
         burn,
         mint,
         transfer,
     },
-    call_frames::{
-        contract_id,
-        msg_asset_id,
-    },
+    call_frames::msg_asset_id,
     constants::ZERO_B256,
     context::msg_amount,
     flags::{
@@ -101,7 +107,7 @@ impl MessageReceiver for Contract {
 impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
-        let asset = sha256((token_address, token_id));
+        let asset = _generate_sub_id_from_metadata(token_address, token_id);
         let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
         require(
             amount != ZERO_U256,
@@ -137,6 +143,7 @@ impl Bridge for Contract {
         let token_id = _asset_to_token_id(asset_id);
         let l1_address = _asset_to_l1_address(asset_id);
 
+        // Hexens Fuel1-4: Might benefit from a custom error message
         storage
             .tokens_minted
             .insert(
@@ -226,7 +233,7 @@ fn register_refund(
     token_id: b256,
     amount: b256,
 ) {
-    let asset = sha256((token_address, token_id));
+    let asset = _generate_sub_id_from_metadata(token_address, token_id);
 
     let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
     let new_amount = amount.as_u256() + previous_amount;
@@ -290,7 +297,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         }
     };
     let sub_id = _generate_sub_id_from_metadata(message_data.token_address, message_data.token_id);
-    let asset_id = AssetId::new(contract_id(), sub_id);
+    let asset_id = AssetId::new(ContractId::this(), sub_id);
 
     let _ = disable_panic_on_overflow();
 
@@ -347,6 +354,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         },
         DepositType::ContractWithData => {
             let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
+            // TODO: Hexens Fuel1-2, if this call fails, funds may get stuck
             dest_contract
                 .process_message {
                     coins: amount,
@@ -365,7 +373,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 #[storage(read, write)]
 fn _process_metadata(metadata: MetadataMessage) {
     let sub_id = _generate_sub_id_from_metadata(metadata.token_address, metadata.token_id);
-    let asset_id = AssetId::new(contract_id(), sub_id);
+    let asset_id = AssetId::new(ContractId::this(), sub_id);
 
     // Important to note: in order to register metadata for an asset, 
     // it must have been deposited first

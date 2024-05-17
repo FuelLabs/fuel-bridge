@@ -13,20 +13,16 @@ use std::str::FromStr;
 mod success {
     use super::*;
     use crate::utils::interface::src20::total_supply;
-    use crate::utils::{
-        constants::MESSAGE_AMOUNT,
-        setup::{
-            contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
-            get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
-            RefundRegisteredEvent,
-        },
+    use crate::utils::setup::{
+        contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
+        get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
+        RefundRegisteredEvent,
     };
     use fuel_core_types::fuel_types::canonical::Deserialize;
 
     use fuels::types::bech32::{Bech32Address, FUEL_BECH32_HRP};
     use fuels::types::{Bytes32, U256};
     use fuels::{
-        prelude::AssetId,
         programs::contract::SettableContract,
         types::{tx_status::TxStatus, Bits256},
     };
@@ -34,20 +30,24 @@ mod success {
     #[tokio::test]
     async fn deposit_to_wallet() {
         let mut wallet = create_wallet();
-        
+
         let amount: u64 = 10;
         let token_address = "0x000000000000000000000000fcF38f326CA709b0B04B2215Dbc969fC622775F7";
         let token_id = BRIDGED_TOKEN_ID;
         let from_address = "0x00000000000000000000000090F79bf6EB2c4f870365E785982E1f101E93b906";
         let message_sender = "0x00000000000000000000000059F2f1fCfE2474fD5F0b9BA1E73ca90b143Eb8d0";
-        let recipient: Bytes32 = Bytes32::from_bytes(&hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28").unwrap()).unwrap();
-        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
-        
-        let configurables: BridgeFungibleTokenContractConfigurables = 
+        let recipient: Bytes32 = Bytes32::from_bytes(
+            &hex::decode("92dffc873b56f219329ed03bb69bebe8c3d8b041088574882f7a6404f02e2f28")
+                .unwrap(),
+        )
+        .unwrap();
+        let recipient_bech32: Bech32Address = Bech32Address::new(FUEL_BECH32_HRP, recipient);
+
+        let configurables: BridgeFungibleTokenContractConfigurables =
             BridgeFungibleTokenContractConfigurables::default()
                 .with_BRIDGED_TOKEN_GATEWAY(Bits256::from_hex_str(message_sender).unwrap())
                 .unwrap();
-        
+
         let (message, coin, deposit_contract) = create_deposit_message(
             token_address,
             token_id,
@@ -83,14 +83,12 @@ mod success {
 
         let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
-        
-        let eth_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
+
         let asset_id = get_asset_id(bridge.contract_id(), token_address);
-        let asset_balance = provider.get_asset_balance(&recipient_bech32, asset_id).await.unwrap();
-        
-        // Verify the message value was received by the bridge
-        assert_eq!(eth_balance, MESSAGE_AMOUNT);
+        let asset_balance = provider
+            .get_asset_balance(&recipient_bech32, asset_id)
+            .await
+            .unwrap();
 
         // Check that wallet now has bridged coins
         assert_eq!(asset_balance, amount);
@@ -153,8 +151,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
@@ -172,12 +168,7 @@ mod success {
         )
         .await;
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &asset_id).await;
-
-        // Verify the message value was received by the bridge
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, deposit_amount);
@@ -261,8 +252,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
@@ -280,12 +269,7 @@ mod success {
         )
         .await;
 
-        let asset_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let balance = wallet_balance(&wallet, &asset_id).await;
-
-        // Verify the message value was received by the bridge
-        assert_eq!(asset_balance, MESSAGE_AMOUNT);
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, max_deposit_amount);
@@ -878,8 +862,6 @@ mod success {
         )
         .await;
 
-        let provider = wallet.provider().expect("Needs provider");
-
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
             &wallet,
@@ -888,13 +870,9 @@ mod success {
         )
         .await;
 
-        let eth_balance =
-            contract_balance(provider, bridge.contract_id(), AssetId::default()).await;
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
         let asset_balance = wallet_balance(&wallet, &asset_id).await;
 
-        // Verify the message value was received by the bridge
-        assert_eq!(eth_balance, MESSAGE_AMOUNT);
         assert_eq!(asset_balance, 0);
 
         let receipts = wallet

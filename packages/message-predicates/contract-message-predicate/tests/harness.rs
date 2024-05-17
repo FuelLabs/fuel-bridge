@@ -6,7 +6,7 @@ mod utils {
 // Test that input messages can be relayed to a contract
 // and that the contract can successfully parse the message data
 mod success {
-    use std::str::FromStr;
+    use std::{str::FromStr, u64};
 
     use crate::utils::{builder, environment as env};
     use fuel_tx::Bytes32;
@@ -39,7 +39,12 @@ mod success {
         let (wallet, test_contract, contract_input, _, message_inputs) =
             env::setup_environment(vec![coin], vec![message]).await;
 
-        let _receipts = env::relay_message_to_contract(
+        let test_contract_id: ContractId = test_contract.contract_id().into();
+        let methods = test_contract.methods();
+
+        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
+
+        let _tx_id = env::relay_message_to_contract(
             &wallet,
             message_inputs[0].clone(),
             vec![contract_input.clone()],
@@ -48,8 +53,6 @@ mod success {
         .await;
 
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract.contract_id().into();
-        let methods = test_contract.methods();
         let test_contract_counter = methods.test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;
         let test_contract_data2 = methods.test_data2().call().await.unwrap().value;
@@ -62,12 +65,8 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message value was received by the test contract
-        let provider = wallet.provider().unwrap();
-        let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
-            .await
-            .unwrap();
-        assert_eq!(test_contract_balance, 100);
+        let counter = methods.test_counter().simulate().await.unwrap().value;
+        assert_eq!(counter, prev_counter + 1);
     }
 
     #[tokio::test]
@@ -84,6 +83,11 @@ mod success {
             env::setup_environment(vec![coin], vec![message1, message2]).await;
         let provider = wallet.provider().unwrap();
 
+        let test_contract_id: ContractId = test_contract.contract_id().into();
+        let methods = test_contract.methods();
+
+        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
+
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
             &[message_inputs[1].clone(), contract_input.clone()],
@@ -98,8 +102,6 @@ mod success {
             .expect("Transaction failed");
 
         // Verify test contract received the message with the correct data
-        let test_contract_id: ContractId = test_contract.contract_id().into();
-        let methods = test_contract.methods();
         let test_contract_counter = methods.test_counter().call().await.unwrap().value;
         let test_contract_data1 = methods.test_data1().call().await.unwrap().value;
         let test_contract_data2 = methods.test_data2().call().await.unwrap().value;
@@ -112,11 +114,8 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message values were received by the test contract
-        let test_contract_balance = provider
-            .get_contract_asset_balance(test_contract.contract_id(), AssetId::default())
-            .await
-            .unwrap();
-        assert_eq!(test_contract_balance, 100);
+        let counter = methods.test_counter().simulate().await.unwrap().value;
+        assert_eq!(counter, prev_counter + 1);
     }
 }
 

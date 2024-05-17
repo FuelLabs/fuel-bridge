@@ -601,7 +601,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   describe('Behaves like V1 - Relay both valid and invalid messages', async () => {
     before(async () => {
       const fixt = await fixture();
-      const { V2Implementation } = fixt;
+      const { V3Implementation } = fixt;
       ({
         provider,
         fuelMessagePortal,
@@ -610,7 +610,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         addresses,
       } = fixt);
 
-      await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
+      await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
         constructorArgs: [MaxUint256],
       });
@@ -876,7 +876,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWithCustomError(fuelMessagePortal, 'MessageRelayFailed');
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
@@ -901,7 +901,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           blockInRoot,
           msgInBlock
         )
-      ).to.be.revertedWith('Message relay failed');
+      ).to.be.revertedWithCustomError(fuelMessagePortal, 'MessageRelayFailed');
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);

@@ -1,10 +1,15 @@
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import chai from 'chai';
 import { keccak256, toBeHex, toUtf8Bytes } from 'ethers';
 import { ethers } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
 import { computeBlockId } from '../protocol/blockHeader';
-import { EMPTY } from '../protocol/constants';
+import {
+  CONSENSUS_PARAMETERS_VERSION,
+  EMPTY,
+  STATE_TRANSITION_BYTECODE_VERSION,
+} from '../protocol/constants';
 import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';
 import { randomBytes32, tai64Time } from '../protocol/utils';
@@ -22,6 +27,9 @@ function createBlock(height: number): BlockHeader {
     outputMessagesCount: '0',
     txRoot: EMPTY,
     outputMessagesRoot: EMPTY,
+    consensusParametersVersion: CONSENSUS_PARAMETERS_VERSION,
+    stateTransitionBytecodeVersion: STATE_TRANSITION_BYTECODE_VERSION,
+    eventInboxRoot: EMPTY,
   };
 
   return header;
@@ -275,6 +283,42 @@ describe('Fuel Chain State', async () => {
       await expect(
         env.fuelChainState.finalized(randomBytes32(), 0)
       ).to.be.revertedWithCustomError(env.fuelChainState, 'UnknownBlock');
+    });
+  });
+
+  describe('Verify recommit cooldown', () => {
+    it('Should revert when trying to recommit to a warm slot', async () => {
+      const blockHash = randomBytes32();
+      const slot = 10;
+      await env.fuelChainState.connect(env.signers[1]).commit(blockHash, slot);
+
+      expect(await env.fuelChainState.blockHashAtCommit(slot)).to.equal(
+        blockHash
+      );
+
+      const cooldown = await env.fuelChainState.COMMIT_COOLDOWN();
+      const currentTime = await ethers.provider
+        .getBlock('latest')
+        .then((block) => block.timestamp);
+      await time.setNextBlockTimestamp(cooldown + BigInt(currentTime) - 1n);
+
+      const tx = env.fuelChainState
+        .connect(env.signers[1])
+        .commit(blockHash, slot);
+
+      await expect(tx).to.be.revertedWithCustomError(
+        env.fuelChainState,
+        'CannotRecommit'
+      );
+      await time.setNextBlockTimestamp(cooldown + BigInt(currentTime));
+
+      const newBlockHash = randomBytes32();
+      await env.fuelChainState
+        .connect(env.signers[1])
+        .commit(newBlockHash, slot);
+      expect(await env.fuelChainState.blockHashAtCommit(slot)).to.equal(
+        newBlockHash
+      );
     });
   });
 
