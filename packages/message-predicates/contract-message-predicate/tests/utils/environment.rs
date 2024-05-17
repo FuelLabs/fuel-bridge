@@ -9,7 +9,7 @@ use fuels::{
     },
     test_helpers::{setup_single_message, setup_test_provider},
     types::{
-        coin_type::CoinType, input::Input, message::Message, unresolved_bytes::UnresolvedBytes,
+        coin_type::CoinType, input::Input, message::Message,
     },
 };
 
@@ -111,7 +111,7 @@ pub async fn setup_environment(
             Input::resource_predicate(
                 CoinType::Message(message),
                 predicate_bytecode.clone(),
-                UnresolvedBytes::default(),
+                Vec::default(),
             )
         })
         .collect();
