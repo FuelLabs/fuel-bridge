@@ -37,7 +37,7 @@ pub fn bytecode() -> Vec<u8> {
             RegId::ZERO,
             GTFArgs::InputMessageData.into(),
         ), //REG_CONTRACT_ADDR_PTR = memory location of the message data from input[0]
-        op::mcpi(REG_DATA_PTR, REG_CONTRACT_ADDR_PTR, 32), // REG_DATA[0..31] = REG_CONTRACT_ADDR_PTR[0..32]
+        op::mcpi(REG_DATA_PTR, REG_CONTRACT_ADDR_PTR, 32), // REG_DATA[0..31] = REG_CONTRACT_ADDR_PTR[0..31]
         op::addi(REG_FN_SELECTOR_PTR, RegId::IS, REF_DATA_START_PTR),
         op::addi(REG_DATA_FN_SELECTOR_PTR, REG_DATA_PTR, 32), // REG_DATA_FN_SELECTOR_PTR = REG_DATA_PTR + 32
         op::sw(REG_DATA_FN_SELECTOR_PTR, REG_FN_SELECTOR_PTR, 0), // REG_DATA[32..39] = (End of IS)[0..7] = (len of "process_message")
