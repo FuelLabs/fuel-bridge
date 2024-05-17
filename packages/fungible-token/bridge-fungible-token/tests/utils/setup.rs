@@ -18,9 +18,7 @@ use fuels::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    },
-    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
+    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};

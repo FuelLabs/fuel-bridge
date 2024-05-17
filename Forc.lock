@@ -3,6 +3,7 @@ name = "bridge_fungible_token"
 source = "member"
 dependencies = [
     "contract_message_receiver",
+    "interface",
     "src_20",
     "std",
     "sway_libs",
@@ -24,6 +25,21 @@ dependencies = [
 [[package]]
 name = "core"
 source = "path+from-root-EE4FC085C06BAAEB"
+
+[[package]]
+name = "interface"
+source = "member"
+dependencies = ["std"]
+
+[[package]]
+name = "proxy"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "interface",
+    "src_20",
+    "std",
+]
 
 [[package]]
 name = "src_20"
