@@ -1,4 +1,4 @@
 /target
-/log
 watchtower_config.json
 .env
+/logs
