@@ -8,7 +8,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
     upgrades: { deployProxy, erc1967 },
-    deployments: { get, save },
+    deployments: { get, save, execute },
   } = hre;
   const [deployer] = await ethers.getSigners();
 
@@ -30,9 +30,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('Deployed FuelMessagePortal at', address);
   await save('FuelMessagePortal', {
     address,
-    abi: [],
+    abi: [...FuelMessagePortal.abi],
     implementation,
   });
+
+  await execute(
+    'FuelMessagePortal',
+    { log: true, from: deployer.address },
+    'pause'
+  );
 
   return true;
 };

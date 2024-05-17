@@ -9,6 +9,7 @@ import type {
 
 import { FUEL_MESSAGE_POLL_MS } from '../constants';
 import { delay } from '../delay';
+import { debug } from '../logs';
 
 // Wait until a message is present in the fuel client
 export async function waitForMessage(
@@ -23,6 +24,8 @@ export async function waitForMessage(
     for (const message of messages) {
       if (message.nonce.toString() === nonce.toHex(32).toString()) {
         return message;
+      } else {
+        debug(`Waiting for message with nonce ${nonce}`);
       }
     }
     await delay(FUEL_MESSAGE_POLL_MS);

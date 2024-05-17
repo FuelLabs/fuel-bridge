@@ -52,6 +52,7 @@ const MessagePayloadSolidityTypes = [
   'uint256', // depositor EVM address, padded
   'uint256', // recipient FuelVM address
   'uint256', // l2 amount to be minted
+  'uint256', // decimals
 ];
 
 export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
@@ -382,6 +383,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               zeroPadValue(await user.getAddress(), 32),
               depositTo,
               depositAmount,
+              decimals,
             ]);
             await expect(tx)
               .to.emit(fuelMessagePortal, 'SendMessageCalled')
@@ -562,6 +564,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             zeroPadValue(await user.getAddress(), 32),
             depositTo,
             depositAmount,
+            decimals,
           ]);
           await expect(tx)
             .to.emit(fuelMessagePortal, 'SendMessageCalled')
@@ -763,6 +766,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             zeroPadValue(await user.getAddress(), 32),
             depositTo,
             downscaledDepositAmount,
+            DECIMALS,
           ]);
           await expect(tx)
             .to.emit(fuelMessagePortal, 'SendMessageCalled')

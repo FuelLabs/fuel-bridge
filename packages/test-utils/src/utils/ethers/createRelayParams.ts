@@ -18,6 +18,7 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     data: withdrawMessageProof.data,
   };
   const header = withdrawMessageProof.messageBlockHeader;
+
   const blockHeader: MessageBlockHeader = {
     prevRoot: header.prevRoot,
     height: header.height.toString(),
@@ -25,8 +26,13 @@ export function createRelayMessageParams(withdrawMessageProof: MessageProof) {
     daHeight: header.daHeight.toString(),
     txCount: header.transactionsCount.toString(),
     txRoot: header.transactionsRoot,
-    outputMessagesRoot: header.messageReceiptRoot,
+    outputMessagesRoot: header.messageOutboxRoot,
     outputMessagesCount: header.messageReceiptCount.toString(),
+    consensusParametersVersion: BigInt(header.consensusParametersVersion),
+    stateTransitionBytecodeVersion: BigInt(
+      header.stateTransitionBytecodeVersion
+    ),
+    eventInboxRoot: header.eventInboxRoot,
   };
   const messageProof = withdrawMessageProof.messageProof;
   // Create the message proof object
