@@ -36,3 +36,4 @@ config = { version = "0.14", features = ["toml", "async"] }
 
 [dev-dependencies]
 mockall = "0.12.1"
+

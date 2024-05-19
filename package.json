@@ -13,6 +13,8 @@
     "build": "sh ./scripts/build.sh",
     "format": "sh ./scripts/format.sh",
     "node:build": "make -C ./docker build",
+    "node:watchtower": "make -C ./docker build_watchtower",
+    "node:watchtower_up": "make -C ./docker up_watchtower",
     "node:up": "make -C ./docker up",
     "node:stop": "make -C ./docker stop",
     "node:clean": "make -C ./docker clean",

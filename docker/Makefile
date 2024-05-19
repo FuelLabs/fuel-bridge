@@ -13,3 +13,8 @@ clean:
 logs:
 	docker compose logs -f
 
+build_watchtower:
+	docker-compose -f docker-compose.watchtower.yml build
+
+up_watchtower:
+	docker-compose -f docker-compose.watchtower.yml up -d --build

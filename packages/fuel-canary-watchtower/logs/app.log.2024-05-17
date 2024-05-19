@@ -119,3 +119,26 @@
 2024-05-17T08:35:56.038484Z  INFO 247: Using config file: watchtower_config.json
 2024-05-17T08:35:56.038563Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
 2024-05-17T08:35:56.047981Z ERROR 10: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-17T12:26:29.500794Z  INFO 247: Using config file: watchtower_config.json
+2024-05-17T12:26:29.501075Z ERROR 280: msg="Environment variable not specified. Some alerts and actions have been disabled" env_var="WATCHTOWER_ETH_PRIVATE_KEY"
+2024-05-17T12:26:29.501109Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-17T12:26:29.514920Z ERROR 10: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-17T22:02:23.090701Z  INFO 247: Using config file: watchtower_config.json
+2024-05-17T22:02:23.090967Z ERROR 280: msg="Environment variable not specified. Some alerts and actions have been disabled" env_var="WATCHTOWER_ETH_PRIVATE_KEY"
+2024-05-17T22:02:23.091024Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-17T22:02:23.106649Z ERROR 10: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): error trying to connect: tcp connect error: Connection refused (os error 61)
+2024-05-17T22:07:54.748524Z  INFO 247: Using config file: watchtower_config.json
+2024-05-17T22:07:54.748793Z ERROR 280: msg="Environment variable not specified. Some alerts and actions have been disabled" env_var="WATCHTOWER_ETH_PRIVATE_KEY"
+2024-05-17T22:07:54.748902Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-17T22:07:54.768631Z ERROR 10: Watchtower run failed: Failed to get chain ID: Error making HTTP request: error sending request for url (http://localhost:4000/v1/graphql): channel closed
+2024-05-17T22:09:04.957591Z  INFO 247: Using config file: watchtower_config.json
+2024-05-17T22:09:04.957688Z ERROR 280: msg="Environment variable not specified. Some alerts and actions have been disabled" env_var="WATCHTOWER_ETH_PRIVATE_KEY"
+2024-05-17T22:09:04.957730Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-17T22:09:05.036468Z  INFO 145: Watching ethereum chain: Periodically querying the ethereum chain    
+2024-05-17T22:09:05.036527Z  INFO 145: Watching fuel chain: Periodically querying the fuel chain    
+2024-05-17T22:09:46.802097Z  WARN 146: Ethereum Chain: block is taking longer than 15 seconds: Last block was 16 seconds ago    
+2024-05-17T22:10:45.547993Z  INFO 247: Using config file: watchtower_config.json
+2024-05-17T22:10:45.548084Z ERROR 280: msg="Environment variable not specified. Some alerts and actions have been disabled" env_var="WATCHTOWER_ETH_PRIVATE_KEY"
+2024-05-17T22:10:45.548136Z ERROR 280: msg="Environment variable not specified. Alerting on PagerDuty has been disabled" env_var="WATCHTOWER_PAGERDUTY_KEY"
+2024-05-17T22:10:45.616175Z  INFO 145: Watching ethereum chain: Periodically querying the ethereum chain    
+2024-05-17T22:10:45.616277Z  INFO 145: Watching fuel chain: Periodically querying the fuel chain    

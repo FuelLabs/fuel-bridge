@@ -1,15 +1,19 @@
 use anyhow::Result;
 use fuel_canary_watchtower::{Error, init_logger, parse};
-use tracing::{error};
+use tracing::{error, info};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     init_logger();
 
+    info!("Starting watchtower");
+
     if let Err(e) = run().await {
         error!("{:?}", e);
         std::process::exit(1);
     }
+
+    info!("Watchtower exiting");
 
     Ok(())
 }
@@ -24,4 +28,4 @@ async fn run() -> Result<()> {
     Ok(())
 }
 
-// TODO: Add default watchtower_config_file config
+//TODO: Add default watchtower_config_file config
