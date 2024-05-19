@@ -1,4 +1,8 @@
 {
   "chain_state": 1714731339,
-  "fuel_message_portal": 1714731385
+  "fuel_message_portal": 1714731385,
+  "portal_upgrade": 1716102263,
+  "portal_unpause": 1716102303,
+  "state_unpause": 1716102313,
+  "fuel_erc20_gateway_v4": 1716102338
 }
