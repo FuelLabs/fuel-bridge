@@ -4,5 +4,6 @@
   "portal_upgrade": 1716102263,
   "portal_unpause": 1716102303,
   "state_unpause": 1716102313,
-  "fuel_erc20_gateway_v4": 1716102338
+  "fuel_erc20_gateway_v4": 1716102338,
+  "state_upgrade": 1716102786
 }

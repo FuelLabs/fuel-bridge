@@ -8,6 +8,11 @@
     },
     {
       "inputs": [],
+      "name": "CannotRecommit",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "UnknownBlock",
       "type": "error"
     },
@@ -210,6 +215,19 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "COMMIT_COOLDOWN",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
         }
       ],
       "stateMutability": "view",
@@ -523,6 +541,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 1,
+  "numDeployments": 2,
   "implementation": "0xba98eDC9AC0B6191180562bF68CE001B1D71C11D"
 }
