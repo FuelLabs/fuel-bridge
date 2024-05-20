@@ -17,14 +17,17 @@ RUN cargo build --release --package fuel-canary-watchtower
 FROM debian:latest
 
 RUN apt-get update && \
-    apt-get install -y libssl-dev pkg-config file strace libc6 libgcc1 && \
+    apt-get install -y libssl-dev gettext-base pkg-config file strace libc6 libgcc1  && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 COPY --from=watchtower_builder /app/target/release/fuel-canary-watchtower /app/fuel-canary-watchtower
 COPY ./docker/fuel-canary-watchtower/watchtower_config.json /app/watchtower_config.json
+COPY ./docker/fuel-canary-watchtower/replace_env.sh /app/replace_env.sh
 
-ENTRYPOINT ["/app/fuel-canary-watchtower"]
-# Set the default command arguments
+RUN chmod +x /app/replace_env.sh
+
+ENTRYPOINT ["/app/replace_env.sh"]
 CMD ["/app/watchtower_config.json"]
+

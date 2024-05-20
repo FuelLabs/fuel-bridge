@@ -1,20 +1,20 @@
 build:
-	docker compose --env-file ./envs/ports.env build
+	docker-compose --profile bridge
 
 up:
-	docker compose --env-file ./envs/ports.env up -d --build
+	docker-compose --profile bridge up -d --build
 
 stop:
-	docker compose stop
+	docker-compose stop
 
 clean:
-	docker compose down --rmi local -v --remove-orphans
+	docker-compose down --rmi local -v --remove-orphans
 
 logs:
-	docker compose logs -f
+	docker-compose logs -f
 
-build_watchtower:
-	docker-compose -f docker-compose.watchtower.yml build
+build-with-wt:
+	docker-compose --profile bridge --profile watchtower build
 
-up_watchtower:
-	docker-compose -f docker-compose.watchtower.yml up -d --build
+up-with-wt:
+	docker-compose --profile bridge --profile watchtower up -d --build
