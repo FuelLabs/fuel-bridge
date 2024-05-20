@@ -9,6 +9,7 @@
     "test:erc20": "pnpm mocha -b -r ts-node/register 'tests/bridge_erc20.ts'",
     "test:erc721": "pnpm mocha -b -r ts-node/register 'tests/bridge_erc721.ts'",
     "test:transfer": "pnpm mocha -b -r ts-node/register 'tests/transfer_eth.ts'",
+    "depositETH": "pnpm ts-node scripts/depositETH.ts",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
     "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
     "transfer": "pnpm ts-node scripts/transfer.ts"
