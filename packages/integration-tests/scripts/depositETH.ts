@@ -6,10 +6,7 @@ import {
   FUEL_MESSAGE_TIMEOUT_MS,
 } from '@fuel-bridge/test-utils';
 import { parseEther } from 'ethers';
-import {
-  Address,
-  BN,
-} from 'fuels';
+import { Address, BN } from 'fuels';
 
 const ETH_AMOUNT = '0.1';
 
@@ -62,7 +59,7 @@ const ETH_AMOUNT = '0.1';
   );
   if (depositMessage == null) {
     throw new Error(
-        `message took longer than ${timeoutCheck}ms to arrive on Fuel`
+      `message took longer than ${timeoutCheck}ms to arrive on Fuel`
     );
   }
   console.log('');
