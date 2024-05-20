@@ -17,7 +17,11 @@ services:
       - ${DEPLOYMENTS_PORT:-8080}:8081
     stop_grace_period: 1s
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://l1_chain:${L1_CHAIN_HTTP_PORT:-9545} || exit 1" ]
+      test:
+        [
+          'CMD-SHELL',
+          'curl -f http://l1_chain:${L1_CHAIN_HTTP_PORT:-9545} || exit 1',
+        ]
       interval: 3s
       timeout: 5s
       retries: 5
@@ -43,7 +47,7 @@ services:
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
     stop_grace_period: 1s
     healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://fuel_core:4001/v1/health || exit 1" ]
+      test: ['CMD-SHELL', 'curl -f http://fuel_core:4001/v1/health || exit 1']
       interval: 3s
       timeout: 5s
       retries: 5
@@ -83,8 +87,8 @@ services:
     stop_grace_period: 1s
     depends_on:
       l1_chain:
-          condition: service_healthy
+        condition: service_healthy
       fuel_core:
-          condition: service_healthy
+        condition: service_healthy
     profiles:
       - watchtower
