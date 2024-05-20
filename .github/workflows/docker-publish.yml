@@ -30,7 +30,6 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ghcr.io/fuellabs/fuel-bridge
           dockerfile: docker/l1-chain/Dockerfile
-
 #      - name: Build and push Fuel Canary Watchtower Image
 #        uses: ./.github/actions/docker-publish
 #        id: publish
