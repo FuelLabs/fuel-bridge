@@ -1,5 +1,5 @@
 use anyhow::Result;
-use fuel_canary_watchtower::{Error, init_logger, parse};
+use fuel_canary_watchtower::{init_logger, parse, Error};
 use tracing::{error, info};
 
 #[tokio::main]
@@ -19,11 +19,10 @@ async fn main() -> Result<()> {
 }
 
 async fn run() -> Result<()> {
-
     let config = parse()?;
-    fuel_canary_watchtower::run(&config).await.map_err(|e| {
-        Error::Other(format!("Watchtower run failed: {}", e))
-    })?;
+    fuel_canary_watchtower::run(&config)
+        .await
+        .map_err(|e| Error::Other(format!("Watchtower run failed: {}", e)))?;
 
     Ok(())
 }

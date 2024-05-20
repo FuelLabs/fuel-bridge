@@ -171,17 +171,17 @@ pub fn default_max_price() -> Option<i32> {
 // loads a config from a json file
 pub fn load_config(file_path: &str) -> Result<WatchtowerConfig> {
     let json_string = fs::read_to_string(file_path)?;
-    let mut config: WatchtowerConfig = serde_json::from_str(&json_string)?;
+    let config: WatchtowerConfig = serde_json::from_str(&json_string)?;
 
     retrieve_key_from_env(
-        &mut config.ethereum_wallet_key,
+        &config.ethereum_wallet_key,
         PRIVATE_KEY_ENV_VAR,
         "Specifying the ethereum private key in the config file is not safe. Please use the {} environment variable instead",
         Some("Environment variable not specified. Some alerts and actions have been disabled"),
     );
 
     retrieve_key_from_env(
-        &mut config.pagerduty_api_key,
+        &config.pagerduty_api_key,
         PAGERDUTY_KEY_ENV_VAR,
         "Specifying the pagerduty api key in the config file is not safe. Please use the {} environment variable instead",
         Some("Environment variable not specified. Alerting on PagerDuty has been disabled"),
