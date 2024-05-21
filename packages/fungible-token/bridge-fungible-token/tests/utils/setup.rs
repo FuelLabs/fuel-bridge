@@ -247,7 +247,7 @@ pub(crate) async fn setup_environment(
         .map(|message| {
             Input::resource_predicate(
                 fuels::types::coin_type::CoinType::Message(message),
-                predicate.code().clone().into(),
+                predicate.code().into(),
                 Default::default(),
             )
         })
@@ -374,7 +374,7 @@ pub(crate) async fn setup_environment_with_proxy(
         .map(|message| {
             Input::resource_predicate(
                 fuels::types::coin_type::CoinType::Message(message),
-                predicate.code().clone().into(),
+                predicate.code().into(),
                 Default::default(),
             )
         })
