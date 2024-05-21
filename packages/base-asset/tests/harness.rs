@@ -7,8 +7,8 @@ use std::{fs, str::FromStr};
 
 // Matches the README addresses
 const BASE_ASSET_CONTRACT_ID: &str =
-    "0x7e2becd64cd598da59b4d1064b711661898656c6b1f4918a787156b8965dc83c";
-const BASE_ASSET_ID: &str = "0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07";
+    "0xa20eb159e6460c47f438cb9e9f653a8d5084146ca115c774181c0620608d15a3";
+const BASE_ASSET_ID: &str = "0xa48cdc6b0bc20843b9a755a6fffc6ff9a0965b1aff0d58cc9247dc72b8bbd61f";
 const BASE_ASSET_CONTRACT_BYTECODE_PATH: &str = "out/release/base-asset-contract.bin";
 const BASE_ASSET_CONTRACT_HEX_PATH: &str = "bin/base-asset-contract.hex";
 const BASE_ASSET_CONTRACT_BIN_PATH: &str = "bin/base-asset-contract.bin";
@@ -49,7 +49,7 @@ async fn get_contract_instance() -> (BaseAssetContract<WalletUnlocked>, Contract
 }
 
 #[tokio::test]
-async fn contract_id_matches_expected() {
+async fn asset_id_matches_expected() {
     let (_instance, id) = get_contract_instance().await;
 
     let base_asset_id = get_asset_id(Bytes32::zeroed(), id);
@@ -58,7 +58,7 @@ async fn contract_id_matches_expected() {
 }
 
 #[tokio::test]
-async fn asset_id_matches_expected() {
+async fn contract_id_matches_expected() {
     let (_instance, id) = get_contract_instance().await;
 
     assert_eq!(id, ContractId::from_str(BASE_ASSET_CONTRACT_ID).unwrap());
@@ -71,7 +71,7 @@ async fn expected_hex_matches_bin() {
     let file_hex = base_asset_contract_hex();
 
     // Convert to hex
-    let hex_bytecode = hex::encode(&compiled_bytecode);
+    let hex_bytecode = hex::encode(compiled_bytecode);
 
     // Assert the hex is correct
     assert_eq!(file_hex, hex_bytecode);
