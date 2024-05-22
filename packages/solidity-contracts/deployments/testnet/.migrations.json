@@ -6,5 +6,6 @@
   "state_unpause": 1716102313,
   "fuel_erc20_gateway_v4": 1716102338,
   "state_upgrade": 1716102786,
-  "register_committer_2": 1716192530
+  "register_committer_2": 1716192530,
+  "set_asset_issuer": 1716373143
 }
