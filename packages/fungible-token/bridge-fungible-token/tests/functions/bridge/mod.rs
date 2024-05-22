@@ -53,7 +53,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -198,7 +198,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![topping_message, refundable_message],
@@ -327,7 +327,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -401,7 +401,7 @@ mod success {
         assert_eq!(amount, amount);
 
         // Check that supply has decreased by withdrawal_amount
-        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id(), BRIDGED_TOKEN))
+        let supply = total_supply(&implementation_contractid, &bridge, get_asset_id(bridge.contract_id(), BRIDGED_TOKEN))
             .await
             .unwrap();
         assert_eq!(supply, 0);
@@ -449,7 +449,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, _) = setup_environment(
+        let (implementation_contractid, bridge, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -462,6 +462,7 @@ mod revert {
         bridge
             .methods()
             .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
+            .with_contract_ids(&[implementation_contractid])
             .call()
             .await
             .unwrap();
@@ -494,7 +495,7 @@ mod revert {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -519,6 +520,7 @@ mod revert {
                 Bits256::from_hex_str(wrong_token).unwrap(),
                 Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
             )
+            .with_contract_ids(&[implementation_contractid])
             .call()
             .await
             .unwrap();

@@ -168,7 +168,7 @@ pub(crate) async fn setup_environment(
     deposit_contract: Option<ContractId>,
     sender: Option<&str>,
     configurables: Option<BridgeFungibleTokenContractConfigurables>,
-) -> (BridgeFungibleTokenContract<WalletUnlocked>, UTXOInputs) {
+) -> (Bech32ContractId, BridgeFungibleTokenContract<WalletUnlocked>, UTXOInputs) {
     // Generate coins for wallet
     let asset_configs: Vec<AssetConfig> = coins
         .iter()
@@ -233,7 +233,7 @@ pub(crate) async fn setup_environment(
             .unwrap();
 
 
-    let bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
+    let proxy_bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs = all_coins
@@ -262,6 +262,14 @@ pub(crate) async fn setup_environment(
         proxy_contract_id.into(),
     )];
 
+    contract_inputs.push(Input::contract(
+        UtxoId::new(Bytes32::zeroed(), 0u16),
+        Bytes32::zeroed(),
+        Bytes32::zeroed(),
+        TxPointer::default(),
+        implementation_contract_id.clone().into(),
+    ));
+
     if let Some(id) = deposit_contract {
         contract_inputs.push(Input::contract(
             UtxoId::new(Bytes32::zeroed(), 0u16),
@@ -273,7 +281,8 @@ pub(crate) async fn setup_environment(
     }
 
     (
-        bridge,
+        implementation_contract_id,
+        proxy_bridge,
         UTXOInputs {
             contract: contract_inputs,
             coin: coin_inputs,
@@ -642,7 +651,7 @@ pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> Asset
 }
 
 /// This setup mints tokens so that they are registered as minted assets in the bridge
-pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> {
+pub(crate) async fn setup_test() -> (Bech32ContractId, BridgeFungibleTokenContract<WalletUnlocked>) {
     let mut wallet = create_wallet();
 
     let amount = u64::MAX;
@@ -663,7 +672,7 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     let metadata_message =
         create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", None).await;
 
-    let (contract, utxo_inputs) = setup_environment(
+    let (implementation_contractid, proxy_contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
         vec![message, (0, metadata_message)],
@@ -692,5 +701,5 @@ pub(crate) async fn setup_test() -> BridgeFungibleTokenContract<WalletUnlocked> 
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
     assert!(matches!(tx_status, TxStatus::Success { .. }));
 
-    contract
+    (implementation_contractid, proxy_contract)
 }
