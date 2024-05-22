@@ -177,7 +177,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -257,7 +257,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![first_deposit_message, second_deposit_message],
@@ -270,7 +270,7 @@ mod success {
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
-        assert!(total_supply(&bridge, asset_id).await.is_none());
+        assert!(total_supply(&implementation_contractid, &bridge, asset_id).await.is_none());
 
         ////////////////////
         // First deposit  //
@@ -289,7 +289,7 @@ mod success {
         // Check that wallet now has bridged coins
         assert_eq!(balance, deposit_amount);
 
-        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        let supply = total_supply(&implementation_contractid, &bridge, asset_id).await.unwrap();
         assert_eq!(supply, deposit_amount);
 
         ////////////////////
@@ -307,7 +307,7 @@ mod success {
         let balance = wallet_balance(&wallet, &asset_id).await;
         assert_eq!(balance, deposit_amount * 2);
 
-        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        let supply = total_supply(&implementation_contractid, &bridge, asset_id).await.unwrap();
         assert_eq!(supply, deposit_amount * 2);
 
         // Verify that a L1 token has been registered
@@ -358,7 +358,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![first_deposit_message, second_deposit_message],
@@ -371,7 +371,7 @@ mod success {
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
-        assert!(total_supply(&bridge, asset_id).await.is_none());
+        assert!(total_supply(&implementation_contractid, &bridge, asset_id).await.is_none());
 
         ////////////////////
         // First deposit  //
@@ -390,7 +390,7 @@ mod success {
         // Check that wallet now has bridged coins
         assert_eq!(balance, max_deposit_amount);
 
-        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        let supply = total_supply(&implementation_contractid, &bridge, asset_id).await.unwrap();
         assert_eq!(supply, max_deposit_amount);
 
         ////////////////////
@@ -423,7 +423,7 @@ mod success {
         assert_eq!(utxos.len(), 1);
         assert_eq!(utxos[0].amount, max_deposit_amount);
 
-        let supply = total_supply(&bridge, asset_id).await.unwrap();
+        let supply = total_supply(&implementation_contractid, &bridge, asset_id).await.unwrap();
         assert_eq!(supply, max_deposit_amount);
 
         let refund_registered_events = bridge
@@ -468,7 +468,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -517,7 +517,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -574,7 +574,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -643,7 +643,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![deposit_message, (0, metadata_message)],
@@ -669,6 +669,7 @@ mod success {
         let l1_address: Bits256 = bridge
             .methods()
             .asset_to_l1_address(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -678,6 +679,7 @@ mod success {
         let l2_decimals: u8 = bridge
             .methods()
             .decimals(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -716,6 +718,7 @@ mod success {
         let registered_symbol = bridge
             .methods()
             .symbol(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -756,7 +759,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![deposit_message, (0, metadata_message)],
@@ -782,6 +785,7 @@ mod success {
         let l1_address: Bits256 = bridge
             .methods()
             .asset_to_l1_address(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -791,6 +795,7 @@ mod success {
         let l2_decimals: u8 = bridge
             .methods()
             .decimals(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -828,6 +833,7 @@ mod success {
         let registered_symbol = bridge
             .methods()
             .symbol(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -868,7 +874,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![deposit_message, (0, metadata_message)],
@@ -894,6 +900,7 @@ mod success {
         let l1_address: Bits256 = bridge
             .methods()
             .asset_to_l1_address(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -903,6 +910,7 @@ mod success {
         let l2_decimals: u8 = bridge
             .methods()
             .decimals(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -940,6 +948,7 @@ mod success {
         let registered_symbol = bridge
             .methods()
             .symbol(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
             .call()
             .await
             .unwrap()
@@ -968,7 +977,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -1008,7 +1017,7 @@ mod success {
 
         assert_eq!(utxos.len(), 0);
 
-        let supply = total_supply(&bridge, asset_id).await;
+        let supply = total_supply(&implementation_contractid, &bridge, asset_id).await;
         assert!(supply.is_none());
 
         let refund_registered_events = bridge
@@ -1069,7 +1078,7 @@ mod success {
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message_one, message_two],
@@ -1176,7 +1185,7 @@ mod revert {
         )
         .await;
 
-        let (_test_contract, utxo_inputs) = setup_environment(
+        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
