@@ -6,4 +6,5 @@ members = [
   "packages/fungible-token/bridge-fungible-token/implementation",
   "packages/message-predicates/contract-message-predicate",
   "packages/message-predicates/contract-message-receiver",
+  "packages/base-asset",
 ]
