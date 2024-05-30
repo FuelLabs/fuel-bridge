@@ -26,37 +26,99 @@ Before delving into the details, let's understand a few key concepts that will b
 
 ## Bridge flow
 
-Fuel 's bridge system is built on a message protocol that allows to send (and receive) messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanism involved for each direction is different. It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed.
+Fuel 's bridge system is built on a message protocol that allows to send (and receive) messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanisms involved for each direction are different and almost independent.
 
-In the case of the bridge system, there are two scenarios:
+It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed.
 
-1. The deposit scenario: a L1 smart contract can send a message to another L2 smart contract upon receiving a deposit of tokens. The L2 smart contract will receive, process and validate this message, and mint an equivalent amount of tokens in the L2
-2. The withdrawal scenario: the holder of L2 tokens can burn them, and in doing so, generate a message from the L2 smart contract to the L1 smart contract that held bridged tokens. The L1 smart contract can process the message and release the L1 tokens back to an address, defined in the message generated in the L2 by the user, and presumably controlled by this same user.
+From here on, you will read first the logic involved in the L1 to L2 message passing, and viceversa after.
 
-In the case of the deposit scenario, the message is relayed from the L1 to the L2 by the sequencer set of the Fuel blockchain. The withdrawal messages, on the other hand, are indirectly included in the commits that assert the finality of the Fuel blockchain in the L1, which means that once the history of the Fuel ledger is considered final, immutable and anchored to the L1, any user can execute withdrawal messages in the L1 blockchain.
+### Message passing from L1 to L2 (a.k.a. outgoing messages)
 
-### Block committing
+The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event `MessageSent` to be picked up by Fuel 's sequencers, optionally containing an ETH value that will be depositted in the contract, and a data payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message.
 
-The Fuel blockchain aims to be scalable, and thus is able to generate blocks at a faster rate than other blockchains, without compromising on its security. It does so by inheriting the security of the L1 it is anchored to. The mechanism allowing this is an hybrid optimistic-ZK rollup (WIP). Blocks generated in the Fuel blockchain are grouped in epochs (e.g. an epoch can group together 10800 blocks), and epochs are identified and summarized in the last block of said epoch. This block can be committed to the L1 blockchain with a transaction to the `FuelChainState` contract, and will be accepted optimistically (i.e. the commit is considered valid unless proven otherwise - validation of the blocks are not considered in the scope of this document). The commit will be registered with the timestamp of the L1 blockchain. Then, once a certain time period has passed, the commit (along with the block) will be considered final.
+The `MessageSent` event emitted on the Ethereum chain and its counterpart UTXO `MessageCoin` on the Fuel chain hold, among other fields, a `value` (amount of ETH that is deposited), a payload `data` and an ID `recipient` that can spend this message in the L2.
+ 
+The following figure contains a view of all the components involved in outgoing messages:
 
-![Block Committing](block_committing.png)
+```mermaid
+erDiagram
+    "FuelMessagePortal.sol" {
+        function sendMessage 
+        event MessageSent
+    }
+    "FuelMessagePortal.sol" ||--|| "ETH Blockchain" : "host"
+    "FuelChainState.sol" ||--|| "ETH Blockchain" : "host"
+    "(user) ETH depositor" }|--|| "FuelMessagePortal.sol" : "sendMessage(to: fuel wallet)"
+    "FuelERC20Gateway.sol" ||--|| "FuelMessagePortal.sol" : "sendMessage(to: bridge predicate)"
+    "Fuel Sequencers" }|--|| "FuelMessagePortal.sol" : "Listens MessageSent"
+    "Fuel Sequencers" }|--|| "Fuel Blockchain" : "Include MessageSent"
+    "(user) ERC20 depositor" }|--|| "FuelERC20Gateway.sol" : "deposit"
+    "erc20bridge.sw" ||--|| "Fuel Blockchain" : "mints assets"
+    "bridge predicate" ||--|| "Fuel Blockchain" : "host"
+    "erc20bridge.sw" {
+        function process_message
+    }
+    "(user) ERC20 depositor" }|--|| "bridge predicate" : "run"
+    "bridge predicate" ||--|| "erc20bridge.sw" : "relay MessageSent data"
+```
 
-### Message passing from L1 to L2
+#### L1 ETH Deposit
 
-The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event to be picked up by Fuel 's sequencers, containing the message payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message and payload. This UTXO can be "spent" (i.e. delivered) by any party on the L2 blockchain.
+Since `MessageSent` events and their spawned `MessageCoin` UTXOs can carry a value, an ETH deposit consists merely of the action of calling `sendMessage` on the L1 with some attached ETH. The recipient in the L2 will see its balance updated by means of the inclusion of the `MessageCoin` that reflects this value in the L2.
 
-#### L1 Deposit
+#### L1 ERC20 Deposit
 
-A deposit operation is an example of message passing from L1 entities to L2 entities. The user will send a transaction to deposit an asset in a L1 bridge contract, which will in turn emit a message through the `FuelMessagePortal` to be picked up by the Fuel blockchain 's sequencer. Sequencers will include this deposit message as part of an UTXO that can be spent by any entity, but forcing the condition of being delivered to the L2 bridge contract. Once the UTXO is "spent" (delivered), this last contract will have the capability of processing these messages, validating that their sender is the L1 bridge contract, and then proceeding to mint an equivalent asset and amount in the Fuel blockchain to the one originally depositted in the L1. Then, the minted assets become available to the user in the L2.
+A deposit operation is an use case of the message passing system from L1 entities to L2 entities. The user will send a transaction to deposit an asset in a L1 bridge contract `FuelERC20Gateway`, which will in turn call `sendMessage` and emit a `MessageSent` event through the `FuelMessagePortal` to be picked up by the Fuel blockchain 's sequencer. The recipient of this message shall be the `bridge predicate` (a L2 entity that posseses an ID), whose role will be explained further ahead. The payload of the message will just reflect the fact that the `FuelERC20Gateway` has received a deposit of a L1 token, with a given amount and a desired recipient. Sequencers will include this message as part of an UTXO that can be spent by the `bridge predicate`. The `predicate` holds these UTXOs until any other entity (which can be the users themselves, or another "relayer" entity) executes the predicate 's logic, which has the responsibility for running validation logic before sending the data to the bridge contract on the L2, `erc20bridge.sw`, by calling `process_message`. Once the UTXO is "spent" (delivered), this last contract will have the capability of processing the payload inside the message, validating that their sender is the L1 bridge contract `FuelERC20Gateway`, and then proceeding to mint an equivalent asset and amount in the Fuel blockchain to the one originally depositted in the L1. Then, the minted assets become available to the user in the L2.
 
-TODO update this diagram
-![L1 Deposit](l1_deposit.png)
+```mermaid
+sequenceDiagram
+    participant user as User
+    box purple ETH
+    participant eth as L1 Chain
+    participant gateway as FuelERC20Gateway.sol
+    participant portal as FuelMessagePortal.sol
+    end
+
+    box darkgreen FUEL
+    participant sequencers as Fuel Sequencers
+    participant fuel as L2 Chain
+    participant predicate as Bridge predicate
+    participant bridge as Bridge contract
+    end
+    
+
+    user ->>+ eth: send deposit tx
+    eth ->> gateway: deposit()
+    gateway ->> portal: sendMessage
+    note over gateway,portal: {to: predicate, payload: deposit data}
+    portal --> eth: emit MessageSent event
+    eth ->>- user: Confirm tx
+    loop MessageSent subscription
+    sequencers ->> portal: get MessageSent events
+    portal ->> sequencers: MessageSent events
+    sequencers ->> fuel: Include events
+    fuel ->> predicate: Assign MessageCoin UTXO
+    end
+    user ->>+ fuel: (cont.) send deposit tx
+    note over sequencers,fuel: The transaction sits in the pool<br/>until included and executed
+    
+    alt Validation happy path
+    fuel ->> predicate: Run predicate
+    predicate ->> bridge: call process_message
+    bridge ->> fuel: mint asset
+    note over bridge,fuel: The asset is sent as an Coin UTXO to the user
+    else Validation failed
+    bridge ->> fuel: trigger refund
+    end
+    fuel ->>- user: tx result
+```
 
 You can follow the actual implementation of the message processing flow via:
 
-- [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `deposit` function
-- [FuelMessagePortal.sol](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `sendMessage` function
-- [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `process_message` function
+- [L1 FuelERC20Gateway](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway) 's `deposit` function (check last version of the contract)
+- [FuelMessagePortal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal) 's `sendMessage` function (check last version)
+- [L2 Bridge contract](../packages/fungible-token/bridge-fungible-token/src/main.sw) 's `process_message` function
+- [L2 predicate](../packages/message-predicates/contract-message-predicate/predicate_asm.rs) predicate that holds the UTXOs meant to be relayed to the bridge contract. Runs some pre-validation logic before relaying the messages to the bridge contract.
 
 ### Message passing from L2 to L1
 
@@ -72,6 +134,13 @@ Once the committed epoch has finalized, an user in the L1 blockchain can prove t
 - Once proven that the block exists, by the same mechanism, it is possible to prove that the message exists as part of the block.
 
 An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
+
+#### Block committing
+
+The Fuel blockchain aims to be scalable, and thus is able to generate blocks at a faster rate than other blockchains, without compromising on its security. It does so by inheriting the security of the L1 it is anchored to. The mechanism allowing this is an hybrid optimistic-ZK rollup (WIP). Blocks generated in the Fuel blockchain are grouped in epochs (e.g. an epoch can group together 10800 blocks), and epochs are identified and summarized in the last block of said epoch. This block can be committed to the L1 blockchain with a transaction to the `FuelChainState` contract, and will be accepted optimistically (i.e. the commit is considered valid unless proven otherwise - validation of the blocks are not considered in the scope of this document). The commit will be registered with the timestamp of the L1 blockchain. Then, once a certain time period has passed, the commit (along with the block) will be considered final.
+
+![Block Committing](block_committing.png)
+
 
 #### L2 (Fuel) Withdrawal
 
