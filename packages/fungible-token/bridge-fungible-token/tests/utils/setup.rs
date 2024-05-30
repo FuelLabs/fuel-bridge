@@ -8,7 +8,7 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_crypto::SecretKey,
+    fuel_crypto::{SecretKey, Hasher},
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
     fuel_types::{Nonce, Word},
 };
@@ -18,7 +18,7 @@ use fuels::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
+    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, tx::StorageSlot, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
@@ -223,8 +223,17 @@ pub(crate) async fn setup_environment(
             .unwrap();
 
     // let proxy_configurables
-    let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
-    let proxy_config = LoadConfiguration::default().with_configurables(proxy_configurables);
+    // let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
+
+    let target_key_hash = Hasher::hash("storage_SRC14_0");
+    let slot_override_target = StorageSlot::new(target_key_hash, (*implementation_contract_id.clone().hash).into());
+    let owner_key_hash = Hasher::hash("storage_SRC14_1");
+    let slot_override_owner = StorageSlot::new(owner_key_hash, (*wallet.address().hash).into());
+
+    let storage_configuration = StorageConfiguration::default()
+        .add_slot_overrides([slot_override_target, slot_override_owner]);
+
+    let proxy_config = LoadConfiguration::default().with_storage_configuration(storage_configuration);
     let proxy_contract_id = 
         Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
             .unwrap()
@@ -358,8 +367,15 @@ pub(crate) async fn setup_environment_with_proxy(
             .unwrap();
 
     // let proxy_configurables
-    let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
-    let proxy_config = LoadConfiguration::default().with_configurables(proxy_configurables);
+    // let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
+    let slot_override_target = StorageSlot::new(Bytes32::zeroed(), (*implementation_contract_id.clone().hash).into());
+    let key: [u8; 32] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1];
+    let slot_override_owner = StorageSlot::new(key.into(), (*wallet.address().hash).into());
+
+    let storage_configuration = StorageConfiguration::default()
+        .add_slot_overrides([slot_override_target, slot_override_owner]);
+    
+    let proxy_config = LoadConfiguration::default().with_storage_configuration(storage_configuration);
     let proxy_contract_id = 
         Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
             .unwrap()

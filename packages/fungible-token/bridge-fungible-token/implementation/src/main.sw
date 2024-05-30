@@ -61,7 +61,7 @@ use utils::{
     encode_data,
     encode_register_calldata,
 };
-use src_20::SRC20;
+use standards::src20::SRC20;
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
 const ZERO_U256 = 0x00u256;
