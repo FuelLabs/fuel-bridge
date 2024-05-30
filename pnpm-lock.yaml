@@ -114,9 +114,6 @@ importers:
 
   packages/solidity-contracts:
     devDependencies:
-      '@fuel-contracts/merkle-sol':
-        specifier: ^0.1.4
-        version: 0.1.4
       '@fuel-ts/merkle':
         specifier: ^0.21.2
         version: 0.21.2
@@ -813,9 +810,6 @@ packages:
   '@fastify/busboy@2.1.1':
     resolution: {integrity: sha512-vBZP4NlzfOlerQTnba4aqZoMhE/a9HY7HRqoOPaETQcSQuWEIyZMHGfVu6w9wGtGK5fED5qRs2DteVCjOH60sA==}
     engines: {node: '>=14'}
-
-  '@fuel-contracts/merkle-sol@0.1.4':
-    resolution: {integrity: sha512-r2jLlVPb/n3vALQ1EissdiW96kPcAGg4Yu/hsGHe+ZEgu8kEYSLWqPAV0shU72q//Ofxfh7xznmUMf7lkzNLRQ==}
 
   '@fuel-ts/abi-coder@0.85.0':
     resolution: {integrity: sha512-BQsjtD2aGDQir4twaCqqPH7oIjg0/mX59FCf/hT5rXRhwBXTPi60vSXniNyQUGuMRYcmRMvr+6GAEmD6w9kFXw==}
@@ -3002,15 +2996,6 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  ganache-cli@6.12.2:
-    resolution: {integrity: sha512-bnmwnJDBDsOWBUP8E/BExWf85TsdDEFelQSzihSJm9VChVO1SHp94YXLP5BlA4j/OTxp0wR4R1Tje9OHOuAJVw==}
-    deprecated: ganache-cli is now ganache; visit https://trfl.io/g7 for details
-    hasBin: true
-    bundledDependencies:
-      - source-map-support
-      - yargs
-      - ethereumjs-util
-
   ganache@7.4.3:
     resolution: {integrity: sha512-RpEDUiCkqbouyE7+NMXG26ynZ+7sGiODU84Kz+FVoXUnQ4qQM4M8wif3Y4qUCt+D/eM1RVeGq0my62FPD6Y1KA==}
     hasBin: true
@@ -4562,6 +4547,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   ripemd160@2.0.2:
@@ -6274,11 +6260,6 @@ snapshots:
       '@ethersproject/strings': 5.7.0
 
   '@fastify/busboy@2.1.1': {}
-
-  '@fuel-contracts/merkle-sol@0.1.4':
-    dependencies:
-      ganache-cli: 6.12.2
-      mocha: 10.4.0
 
   '@fuel-ts/abi-coder@0.85.0(bufferutil@4.0.5)(utf-8-validate@5.0.7)':
     dependencies:
@@ -9245,8 +9226,6 @@ snapshots:
   functional-red-black-tree@1.0.1: {}
 
   functions-have-names@1.2.3: {}
-
-  ganache-cli@6.12.2: {}
 
   ganache@7.4.3:
     optionalDependencies:
