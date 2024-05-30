@@ -6,5 +6,5 @@ name = "proxy"
 
 [dependencies]
 interface = { path = "../interface" }
-src_20 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.2.2" }
+standards = { git = "https://github.com/FuelLabs/sway-standards", branch = "master" }
 contract_message_receiver = { path = "../../../message-predicates/contract-message-receiver" }
