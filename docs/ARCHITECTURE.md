@@ -41,14 +41,16 @@ The `MessageSent` event emitted on the Ethereum chain and its counterpart UTXO `
 The following figure contains a view of all the components involved in outgoing messages:
 
 ```mermaid
-erDiagram
+erDiagram 
     "FuelMessagePortal.sol" {
         function sendMessage 
         event MessageSent
     }
     "FuelMessagePortal.sol" ||--|| "ETH Blockchain" : "host"
-    "FuelChainState.sol" ||--|| "ETH Blockchain" : "host"
     "(user) ETH depositor" }|--|| "FuelMessagePortal.sol" : "sendMessage(to: fuel wallet)"
+    "FuelERC20Gateway.sol" {
+        function deposit
+    }
     "FuelERC20Gateway.sol" ||--|| "FuelMessagePortal.sol" : "sendMessage(to: bridge predicate)"
     "Fuel Sequencers" }|--|| "FuelMessagePortal.sol" : "Listens MessageSent"
     "Fuel Sequencers" }|--|| "Fuel Blockchain" : "Include MessageSent"
@@ -65,6 +67,33 @@ erDiagram
 #### L1 ETH Deposit
 
 Since `MessageSent` events and their spawned `MessageCoin` UTXOs can carry a value, an ETH deposit consists merely of the action of calling `sendMessage` on the L1 with some attached ETH. The recipient in the L2 will see its balance updated by means of the inclusion of the `MessageCoin` that reflects this value in the L2.
+
+```mermaid
+sequenceDiagram
+    participant user as User
+    box purple ETH
+    participant eth as L1 Chain
+    participant portal as FuelMessagePortal.sol
+    end
+
+    box darkgreen FUEL
+    participant sequencers as Fuel Sequencers
+    participant fuel as L2 Chain
+    end
+    
+
+    user ->>+ eth: send tx with ETH
+    eth ->> portal: sendMessage()
+    note over eth,portal: {to: fuel address}
+    portal --> eth: emit MessageSent event
+    eth ->>- user: Confirm tx
+    loop MessageSent subscription
+    sequencers ->> portal: get MessageSent events
+    portal ->> sequencers: MessageSent events
+    sequencers ->> fuel: Include events
+    end
+    note over sequencers,fuel: The deposit is reflected as an UTXO<br/>owned by the recipient of the<br> MessageSent event in ETH
+```
 
 #### L1 ERC20 Deposit
 
@@ -120,13 +149,13 @@ You can follow the actual implementation of the message processing flow via:
 - [L2 Bridge contract](../packages/fungible-token/bridge-fungible-token/src/main.sw) 's `process_message` function
 - [L2 predicate](../packages/message-predicates/contract-message-predicate/predicate_asm.rs) predicate that holds the UTXOs meant to be relayed to the bridge contract. Runs some pre-validation logic before relaying the messages to the bridge contract.
 
-### Message passing from L2 to L1
+### Message passing from L2 to L1 (a.k.a. incoming messages)
 
 The mechanism that implements messaging from L2 to L1 can be more convoluted; bear with us.
 
-Any user on the L2 can trigger transactions that generate a message. This message is included as part of the Fuel block, and its inclusion can be proven by verifying a `Merkle root` in the block header that commits to a `Merkle tree` containing the message. The block hash is derived, among other fields, from this root.
+Any user (or contract) on the L2 can trigger transactions that generate [receipts](https://github.com/FuelLabs/fuel-specs/blob/master/src/abi/receipts.md). Among these receipts, it is possible to include the `MessageOut` receipt. Each Fuel block header contains a merkle root built from the `MessageOut` receipts, making it trivial to build a merkle proof for the inclusion of specific `MessageOut` payloads in a Fuel block.
 
-Fuel blocks are packed and committed together by the mechanism described two sections above, `block comitting`. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
+Fuel blocks are packed and committed together by the mechanism described in the section `Block committing` in epochs. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
 
 Once the committed epoch has finalized, an user in the L1 blockchain can prove that the original message was included in the finalized epoch:
 
@@ -135,11 +164,71 @@ Once the committed epoch has finalized, an user in the L1 blockchain can prove t
 
 An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
 
+Find below a figure describing the general relationships between all the systems involved in this process.
+
+```mermaid
+erDiagram 
+    "FuelMessagePortal.sol" {
+        function relayMessage
+    }
+    "FuelChainState.sol" {
+        function commit
+        function finalized
+    }
+    "FuelMessagePortal.sol" ||--|| "ETH Blockchain" : "host"
+    "FuelMessagePortal.sol" ||--|| "FuelChainState.sol" : "checks finalized()"
+    "Block Committer" ||--|| "FuelChainState.sol" : "commit() blocks"
+    "Block Committer" ||--|| "Fuel Blockchain" : "Reads blocks"
+    "FuelChainState.sol" ||--|| "ETH Blockchain" : "host"
+    "(user) withdrawer" }|--|| "FuelMessagePortal.sol" : "relayMessage(message,block data)"
+    "(user) withdrawer" }|--|| "Fuel Blockchain" : "burn eth"
+    "(user) withdrawer" }|--|| "erc20bridge.sw" : "burn assets"
+    "Fuel Sequencers" }|--|| "Fuel Blockchain" : "Build blocks with txs"
+    "erc20bridge.sw" ||--|| "Fuel Blockchain" : "host"
+    "erc20bridge.sw" {
+        function withdraw
+        function claim_refund
+    }
+```
+
 #### Block committing
 
-The Fuel blockchain aims to be scalable, and thus is able to generate blocks at a faster rate than other blockchains, without compromising on its security. It does so by inheriting the security of the L1 it is anchored to. The mechanism allowing this is an hybrid optimistic-ZK rollup (WIP). Blocks generated in the Fuel blockchain are grouped in epochs (e.g. an epoch can group together 10800 blocks), and epochs are identified and summarized in the last block of said epoch. This block can be committed to the L1 blockchain with a transaction to the `FuelChainState` contract, and will be accepted optimistically (i.e. the commit is considered valid unless proven otherwise - validation of the blocks are not considered in the scope of this document). The commit will be registered with the timestamp of the L1 blockchain. Then, once a certain time period has passed, the commit (along with the block) will be considered final.
+The Fuel blockchain aims to be scalable, and thus is able to generate blocks at a faster rate than other blockchains, without compromising on its security. It does so by inheriting the security of the L1 it is anchored to. The mechanism allowing this is an hybrid optimistic-ZK rollup approach. Blocks generated in the Fuel blockchain are grouped in epochs (e.g. an epoch can group together 10800 blocks), and epochs are identified and summarized in the last block of said epoch. This block can be committed to the L1 blockchain with a transaction to the `FuelChainState` contract, and will be accepted optimistically (i.e. the commit is considered valid unless proven otherwise - validation of the blocks, as well as decentralization of the entities that are able to commit blocks, are not considered in the scope of this document). The commit will be registered with the timestamp of the L1 blockchain. Then, once a certain time period has passed, the commit (along with the block) will be considered final. This finalization enables entities in the L1 chain to execute and relay messages originating from the L2 to their L1 recipients.
 
-![Block Committing](block_committing.png)
+```mermaid
+sequenceDiagram
+    participant user as User
+    box darkgreen FUEL
+        participant fuel as L2 Chain
+        participant sequencers as Fuel Sequencers
+    end
+
+    participant committer as Block committer
+
+    box purple ETH
+        participant eth as L1 Chain
+        participant state as FuelChainState.sol
+        participant observer
+    end
+
+    loop Block creation
+        user ->> fuel: send txs with<br/>MessageOut receipts
+        sequencers ->> fuel: build block with user txs
+    end
+
+    loop Block collection
+        committer ->> fuel: get new blocks
+        fuel ->> committer: send new blocks
+        alt if new epoch
+            committer ->> eth: send tx
+            eth ->> state: commit(last_block_header_root)
+            eth ->> committer: tx confirmation
+        end
+    end
+    observer ->> state: finalized(block_header_root)
+    note over state,observer: Once enough time passes, the root of the<br>block header that was committed<br>is considered valid. This marks the<br>finality of the Fuel Chain
+    state ->> observer: [false | true]
+```
 
 
 #### L2 (Fuel) Withdrawal
