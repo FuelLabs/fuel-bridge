@@ -64,7 +64,7 @@ erDiagram
     "bridge predicate" ||--|| "erc20bridge.sw" : "relay MessageSent data"
 ```
 
-#### L1 ETH Deposit
+#### L1 (Ethereum) ETH Deposit
 
 Since `MessageSent` events and their spawned `MessageCoin` UTXOs can carry a value, an ETH deposit consists merely of the action of calling `sendMessage` on the L1 with some attached ETH. The recipient in the L2 will see its balance updated by means of the inclusion of the `MessageCoin` that reflects this value in the L2.
 
@@ -95,7 +95,7 @@ sequenceDiagram
     note over sequencers,fuel: The deposit is reflected as an UTXO<br/>owned by the recipient of the<br> MessageSent event in ETH
 ```
 
-#### L1 ERC20 Deposit
+#### L1 (Ethereum) ERC20 Deposit
 
 A deposit operation is an use case of the message passing system from L1 entities to L2 entities. The user will send a transaction to deposit an asset in a L1 bridge contract `FuelERC20Gateway`, which will in turn call `sendMessage` and emit a `MessageSent` event through the `FuelMessagePortal` to be picked up by the Fuel blockchain 's sequencer. The recipient of this message shall be the `bridge predicate` (a L2 entity that posseses an ID), whose role will be explained further ahead. The payload of the message will just reflect the fact that the `FuelERC20Gateway` has received a deposit of a L1 token, with a given amount and a desired recipient. Sequencers will include this message as part of an UTXO that can be spent by the `bridge predicate`. The `predicate` holds these UTXOs until any other entity (which can be the users themselves, or another "relayer" entity) executes the predicate 's logic, which has the responsibility for running validation logic before sending the data to the bridge contract on the L2, `erc20bridge.sw`, by calling `process_message`. Once the UTXO is "spent" (delivered), this last contract will have the capability of processing the payload inside the message, validating that their sender is the L1 bridge contract `FuelERC20Gateway`, and then proceeding to mint an equivalent asset and amount in the Fuel blockchain to the one originally depositted in the L1. Then, the minted assets become available to the user in the L2.
 
@@ -153,7 +153,7 @@ You can follow the actual implementation of the message processing flow via:
 
 The mechanism that implements messaging from L2 to L1 can be more convoluted; bear with us.
 
-Any user (or contract) on the L2 can trigger transactions that generate [receipts](https://github.com/FuelLabs/fuel-specs/blob/master/src/abi/receipts.md). Among these receipts, it is possible to include the `MessageOut` receipt. Each Fuel block header contains a merkle root built from the `MessageOut` receipts, making it trivial to build a merkle proof for the inclusion of specific `MessageOut` payloads in a Fuel block.
+Any user (or contract) on the L2 can trigger transactions that generate [receipts](https://github.com/FuelLabs/fuel-specs/blob/master/src/abi/receipts.md). Among these receipts, it is possible to include the `MessageOut` receipt, carrying among other things, a `sender` ID from the Fuel chain, a `recipient` address of the L1 chain, an `amount` of the base currency used in the L1, and a `data` payload. Each Fuel block header contains a merkle root built from the `MessageOut` receipts, making it trivial to build a merkle proof for the inclusion of specific `MessageOut` payloads in a Fuel block.
 
 Fuel blocks are packed and committed together by the mechanism described in the section `Block committing` in epochs. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
 
@@ -230,12 +230,52 @@ sequenceDiagram
     state ->> observer: [false | true]
 ```
 
+#### L2 (Fuel) ETH Withdrawal
+
+An ETH withdrawal can be accomplished just by sending a transaction from a Fuel entity that generates a `MessageOut` receipt, with the desired Ethereum address as recipient, and the withdrawn value coded in the `amount`. After the transaction is picked up by the L2 network and included in one of its blocks, eventually, a `block committer` shall update the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) by committing the last epoch of the Fuel blockchain. Once enough time has passed, the epoch will be considered valid and the user will be able to call [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` with the appropiate Merkle proofs that witness the activity of the L2 chain. This way, the user can prove the existence of a `MessageOut` receipt in with these proofs, and the ETH that was originally locked in the portal contract can be finally released to the `recipient` of the unpacked `MessageOut` specified in the call.
+
+A simplified sequencer diagram shows the process below:
+
+```mermaid
+sequenceDiagram
+    participant user as User
+    box darkgreen FUEL
+        participant fuel as L2 Chain
+    end
+
+    participant committer as Block committer
+
+    box purple ETH
+        participant state as FuelChainState.sol
+        participant portal as FuelMessagePortal.sol
+    end
+
+    user ->>+ fuel: send txs with<br/>MessageOut receipt<br>{recipient(evm addr of the user), amount(eth)}
+    fuel ->> user: confirm tx
+
+    loop Block collection
+        committer ->> fuel: get epoch
+        fuel ->> committer: send epoch
+        committer ->> state: commit
+    end
+    fuel -->- user: Fuel block was committed<br>in FuelChainState
+    note over state: Finalization time passes
+    user ->> fuel: get proofs for tx, block, receipt, etc
+    fuel ->> user: send proofs
+    user ->>+ portal: call relayMessage() with proofs
+    portal ->> state: get involved commits
+    state ->> portal: send involved commits
+    portal ->> portal: validate proofs
+    portal ->>- user: release ETH
+
+```
+
 
 #### L2 (Fuel) Withdrawal
 
 A bridge withdrawal is an example implementation of message passing from L2 entities to L1 entities.
 
-The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw), which will burn the tokens and generate a message to be included in a Fuel block, with recipient to the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol).
+The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/main.sw), which will burn the tokens and generate a message to be included in a Fuel block, with recipient to the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol).
 
 Once the transaction has been included in the Fuel blockchain, the user will need to await two events:
 
