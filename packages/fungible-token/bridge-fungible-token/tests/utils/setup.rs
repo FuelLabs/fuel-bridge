@@ -236,7 +236,7 @@ pub(crate) async fn setup_environment(
         .map(|message| {
             Input::resource_predicate(
                 fuels::types::coin_type::CoinType::Message(message),
-                predicate.code().clone(),
+                predicate.code().into(),
                 Default::default(),
             )
         })
