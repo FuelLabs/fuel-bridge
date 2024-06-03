@@ -97,7 +97,7 @@ sequenceDiagram
 
 #### L1 (Ethereum) ERC20 Deposit
 
-A deposit operation is an use case of the message passing system from L1 entities to L2 entities. The user will send a transaction to deposit an asset in a L1 bridge contract `FuelERC20Gateway`, which will in turn call `sendMessage` and emit a `MessageSent` event through the `FuelMessagePortal` to be picked up by the Fuel blockchain 's sequencer. The recipient of this message shall be the `bridge predicate` (a L2 entity that posseses an ID), whose role will be explained further ahead. The payload of the message will just reflect the fact that the `FuelERC20Gateway` has received a deposit of a L1 token, with a given amount and a desired recipient. Sequencers will include this message as part of an UTXO that can be spent by the `bridge predicate`. The `predicate` holds these UTXOs until any other entity (which can be the users themselves, or another "relayer" entity) executes the predicate 's logic, which has the responsibility for running validation logic before sending the data to the bridge contract on the L2, `erc20bridge.sw`, by calling `process_message`. Once the UTXO is "spent" (delivered), this last contract will have the capability of processing the payload inside the message, validating that their sender is the L1 bridge contract `FuelERC20Gateway`, and then proceeding to mint an equivalent asset and amount in the Fuel blockchain to the one originally depositted in the L1. Then, the minted assets become available to the user in the L2.
+A deposit operation is an use case of the message passing system from L1 entities to L2 entities. The user will send a transaction to deposit an asset in a L1 bridge contract `FuelERC20Gateway`, which will in turn call `sendMessage` and emit a `MessageSent` event through the `FuelMessagePortal` to be picked up by the Fuel blockchain 's sequencer. The recipient of this message shall be the `bridge predicate` (a L2 entity that posseses an ID), whose role will be explained further ahead. The payload of the message will just reflect the fact that the `FuelERC20Gateway` has received a deposit of a L1 token, with a given amount and a desired recipient. Sequencers will include this message as part of an UTXO that can be spent by the `bridge predicate`. The `predicate` holds these UTXOs until any other entity (which can be the users themselves, or another "relayer" entity) executes the predicate 's logic, which has the responsibility for running validation logic before sending the data to the bridge contract on the L2, `erc20bridge.sw`, by calling `process_message`. Once the UTXO is "spent" (delivered), this last contract will have the capability of processing the payload inside the message, validating that their sender is the L1 bridge contract `FuelERC20Gateway`, and then proceeding to mint an equivalent asset and amount in the Fuel blockchain to the one originally deposited in the L1. Then, the minted assets become available to the user in the L2.
 
 ```mermaid
 sequenceDiagram
@@ -162,7 +162,7 @@ Once the committed epoch has finalized, an user in the L1 blockchain can prove t
 - First, it is needed to prove that a certain block (identified by its block hash) exists in the committed epoch. This is done with a `Merkle proof`.
 - Once proven that the block exists, by the same mechanism, it is possible to prove that the message exists as part of the block.
 
-An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
+An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
 
 Find below a figure describing the general relationships between all the systems involved in this process.
 
@@ -271,30 +271,70 @@ sequenceDiagram
 ```
 
 
-#### L2 (Fuel) Withdrawal
+#### L2 (Fuel) ERC20 Withdrawal
 
-A bridge withdrawal is an example implementation of message passing from L2 entities to L1 entities.
+An ERC20 withdrawal is an example implementation of message passing from L2 entities to L1 entities.
 
-The user will start the process by signaling a withdrawal transaction to the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/main.sw), which will burn the tokens and generate a message to be included in a Fuel block, with recipient to the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol). This message will be relayed later on by means of the block committer and the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol).
+The user will start the process by sending a transaction towards the [L2 Bridge Contract](../packages/fungible-token/bridge-fungible-token/src/main.sw) 's `withdraw` function, along with the tokens that need to be withdrawn. This function will burn the tokens attached to the transaction and generate a `MessageOut` receipt directed to the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol) (the recipient of the `MessageOut` will encode the EVM address of the gateway). The `data` payload of this receipt will be the ABI-encoded call to the L1 bridge contract 's `finalizeWithdrawal`. Eventually, the block containing this receipt will be committed through the block committer, becoming available to relay through the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol).
 
-Once the transaction has been included in the Fuel blockchain, the user will need to await two events:
+Once the transaction has been included in the Fuel blockchain, the user will need to await two events (just as with the ETH withdrawal):
 
-- First, the Fuel blockchain will need to close the epoch. The epoch will be committed to the L1 blockchain in the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol). It will be possible to prove the inclusion of all the blocks in the epoch with the `Merkle root` of the `Fuel root block` (commit).
-- Then, once the epoch has been committed, it is needed to wait for its finalization.
+- First, the Fuel blockchain will need to close the epoch. The epoch will be committed to the L1 blockchain in the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) when a block committer uploads the block header 's root through the `commit` function.
+- Then, once the epoch has been committed, it is needed to wait for its finalization `TIME_TO_FINALIZE`.
 
-After finality has been reached for the epoch that includes the block where the withdrawal transaction was signaled, the user can request the proofs of inclusion of both the message in the Fuel block, and the Fuel block in the Fuel epoch. The user will send a transaction call to the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function that will check the attached proofs and the finalization status of the epoch that the message belongs to, then proceed to unpack the payload of said message, that should contain an execution instruction to call `finalizeWithdrawal` in the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol), releasing the L1 locked tokens.
+After finality has been reached for the epoch that includes the block where the withdrawal transaction was signaled, the user can craft the proofs of inclusion of both the message in the Fuel block, and the Fuel block in the Fuel epoch. The user will send a transaction call to the [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage` function that will check the attached proofs and the finalization status of the epoch that the message belongs to, then proceed to unpack the payload of said message, that should contain an execution instruction to call `finalizeWithdrawal` in the [L1 Bridge Contract](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol). The gateway contract will validate the call, finally releasing the tokens to the recipient.
 
-![L2 Withdrawal](l2_withdrawal.png)
+```mermaid
+sequenceDiagram
+    participant user as User
+    box darkgreen FUEL
+        participant fuel as L2 Chain
+        participant bridge as L2 Bridge Contract
+    end
+
+    participant committer as Block committer
+
+    box purple ETH
+        participant state as FuelChainState.sol
+        participant portal as FuelMessagePortal.sol
+        participant gateway as FuelERC20Gateway.sol
+    end
+
+    user ->>+ fuel: send tx with call to L2 Bridge<br>withdraw function
+    fuel ->> bridge: call withdraw()
+    bridge ->> fuel: Burn tokens receipt
+    bridge ->> fuel: MessageOut receipt<br>to FuelERC20Gateway.sol<br>data abi-encoded call of<br>finalizeWithdrawal()
+    fuel ->> user: confirm tx
+
+    loop Block collection
+        committer ->> fuel: get epoch
+        fuel ->> committer: send epoch
+        committer ->> state: commit
+    end
+    fuel -->- user: Fuel block was committed<br>in FuelChainState
+    note over state: Finalization time passes
+    user ->> fuel: get proofs for tx, block, receipt, etc
+    fuel ->> user: send proofs
+    user ->>+ portal: call relayMessage() with proofs
+    portal ->> state: get involved commits
+    state ->> portal: send involved commits
+    portal ->> portal: validate proofs
+    portal ->>+ gateway: finalizeWithdrawal()
+    gateway ->> portal: check<br>sender == L2 Bridge Contract
+    gateway ->> user: transfer tokens
+    gateway ->>- portal: return success
+    portal ->>- user: return success
+```
 
 You can follow the implementation of this flow via:
 
-- [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/bridge_fungible_token.sw) 's `withdraw` function
+- [bridge_fungible_token.sw](../packages/fungible-token/bridge-fungible-token/src/main.sw) 's `withdraw` function
 - [FuelChainState.sol](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) 's `commit` and `finalized` functions
-- [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) 's `relayMessage` function
-- [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway.sol) 's `finalizeWithdrawal`
+- [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage` function
+- [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol) 's `finalizeWithdrawal`
 
 ## Decimals adjustment
 
-Easing the operation and participation of light clients in the network without compromising on security is a key principle in Fuel. In that sense, Fuel strives to minimize the size of the information that is exchanged between peers through the protocol. One of the design decisions furthering that goal is the use of 64 bits (`u64`) to code the balances that are bridged from L1 to L2. The most popular token standard, `ERC20`, codes the amounts with `256 bits`. If the amount transferred from L1 to L2 surpasses the capacity of Fuel to mint the L2 counterpart, a `refund` message will be generated, that will allow the user to retrieve the originally depositted amount in L1.
+Easing the operation and participation of light clients in the network without compromising on security is a key principle in Fuel. In that sense, Fuel strives to minimize the size of the information that is exchanged between peers through the protocol. One of the design decisions furthering that goal is the use of 64 bits (`u64`) to code the balances that are bridged from L1 to L2. The most popular token standard, `ERC20`, codes the amounts with `256 bits`. If the amount transferred from L1 to L2 surpasses the capacity of Fuel to mint the L2 counterpart, a `refund` message will be generated, that will allow the user to retrieve the originally deposited amount in L1.
 
 Additionally, it is a de-facto practice in the space to use 18 decimals to represent the token, whereas in Fuel, 9 decimals are used to represent amounts under the unit. This means that there is a potential loss of precision when it comes to translating L1 amounts to L2 amounts, as the user could lose some dust amounts between bridging operations. Ideally, this limitation could be worked around as long as the deposits initiated in L1 do not specify amounts greater than 9 decimals (i.e. 1.0000000010 does not lose amounts, 1.0000000011 would lose 0.0000000001). DApps that enable bridge operations should observe this limitation and truncate the amounts to avoid loss of precision.
