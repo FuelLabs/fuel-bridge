@@ -341,3 +341,36 @@ Additionally, it is a de-facto practice in the space to use 18 decimals to repre
 
 
 DApps that enable bridge operations should observe this limitation and truncate the amounts accordingly to avoid reverted transactions.
+
+## Incompatibilities, risks and SPoF
+
+> SPoF stands for Single Points of Failure
+
+When it comes to using the token bridge and the underlying message exchange system between Ethereum and Fuel, there are some things to consider.
+
+### ERC20 incompatibilities
+
+ERC20 that do not adhere fully to the spec might not be compatible or present major flaws when paired with the bridge. Tokens that present the following characteristics:
+
+- Rebasing balances
+- Fee on transfer
+- Hyper supply (> 2^64 units of total supply in circulation) or hyper precision (high decimal counts)
+
+might observe unexpected behavior. Therefore, it is recommended not to deposit these tokens as there is risk of total loss of funds.
+
+## Risks
+
+As with many if not all smart contracts publicly available on the Ethereum blockchain, using our smart contracts come with risks of permanent loss of funds. The sources of these risks emanate from:
+
+- Centralization: while we progress towards decentralization, some centralized placeholders run essential components on the whole system. These centralized entities could be compromised and / or produce permanent damages. Refer to the section below on single points of failure for more information.
+- Vulnerabilities: the code is audited, but that 's not a guarantee that the contracts are safe from these.
+- Upgradability: our smart contracts are upgradable and expected to change over time in the short and long term. An upgrade operation always come with risks, as the new code being implemented could introduce new vulnerabilities, be malicious in itself, or brick the smart contract entirely due to a malfunction.
+- VM: for each deposit that happens on Ethereum, a mirror asset is created in the L2 following the FuelVM set of rules. All assets minted in the L2 follow the same set of rules are treated equally. A FuelVM malfunction could affect all assets locked in the FuelVM.
+
+## SPoFs
+
+As it can be derived from the diagrams above, there are entities performing mission critical tasks:
+
+- Security council and smart contract ownership: the smart contracts will be managed by a security council (by means of a multisig) that enables key administration functions, such as upgrades, granting of roles and permissions for privileged smart contract functions, pausing of the system, etc. It is of the essence that the security council operates correctly, honestly and timely in the management of the smart contracts.
+- Fuel Blockchain Sequencer / Validator: The Fuel blockchain 's operation is currently a Proof of Authority scheme under which a single private key is able to build new blocks. A compromise on this key could mean the generation of rogue blocks. While it is needed to compromise more than just the private key of the PoA node in order to cause permanent damage, it would halt the network for an unknown amount of time.
+- Block committer: The block committer links the activity in the Fuel blockchain by pushing state updates back to Ethereum, where users can use these updates to prove certain aspects of the Fuel blockchain activity (such as withdrawals). If a block committer uploads rogue data to Ethereum, it can enable fraudulent behaviour (for example, uploading withdrawals that never happened). New states uploaded by the committer are timelocked (i.e. they cannot be used to prove L2 activity). If rogue states remain undetected for a time longer than the "finalization window", then a malicious actor can finally propagate the nefarious activity to Ethereum and ultimately extract funds out of our contracts. At that point, the loss is considered final and other avenues must be pursued for the recovery. 
