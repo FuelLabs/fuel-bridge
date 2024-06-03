@@ -358,7 +358,7 @@ ERC20 that do not adhere fully to the spec might not be compatible or present ma
 
 might observe unexpected behavior. Therefore, it is recommended not to deposit these tokens as there is risk of total loss of funds.
 
-## Risks
+### Risks
 
 As with many if not all smart contracts publicly available on the Ethereum blockchain, using our smart contracts come with risks of permanent loss of funds. The sources of these risks emanate from:
 
@@ -369,18 +369,18 @@ As with many if not all smart contracts publicly available on the Ethereum block
 
 A summarized list of risks:
 
-### Funds theft
+#### Funds theft
 
 Funds can be permanently stolen if:
 - Our contracts receive a malicious or defective upgrade
 - Malicious L2 activity is undetected for more than 1 week
 
-### Funds loss
+#### Funds loss
 
 Funds can be permantely lost if:
 - Our contracts receive a defective upgrade
 
-### Chain halt
+#### Chain halt
 
 The chain might be halted as preemptive measure against the risks above. The chain will be halted if
 
@@ -389,7 +389,7 @@ The chain might be halted as preemptive measure against the risks above. The cha
 
 This might temporarily lock user funds and cause inconvenience.
 
-## SPoFs
+### SPoFs
 
 As it can be derived from the diagrams above, there are entities performing mission critical tasks:
 
