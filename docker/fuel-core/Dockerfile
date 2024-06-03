@@ -10,12 +10,6 @@ RUN apt update && apt install -y git curl jq && rm -rf /var/lib/apt/lists/*
 
 # copy chain config
 WORKDIR /fuel
-# COPY ./chain_config.json .
-# COPY ./metadata.json .
-# COPY ./state_config.json .
-# RUN curl \
-#     https://github.com/FuelLabs/fuel-core/raw/v0.27.0/bin/fuel-core/chainspec/testnet/ \
-#     -o ./state_transition_bytecode.wasm
 
 COPY ./genesis_coins.json .
 
