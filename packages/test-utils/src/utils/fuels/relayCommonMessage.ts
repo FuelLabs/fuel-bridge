@@ -98,7 +98,7 @@ function getCommonRelayableMessages(provider: Provider) {
           type: OutputType.Variable,
         });
 
-        transaction.witnesses.push('0x');
+        transaction.witnesses.push(ZeroBytes32);
 
         transaction.gasLimit = bn(1_000_000);
 
