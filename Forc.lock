@@ -1,4 +1,12 @@
 [[package]]
+name = "base-asset-contract"
+source = "member"
+dependencies = [
+    "standards",
+    "std",
+]
+
+[[package]]
 name = "bridge_fungible_token"
 source = "member"
 dependencies = [

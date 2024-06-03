@@ -56,13 +56,14 @@ const ETH_AMOUNT = '0.1';
 
   // parse events from logs to get the message nonce
   const event = fuelMessagePortal.interface.parseLog(eSendTxResult.logs[0]);
-  const depositMessageNonce = new BN(event.args.nonce.toHexString());
+  const depositMessageNonce = new BN(event.args.nonce.toString());
+  const depositRecipient = Address.fromB256(event.args.recipient);
 
   // wait for message to appear in fuel client
   console.log('Waiting for ETH to arrive on Fuel...');
   const depositMessage = await waitForMessage(
     env.fuel.provider,
-    fuelAccount.address,
+    depositRecipient,
     depositMessageNonce,
     FUEL_MESSAGE_TIMEOUT_MS
   );
