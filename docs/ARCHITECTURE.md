@@ -367,6 +367,28 @@ As with many if not all smart contracts publicly available on the Ethereum block
 - Upgradability: our smart contracts are upgradable and expected to change over time in the short and long term. An upgrade operation always come with risks, as the new code being implemented could introduce new vulnerabilities, be malicious in itself, or brick the smart contract entirely due to a malfunction.
 - VM: for each deposit that happens on Ethereum, a mirror asset is created in the L2 following the FuelVM set of rules. All assets minted in the L2 follow the same set of rules are treated equally. A FuelVM malfunction could affect all assets locked in the FuelVM.
 
+A summarized list of risks:
+
+### Funds theft
+
+Funds can be permanently stolen if:
+- Our contracts receive a malicious or defective upgrade
+- Malicious L2 activity is undetected for more than 1 week
+
+### Funds loss
+
+Funds can be permantely lost if:
+- Our contracts receive a defective upgrade
+
+### Chain halt
+
+The chain might be halted as preemptive measure against the risks above. The chain will be halted if
+
+- Malicious activity is detected
+- Unintended behaviour of the L2 is detected
+
+This might temporarily lock user funds and cause inconvenience.
+
 ## SPoFs
 
 As it can be derived from the diagrams above, there are entities performing mission critical tasks:
