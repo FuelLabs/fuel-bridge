@@ -1,6 +1,8 @@
 import { Wallet } from 'ethers';
-import type { Contract, Signer, TransactionResponse } from 'ethers';
+import type { Signer, TransactionResponse } from 'ethers';
 import { task } from 'hardhat/config';
+
+import { getDeploymentByName } from './utils';
 
 task('unpause', 'unpauses a contract that implements the Pausable interface')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
@@ -17,22 +19,8 @@ task('unpause', 'unpauses a contract that implements the Pausable interface')
       signer = signers[0];
     }
 
-    const allDeployments = Object.keys(await hre.deployments.all());
-
-    if (!allDeployments.includes(contractName)) {
-      console.log(`Cannot find ${contractName}`);
-      console.log('Here is the list of available deployments:');
-      console.log(allDeployments.map((d) => '- ' + d).join('\n'));
-      return;
-    }
-
-    const contract = (await hre.ethers.getContractAt(
-      contractName,
-      (
-        await hre.deployments.get(contractName)
-      ).address,
-      signer
-    )) as unknown as Contract;
+    const contract = await getDeploymentByName(hre, contractName, signer);
+    if (!contract) return;
 
     const role = await contract.DEFAULT_ADMIN_ROLE();
     const hasRole = await contract.hasRole(role, signer);
