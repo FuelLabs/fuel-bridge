@@ -125,6 +125,11 @@
       "address": "0x01855B78C1f8868DE70e84507ec735983bf262dA",
       "txHash": "0xfe7d426ed7e823f4ef65c2cc10cae603ded0dedfb458073e275488f640b87c0a",
       "kind": "uups"
+    },
+    {
+      "address": "0xa97200022c7aDb1b15f0f61f374E3A0c90e2Efa0",
+      "txHash": "0x78839dcc8bd48354a7f678f95ed1b4dc07439c2fa64f5e7dde48f80e5676c6ce",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -3539,6 +3544,237 @@
           "t_uint32": {
             "label": "uint32",
             "numberOfBytes": "4"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        },
+        "namespaces": {}
+      }
+    },
+    "76b7b3bdcf5f6a9c0ac69852a09075952b1c724cab925448f9c191812ed233b7": {
+      "address": "0xf6024CcbfbB2201C3d43C0C2bBD162d65D4a07c4",
+      "txHash": "0x45ad34b0af40959d4a5c8963a47d67fc85d393f1f9592dd12a282ef47edfaf8e",
+      "layout": {
+        "solcVersion": "0.8.9",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:63",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:68"
+          },
+          {
+            "label": "_fuelMessagePortal",
+            "offset": 2,
+            "slot": "0",
+            "type": "t_contract(FuelMessagePortal)10253",
+            "contract": "FuelMessagesEnabled",
+            "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "FuelMessagesEnabledUpgradeable",
+            "src": "contracts/messaging/FuelMessagesEnabledUpgradeable.sol:31"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:40"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "100",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "150",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC165Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol:41"
+          },
+          {
+            "label": "_roles",
+            "offset": 0,
+            "slot": "200",
+            "type": "t_mapping(t_bytes32,t_struct(RoleData)2324_storage)",
+            "contract": "AccessControlUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:57"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "AccessControlUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol:260"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "250",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ERC1967UpgradeUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/ERC1967/ERC1967UpgradeUpgradeable.sol:169"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "300",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "UUPSUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol:111"
+          },
+          {
+            "label": "whitelistRequired",
+            "offset": 0,
+            "slot": "350",
+            "type": "t_bool",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:66"
+          },
+          {
+            "label": "assetIssuerId",
+            "offset": 0,
+            "slot": "351",
+            "type": "t_bytes32",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:67"
+          },
+          {
+            "label": "_deposits",
+            "offset": 0,
+            "slot": "352",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:69"
+          },
+          {
+            "label": "_depositLimits",
+            "offset": 0,
+            "slot": "353",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:70"
+          },
+          {
+            "label": "_decimalsCache",
+            "offset": 0,
+            "slot": "354",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:71"
+          },
+          {
+            "label": "_isBridge",
+            "offset": 0,
+            "slot": "355",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:72"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "356",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "FuelERC20GatewayV4",
+            "src": "contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol:337"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_contract(FuelMessagePortal)10253": {
+            "label": "contract FuelMessagePortal",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_struct(RoleData)2324_storage)": {
+            "label": "mapping(bytes32 => struct AccessControlUpgradeable.RoleData)",
+            "numberOfBytes": "32"
+          },
+          "t_struct(RoleData)2324_storage": {
+            "label": "struct AccessControlUpgradeable.RoleData",
+            "members": [
+              {
+                "label": "members",
+                "type": "t_mapping(t_address,t_bool)",
+                "offset": 0,
+                "slot": "0"
+              },
+              {
+                "label": "adminRole",
+                "type": "t_bytes32",
+                "offset": 0,
+                "slot": "1"
+              }
+            ],
+            "numberOfBytes": "64"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
           },
           "t_uint8": {
             "label": "uint8",

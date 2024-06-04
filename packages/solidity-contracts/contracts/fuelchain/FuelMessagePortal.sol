@@ -6,7 +6,7 @@ import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/U
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import {verifyBinaryTree} from "@fuel-contracts/merkle-sol/contracts/tree/binary/BinaryMerkleTree.sol";
+import {verifyBinaryTree} from "../lib/VerifyBinaryTree/VerifyBinaryTree.sol";
 import {FuelChainState} from "./FuelChainState.sol";
 import {FuelBlockHeader, FuelBlockHeaderLib} from "./types/FuelBlockHeader.sol";
 import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "./types/FuelBlockHeaderLite.sol";

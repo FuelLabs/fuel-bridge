@@ -114,9 +114,6 @@ importers:
 
   packages/solidity-contracts:
     devDependencies:
-      '@fuel-contracts/merkle-sol':
-        specifier: ^0.1.4
-        version: 0.1.4
       '@fuel-ts/merkle':
         specifier: ^0.21.2
         version: 0.21.2
@@ -2994,15 +2991,6 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  ganache-cli@6.12.2:
-    resolution: {integrity: sha512-bnmwnJDBDsOWBUP8E/BExWf85TsdDEFelQSzihSJm9VChVO1SHp94YXLP5BlA4j/OTxp0wR4R1Tje9OHOuAJVw==}
-    deprecated: ganache-cli is now ganache; visit https://trfl.io/g7 for details
-    hasBin: true
-    bundledDependencies:
-      - source-map-support
-      - yargs
-      - ethereumjs-util
-
   ganache@7.4.3:
     resolution: {integrity: sha512-RpEDUiCkqbouyE7+NMXG26ynZ+7sGiODU84Kz+FVoXUnQ4qQM4M8wif3Y4qUCt+D/eM1RVeGq0my62FPD6Y1KA==}
     hasBin: true
@@ -4554,6 +4542,7 @@ packages:
 
   rimraf@3.0.2:
     resolution: {integrity: sha512-JZkJMZkAGFFPP2YqXZXPbMlMBgsxzE8ILs4lMIX/2o0L9UBw9O/Y3o6wFw/i9YLapcUJWwqbi3kdxIPdC62TIA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   ripemd160@2.0.2:
@@ -9196,8 +9185,6 @@ snapshots:
   functional-red-black-tree@1.0.1: {}
 
   functions-have-names@1.2.3: {}
-
-  ganache-cli@6.12.2: {}
 
   ganache@7.4.3:
     optionalDependencies:
