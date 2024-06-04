@@ -21,7 +21,7 @@ pub fn bytecode() -> Vec<u8> {
 
     //referenced data start pointer
     const REF_DATA_START_PTR: u16 = 13 * BYTES_PER_INSTR;
-    
+
     /* The following assembly code is intended to:
      * Call the function `process_message` on the contract with ID that matches
      * the first 32 bytes in the message data field. It won't forward the possible value
@@ -41,7 +41,11 @@ pub fn bytecode() -> Vec<u8> {
         op::addi(REG_FN_SELECTOR_PTR, RegId::IS, REF_DATA_START_PTR),
         op::addi(REG_DATA_FN_SELECTOR_PTR, REG_DATA_PTR, 32), // REG_DATA_FN_SELECTOR_PTR = REG_DATA_PTR + 32
         op::sw(REG_DATA_FN_SELECTOR_PTR, REG_FN_SELECTOR_PTR, 0), // REG_DATA[32..39] = (End of IS)[0..7] = (len of "process_message")
-        op::addi(REG_CALLDATA_PTR, RegId::IS, REF_DATA_START_PTR + FN_SEL_BYTES_LEN), // REG_DATA_FN_SELECTOR_PTR = REG_DATA_PTR + 32 + 23
+        op::addi(
+            REG_CALLDATA_PTR,
+            RegId::IS,
+            REF_DATA_START_PTR + FN_SEL_BYTES_LEN,
+        ), // REG_DATA_FN_SELECTOR_PTR = REG_DATA_PTR + 32 + 23
         op::addi(REG_DATA_CALLDATA_PTR, REG_DATA_PTR, 40), // REG_DATA_FN_SELECTOR_PTR = REG_DATA_PTR + 40
         op::sw(REG_DATA_CALLDATA_PTR, REG_CALLDATA_PTR, 0), // REG_DATA[40..47] = (End of IS)[23..30] = msg_idx = 0
         op::call(REG_DATA_PTR, RegId::ZERO, RegId::ZERO, RegId::CGAS),
