@@ -1,5 +1,5 @@
 import { Wallet, isAddress } from 'ethers';
-import type { Signer } from 'ethers';
+import type { Signer, TransactionResponse } from 'ethers';
 import { task } from 'hardhat/config';
 
 import { getDeploymentByName, requireConfirmation } from './utils';
@@ -45,5 +45,14 @@ task('grantRole', 'grants a given role to a given adress')
     console.log(`on ${taskArgs.contract} (${await contract.getAddress()})`);
     await requireConfirmation();
 
-    console.log('\t> Finished');
+    const tx: TransactionResponse = await contract['grantRole'](
+      role,
+      taskArgs.address
+    );
+    console.log(`Transaction sent with hash=${tx.hash}`);
+
+    const receipt = await tx.wait();
+    console.log(
+      `\t> Completed at hash=${receipt!.hash} block=${receipt!.blockNumber}`
+    );
   });
