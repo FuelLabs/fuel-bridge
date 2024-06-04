@@ -41,13 +41,13 @@ From here on, you will read first the logic involved in the L1 to L2 message pas
 The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event `MessageSent` to be picked up by Fuel 's sequencers, optionally containing an ETH value that will be depositted in the contract, and a data payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message. Messages will be reflected in the block header 's inbox.
 
 The `MessageSent` event emitted on the Ethereum chain and its counterpart UTXO `MessageCoin` on the Fuel chain hold, among other fields, a `value` (amount of ETH that is deposited), a payload `data` and an ID `recipient` that can spend this message in the L2.
- 
+
 The following figure contains a view of all the components involved in the L1 outgoing messages
 
 ```mermaid
-erDiagram 
+erDiagram
     "FuelMessagePortal.sol" {
-        function sendMessage 
+        function sendMessage
         event MessageSent
     }
     "FuelMessagePortal.sol" ||--|| "ETH Blockchain" : "host"
@@ -84,7 +84,7 @@ sequenceDiagram
     participant sequencers as Fuel Sequencers
     participant fuel as L2 Chain
     end
-    
+
 
     user ->>+ eth: send tx with ETH
     eth ->> portal: sendMessage()
@@ -118,7 +118,7 @@ sequenceDiagram
     participant predicate as Bridge predicate
     participant bridge as Bridge contract
     end
-    
+
 
     user ->>+ eth: send deposit tx
     eth ->> gateway: deposit()
@@ -134,7 +134,7 @@ sequenceDiagram
     end
     user ->>+ fuel: (cont.) send deposit tx
     note over sequencers,fuel: The transaction sits in the pool<br/>until included and executed
-    
+
     alt Validation happy path
     fuel ->> predicate: Run predicate
     predicate ->> bridge: call process_message
@@ -171,7 +171,7 @@ An user can request proofs of inclusion of both the block inside the epoch, and 
 Find below a figure describing the general relationships between all the systems involved in this process.
 
 ```mermaid
-erDiagram 
+erDiagram
     "FuelMessagePortal.sol" {
         function relayMessage
     }
@@ -274,7 +274,6 @@ sequenceDiagram
 
 ```
 
-
 #### L2 (Fuel) ERC20 Withdrawal
 
 An ERC20 withdrawal is an example implementation of message passing from L2 entities to L1 entities.
@@ -343,7 +342,6 @@ One of Fuel 's key design principles is to minimize execution costs and minimize
 
 Additionally, it is a de-facto practice in the space to use 18 decimals to represent the token (in itself, this excess of precision contributes to making the amounts in an ERC20 transfers bloated), whereas in Fuel, 9 decimals are used to represent amounts under the unit. This means that there is a loss of precision when bridging L1 amounts. This loss of precision is nullified by enforcing that all deposits made in the L1 do not incur the loss of dust amounts. For example, when depositing ETH, which has 18 decimals of precision, a deposit of 1.0000000010 ETH is allowed, whereas 1.0000000011 would lose 0.0000000001, and therefore such deposit would be rejected and reverted.
 
-
 DApps that enable bridge operations should observe this limitation and truncate the amounts accordingly to avoid reverted transactions.
 
 ## Incompatibilities, risks and SPoF
@@ -376,12 +374,14 @@ A summarized list of risks:
 #### Funds theft
 
 Funds can be permanently stolen if:
+
 - Our contracts receive a malicious or defective upgrade
 - Malicious L2 activity is undetected for more than 1 week
 
 #### Funds loss
 
 Funds can be permantely lost if:
+
 - Our contracts receive a defective upgrade
 
 #### Chain halt
@@ -399,4 +399,4 @@ As it can be derived from the diagrams above, there are entities performing miss
 
 - Security council and smart contract ownership: the smart contracts will be managed by a security council (by means of a multisig) that enables key administration functions, such as upgrades, granting of roles and permissions for privileged smart contract functions, pausing of the system, etc. It is of the essence that the security council operates correctly, honestly and timely in the management of the smart contracts.
 - Fuel Blockchain Sequencer / Validator: The Fuel blockchain 's operation is currently a Proof of Authority scheme under which a single private key is able to build new blocks. A compromise on this key could mean the generation of rogue blocks. While it is needed to compromise more than just the private key of the PoA node in order to cause permanent damage, it would halt the network for an unknown amount of time.
-- Block committer: The block committer links the activity in the Fuel blockchain by pushing state updates back to Ethereum, where users can use these updates to prove certain aspects of the Fuel blockchain activity (such as withdrawals). If a block committer uploads rogue data to Ethereum, it can enable fraudulent behaviour (for example, uploading withdrawals that never happened). New states uploaded by the committer are timelocked (i.e. they cannot be used to prove L2 activity). If rogue states remain undetected for a time longer than the "finalization window", then a malicious actor can finally propagate the nefarious activity to Ethereum and ultimately extract funds out of our contracts. At that point, the loss is considered final and other avenues must be pursued for the recovery. 
+- Block committer: The block committer links the activity in the Fuel blockchain by pushing state updates back to Ethereum, where users can use these updates to prove certain aspects of the Fuel blockchain activity (such as withdrawals). If a block committer uploads rogue data to Ethereum, it can enable fraudulent behaviour (for example, uploading withdrawals that never happened). New states uploaded by the committer are timelocked (i.e. they cannot be used to prove L2 activity). If rogue states remain undetected for a time longer than the "finalization window", then a malicious actor can finally propagate the nefarious activity to Ethereum and ultimately extract funds out of our contracts. At that point, the loss is considered final and other avenues must be pursued for the recovery.
