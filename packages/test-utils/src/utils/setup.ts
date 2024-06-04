@@ -69,6 +69,7 @@ export interface SetupOptions {
   pk_fuel_deployer?: string;
   pk_fuel_signer1?: string;
   pk_fuel_signer2?: string;
+  skip_deployer_balance?: boolean;
 }
 
 // The test environment
@@ -125,6 +126,7 @@ export async function setupEnvironment(
 
   const fuel_erc721_gateway_addr: string =
     process.env.FUEL_ERC20_GATEWAY_ADDRESS || '';
+  const skip_deployer_balance = !opts.skip_deployer_balance;
 
   // Create provider from http_fuel_client
   const fuel_provider = await FuelProvider.create(http_fuel_client);
@@ -139,7 +141,7 @@ export async function setupEnvironment(
   }
   const fuel_deployer = Wallet.fromPrivateKey(pk_fuel_deployer, fuel_provider);
   const fuel_deployerBalance = await fuel_deployer.getBalance();
-  if (fuel_deployerBalance.lt(fuels_parseEther('5'))) {
+  if (fuel_deployerBalance.lt(fuels_parseEther('5')) && skip_deployer_balance) {
     throw new Error(
       'Fuel deployer balance is very low (' +
         fuels_formatEther(fuel_deployerBalance) +
@@ -148,7 +150,7 @@ export async function setupEnvironment(
   }
   const fuel_signer1 = Wallet.fromPrivateKey(pk_fuel_signer1, fuel_provider);
   const fuel_signer1Balance = await fuel_signer1.getBalance();
-  if (fuel_signer1Balance.lt(fuels_parseEther('1'))) {
+  if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
     const tx = await fuel_deployer.transfer(
       fuel_signer1.address,
       fuels_parseEther('1').toHex()
@@ -157,7 +159,7 @@ export async function setupEnvironment(
   }
   const fuel_signer2 = Wallet.fromPrivateKey(pk_fuel_signer2, fuel_provider);
   const fuel_signer2Balance = await fuel_signer2.getBalance();
-  if (fuel_signer2Balance.lt(fuels_parseEther('1'))) {
+  if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
     const tx = await fuel_deployer.transfer(
       fuel_signer2.address,
       fuels_parseEther('1').toHex()
@@ -181,7 +183,7 @@ export async function setupEnvironment(
     new ethers.Wallet(pk_eth_deployer, eth_provider)
   );
   const eth_deployerBalance = await eth_provider.getBalance(eth_deployer);
-  if (eth_deployerBalance < parseEther('5')) {
+  if (eth_deployerBalance < parseEther('5') && skip_deployer_balance) {
     throw new Error(
       'Ethereum deployer balance is very low (' +
         formatEther(eth_deployerBalance) +
@@ -192,7 +194,7 @@ export async function setupEnvironment(
     new ethers.Wallet(pk_eth_signer1, eth_provider)
   );
   const eth_signer1Balance = await eth_provider.getBalance(eth_signer1);
-  if (eth_signer1Balance < parseEther('1')) {
+  if (eth_signer1Balance < parseEther('1') && skip_deployer_balance) {
     const tx = await eth_deployer.sendTransaction({
       to: eth_signer1,
       value: parseEther('1'),
@@ -203,7 +205,7 @@ export async function setupEnvironment(
     new ethers.Wallet(pk_eth_signer2, eth_provider)
   );
   const eth_signer2Balance = await eth_provider.getBalance(eth_signer2);
-  if (eth_signer2Balance < parseEther('1')) {
+  if (eth_signer2Balance < parseEther('1') && skip_deployer_balance) {
     const tx = await eth_deployer.sendTransaction({
       to: eth_signer2,
       value: parseEther('1'),

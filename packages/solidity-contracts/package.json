@@ -37,7 +37,6 @@
     "lint": "prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
   },
   "devDependencies": {
-    "@fuel-contracts/merkle-sol": "^0.1.4",
     "@fuel-ts/merkle": "^0.21.2",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.4",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
