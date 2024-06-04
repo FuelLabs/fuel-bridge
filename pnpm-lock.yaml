@@ -183,6 +183,9 @@ importers:
       express:
         specifier: ^4.18.2
         version: 4.19.2
+      fuels:
+        specifier: 0.85.0
+        version: 0.85.0(bufferutil@4.0.5)(utf-8-validate@5.0.7)
       hardhat:
         specifier: ^2.20.1
         version: 2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)
