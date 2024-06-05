@@ -373,7 +373,7 @@ might observe unexpected behavior. Therefore, it is recommended not to deposit t
 As with many if not all smart contracts publicly available on the Ethereum blockchain, using our smart contracts come with risks of permanent loss of funds. The sources of these risks emanate from:
 
 - Centralization: while we progress towards decentralization, some centralized placeholders run essential components on the whole system. These centralized entities could be compromised and / or produce permanent damages. Refer to the section below on single points of failure for more information.
-- Vulnerabilities: the code is audited, but that 's not a guarantee that the contracts are safe from these.
+- Vulnerabilities: the code is audited, but that's not a guarantee that the contracts are safe from these.
 - Upgradability: our smart contracts are upgradable and expected to change over time in the short and long term. An upgrade operation always come with risks, as the new code being implemented could introduce new vulnerabilities, be malicious in itself, or brick the smart contract entirely due to a malfunction.
 - VM: for each deposit that happens on Ethereum, a mirror asset is created in the L2 following the FuelVM set of rules. All assets minted in the L2 follow the same set of rules are treated equally. A FuelVM malfunction could affect all assets locked in the FuelVM.
 
