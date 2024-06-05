@@ -174,7 +174,7 @@ Once the committed epoch has finalized, an user in the L1 blockchain can prove t
 - First, it is needed to prove that a certain block (identified by its block hash) exists in the committed epoch. This is done with a `Merkle proof`.
 - Once proven that the block exists, by the same mechanism, it is possible to prove that the message exists as part of the block.
 
-An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage`. The portal will check that the proofs are correct and that the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
+An user can request proofs of inclusion of both the block inside the epoch, and the message inside the block, to the L2, then attach those proofs on a call to [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage`. The portal will check that the proofs are correct and the finalization status of the epoch, then proceed to unpack the payload of the message, that should contain execution instructions.
 
 Find below a figure describing the general relationships between all the systems involved in this process.
 
