@@ -2,7 +2,7 @@
 name = "base-asset-contract"
 source = "member"
 dependencies = [
-    "standards",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
     "std",
 ]
 
@@ -45,13 +45,13 @@ source = "member"
 dependencies = [
     "contract_message_receiver",
     "interface",
-    "standards git+https://github.com/FuelLabs/sway-standards?branch=master#400cf1f42909ed2a4a45ec212abc7ad753cc94de",
+    "standards git+https://github.com/FuelLabs/sway-standards?branch=master#27c4f18170a7259fca85d59e4cfb4197437bae36",
     "std",
 ]
 
 [[package]]
 name = "standards"
-source = "git+https://github.com/FuelLabs/sway-standards?branch=master#400cf1f42909ed2a4a45ec212abc7ad753cc94de"
+source = "git+https://github.com/FuelLabs/sway-standards?branch=master#27c4f18170a7259fca85d59e4cfb4197437bae36"
 dependencies = ["std"]
 
 [[package]]
