@@ -35,7 +35,7 @@ Fuel 's bridge system is built on a message protocol that allows the sending (an
 - A message that goes from L1 to L2 originates with an Ethereum event, to which Fuel sequencers will be listening. The event that creates this message will be parsed and included as an UTXO in the Fuel chain.
 - A message that goes from L2 to L1 originates with a Fuel receipt. Receipts are bound with Fuel block headers. The block committer will push witnesses (Merkle roots) to Ethereum, so that these messages can be trustlessly unwrapped and sent via Merkle proofs to their recipients.
 
-It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed.
+It can be derived that; if the entities receiving these messages are capable of interpreting them, some actions can be executed.
 
 From here on, you will read first the logic involved in the L1 to L2 message passing, and viceversa after.
 
