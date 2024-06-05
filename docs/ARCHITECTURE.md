@@ -13,7 +13,7 @@ Before delving into the details, let's understand a few key concepts that will b
 - Fuel epoch: A group of Fuel blocks, packed together and identified by the last block of the epoch.
 - (Incoming / Outgoing) messages: depending on the context, messages will be referred as "incoming" or "outgoing". A L1 -> L2 message is an outgoing message from the L1 perspective, and an incoming message from the L2 perspective. A L2 -> L1 message inverts those tags.
 - Relayed messages: Messages that are generated in the L2 (Fuel) blockchain that must be sent to L1 entities.
-- Fuel sequencers: Entities that process L2 transactions and keep the L2 blockchain  updated. These entities are akin to Bitcoin miners or ETH 2.0 validators.
+- Fuel sequencers: Entities that process L2 transactions and keep the L2 blockchain updated. These entities are akin to Bitcoin miners or ETH 2.0 validators.
 - L1 Commits: Transactions on the L1 that start the finalization process of a Fuel epoch.
 - Finality: State of commits by which the commit cannot be changed, it is considered honest and immutable - final. When an epoch is committed, a clock starts. If the commit is correct, time will pass and the epoch will be final - it cannot be reverted or changed. If the commit is not correct, an honest party can challenge it.
 - Block comitter: entity responsible for listening to finished epochs from the Fuel Blockchain and comitting these epochs to the `FuelChainState` contract.
