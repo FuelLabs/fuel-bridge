@@ -27,6 +27,7 @@ import type {
   NFT,
 } from '../typechain';
 
+import { BLOCKS_PER_COMMIT_INTERVAL, TIME_TO_FINALIZE } from './utils';
 import { createBlock } from './utils/createBlock';
 
 const { expect } = chai;
@@ -86,7 +87,12 @@ const fixture = deployments.createFixture(
 
     const fuelChainState = (await ethers
       .getContractFactory('FuelChainState', deployer)
-      .then(async (factory) => deployProxy(factory, [], proxyOptions))
+      .then(async (factory) =>
+        deployProxy(factory, [], {
+          ...proxyOptions,
+          constructorArgs: [TIME_TO_FINALIZE, BLOCKS_PER_COMMIT_INTERVAL],
+        })
+      )
       .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
     const fuelMessagePortal = (await ethers

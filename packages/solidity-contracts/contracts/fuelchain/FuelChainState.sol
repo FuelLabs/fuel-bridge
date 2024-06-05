@@ -23,17 +23,20 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     ///////////////
 
     /// @dev The commit proccess parameters
-    //TODO: update these values once block time and commit frequency are finalized
-    // days worth of commits
     // NUM_COMMIT_SLOTS an arbitrary number of commits to store before starting to overwrite
     uint256 public constant NUM_COMMIT_SLOTS = 240;
     // Number of blocks per commit interval
     // BLOCKS_PER_COMMIT_INTERVAL = (num of blocks per minute * target interval in minutes)
-    uint256 public constant BLOCKS_PER_COMMIT_INTERVAL = 10800;
-    // Time to fianlize in seconds
-    // TIME_TO_FINALIZE = target interval in minutes * 60
-    uint256 public constant TIME_TO_FINALIZE = 10800;
-    uint32 public constant COMMIT_COOLDOWN = uint32(TIME_TO_FINALIZE) * 8;
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    uint256 public immutable BLOCKS_PER_COMMIT_INTERVAL;
+
+    // Time after which a commit becomes finalized
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    uint256 public immutable TIME_TO_FINALIZE;
+
+    /// Time before a slot can be overwritten
+    /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
+    uint32 public immutable COMMIT_COOLDOWN;
 
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
@@ -66,7 +69,11 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
 
     /// @notice Constructor disables initialization for the implementation contract
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor() {
+    constructor(uint256 timeToFinalize, uint256 blocksPerCommitInterval) {
+        TIME_TO_FINALIZE = timeToFinalize;
+        COMMIT_COOLDOWN = uint32(timeToFinalize) * 8;
+        BLOCKS_PER_COMMIT_INTERVAL = blocksPerCommitInterval;
+
         _disableInitializers();
     }
 

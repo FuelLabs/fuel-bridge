@@ -3,6 +3,9 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory as FuelChainState } from '../../typechain';
 
+const BLOCKS_PER_COMMIT_INTERVAL = 30;
+const TIME_TO_FINALIZE = 5;
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
@@ -13,6 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const contract = await deployProxy(new FuelChainState(deployer), [], {
     initializer: 'initialize',
+    constructorArgs: [TIME_TO_FINALIZE, BLOCKS_PER_COMMIT_INTERVAL],
   });
   await contract.waitForDeployment();
   const address = await contract.getAddress();
@@ -21,7 +25,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('Deployed FuelChainState at', address);
   await save('FuelChainState', {
     address,
-    abi: [],
+    abi: [...FuelChainState.abi],
     implementation,
   });
 

@@ -230,7 +230,12 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       const fuelChainState = (await ethers
         .getContractFactory('FuelChainState', deployer)
-        .then(async (factory) => deployProxy(factory, [], proxyOptions))
+        .then(async (factory) =>
+          deployProxy(factory, [], {
+            ...proxyOptions,
+            constructorArgs: [TIME_TO_FINALIZE, BLOCKS_PER_COMMIT_INTERVAL],
+          })
+        )
         .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
       const deployment = await ethers
