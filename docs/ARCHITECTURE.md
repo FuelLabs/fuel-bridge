@@ -13,7 +13,7 @@ Before delving into the details, let's understand a few key concepts that will b
 - Fuel epoch: A group of Fuel blocks, packed together and identified by the last block of the epoch.
 - (Incoming / Outgoing) messages: depending on the context, messages will be referred as "incoming" or "outgoing". A L1 -> L2 message is an outgoing message from the L1 perspective, and an incoming message from the L2 perspective. A L2 -> L1 message inverts those tags.
 - Relayed messages: Messages that are generated in the L2 (Fuel) blockchain that must be sent to L1 entities.
-- Fuel sequencers: Entities that process L2 transactions and keep the ledger updated.
+- Fuel sequencers: Entities that process L2 transactions and keep the L2 blockchain  updated. These entities are akin to Bitcoin miners or ETH 2.0 validators.
 - L1 Commits: Transactions on the L1 that start the finalization process of a Fuel epoch.
 - Finality: State of commits by which the commit cannot be changed, it is considered honest and immutable - final. When an epoch is committed, a clock starts. If the commit is correct, time will pass and the epoch will be final - it cannot be reverted or changed. If the commit is not correct, an honest party can challenge it.
 - Block comitter: entity responsible for listening to finished epochs from the Fuel Blockchain and comitting these epochs to the `FuelChainState` contract.
@@ -30,7 +30,10 @@ Before delving into the details, let's understand a few key concepts that will b
 
 ## Bridge flow
 
-Fuel 's bridge system is built on a message protocol that allows to send (and receive) messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanisms involved for each direction are different and almost independent.
+Fuel 's bridge system is built on a message protocol that allows to send (and receive) messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanisms involved for each direction are different and almost independent:
+
+- A message that goes from L1 to L2 is originated with an Ethereum event, to which Fuel sequencers will be listening. The event that creates this message will be parsed and included as an UTXO in the Fuel chain.
+- A message that goes from L2 to L1 is originated with a Fuel receipt. Receipts are bound with Fuel block headers. The block committer will push witnesses (Merkle roots) to Ethereum, so that these messages can be trustlessly unwrapped and sent via Merkle proofs to their recipients.
 
 It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed.
 
@@ -41,6 +44,12 @@ From here on, you will read first the logic involved in the L1 to L2 message pas
 The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event `MessageSent` to be picked up by Fuel 's sequencers, optionally containing an ETH value that will be depositted in the contract, and a data payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message. Messages will be reflected in the block header 's inbox.
 
 The `MessageSent` event emitted on the Ethereum chain and its counterpart UTXO `MessageCoin` on the Fuel chain hold, among other fields, a `value` (amount of ETH that is deposited), a payload `data` and an ID `recipient` that can spend this message in the L2.
+
+A summarized user journey can be described as follows:
+
+- An EVM address (EOA or smart contract) calls `sendMessage` in the `FuelMessagePortal`. This message might have attached some ETH. An event containing the `recipient` of the message in the L2, the attached `value` and a `data` payload will be emitted in this call
+- Fuel sequencers will listen for these events and include them as an UTXO during block generation in the L2.
+- The recipient will be able to make use of the UTXO as part of the normal L2 activities.
 
 The following figure contains a view of all the components involved in the L1 outgoing messages
 
