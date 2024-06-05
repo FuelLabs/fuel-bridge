@@ -41,7 +41,7 @@ From here on, you will read first the logic involved in the L1 to L2 message pas
 
 ### Message passing from L1 to L2
 
-The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event `MessageSent` to be picked up by Fuel 's sequencers, optionally containing an ETH value that will be depositted in the contract, and a data payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message. Messages will be reflected in the block header 's inbox.
+The [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal.sol) contains a `sendMessage` function that can be called by any entity on the L1 blockchain. This function will emit an event `MessageSent` to be picked up by Fuel's sequencers, optionally containing an ETH value that will be depositted in the contract, and a data payload. The sequencers will include said message in the following blocks of the L2 blockchain, by adding an UTXO that reflects the original message. Messages will be reflected in the block header's inbox.
 
 The `MessageSent` event emitted on the Ethereum chain and its counterpart UTXO `MessageCoin` on the Fuel chain hold, among other fields, a `value` (amount of ETH that is deposited), a payload `data` and an ID `recipient` that can spend this message in the L2.
 
