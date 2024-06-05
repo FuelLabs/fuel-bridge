@@ -2,7 +2,7 @@
 name = "base-asset-contract"
 source = "member"
 dependencies = [
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
+    "standards",
     "std",
 ]
 
