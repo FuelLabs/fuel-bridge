@@ -19,15 +19,18 @@ rust-version = "1.72.0"
 
 [workspace.dependencies]
 # Dependencies from fuel-vm repository:
-fuel-asm = "0.49.0"
-fuel-tx = "0.49.0"
+fuel-asm = "0.50.0"
+fuel-tx = "0.50.0"
 
 # Dependencies from fuel-core repository:
-fuel-core-types = { version = "0.26.0", default-features = false }
+fuel-core-types = { version = "0.27.0", default-features = false }
 
 # Dependencies from fuels-rs repository:    
-fuels = { version = "0.62.0"}
+fuels = { version = "0.63.0", features = ["fuel-core-lib"] }
 
 # Third-party dependencies
 tokio = { version = "1.32.0", features = ["rt", "macros"] }
 hex = "0.4.3"
+
+# Base asset
+sha2 = { version = "0.10.0" }

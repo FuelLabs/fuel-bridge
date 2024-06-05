@@ -111,7 +111,7 @@ pub async fn setup_environment(
             Input::resource_predicate(
                 CoinType::Message(message),
                 predicate_bytecode.clone(),
-                Vec::default(),
+                Vec::new(),
             )
         })
         .collect();

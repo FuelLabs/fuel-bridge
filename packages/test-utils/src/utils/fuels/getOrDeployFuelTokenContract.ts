@@ -33,7 +33,7 @@ export async function getOrDeployFuelTokenContract(
     try {
       fuelTestToken = new Contract(
         FUEL_FUNGIBLE_TOKEN_ADDRESS,
-        fungibleTokenABI,
+        fungibleTokenABI as any,
         fuelAcct
       );
       await fuelTestToken.functions.name().dryRun();
@@ -51,7 +51,7 @@ export async function getOrDeployFuelTokenContract(
     debug('Deploy contract on Fuel');
     const factory = new ContractFactory(
       bytecodeHex,
-      fungibleTokenABI,
+      fungibleTokenABI as any,
       env.fuel.deployer
     );
 

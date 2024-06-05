@@ -1170,7 +1170,7 @@ mod revert {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let bad_sender: &str =
-            "0x55555500000000000000000000000000000000000000000000000000005555555";
+            "0x5555550000000000000000000000000000000000000000000000000005555555";
 
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
