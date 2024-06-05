@@ -33,7 +33,7 @@ Before delving into the details, let's understand a few key concepts that will b
 Fuel 's bridge system is built on a message protocol that allows the sending (and receiving) of messages between entities located in two different blockchains, namely the L1 (Ethereum or EVM) and L2 (Fuel blockchain). The system features sending messages in both directions (L1 to L2, and L2 to L1), though the mechanisms involved for each direction are different and almost independent:
 
 - A message that goes from L1 to L2 originates with an Ethereum event, to which Fuel sequencers will be listening. The event that creates this message will be parsed and included as an UTXO in the Fuel chain.
-- A message that goes from L2 to L1 is originated with a Fuel receipt. Receipts are bound with Fuel block headers. The block committer will push witnesses (Merkle roots) to Ethereum, so that these messages can be trustlessly unwrapped and sent via Merkle proofs to their recipients.
+- A message that goes from L2 to L1 originates with a Fuel receipt. Receipts are bound with Fuel block headers. The block committer will push witnesses (Merkle roots) to Ethereum, so that these messages can be trustlessly unwrapped and sent via Merkle proofs to their recipients.
 
 It can be derived that if the entities receiving these messages are capable of interpreting them, some actions can be executed.
 
