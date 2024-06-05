@@ -200,7 +200,7 @@ mod success {
         let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
-        let asset_id = get_asset_id(bridge.contract_id(), token_address);
+        let asset_id = get_asset_id(&implementation_contractid, token_address);
         let asset_balance = provider
             .get_asset_balance(&recipient_bech32, asset_id)
             .await
@@ -1112,7 +1112,7 @@ mod success {
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
         // Token one checks
-        let asset_id = get_asset_id(bridge.contract_id(), token_one);
+        let asset_id = get_asset_id(&implementation_contractid, token_one);
         let asset_balance = wallet_balance(&wallet, &asset_id).await;
 
         // Check that wallet now has bridged coins

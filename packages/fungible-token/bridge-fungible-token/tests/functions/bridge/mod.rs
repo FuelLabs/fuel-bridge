@@ -362,7 +362,7 @@ mod success {
         }
 
         let balance =
-            wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
+            wallet_balance(&wallet, &get_asset_id(&implementation_contractid, BRIDGED_TOKEN)).await;
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, amount);
