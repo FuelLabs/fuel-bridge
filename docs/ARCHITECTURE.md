@@ -164,7 +164,6 @@ You can follow the actual implementation of the message processing flow via:
 
 ### Message passing from L2 to L1
 
-The mechanism that implements messaging from L2 to L1 can be more convoluted; bear with us.
 
 Any user (or contract) on the L2 can trigger transactions that generate [receipts](https://github.com/FuelLabs/fuel-specs/blob/master/src/abi/receipts.md). Among these receipts, it is possible to include the `MessageOut` receipt, carrying among other things, a `sender` ID from the Fuel chain, a `recipient` address of the L1 chain, an `amount` of the base currency used in the L1, and a `data` payload. Each Fuel block header contains a merkle root built from the `MessageOut` receipts, making it trivial to build a merkle proof for the inclusion of specific `MessageOut` payloads in a Fuel block.
 
