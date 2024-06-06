@@ -21,7 +21,7 @@ mod success {
             bridge::{bridged_token_gateway, claim_refund},
             src20::total_supply,
         },
-        setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
+        setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
     use primitive_types::H160;
@@ -40,6 +40,9 @@ mod success {
             hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
         );
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (message, coin, deposit_contract) = create_deposit_message(
             &token_address,
             BRIDGED_TOKEN_ID,
@@ -47,7 +50,7 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            Default::default(),
+            proxy_id,
             false,
             None,
         )
@@ -172,6 +175,9 @@ mod success {
         );
         let deposit_amount = U256::from(1);
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (topping_message, coin, deposit_contract) = create_deposit_message(
             &token_address,
             BRIDGED_TOKEN_ID,
@@ -179,7 +185,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(u64::MAX),
             BRIDGED_TOKEN_DECIMALS,
-            Default::default(),
+            proxy_id,
             false,
             None,
         )
@@ -192,7 +198,7 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            Default::default(),
+            proxy_id,
             false,
             None,
         )
@@ -314,6 +320,9 @@ mod success {
 
         let amount = 10u64;
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
@@ -321,7 +330,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            Default::default(),
+            proxy_id,
             false,
             None,
         )
@@ -361,8 +370,7 @@ mod success {
             }
         }
 
-        let balance =
-            wallet_balance(&wallet, &get_asset_id(&implementation_contractid, BRIDGED_TOKEN)).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(&proxy_id.into(), BRIDGED_TOKEN)).await;
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, amount);
@@ -401,9 +409,13 @@ mod success {
         assert_eq!(amount, amount);
 
         // Check that supply has decreased by withdrawal_amount
-        let supply = total_supply(&implementation_contractid, &bridge, get_asset_id(bridge.contract_id(), BRIDGED_TOKEN))
-            .await
-            .unwrap();
+        let supply = total_supply(
+            &implementation_contractid,
+            &bridge,
+            get_asset_id(bridge.contract_id(), BRIDGED_TOKEN),
+        )
+        .await
+        .unwrap();
         assert_eq!(supply, 0);
     }
 

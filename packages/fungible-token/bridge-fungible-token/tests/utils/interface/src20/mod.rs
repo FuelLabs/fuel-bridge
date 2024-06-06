@@ -1,5 +1,5 @@
 use crate::utils::setup::BridgeFungibleTokenContract;
-use fuels::{prelude::Bech32ContractId, accounts::wallet::WalletUnlocked, types::AssetId};
+use fuels::{accounts::wallet::WalletUnlocked, prelude::Bech32ContractId, types::AssetId};
 
 pub(crate) async fn total_supply(
     implementation_contractid: &Bech32ContractId,

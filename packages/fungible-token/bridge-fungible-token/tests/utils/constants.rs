@@ -6,8 +6,7 @@ pub(crate) const BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
     "../bridge-fungible-token/implementation/out/release/bridge_fungible_token.bin";
 pub(crate) const DEPOSIT_RECIPIENT_CONTRACT_BINARY: &str =
     "../test-deposit-recipient-contract/out/release/test_deposit_recipient_contract.bin";
-pub(crate) const BRIDGE_PROXY_BINARY: &str =
-    "../bridge-fungible-token/proxy/out/release/proxy.bin";
+pub(crate) const BRIDGE_PROXY_BINARY: &str = "../bridge-fungible-token/proxy/out/release/proxy.bin";
 
 pub(crate) const BRIDGED_TOKEN: &str =
     "0x00000000000000000000000000000000000000000000000000000000deadbeef";

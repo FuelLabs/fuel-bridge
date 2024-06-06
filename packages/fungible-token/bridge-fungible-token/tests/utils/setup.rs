@@ -8,23 +8,29 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_crypto::{SecretKey, Hasher},
+    fuel_crypto::{Hasher, SecretKey},
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
     fuel_types::{Nonce, Word},
 };
 
 use fuels::{
-    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount}, prelude::{
+    accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
+    prelude::{
         abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
-    }, programs::contract::StorageConfiguration, test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT}, tx::StorageSlot, types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256}
+    },
+    programs::contract::StorageConfiguration,
+    test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
+    tx::StorageSlot,
+    types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
 use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
-    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG, DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG
+    BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG,
+    DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
 };
 
 abigen!(
@@ -168,7 +174,11 @@ pub(crate) async fn setup_environment(
     deposit_contract: Option<ContractId>,
     sender: Option<&str>,
     configurables: Option<BridgeFungibleTokenContractConfigurables>,
-) -> (Bech32ContractId, BridgeFungibleTokenContract<WalletUnlocked>, UTXOInputs) {
+) -> (
+    Bech32ContractId,
+    BridgeFungibleTokenContract<WalletUnlocked>,
+    UTXOInputs,
+) {
     // Generate coins for wallet
     let asset_configs: Vec<AssetConfig> = coins
         .iter()
@@ -214,7 +224,7 @@ pub(crate) async fn setup_environment(
         Some(config) => LoadConfiguration::default().with_configurables(config),
         None => LoadConfiguration::default(),
     };
-    
+
     let implementation_contract_id =
         Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
             .unwrap()
@@ -226,20 +236,23 @@ pub(crate) async fn setup_environment(
     // let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
 
     let target_key_hash = Hasher::hash("storage_SRC14_0");
-    let slot_override_target = StorageSlot::new(target_key_hash, (*implementation_contract_id.clone().hash).into());
+    let slot_override_target = StorageSlot::new(
+        target_key_hash,
+        (*implementation_contract_id.clone().hash).into(),
+    );
     let owner_key_hash = Hasher::hash("storage_SRC14_1");
     let slot_override_owner = StorageSlot::new(owner_key_hash, (*wallet.address().hash).into());
 
     let storage_configuration = StorageConfiguration::default()
         .add_slot_overrides([slot_override_target, slot_override_owner]);
 
-    let proxy_config = LoadConfiguration::default().with_storage_configuration(storage_configuration);
-    let proxy_contract_id = 
-        Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
-            .unwrap()
-            .deploy(&wallet.clone(), TxPolicies::default())
-            .await
-            .unwrap();
+    let proxy_config =
+        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+    let proxy_contract_id = Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
+        .unwrap()
+        .deploy(&wallet.clone(), TxPolicies::default())
+        .await
+        .unwrap();
 
     let proxy_bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
 
@@ -299,7 +312,6 @@ pub(crate) async fn setup_environment(
     )
 }
 
-
 /// Sets up a test fuel environment with a funded wallet
 pub(crate) async fn setup_environment_with_proxy(
     wallet: &mut WalletUnlocked,
@@ -308,7 +320,12 @@ pub(crate) async fn setup_environment_with_proxy(
     deposit_contract: Option<ContractId>,
     sender: Option<&str>,
     configurables: Option<BridgeFungibleTokenContractConfigurables>,
-) -> (BridgeFungibleTokenContract<WalletUnlocked>, BridgeFungibleTokenContract<WalletUnlocked>, Bech32ContractId,  UTXOInputs) {
+) -> (
+    BridgeFungibleTokenContract<WalletUnlocked>,
+    BridgeFungibleTokenContract<WalletUnlocked>,
+    Bech32ContractId,
+    UTXOInputs,
+) {
     // Generate coins for wallet
     let asset_configs: Vec<AssetConfig> = coins
         .iter()
@@ -351,13 +368,12 @@ pub(crate) async fn setup_environment_with_proxy(
 
     // Set up the bridge contract instance
     let implementation_config = match configurables {
-        Some(config) => 
-            LoadConfiguration::default()
-                .with_configurables(config)
-                .with_storage_configuration(StorageConfiguration::default().with_autoload(false)),
+        Some(config) => LoadConfiguration::default()
+            .with_configurables(config)
+            .with_storage_configuration(StorageConfiguration::default().with_autoload(false)),
         None => LoadConfiguration::default(),
     };
-    
+
     let implementation_contract_id =
         Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
             .unwrap()
@@ -367,24 +383,30 @@ pub(crate) async fn setup_environment_with_proxy(
 
     // let proxy_configurables
     // let proxy_configurables = BridgeProxyConfigurables::default().with_TARGET(implementation_contract_id.clone().into()).unwrap();
-    let slot_override_target = StorageSlot::new(Bytes32::zeroed(), (*implementation_contract_id.clone().hash).into());
-    let key: [u8; 32] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1];
+    let slot_override_target = StorageSlot::new(
+        Bytes32::zeroed(),
+        (*implementation_contract_id.clone().hash).into(),
+    );
+    let key: [u8; 32] = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 1,
+    ];
     let slot_override_owner = StorageSlot::new(key.into(), (*wallet.address().hash).into());
 
     let storage_configuration = StorageConfiguration::default()
         .add_slot_overrides([slot_override_target, slot_override_owner]);
-    
-    let proxy_config = LoadConfiguration::default().with_storage_configuration(storage_configuration);
-    let proxy_contract_id = 
-        Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
-            .unwrap()
-            .deploy(&wallet.clone(), TxPolicies::default())
-            .await
-            .unwrap();
 
+    let proxy_config =
+        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+    let proxy_contract_id = Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
+        .unwrap()
+        .deploy(&wallet.clone(), TxPolicies::default())
+        .await
+        .unwrap();
 
     let bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
-    let implementation = BridgeFungibleTokenContract::new(implementation_contract_id.clone(), wallet.clone());
+    let implementation =
+        BridgeFungibleTokenContract::new(implementation_contract_id.clone(), wallet.clone());
 
     // Build inputs for provided coins
     let coin_inputs = all_coins
@@ -479,10 +501,7 @@ pub(crate) async fn precalculate_deposit_id() -> ContractId {
 }
 
 /// Prefixes the given bytes with the test contract ID
-pub(crate) fn prefix_contract_id(
-    mut data: Vec<u8>,
-    contract_id: ContractId
-) -> Vec<u8> {
+pub(crate) fn prefix_contract_id(mut data: Vec<u8>, contract_id: ContractId) -> Vec<u8> {
     // Turn contract id into array with the given data appended to it
     let test_contract_id: [u8; 32] = contract_id.into();
     let mut test_contract_id = test_contract_id.to_vec();
@@ -586,7 +605,7 @@ pub(crate) async fn create_metadata_message(
     token_id: &str,
     token_name: &str,
     token_symbol: &str,
-    contract_recipient: ContractId
+    contract_recipient: ContractId,
 ) -> Vec<u8> {
     let mut message_data: Vec<u8> = vec![];
     message_data.append(&mut encode_hex(U256::from(METADATA_MESSAGE_FLAG)).to_vec());
@@ -650,11 +669,16 @@ pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> Asset
 }
 
 /// This setup mints tokens so that they are registered as minted assets in the bridge
-pub(crate) async fn setup_test() -> (Bech32ContractId, BridgeFungibleTokenContract<WalletUnlocked>) {
+pub(crate) async fn setup_test() -> (
+    Bech32ContractId,
+    BridgeFungibleTokenContract<WalletUnlocked>,
+) {
     let mut wallet = create_wallet();
+    let configurables = None;
+
+    let (proxy_id, _implementation_contract_id) = get_contract_ids(&wallet, configurables.clone());
 
     let amount = u64::MAX;
-
     let (message, coin, deposit_contract) = create_deposit_message(
         BRIDGED_TOKEN,
         BRIDGED_TOKEN_ID,
@@ -662,14 +686,14 @@ pub(crate) async fn setup_test() -> (Bech32ContractId, BridgeFungibleTokenContra
         *wallet.address().hash(),
         U256::from(amount),
         BRIDGED_TOKEN_DECIMALS,
-        Default::default(),
+        proxy_id,
         false,
         None,
     )
     .await;
 
     let metadata_message =
-        create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", Default::default()).await;
+        create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", proxy_id).await;
 
     let (implementation_contractid, proxy_contract, utxo_inputs) = setup_environment(
         &mut wallet,
@@ -677,7 +701,7 @@ pub(crate) async fn setup_test() -> (Bech32ContractId, BridgeFungibleTokenContra
         vec![message, (0, metadata_message)],
         deposit_contract,
         None,
-        None,
+        configurables,
     )
     .await;
 
@@ -705,9 +729,8 @@ pub(crate) async fn setup_test() -> (Bech32ContractId, BridgeFungibleTokenContra
 
 pub(crate) fn get_contract_ids(
     proxy_owner: &WalletUnlocked,
-    implementation_configurables: Option<BridgeFungibleTokenContractConfigurables>
+    implementation_configurables: Option<BridgeFungibleTokenContractConfigurables>,
 ) -> (ContractId, ContractId) {
-
     // Set up the bridge contract instance
     let implementation_config = match implementation_configurables {
         Some(config) => LoadConfiguration::default().with_configurables(config),
@@ -718,22 +741,26 @@ pub(crate) fn get_contract_ids(
         Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
             .unwrap()
             .contract_id();
-    let implementation_contract_bech32: Bech32ContractId = implementation_contract_id.clone().into();
-
+    let implementation_contract_bech32: Bech32ContractId =
+        implementation_contract_id.clone().into();
 
     let target_key_hash = Hasher::hash("storage_SRC14_0");
-    let slot_override_target = StorageSlot::new(target_key_hash, (*implementation_contract_bech32.hash).into());
+    let slot_override_target = StorageSlot::new(
+        target_key_hash,
+        (*implementation_contract_bech32.hash).into(),
+    );
     let owner_key_hash = Hasher::hash("storage_SRC14_1");
-    let slot_override_owner = StorageSlot::new(owner_key_hash, (*proxy_owner.address().hash).into());
+    let slot_override_owner =
+        StorageSlot::new(owner_key_hash, (*proxy_owner.address().hash).into());
 
     let storage_configuration = StorageConfiguration::default()
         .add_slot_overrides([slot_override_target, slot_override_owner]);
 
-    let proxy_config = LoadConfiguration::default().with_storage_configuration(storage_configuration);
-    let proxy_contract_id = 
-        Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
-            .unwrap()
-            .contract_id();
+    let proxy_config =
+        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+    let proxy_contract_id = Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
+        .unwrap()
+        .contract_id();
 
     (proxy_contract_id, implementation_contract_id)
 }

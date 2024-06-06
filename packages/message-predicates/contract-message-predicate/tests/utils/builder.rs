@@ -16,7 +16,7 @@ use fuels::{
         input::Input,
         transaction_builders::{
             BuildableTransaction, ScriptTransactionBuilder, TransactionBuilder,
-        }
+        },
     },
 };
 
