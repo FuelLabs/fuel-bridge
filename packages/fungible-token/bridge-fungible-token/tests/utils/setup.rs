@@ -16,7 +16,7 @@ use fuel_core_types::{
 use fuels::{
     accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
-        abigen, launch_provider_and_get_wallet, setup_custom_assets_coins, setup_test_provider,
+        abigen, setup_custom_assets_coins, setup_test_provider,
         Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
         Provider, TxPolicies,
     },
@@ -727,7 +727,7 @@ pub(crate) fn get_contract_ids(
             .unwrap()
             .contract_id();
     let implementation_contract_bech32: Bech32ContractId =
-        implementation_contract_id.clone().into();
+        implementation_contract_id.into();
 
     let target_key_hash = Hasher::hash("storage_SRC14_0");
     let slot_override_target = StorageSlot::new(

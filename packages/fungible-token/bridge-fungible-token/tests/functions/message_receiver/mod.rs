@@ -12,11 +12,10 @@ use std::str::FromStr;
 
 mod success {
     use super::*;
-    use crate::utils::constants::BRIDGED_TOKEN_GATEWAY;
+    
     use crate::utils::interface::src20::total_supply;
-    use crate::utils::setup::setup_environment_with_proxy;
+    
     use crate::utils::{
-        constants::MESSAGE_AMOUNT,
         setup::{
             contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
             get_asset_id, get_contract_ids, precalculate_deposit_id, wallet_balance, MetadataEvent,
@@ -47,7 +46,7 @@ mod success {
         )
         .unwrap();
         let recipient_bech32: Bech32Address =
-            Bech32Address::new(FUEL_BECH32_HRP, recipient.clone());
+            Bech32Address::new(FUEL_BECH32_HRP, recipient);
 
         let configurables: BridgeFungibleTokenContractConfigurables =
             BridgeFungibleTokenContractConfigurables::default()
