@@ -15,10 +15,10 @@ ethers = {version = "=2.0.14"}
 fuel-core-types = { workspace = true }
 # Dependencies from fuels-rs repository:
 fuels = { workspace = true, features = ["fuel-core-lib"] }
-hex = "0.4.3"
+hex = { workspace = true }
 
 primitive-types = "0.12.1"
-sha2 = "0.10"
+sha2 = { workspace = true }
 sha3 = "0.10.1"
 tokio = { workspace = true }
 
