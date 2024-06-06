@@ -164,7 +164,6 @@ You can follow the actual implementation of the message processing flow via:
 
 ### Message passing from L2 to L1
 
-
 Any user (or contract) on the L2 can trigger transactions that generate [receipts](https://github.com/FuelLabs/fuel-specs/blob/master/src/abi/receipts.md). Among these receipts, it is possible to include the `MessageOut` receipt, carrying among other things, a `sender` ID from the Fuel chain, a `recipient` address of the L1 chain, an `amount` of the base currency used in the L1, and a `data` payload. Each Fuel block header contains a merkle root built from the `MessageOut` receipts, making it trivial to build a merkle proof for the inclusion of specific `MessageOut` payloads in a Fuel block.
 
 Fuel blocks are packed and committed together by the mechanism described in the section `Block committing` in epochs. A Fuel epoch will be committed at the [Chain State contract](../packages/solidity-contracts/contracts/fuelchain/FuelChainState.sol) with the last block of the epoch, namely the `Fuel root block`. This block features another `Merkle root` that commits to a tree consisting of the block hashes of the epoch. Again, the hash of this root block is derived, among other elements, from this root.
