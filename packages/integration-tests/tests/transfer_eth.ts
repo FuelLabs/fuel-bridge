@@ -13,7 +13,7 @@ import {
 import chai from 'chai';
 import type { Signer } from 'ethers';
 import { parseEther } from 'ethers';
-import { Address, BN, ZeroBytes32, padFirst12BytesOfEvmAddress } from 'fuels';
+import { Address, BN, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
@@ -26,6 +26,7 @@ describe('Transferring ETH', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
+  let BASE_ASSET_ID: string;
 
   let env: TestEnvironment;
 
@@ -34,6 +35,7 @@ describe('Transferring ETH', async function () {
 
   before(async () => {
     env = await setupEnvironment({});
+    BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
 
   describe('Send ETH to Fuel', async () => {
@@ -53,9 +55,10 @@ describe('Transferring ETH', async function () {
       );
       fuelETHReceiver = env.fuel.signers[0].address;
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
+
       fuelETHReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        ZeroBytes32
+        BASE_ASSET_ID
       );
     });
 
@@ -113,7 +116,7 @@ describe('Transferring ETH', async function () {
       // check that the recipient balance has increased by the expected amount
       const newReceiverBalance = await env.fuel.provider.getBalance(
         fuelETHReceiver,
-        ZeroBytes32
+        BASE_ASSET_ID
       );
       expect(
         newReceiverBalance.eq(
@@ -134,7 +137,7 @@ describe('Transferring ETH', async function () {
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
-      fuelETHSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
+      fuelETHSenderBalance = await fuelETHSender.getBalance(BASE_ASSET_ID);
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
       ethereumETHReceiverBalance = await env.eth.provider.getBalance(
@@ -175,7 +178,7 @@ describe('Transferring ETH', async function () {
       );
 
       // check that the sender balance has decreased by the expected amount
-      const newSenderBalance = await fuelETHSender.getBalance(ZeroBytes32);
+      const newSenderBalance = await fuelETHSender.getBalance(BASE_ASSET_ID);
 
       // Get just the first 3 digits of the balance to compare to the expected balance
       // this is required because the payment of gas fees is not deterministic

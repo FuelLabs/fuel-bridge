@@ -15,7 +15,7 @@ fuels = { workspace = true, features = ["fuel-core-lib"] }
 fuel-asm = { workspace = true }
 fuel-tx = { workspace = true }
 
-sha2 = "0.10.6"
+sha2 = { workspace = true }
 
 [dev-dependencies]
 fuel-core-types = { workspace = true }
@@ -24,7 +24,7 @@ insta = "1.28"
 tokio = { workspace = true }
 
 [build-dependencies]
-sha2 = "0.10.6"
+sha2 = { workspace = true }
 fuels = { workspace = true, features = ["fuel-core-lib"] }
 hex = { workspace = true }
 
