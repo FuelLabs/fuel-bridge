@@ -632,9 +632,14 @@ mod success {
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
 
-        let registered_name = bridge.methods().name(asset_id)
-        .with_contract_ids(&[implementation_contractid.clone()])
-        .call().await.unwrap().value;
+        let registered_name = bridge
+            .methods()
+            .name(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
+            .call()
+            .await
+            .unwrap()
+            .value;
 
         assert_eq!(name, registered_name.unwrap());
 
@@ -748,9 +753,14 @@ mod success {
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
 
-        let registered_name = bridge.methods().name(asset_id)
-        .with_contract_ids(&[implementation_contractid.clone()])
-        .call().await.unwrap().value;
+        let registered_name = bridge
+            .methods()
+            .name(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
+            .call()
+            .await
+            .unwrap()
+            .value;
         assert_eq!(name, registered_name.unwrap());
 
         let registered_symbol = bridge
@@ -862,9 +872,14 @@ mod success {
             Bits256::from_hex_str(BRIDGED_TOKEN).unwrap()
         );
 
-        let registered_name = bridge.methods().name(asset_id)
-        .with_contract_ids(&[implementation_contractid.clone()])
-        .call().await.unwrap().value;
+        let registered_name = bridge
+            .methods()
+            .name(asset_id)
+            .with_contract_ids(&[implementation_contractid.clone()])
+            .call()
+            .await
+            .unwrap()
+            .value;
 
         assert_eq!(name, registered_name.unwrap());
 

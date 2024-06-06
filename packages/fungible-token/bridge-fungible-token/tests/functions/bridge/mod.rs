@@ -4,8 +4,8 @@ use crate::utils::{
     },
     interface::bridge::withdraw,
     setup::{
-        create_deposit_message, create_wallet, decode_hex, encode_hex,
-        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
+        create_deposit_message, create_wallet, decode_hex, encode_hex, parse_output_message_data,
+        relay_message_to_contract, setup_environment, wallet_balance,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
 };
@@ -381,7 +381,8 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let call_response = withdraw(&bridge, implementation_contractid.clone(), to, amount, gas).await;
+        let call_response =
+            withdraw(&bridge, implementation_contractid.clone(), to, amount, gas).await;
 
         let message_receipt = call_response
             .receipts
