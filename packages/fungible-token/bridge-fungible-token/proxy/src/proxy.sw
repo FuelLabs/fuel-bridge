@@ -1,14 +1,14 @@
 contract;
 
 use std::{
-    execution::run_external,
-    constants::ZERO_B256,
-    string::String,
     call_frames::first_param,
+    constants::ZERO_B256,
+    execution::run_external,
     hash::Hash,
     hash::sha256,
+    string::String,
 };
-use standards::{src5::{AccessError, SRC5, State}, src14::SRC14, src20::SRC20};
+use standards::{src14::SRC14, src20::SRC20, src5::{AccessError, SRC5, State}};
 use contract_message_receiver::MessageReceiver;
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
 

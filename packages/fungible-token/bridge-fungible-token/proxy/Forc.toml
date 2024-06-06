@@ -5,6 +5,6 @@ license = "Apache-2.0"
 name = "proxy"
 
 [dependencies]
+contract_message_receiver = { path = "../../../message-predicates/contract-message-receiver" }
 interface = { path = "../interface" }
 standards = { git = "https://github.com/FuelLabs/sway-standards", branch = "master" }
-contract_message_receiver = { path = "../../../message-predicates/contract-message-receiver" }
