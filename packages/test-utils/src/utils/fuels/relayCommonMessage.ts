@@ -34,6 +34,8 @@ function getCommonRelayableMessages(provider: Provider) {
     provider,
   });
 
+  const assetId = provider.getBaseAssetId();
+
   // Details for relaying common messages with certain predicate roots
   const relayableMessages: CommonMessageDetails[] = [
     {
@@ -52,7 +54,7 @@ function getCommonRelayableMessages(provider: Provider) {
         const resources = await relayer.getResourcesToSpend([
           {
             amount: bn.parseUnits('5'),
-            assetId: ZeroBytes32,
+            assetId,
           },
         ]);
         // convert resources to inputs
@@ -92,12 +94,11 @@ function getCommonRelayableMessages(provider: Provider) {
         transaction.outputs.push({
           type: OutputType.Change,
           to: relayer.address.toB256(),
-          assetId: ZeroBytes32,
+          assetId,
         });
         transaction.outputs.push({
           type: OutputType.Variable,
         });
-
         transaction.witnesses.push(ZeroBytes32);
 
         transaction.gasLimit = bn(1_000_000);
