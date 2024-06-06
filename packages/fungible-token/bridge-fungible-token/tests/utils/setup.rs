@@ -16,9 +16,8 @@ use fuel_core_types::{
 use fuels::{
     accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
     prelude::{
-        abigen, setup_custom_assets_coins, setup_test_provider,
-        Address, AssetConfig, AssetId, Bech32ContractId, Contract, ContractId, LoadConfiguration,
-        Provider, TxPolicies,
+        abigen, setup_custom_assets_coins, setup_test_provider, Address, AssetConfig, AssetId,
+        Bech32ContractId, Contract, ContractId, LoadConfiguration, Provider, TxPolicies,
     },
     programs::contract::StorageConfiguration,
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
@@ -726,8 +725,7 @@ pub(crate) fn get_contract_ids(
         Contract::load_from(BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY, implementation_config)
             .unwrap()
             .contract_id();
-    let implementation_contract_bech32: Bech32ContractId =
-        implementation_contract_id.into();
+    let implementation_contract_bech32: Bech32ContractId = implementation_contract_id.into();
 
     let target_key_hash = Hasher::hash("storage_SRC14_0");
     let slot_override_target = StorageSlot::new(

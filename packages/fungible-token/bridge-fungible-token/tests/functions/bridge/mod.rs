@@ -17,10 +17,7 @@ mod success {
 
     use crate::utils::{
         constants::BRIDGED_TOKEN_GATEWAY,
-        interface::{
-            bridge::{claim_refund},
-            src20::total_supply,
-        },
+        interface::{bridge::claim_refund, src20::total_supply},
         setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
     use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
