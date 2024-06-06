@@ -509,21 +509,6 @@ pub(crate) fn prefix_contract_id(mut data: Vec<u8>, contract_id: ContractId) -> 
     test_contract_id
 }
 
-pub(crate) async fn create_token() -> BridgeFungibleTokenContract<WalletUnlocked> {
-    let wallet = launch_provider_and_get_wallet().await.unwrap();
-
-    let id = Contract::load_from(
-        BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY,
-        LoadConfiguration::default(),
-    )
-    .unwrap()
-    .deploy(&wallet, TxPolicies::default())
-    .await
-    .unwrap();
-
-    BridgeFungibleTokenContract::new(id, wallet)
-}
-
 pub(crate) async fn create_recipient_contract(
     wallet: WalletUnlocked,
 ) -> DepositRecipientContract<WalletUnlocked> {

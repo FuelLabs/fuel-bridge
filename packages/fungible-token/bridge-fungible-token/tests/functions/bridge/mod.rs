@@ -4,7 +4,7 @@ use crate::utils::{
     },
     interface::bridge::withdraw,
     setup::{
-        create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
+        create_deposit_message, create_wallet, decode_hex, encode_hex,
         parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
         BridgeFungibleTokenContractConfigurables, BridgingConfig,
     },
@@ -109,6 +109,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
+            implementation_contractid,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -259,6 +260,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
+            implementation_contractid,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -379,7 +381,7 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let call_response = withdraw(&bridge, to, amount, gas).await;
+        let call_response = withdraw(&bridge, implementation_contractid.clone(), to, amount, gas).await;
 
         let message_receipt = call_response
             .receipts
@@ -417,18 +419,6 @@ mod success {
         .await
         .unwrap();
         assert_eq!(supply, 0);
-    }
-
-    #[tokio::test]
-    async fn check_bridged_token_gateway() {
-        let contract = create_token().await;
-
-        let response = bridged_token_gateway(&contract).await;
-
-        assert_eq!(
-            response,
-            Bits256(*Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
-        )
     }
 }
 
