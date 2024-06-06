@@ -20,7 +20,7 @@ mod success {
         setup::{
             contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
             get_asset_id, precalculate_deposit_id, wallet_balance, MetadataEvent,
-            RefundRegisteredEvent,
+            RefundRegisteredEvent, get_contract_ids
         },
     };
     use fuel_core_types::fuel_types::canonical::Deserialize;
@@ -60,7 +60,7 @@ mod success {
             *recipient,
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            Some(configurables.clone()),
+            Default::default(),
             false,
             None,
         )
@@ -171,7 +171,7 @@ mod success {
             *recipient,
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            Some(configurables.clone()),
+            Default::default(),
             false,
             None,
         )
@@ -229,6 +229,8 @@ mod success {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
+        let (proxy_id,implementation_contract_id) = get_contract_ids(&wallet, configurables.clone());
+
         let deposit_amount = u64::MAX / 2;
 
         let (first_deposit_message, coin, deposit_contract) = create_deposit_message(
@@ -238,7 +240,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
@@ -251,7 +253,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
@@ -268,6 +270,7 @@ mod success {
         .await;
 
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
+        let impl_asset_id = get_asset_id(&implementation_contractid, BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         assert!(total_supply(&implementation_contractid, &bridge, asset_id).await.is_none());
@@ -277,7 +280,7 @@ mod success {
         ////////////////////
 
         // Relay the test message to the bridge contract
-        let _receipts = relay_message_to_contract(
+        let _tx_id = relay_message_to_contract(
             &wallet,
             utxo_inputs.message[0].clone(),
             utxo_inputs.contract.clone(),
@@ -314,6 +317,7 @@ mod success {
         let registered_l1_address: Bits256 = bridge
             .methods()
             .asset_to_l1_address(asset_id)
+            .with_contract_ids(&[implementation_contractid])
             .call()
             .await
             .unwrap()
@@ -339,7 +343,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(max_deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -352,7 +356,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(max_deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -462,7 +466,7 @@ mod success {
             *deposit_contract_id,
             U256::from(deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             true,
             None,
         )
@@ -511,7 +515,7 @@ mod success {
             *deposit_contract_id,
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             true,
             Some(vec![11u8, 42u8, 69u8]),
         )
@@ -568,7 +572,7 @@ mod success {
             *deposit_contract_id,
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             true,
             Some(vec![11u8, 42u8, 69u8]),
         )
@@ -628,7 +632,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             decimals,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -639,7 +643,7 @@ mod success {
             BRIDGED_TOKEN_ID,
             &name,
             &symbol,
-            configurables.clone(),
+            Default::default(),
         )
         .await;
 
@@ -744,7 +748,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             decimals,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -755,7 +759,7 @@ mod success {
             BRIDGED_TOKEN_ID,
             &name,
             &symbol,
-            configurables.clone(),
+            Default::default(),
         )
         .await;
 
@@ -859,7 +863,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             decimals,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -870,7 +874,7 @@ mod success {
             BRIDGED_TOKEN_ID,
             &name,
             &symbol,
-            configurables.clone(),
+            Default::default(),
         )
         .await;
 
@@ -971,7 +975,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(deposit_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -1059,7 +1063,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(token_one_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -1072,7 +1076,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(token_two_amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -1179,7 +1183,7 @@ mod revert {
             *Address::from_str(TO).unwrap(),
             config.amount.min,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
