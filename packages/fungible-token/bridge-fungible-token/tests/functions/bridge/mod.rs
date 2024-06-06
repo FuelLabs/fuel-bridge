@@ -47,7 +47,7 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -179,7 +179,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(u64::MAX),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -192,7 +192,7 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -321,7 +321,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -443,7 +443,7 @@ mod revert {
             *wallet.address().hash(),
             config.overflow.two,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
@@ -489,7 +489,7 @@ mod revert {
             *wallet.address().hash(),
             config.overflow.two,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
