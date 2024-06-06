@@ -84,12 +84,12 @@ Since `MessageSent` events and their spawned `MessageCoin` UTXOs can carry a val
 ```mermaid
 sequenceDiagram
     participant user as User
-    box purple ETH
+    box ETH
     participant eth as L1 Chain
     participant portal as FuelMessagePortal.sol
     end
 
-    box darkgreen FUEL
+    box FUEL
     participant sequencers as Fuel Sequencers
     participant fuel as L2 Chain
     end
@@ -115,13 +115,13 @@ A deposit operation is an use case of the message passing system from L1 entitie
 ```mermaid
 sequenceDiagram
     participant user as User
-    box purple ETH
+    box ETH
     participant eth as L1 Chain
     participant gateway as FuelERC20Gateway.sol
     participant portal as FuelMessagePortal.sol
     end
 
-    box darkgreen FUEL
+    box FUEL
     participant sequencers as Fuel Sequencers
     participant fuel as L2 Chain
     participant predicate as Bridge predicate
@@ -209,14 +209,14 @@ The Fuel blockchain aims to be scalable, and thus is able to generate blocks at 
 ```mermaid
 sequenceDiagram
     participant user as User
-    box darkgreen FUEL
+    box FUEL
         participant fuel as L2 Chain
         participant sequencers as Fuel Sequencers
     end
 
     participant committer as Block committer
 
-    box purple ETH
+    box ETH
         participant eth as L1 Chain
         participant state as FuelChainState.sol
         participant observer
@@ -250,13 +250,13 @@ A simplified sequencer diagram shows the process below:
 ```mermaid
 sequenceDiagram
     participant user as User
-    box darkgreen FUEL
+    box FUEL
         participant fuel as L2 Chain
     end
 
     participant committer as Block committer
 
-    box purple ETH
+    box ETH
         participant state as FuelChainState.sol
         participant portal as FuelMessagePortal.sol
     end
@@ -297,14 +297,14 @@ After finality has been reached for the epoch that includes the block where the 
 ```mermaid
 sequenceDiagram
     participant user as User
-    box darkgreen FUEL
+    box FUEL
         participant fuel as L2 Chain
         participant bridge as L2 Bridge Contract
     end
 
     participant committer as Block committer
 
-    box purple ETH
+    box ETH
         participant state as FuelChainState.sol
         participant portal as FuelMessagePortal.sol
         participant gateway as FuelERC20Gateway.sol
