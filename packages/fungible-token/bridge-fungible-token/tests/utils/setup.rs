@@ -312,7 +312,7 @@ pub(crate) async fn setup_environment(
 }
 
 /// Sets up a test fuel environment with a funded wallet
-pub(crate) async fn setup_environment_with_proxy(
+pub(crate) async fn _setup_environment_with_proxy(
     wallet: &mut WalletUnlocked,
     coins: Vec<(Word, AssetId)>,
     messages: Vec<(Word, Vec<u8>)>,

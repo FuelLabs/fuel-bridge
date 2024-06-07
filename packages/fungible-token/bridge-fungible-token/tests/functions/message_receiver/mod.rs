@@ -119,7 +119,7 @@ mod success {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let deposit_amount = u64::MAX / 2;
@@ -161,7 +161,7 @@ mod success {
         .await;
 
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
-        let impl_asset_id = get_asset_id(&implementation_contractid, BRIDGED_TOKEN);
+        let _impl_asset_id = get_asset_id(&implementation_contractid, BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         assert!(total_supply(&implementation_contractid, &bridge, asset_id)
@@ -365,7 +365,7 @@ mod success {
 
         let deposit_amount = u64::MAX;
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -381,7 +381,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (_implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -433,7 +433,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (_implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -477,7 +477,7 @@ mod success {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
         let amount = u64::MAX;
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -493,7 +493,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (_implementation_contractid, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -539,7 +539,7 @@ mod success {
         let symbol = "TKN".to_string();
         let decimals = 18;
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let amount: u64 = u64::MAX;
@@ -780,7 +780,7 @@ mod success {
         let symbol = "TKN".to_string();
         let decimals = 6;
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let amount: u64 = u64::MAX;
@@ -1115,7 +1115,7 @@ mod revert {
         let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let bad_sender: &str = "0x5555550000000000000000000000000000000000000000000000000005555555";
 
-        let (proxy_id, implementation_contract_id) =
+        let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -1131,7 +1131,7 @@ mod revert {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (_implementation_contractid, _bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
