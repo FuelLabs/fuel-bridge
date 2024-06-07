@@ -135,7 +135,6 @@ mod fail {
             coin::{Coin, CoinStatus::Unspent},
             coin_type::CoinType,
             input::Input,
-            unresolved_bytes::UnresolvedBytes,
         },
     };
 
@@ -184,7 +183,7 @@ mod fail {
                 status: Unspent,
             }),
             code: predicate_bytecode,
-            data: UnresolvedBytes::new(vec![]),
+            data: Vec::new(),
         };
 
         let tx = builder::build_contract_message_tx(
