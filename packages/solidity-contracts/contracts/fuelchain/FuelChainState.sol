@@ -26,7 +26,7 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     // NUM_COMMIT_SLOTS an arbitrary number of commits to store before starting to overwrite
     uint256 public constant NUM_COMMIT_SLOTS = 240;
     // Number of blocks per commit interval
-    // BLOCKS_PER_COMMIT_INTERVAL = (num of blocks per minute * target interval in minutes)
+    // BLOCKS_PER_COMMIT_INTERVAL = (num of blocks per minute (=60) * target interval in minutes)
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     uint256 public immutable BLOCKS_PER_COMMIT_INTERVAL;
 
@@ -53,6 +53,9 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     // Errors //
     ////////////
 
+    error TimeToFinalizeTooLarge();
+    error CommitCooldownTooLarge();
+    error FinalizationIsGtCooldown();
     error UnknownBlock();
     error CannotRecommit();
 
@@ -68,10 +71,25 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     /////////////////////////////
 
     /// @notice Constructor disables initialization for the implementation contract
+    /// @dev assumes 1 block per second in the L2 chain
     /// @custom:oz-upgrades-unsafe-allow constructor
-    constructor(uint256 timeToFinalize, uint256 blocksPerCommitInterval) {
+    constructor(uint256 timeToFinalize, uint256 blocksPerCommitInterval, uint32 commitCooldown) {
+        if (timeToFinalize > commitCooldown) {
+            revert FinalizationIsGtCooldown();
+        }
+
+        uint256 circularBufferSizeInSeconds = NUM_COMMIT_SLOTS * blocksPerCommitInterval;
+
+        if (timeToFinalize > circularBufferSizeInSeconds) {
+            revert TimeToFinalizeTooLarge();
+        }
+
+        if (commitCooldown > circularBufferSizeInSeconds) {
+            revert CommitCooldownTooLarge();
+        }
+
         TIME_TO_FINALIZE = timeToFinalize;
-        COMMIT_COOLDOWN = uint32(timeToFinalize) * 8;
+        COMMIT_COOLDOWN = commitCooldown;
         BLOCKS_PER_COMMIT_INTERVAL = blocksPerCommitInterval;
 
         _disableInitializers();

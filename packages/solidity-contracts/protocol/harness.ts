@@ -155,7 +155,7 @@ export async function deployFuel(
   const fuelChainState = await upgrades
     .deployProxy(FuelChainState, [], {
       initializer: 'initialize',
-      constructorArgs: [10800, 10800],
+      constructorArgs: [10800, 10800, 10800],
     })
     .then((tx) => tx.waitForDeployment())
     .then((tx) => FuelChainState__factory.connect(tx as any, tx.runner));
@@ -219,10 +219,10 @@ export async function upgradeFuel(
   );
   await upgrades.forceImport(contracts.FuelChainState, FuelChainState, {
     kind: 'uups',
-    constructorArgs: [10800, 10800],
+    constructorArgs: [10800, 10800, 10800],
   } as any);
   await upgrades.upgradeProxy(contracts.FuelChainState, FuelChainState, {
-    constructorArgs: [10800, 10800],
+    constructorArgs: [10800, 10800, 10800],
   });
 
   // Upgrade message portal contract

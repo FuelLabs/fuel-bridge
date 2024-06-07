@@ -19,7 +19,11 @@ import type {
   FuelMessagePortalV2,
 } from '../typechain';
 
-import { BLOCKS_PER_COMMIT_INTERVAL, TIME_TO_FINALIZE } from './utils';
+import {
+  BLOCKS_PER_COMMIT_INTERVAL,
+  COMMIT_COOLDOWN,
+  TIME_TO_FINALIZE,
+} from './utils';
 import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;
@@ -64,7 +68,11 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         .then(async (factory) =>
           deployProxy(factory, [], {
             ...proxyOptions,
-            constructorArgs: [TIME_TO_FINALIZE, BLOCKS_PER_COMMIT_INTERVAL],
+            constructorArgs: [
+              TIME_TO_FINALIZE,
+              BLOCKS_PER_COMMIT_INTERVAL,
+              COMMIT_COOLDOWN,
+            ],
           })
         )
         .then((tx) => tx.waitForDeployment())) as FuelChainState;
