@@ -8,7 +8,9 @@ use fuels::{
         LoadConfiguration, TxPolicies,
     },
     test_helpers::{setup_single_message, setup_test_provider},
-    types::{coin_type::CoinType, input::Input, message::Message},
+    types::{
+        coin_type::CoinType, input::Input, message::Message,
+    },
 };
 
 use fuel_tx::{Bytes32, TxId, TxPointer, UtxoId, Word};
