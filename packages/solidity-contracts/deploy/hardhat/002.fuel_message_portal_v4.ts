@@ -2,7 +2,10 @@ import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
+import { FuelMessagePortalV4__factory as FuelMessagePortal } from '../../typechain';
+
+const ETH_DEPOSIT_LIMIT = MaxUint256;
+const FTI_GAS_LIMIT = (2n ^ 64n) - 1n;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -19,7 +22,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     [fuelChainState],
     {
       initializer: 'initialize',
-      constructorArgs: [MaxUint256],
+      constructorArgs: [ETH_DEPOSIT_LIMIT, FTI_GAS_LIMIT],
     }
   );
   await contract.waitForDeployment();
@@ -30,7 +33,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('Deployed FuelMessagePortal at', address);
   await save('FuelMessagePortal', {
     address,
-    abi: [],
+    abi: [...FuelMessagePortal.abi],
     implementation,
   });
 
