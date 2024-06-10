@@ -14,11 +14,13 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
     uint192 internal lastSeenBlock;
     uint64 internal usedGas;
 
+    uint256 internal transactionNonce;
+
     constructor(uint256 _depositLimitGlobal, uint64 _gasLimit) FuelMessagePortalV3(_depositLimitGlobal) {
         GAS_LIMIT = _gasLimit;
     }
 
-    function sendTransaction(uint64 gas, bytes calldata /*serializedTx*/) external payable virtual {
+    function sendTransaction(uint64 gas, bytes calldata serializedTx) external payable virtual {
         uint64 _usedGas = usedGas;
 
         if (lastSeenBlock == block.number) {
@@ -33,6 +35,9 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
 
         lastSeenBlock = uint192(block.number);
         usedGas = _usedGas;
+        unchecked {
+            emit Transaction(transactionNonce++, gas, serializedTx);
+        }
     }
 
     function getLastSeenBlock() public virtual returns (uint256) {
@@ -43,6 +48,10 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
         if (getLastSeenBlock() == block.number) return usedGas;
 
         return 0;
+    }
+
+    function getCurrentTransactionNonce() external virtual returns (uint256) {
+        return transactionNonce;
     }
 
     /**

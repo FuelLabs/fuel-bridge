@@ -1,7 +1,12 @@
 import { MaxUint256 } from 'ethers';
 import hre from 'hardhat';
 
-import { behavesLikeAccessControl } from './behaviors';
+import type { FuelMessagePortalV4 } from '../typechain';
+
+import {
+  behavesLikeAccessControl,
+  behavesLikeFuelMessagePortalV4,
+} from './behaviors';
 
 const DEPOSIT_LIMIT = MaxUint256;
 const GAS_LIMIT = 1_000;
@@ -23,18 +28,19 @@ describe.only('FuelMessagePortalV4', () => {
         // ],
       });
 
-      const fuelMessagePortal = await upgrades.deployProxy(
+      const fuelMessagePortal = (await upgrades.deployProxy(
         FuelMessagePortal,
         [await fuelChainState.getAddress()],
         {
           initializer: 'initialize',
           constructorArgs: [DEPOSIT_LIMIT, GAS_LIMIT],
         }
-      );
+      )) as unknown as FuelMessagePortalV4;
 
       return { signers, fuelMessagePortal };
     }
   );
 
   behavesLikeAccessControl(fixture, 'fuelMessagePortal');
+  behavesLikeFuelMessagePortalV4(fixture);
 });
