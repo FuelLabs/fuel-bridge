@@ -2,13 +2,13 @@
 /// A set of useful helper methods for setting up the integration test environment.
 import type {
   FuelChainState,
-  FuelMessagePortal,
+  FuelMessagePortalV4,
   FuelERC20GatewayV4 as FuelERC20Gateway,
   FuelERC721Gateway,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
-  FuelMessagePortal__factory,
+  FuelMessagePortalV4__factory as FuelMessagePortal__factory,
   FuelERC20GatewayV4__factory as FuelERC20Gateway__factory,
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
@@ -78,7 +78,7 @@ export interface TestEnvironment {
     provider: EthProvider;
     jsonRPC: string;
     fuelChainState: FuelChainState;
-    fuelMessagePortal: FuelMessagePortal;
+    fuelMessagePortal: FuelMessagePortalV4;
     fuelERC20Gateway: FuelERC20Gateway;
     fuelERC721Gateway: FuelERC721Gateway;
     deployer: EthSigner;
@@ -275,7 +275,7 @@ export async function setupEnvironment(
     eth_fuelChainStateAddress,
     eth_deployer
   );
-  const eth_fuelMessagePortal: FuelMessagePortal =
+  const eth_fuelMessagePortal: FuelMessagePortalV4 =
     FuelMessagePortal__factory.connect(
       eth_fuelMessagePortalAddress,
       eth_deployer

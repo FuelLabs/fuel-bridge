@@ -5,7 +5,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import { FuelMessagePortalV4__factory as FuelMessagePortal } from '../../typechain';
 
 const ETH_DEPOSIT_LIMIT = MaxUint256;
-const FTI_GAS_LIMIT = (2n ^ 64n) - 1n;
+const FTI_GAS_LIMIT = 2n ** 64n - 1n;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -17,6 +17,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: fuelChainState } = await get('FuelChainState');
 
+  console.log('holaaaa');
+  console.log(FTI_GAS_LIMIT);
+
   const contract = await deployProxy(
     new FuelMessagePortal(deployer),
     [fuelChainState],
@@ -26,6 +29,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
   );
   await contract.waitForDeployment();
+
+  console.log('waaaat');
+  await contract.GAS_LIMIT().then(console.log);
 
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
