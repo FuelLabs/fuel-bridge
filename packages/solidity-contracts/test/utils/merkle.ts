@@ -8,6 +8,7 @@ import { computeMessageId } from '../../protocol/message';
 
 // Contract constants
 export const TIME_TO_FINALIZE = 10800;
+export const COMMIT_COOLDOWN = 10800;
 export const BLOCKS_PER_COMMIT_INTERVAL = 10800;
 
 // TODO: should be importable from @fuel-ts/merkle

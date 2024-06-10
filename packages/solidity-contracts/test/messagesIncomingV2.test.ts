@@ -23,6 +23,7 @@ import { createBlock } from './utils/createBlock';
 import type { TreeNode } from './utils/merkle';
 import {
   BLOCKS_PER_COMMIT_INTERVAL,
+  COMMIT_COOLDOWN,
   TIME_TO_FINALIZE,
   generateProof,
   getLeafIndexKey,
@@ -229,7 +230,16 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
 
       const fuelChainState = (await ethers
         .getContractFactory('FuelChainState', deployer)
-        .then(async (factory) => deployProxy(factory, [], proxyOptions))
+        .then(async (factory) =>
+          deployProxy(factory, [], {
+            ...proxyOptions,
+            constructorArgs: [
+              TIME_TO_FINALIZE,
+              BLOCKS_PER_COMMIT_INTERVAL,
+              COMMIT_COOLDOWN,
+            ],
+          })
+        )
         .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
       const deployment = await ethers
