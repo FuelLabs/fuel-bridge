@@ -204,10 +204,9 @@ describe.skip('Bridging ERC721 tokens', async function () {
             amount: 1,
             assetId: fuel_testAssetId,
           },
-        });
+        })
+        .fundWithRequiredCoins();
 
-      const scopeFunded = await scope.fundWithRequiredCoins();
-      const transactionRequest = await scopeFunded.getTransactionRequest();
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
 
       const fWithdrawTxResult = await tx.waitForResult();
