@@ -6,7 +6,7 @@ import {
   waitForMessage,
   createRelayMessageParams,
   getOrDeployECR20Contract,
-  getOrDeployFuelTokenContract,
+  getOrDeployL2Bridge,
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
@@ -53,7 +53,7 @@ describe('Bridging ERC20 tokens', async function () {
     ).toLowerCase();
     eth_testToken = await getOrDeployECR20Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
-    fuel_testToken = await getOrDeployFuelTokenContract(
+    fuel_testToken = await getOrDeployL2Bridge(
       env,
       env.eth.fuelERC20Gateway,
       FUEL_TX_PARAMS

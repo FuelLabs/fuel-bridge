@@ -5,7 +5,7 @@ import {
   relayCommonMessage,
   waitForMessage,
   createRelayMessageParams,
-  getOrDeployFuelTokenContract,
+  getOrDeployL2Bridge,
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
@@ -54,7 +54,7 @@ describe.skip('Bridging ERC721 tokens', async function () {
     eth_erc721GatewayAddress = (
       await env.eth.fuelERC721Gateway.getAddress()
     ).toLowerCase();
-    fuel_testToken = await getOrDeployFuelTokenContract(
+    fuel_testToken = await getOrDeployL2Bridge(
       env,
       env.eth.fuelERC721Gateway,
       FUEL_TX_PARAMS,

@@ -12,7 +12,7 @@ import type { TestEnvironment } from '../setup';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 
-export async function getOrDeployFuelTokenContract(
+export async function getOrDeployL2Bridge(
   env: TestEnvironment,
   ethTokenGateway: AddressLike,
   fuelTxParams: TxParams,
