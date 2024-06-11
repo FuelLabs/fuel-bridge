@@ -45,13 +45,13 @@ source = "member"
 dependencies = [
     "contract_message_receiver",
     "interface",
-    "standards git+https://github.com/FuelLabs/sway-standards?branch=master#1e567c6442738d9c2f3e9c7a923afceb8770fce4",
+    "standards git+https://github.com/FuelLabs/sway-standards?branch=master#5c85027f279f5377fba706c260021c45fb280ab5",
     "std",
 ]
 
 [[package]]
 name = "standards"
-source = "git+https://github.com/FuelLabs/sway-standards?branch=master#1e567c6442738d9c2f3e9c7a923afceb8770fce4"
+source = "git+https://github.com/FuelLabs/sway-standards?branch=master#5c85027f279f5377fba706c260021c45fb280ab5"
 dependencies = ["std"]
 
 [[package]]

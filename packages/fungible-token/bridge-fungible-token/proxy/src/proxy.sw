@@ -27,7 +27,8 @@ abi Proxy {
 storage {
     // target is at sha256("storage_SRC14_0")
     target: ContractId = ContractId::zero(),
-    owner: State = State::Initialized(Identity::Address(Address::zero())),
+    // owner is at sha256("storage_SRC14_1")
+    owner: State = State::Uninitialized,
 }
 
 impl SRC14 for Contract {
@@ -39,7 +40,7 @@ impl SRC14 for Contract {
 }
 
 #[fallback]
-#[storage(read)]
+#[storage(read,write)]
 fn fallback() {
     // pass through any other method call to the target
     run_external(storage.target.read())
