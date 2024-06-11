@@ -629,6 +629,7 @@ dependencies = [
 name = "bridge-fungible-token-contract"
 version = "0.3.0"
 dependencies = [
+ "anyhow",
  "ethers",
  "fuel-core-types",
  "fuels",
