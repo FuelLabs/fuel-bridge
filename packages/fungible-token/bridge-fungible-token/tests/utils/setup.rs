@@ -233,8 +233,8 @@ pub(crate) async fn setup_environment(
             .unwrap();
 
     let storage_configuration = get_proxy_storage_config(
-        (*implementation_contract_id.clone().hash).into(), 
-        State::Initialized(wallet.address().clone().into())
+        (*implementation_contract_id.clone().hash).into(),
+        State::Initialized(wallet.address().clone().into()),
     );
 
     let proxy_config =
@@ -720,7 +720,7 @@ pub(crate) fn get_contract_ids(
 
     let storage_configuration = get_proxy_storage_config(
         Bytes32::from_bytes(implementation_contract_id.as_slice()).unwrap(),
-        State::Initialized(proxy_owner.address().clone().into())
+        State::Initialized(proxy_owner.address().clone().into()),
     );
 
     let proxy_config =
@@ -732,17 +732,17 @@ pub(crate) fn get_contract_ids(
     (proxy_contract_id, implementation_contract_id)
 }
 
-pub(crate) fn get_proxy_storage_config(target_contract_id: Bytes32, owner: State) -> StorageConfiguration {
+pub(crate) fn get_proxy_storage_config(
+    target_contract_id: Bytes32,
+    owner: State,
+) -> StorageConfiguration {
     let target_key_hash = Hasher::hash("storage_SRC14_0");
-    let slot_override_target = StorageSlot::new(
-        target_key_hash,
-        target_contract_id,
-    );
-    
+    let slot_override_target = StorageSlot::new(target_key_hash, target_contract_id);
+
     let (owner_key_hash_1, owner_key_hash_2) = {
         let owner_key_hash_1: Bytes32 = Hasher::hash("storage_SRC14_1");
         let mut key_hash_slice = owner_key_hash_1.clone().as_slice().to_vec();
-        
+
         let last_index = key_hash_slice.len() - 1;
         key_hash_slice[last_index] = key_hash_slice[last_index].wrapping_add(1);
 
@@ -758,20 +758,20 @@ pub(crate) fn get_proxy_storage_config(target_contract_id: Bytes32, owner: State
             encoded_value.resize(64, 0);
         }
 
-        let owner_value_1: Bytes32 = 
-            Bytes32::from_bytes(&mut encoded_value[0..32])
-                .expect("Could not decode owner_value_1");
-        let owner_value_2: Bytes32 = 
-            Bytes32::from_bytes(&mut encoded_value[32..64])
+        let owner_value_1: Bytes32 =
+            Bytes32::from_bytes(&mut encoded_value[0..32]).expect("Could not decode owner_value_1");
+        let owner_value_2: Bytes32 = Bytes32::from_bytes(&mut encoded_value[32..64])
             .expect("Could not decode owner_value_2");
 
         (owner_value_1, owner_value_2)
     };
-    
-    
+
     let slot_override_owner_1 = StorageSlot::new(owner_key_hash_1, owner_value_1);
     let slot_override_owner_2 = StorageSlot::new(owner_key_hash_2, owner_value_2);
 
-    StorageConfiguration::default()
-        .add_slot_overrides([slot_override_target, slot_override_owner_1, slot_override_owner_2])
+    StorageConfiguration::default().add_slot_overrides([
+        slot_override_target,
+        slot_override_owner_1,
+        slot_override_owner_2,
+    ])
 }

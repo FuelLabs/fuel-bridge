@@ -1,19 +1,19 @@
-
 mod tests {
-    use crate::utils::
-        setup::{
-            create_wallet, get_contract_ids, setup_environment, BridgeFungibleTokenContractConfigurables, BridgeProxy, State
-        }
-    ;
+    use crate::utils::setup::{
+        create_wallet, get_contract_ids, setup_environment,
+        BridgeFungibleTokenContractConfigurables, BridgeProxy, State,
+    };
     use ethers::core::rand::{self, Rng};
     use fuels::{
-        accounts::{wallet::WalletUnlocked, Account}, 
-        prelude::AssetId, 
+        accounts::{wallet::WalletUnlocked, Account},
+        prelude::AssetId,
         test_helpers::DEFAULT_COIN_AMOUNT,
-        types::{errors::{transaction::Reason, Error}, ContractId}
+        types::{
+            errors::{transaction::Reason, Error},
+            ContractId,
+        },
     };
 
-    
     #[tokio::test]
     async fn proxy_owner_and_target() -> anyhow::Result<()> {
         let mut wallet = create_wallet();
@@ -36,19 +36,24 @@ mod tests {
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
 
-        let owner = proxy.methods()
+        let owner = proxy
+            .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
             .simulate()
             .await?
             .value;
 
-        assert!(matches!(owner,
-            State::Initialized(fuels::types::Identity::Address(address))
-            if address == wallet.address().clone().into()
-        ), "Ownership was not initialized or owner is not the expected address");
+        assert!(
+            matches!(owner,
+                State::Initialized(fuels::types::Identity::Address(address))
+                if address == wallet.address().clone().into()
+            ),
+            "Ownership was not initialized or owner is not the expected address"
+        );
 
-        let target = proxy.methods()
+        let target = proxy
+            .methods()
             ._proxy_target()
             .with_contract_ids(&[proxy_id.into()])
             .simulate()
@@ -64,7 +69,7 @@ mod tests {
     async fn proxy_change_owner() -> anyhow::Result<()> {
         let mut wallet = create_wallet();
         let new_owner = WalletUnlocked::new_random(None);
-        
+
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let (proxy_id, _implementation_contract_id) =
@@ -84,7 +89,8 @@ mod tests {
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
 
-        let _tx_id = proxy.methods()
+        let _tx_id = proxy
+            .methods()
             ._proxy_change_owner(new_owner.address().into())
             .with_contract_ids(&[proxy_id.into()])
             .call()
@@ -92,18 +98,21 @@ mod tests {
             .tx_id
             .unwrap();
 
-        let owner = proxy.methods()
+        let owner = proxy
+            .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
             .simulate()
             .await?
             .value;
 
-        assert!(matches!(owner,
-            State::Initialized(fuels::types::Identity::Address(address))
-            if address == new_owner.address().clone().into()
-        ), "Ownership was not initialized or owner is not the expected address");
-
+        assert!(
+            matches!(owner,
+                State::Initialized(fuels::types::Identity::Address(address))
+                if address == new_owner.address().clone().into()
+            ),
+            "Ownership was not initialized or owner is not the expected address"
+        );
 
         Ok(())
     }
@@ -112,7 +121,7 @@ mod tests {
     async fn proxy_change_owner_only_owner() -> anyhow::Result<()> {
         let mut wallet = create_wallet();
         let mut mallory = WalletUnlocked::new_random(None);
-        
+
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let (proxy_id, _implementation_contract_id) =
@@ -131,7 +140,12 @@ mod tests {
         .await;
 
         let _ = wallet
-            .transfer(mallory.address(), DEFAULT_COIN_AMOUNT / 2, Default::default(), Default::default())
+            .transfer(
+                mallory.address(),
+                DEFAULT_COIN_AMOUNT / 2,
+                Default::default(),
+                Default::default(),
+            )
             .await?;
 
         let provider = wallet.provider().clone().unwrap().clone();
@@ -139,29 +153,37 @@ mod tests {
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), mallory.clone());
 
-        let error_receipt = proxy.methods()
+        let error_receipt = proxy
+            .methods()
             ._proxy_change_owner(mallory.address().into())
             .with_contract_ids(&[proxy_id.into()])
             .call()
             .await
             .unwrap_err();
-        
-        assert!(matches!(error_receipt, 
-            Error::Transaction(Reason::Reverted {reason, ..})
-            if reason == "NotOwner".to_string()
-        ), "Transaction did not revert or reverted with a wrong reason");
 
-        let owner = proxy.methods()
+        assert!(
+            matches!(error_receipt,
+                Error::Transaction(Reason::Reverted {reason, ..})
+                if reason == "NotOwner".to_string()
+            ),
+            "Transaction did not revert or reverted with a wrong reason"
+        );
+
+        let owner = proxy
+            .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
             .simulate()
             .await?
             .value;
 
-        assert!(matches!(owner,
-            State::Initialized(fuels::types::Identity::Address(address))
-            if address == wallet.address().clone().into()
-        ), "Ownership was not initialized or owner is not the expected address");
+        assert!(
+            matches!(owner,
+                State::Initialized(fuels::types::Identity::Address(address))
+                if address == wallet.address().clone().into()
+            ),
+            "Ownership was not initialized or owner is not the expected address"
+        );
 
         Ok(())
     }
@@ -173,7 +195,7 @@ mod tests {
         let mut rng = rand::thread_rng();
         let random_bytes: [u8; 32] = rng.gen();
         let random_contract_id = ContractId::new(random_bytes);
-        
+
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
         let (proxy_id, _implementation_contract_id) =
@@ -193,7 +215,8 @@ mod tests {
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
 
-        let _tx_id = proxy.methods()
+        let _tx_id = proxy
+            .methods()
             .set_proxy_target(random_contract_id)
             .with_contract_ids(&[proxy_id.into()])
             .call()
@@ -201,7 +224,8 @@ mod tests {
             .tx_id
             .unwrap();
 
-        let target = proxy.methods()
+        let target = proxy
+            .methods()
             ._proxy_target()
             .with_contract_ids(&[proxy_id.into()])
             .simulate()
@@ -210,9 +234,6 @@ mod tests {
 
         assert_eq!(target, random_contract_id);
 
-
         Ok(())
     }
-
-
 }
