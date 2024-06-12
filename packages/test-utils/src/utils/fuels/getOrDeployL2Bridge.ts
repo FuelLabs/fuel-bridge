@@ -215,12 +215,13 @@ export async function getOrDeployL2Bridge(
     const [fuelSigner] = env.fuel.signers;
     l2Bridge.account = fuelSigner;
 
-    debug('Set up bridge contract');
+    debug('Finished setting up bridge');
   }
 
   l2Bridge.account = fuelAcct;
-  const fuelTestTokenId = l2Bridge.id.toHexString();
-  debug(`Testing with Fuel fungible token contract at ${fuelTestTokenId}.`);
+  debug(
+    `Testing with Fuel fungible token contract at ${l2Bridge.id.toHexString()}.`
+  );
 
   return { contract: l2Bridge, proxy, implementation };
 }

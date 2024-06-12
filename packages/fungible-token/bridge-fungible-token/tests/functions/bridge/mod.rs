@@ -16,11 +16,11 @@ mod success {
     use super::*;
 
     use crate::utils::{
-        constants::BRIDGED_TOKEN_GATEWAY,
+        constants::{BRIDGED_TOKEN_GATEWAY, MESSAGE_SENDER_ADDRESS},
         interface::{bridge::claim_refund, src20::total_supply},
         setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
+    use fuels::{prelude::Address, programs::contract::{ContractCallHandler, MultiContractCallHandler, SettableContract}, tx::Receipt, types::U256};
     use primitive_types::H160;
     use std::str::FromStr;
 
@@ -418,6 +418,78 @@ mod success {
         .unwrap();
         assert_eq!(supply, 0);
     }
+
+    #[tokio::test]
+    async fn bridge_bridged_token_gateway() -> anyhow::Result<()> {
+        // perform successful deposit first, verify it, then withdraw and verify balances
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let amount = 10u64;
+
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        dbg!(&proxy_id);
+        
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
+            proxy_id,
+            false,
+            None,
+        )
+        .await;
+
+        let (implementation_contractid, bridge, _) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        dbg!(&implementation_contractid);
+
+        let bridged_token_gateway: Bits256 = bridge
+            .methods()
+            .bridged_token_gateway()
+            .with_contract_ids(&[implementation_contractid.clone()])
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        
+        let hex_bridged_token_gateway = format!("0x{}", hex::encode(bridged_token_gateway.0));
+        assert_eq!(hex_bridged_token_gateway, MESSAGE_SENDER_ADDRESS.to_ascii_lowercase());
+
+        let debug = bridge
+            .methods()
+            .bridged_token_gateway()
+            .with_contract_ids(&[implementation_contractid])
+            .build_tx()
+            .await?;
+
+        // ContractCallHandler
+        // MultiContractCallHandler
+        dbg!(&debug);
+        dbg!(hex::encode(&debug.script()));
+        dbg!(hex::encode(&debug.script_data()));
+
+        panic!("forced");
+
+        Ok(())
+    }
+
+    
 }
 
 mod revert {

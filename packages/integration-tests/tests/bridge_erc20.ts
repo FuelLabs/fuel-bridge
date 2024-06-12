@@ -17,7 +17,7 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { toBeHex } from 'ethers';
+import { hexlify, toBeHex } from 'ethers';
 import type { Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
@@ -74,6 +74,8 @@ describe.only('Bridging ERC20 tokens', async function () {
       .txParams(FUEL_CALL_TX_PARAMS)
       .getTransactionRequest();
 
+    txRequest.script = hexlify(txRequest.script) as any;
+    txRequest.scriptData = hexlify(txRequest.scriptData) as any;
     console.log(txRequest);
 
     const { value: expectedGatewayContractId } = await fuel_bridge.functions
