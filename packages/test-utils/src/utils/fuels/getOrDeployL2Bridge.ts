@@ -1,10 +1,12 @@
 import {
   fungibleTokenBinary,
   fungibleTokenABI,
+  bridgeProxyBinary,
+  bridgeProxyABI,
 } from '@fuel-bridge/fungible-token';
 import type { AddressLike } from 'ethers';
-import type { TxParams } from 'fuels';
-import { ContractFactory, Contract } from 'fuels';
+import type { StorageSlot, TxParams } from 'fuels';
+import { ContractFactory, Contract, sha256, toUtf8Bytes, BN } from 'fuels';
 
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
@@ -28,28 +30,44 @@ export async function getOrDeployL2Bridge(
   const tokenGateway = ethTokenGateway.replace('0x', '');
   const fuelAcct = env.fuel.signers[1];
 
-  let fuelTestToken: Contract = null;
+  let l2Bridge: Contract;
+  let proxy: Contract;
+  let implementation: Contract;
+
   if (FUEL_FUNGIBLE_TOKEN_ADDRESS) {
     try {
-      fuelTestToken = new Contract(
+      proxy = new Contract(
+        FUEL_FUNGIBLE_TOKEN_ADDRESS,
+        bridgeProxyABI as any,
+        fuelAcct
+      );
+
+      const { value: implementationContractId } = await proxy.functions
+        ._proxy_target()
+        .dryRun();
+
+      implementation = new Contract(
+        implementationContractId.bits,
+        fungibleTokenABI as any,
+        fuelAcct
+      );
+
+      l2Bridge = new Contract(
         FUEL_FUNGIBLE_TOKEN_ADDRESS,
         fungibleTokenABI as any,
         fuelAcct
       );
-      await fuelTestToken.functions.name().dryRun();
     } catch (e) {
-      fuelTestToken = null;
+      l2Bridge = null;
       debug(
-        `The Fuel fungible token contract could not be found at the provided address ${FUEL_FUNGIBLE_TOKEN_ADDRESS}.`
+        `The Fuel bridge contract could not be found at the provided address ${FUEL_FUNGIBLE_TOKEN_ADDRESS}.`
       );
     }
   }
-  if (!fuelTestToken) {
-    debug(`Creating Fuel fungible token contract to test with...`);
+  if (!l2Bridge) {
+    debug(`Creating Fuel bridge contract to test with...`);
     const bytecodeHex = fungibleTokenBinary;
-    debug('Replace ECR20 contract id');
-    debug('Deploy contract on Fuel');
-    const factory = new ContractFactory(
+    const implFactory = new ContractFactory(
       bytecodeHex,
       fungibleTokenABI as any,
       env.fuel.deployer
@@ -62,44 +80,147 @@ export async function getOrDeployL2Bridge(
     if (DECIMALS !== undefined) configurableConstants['DECIMALS'] = DECIMALS;
 
     // Set the token gateway and token address in the contract
-    factory.setConfigurableConstants(configurableConstants);
+    implFactory.setConfigurableConstants(configurableConstants);
 
-    const { contractId, transactionRequest } = factory.createTransactionRequest(
-      {
-        ...fuelTxParams,
-        storageSlots: [],
-      }
-    );
-    const { requiredQuantities } = await fuelAcct.provider.getTransactionCost(
-      transactionRequest
-    );
-
-    await fuelAcct.fund(transactionRequest, {
-      requiredQuantities,
-      estimatedPredicates: [],
-      addedSignatures: 0,
+    const {
+      contractId: implContractId,
+      transactionRequest: implCreateTxRequest,
+    } = implFactory.createTransactionRequest({
+      ...fuelTxParams,
+      storageSlots: [],
     });
-    // send transaction
-    const response = await fuelAcct.sendTransaction(transactionRequest);
-    await response.wait();
-    // create contract instance
-    fuelTestToken = new Contract(
-      contractId,
-      factory.interface,
-      factory.account
+
+    {
+      const { requiredQuantities } = await fuelAcct.provider.getTransactionCost(
+        implCreateTxRequest
+      );
+
+      await fuelAcct.fund(implCreateTxRequest, {
+        requiredQuantities,
+        estimatedPredicates: [],
+        addedSignatures: 0,
+      });
+
+      // send transaction
+
+      debug('Deploying implementation contract...');
+      const response = await fuelAcct.sendTransaction(implCreateTxRequest);
+      await response.wait();
+      debug(`Implementation contract deployed at ${implContractId}.`);
+    }
+
+    debug('Creating proxy contract');
+    const proxyFactory = new ContractFactory(
+      bridgeProxyBinary,
+      bridgeProxyABI as any,
+      env.fuel.deployer
     );
-    debug(
-      `Fuel fungible token contract created at ${fuelTestToken.id.toHexString()}.`
+
+    const targetStorageSlot: StorageSlot = {
+      key: sha256(toUtf8Bytes('storage_SRC14_0')),
+      value: implContractId,
+    };
+
+    const ownerStorageSlotKey = new BN(sha256(toUtf8Bytes('storage_SRC14_1')));
+    const ownerStorageSlotValue_1 =
+      '0x00000000000000010000000000000000' +
+      env.fuel.deployer.address.toHexString().substring(2).slice(0, 32);
+    const ownerStorageSlotValue_2 =
+      '0x' +
+      env.fuel.deployer.address
+        .toHexString()
+        .substring(2)
+        .slice(32)
+        .padEnd(64, '0');
+
+    const ownerStorageSlots: StorageSlot[] = [
+      {
+        key: ownerStorageSlotKey.toHex(32),
+        value: ownerStorageSlotValue_1,
+      },
+      {
+        key: ownerStorageSlotKey.add(1).toHex(32),
+        value: ownerStorageSlotValue_2,
+      },
+    ];
+
+    const storageSlots = [targetStorageSlot, ...ownerStorageSlots];
+
+    debug('STORAGE SLOTS: ');
+    debug(storageSlots);
+
+    const {
+      contractId: proxyContractId,
+      transactionRequest: proxyCreateTxRequest,
+    } = proxyFactory.createTransactionRequest({
+      ...fuelTxParams,
+      storageSlots,
+    });
+
+    {
+      const { requiredQuantities } = await fuelAcct.provider.getTransactionCost(
+        proxyCreateTxRequest
+      );
+
+      await fuelAcct.fund(proxyCreateTxRequest, {
+        requiredQuantities,
+        estimatedPredicates: [],
+        addedSignatures: 0,
+      });
+
+      // send transaction
+
+      debug('Deploying proxy contract...');
+      const response = await fuelAcct.sendTransaction(proxyCreateTxRequest);
+      await response.wait();
+      debug(`Proxy contract deployed at ${proxyContractId}.`);
+
+      const proxyIface = new Contract(
+        proxyContractId,
+        proxyFactory.interface,
+        proxyFactory.account
+      );
+
+      const configuredTarget = await proxyIface.functions
+        ._proxy_target()
+        .dryRun();
+      debug('configuredTarget');
+      debug(configuredTarget.value);
+
+      const configuredOwner = await proxyIface.functions
+        ._proxy_owner()
+        .dryRun();
+      debug('configuredOwner');
+      debug(configuredOwner.value);
+    }
+
+    // create contract instance
+    l2Bridge = new Contract(
+      proxyContractId,
+      implFactory.interface,
+      implFactory.account
+    );
+
+    proxy = new Contract(
+      proxyContractId,
+      proxyFactory.interface,
+      proxyFactory.account
+    );
+    implementation = new Contract(
+      implContractId,
+      implFactory.interface,
+      implFactory.account
     );
 
     const [fuelSigner] = env.fuel.signers;
-    fuelTestToken.account = fuelSigner;
+    l2Bridge.account = fuelSigner;
 
     debug('Set up bridge contract');
   }
-  fuelTestToken.account = fuelAcct;
-  const fuelTestTokenId = fuelTestToken.id.toHexString();
+
+  l2Bridge.account = fuelAcct;
+  const fuelTestTokenId = l2Bridge.id.toHexString();
   debug(`Testing with Fuel fungible token contract at ${fuelTestTokenId}.`);
 
-  return fuelTestToken;
+  return { contract: l2Bridge, proxy, implementation };
 }

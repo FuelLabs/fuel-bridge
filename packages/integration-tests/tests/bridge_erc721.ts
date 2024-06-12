@@ -54,12 +54,15 @@ describe.skip('Bridging ERC721 tokens', async function () {
     eth_erc721GatewayAddress = (
       await env.eth.fuelERC721Gateway.getAddress()
     ).toLowerCase();
-    fuel_testToken = await getOrDeployL2Bridge(
+
+    const { contract } = await getOrDeployL2Bridge(
       env,
       env.eth.fuelERC721Gateway,
       FUEL_TX_PARAMS,
       0
     );
+
+    fuel_testToken = contract;
     fuel_testContractId = fuel_testToken.id.toHexString();
 
     const { value: expectedTokenContractId } = await fuel_testToken.functions
