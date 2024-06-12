@@ -484,7 +484,6 @@ mod success {
         dbg!(hex::encode(&debug.script()));
         dbg!(hex::encode(&debug.script_data()));
 
-        panic!("forced");
 
         Ok(())
     }
