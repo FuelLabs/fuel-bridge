@@ -1,8 +1,7 @@
-# IMPORTANT!
-# Make sure to check:
+# IMPORTANT! When upgrading fuel-core version,
+# Make sure to check
 # https://github.com/FuelLabs/chain-configuration/tree/master/upgradelog/ignition
 # and apply the latest state_transition_function and consensus_parameter
-# when upgrading fuel-core
 FROM ghcr.io/fuellabs/fuel-core:v0.28.0
 
 ARG FUEL_IP=0.0.0.0
