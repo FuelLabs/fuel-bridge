@@ -20,7 +20,12 @@ mod success {
         interface::{bridge::claim_refund, src20::total_supply},
         setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::{ContractCallHandler, MultiContractCallHandler, SettableContract}, tx::Receipt, types::U256};
+    use fuels::{
+        prelude::Address,
+        programs::contract::{ContractCallHandler, MultiContractCallHandler, SettableContract},
+        tx::Receipt,
+        types::U256,
+    };
     use primitive_types::H160;
     use std::str::FromStr;
 
@@ -431,7 +436,6 @@ mod success {
             get_contract_ids(&wallet, configurables.clone());
 
         dbg!(&proxy_id);
-        
 
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
@@ -467,14 +471,14 @@ mod success {
             .unwrap()
             .value;
 
-        
         let hex_bridged_token_gateway = format!("0x{}", hex::encode(bridged_token_gateway.0));
-        assert_eq!(hex_bridged_token_gateway, MESSAGE_SENDER_ADDRESS.to_ascii_lowercase());
-        
+        assert_eq!(
+            hex_bridged_token_gateway,
+            MESSAGE_SENDER_ADDRESS.to_ascii_lowercase()
+        );
+
         Ok(())
     }
-
-    
 }
 
 mod revert {
