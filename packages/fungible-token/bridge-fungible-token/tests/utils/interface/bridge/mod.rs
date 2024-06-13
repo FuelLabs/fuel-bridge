@@ -48,17 +48,3 @@ pub(crate) async fn withdraw(
         .await
         .unwrap()
 }
-
-pub(crate) async fn _bridged_token_gateway(
-    contract: &BridgeFungibleTokenContract<WalletUnlocked>,
-    implementation_contract_id: Bech32ContractId,
-) -> Bits256 {
-    contract
-        .methods()
-        .bridged_token_gateway()
-        .with_contract_ids(&[implementation_contract_id])
-        .call()
-        .await
-        .unwrap()
-        .value
-}

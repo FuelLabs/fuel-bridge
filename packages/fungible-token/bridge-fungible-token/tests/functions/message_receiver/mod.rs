@@ -161,7 +161,6 @@ mod success {
         .await;
 
         let asset_id = get_asset_id(bridge.contract_id(), BRIDGED_TOKEN);
-        let _impl_asset_id = get_asset_id(&implementation_contractid, BRIDGED_TOKEN);
 
         // Get the balance for the deposit contract before
         assert!(total_supply(&implementation_contractid, &bridge, asset_id)
