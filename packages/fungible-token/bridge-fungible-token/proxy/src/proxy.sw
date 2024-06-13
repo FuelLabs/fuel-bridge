@@ -3,8 +3,7 @@ contract;
 use std::{
     call_frames::first_param,
     execution::run_external,
-    hash::Hash,
-    hash::sha256,
+    hash::{sha256, Hash},
     string::String,
 };
 use standards::{src14::SRC14, src20::SRC20, src5::{AccessError, SRC5, State}};
