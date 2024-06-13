@@ -1,3 +1,8 @@
+# IMPORTANT!
+# Make sure to check:
+# https://github.com/FuelLabs/chain-configuration/tree/master/upgradelog/ignition
+# and apply the latest state_transition_function and consensus_parameter
+# when upgrading fuel-core
 FROM ghcr.io/fuellabs/fuel-core:v0.28.0
 
 ARG FUEL_IP=0.0.0.0
@@ -13,12 +18,28 @@ WORKDIR /fuel
 
 COPY ./genesis_coins.json .
 
-RUN git clone https://github.com/FuelLabs/chain-configuration.git /chain-configuration
+RUN git clone \
+    https://github.com/FuelLabs/chain-configuration.git \
+    /chain-configuration
 
+# Copy the base local configuration
 RUN cp -R /chain-configuration/local/* ./
 
-# merge genesis_coins.json into state_config.json
-RUN jq '.coins = input' state_config.json genesis_coins.json > state_config_tmp.json && mv state_config_tmp.json state_config.json
+# Copy the testnet consensus parameters and state transition bytecode
+RUN cp /chain-configuration/upgradelog/ignition/consensus_parameters/3.json \
+    ./latest_consensus_parameters.json
+RUN cp /chain-configuration/upgradelog/ignition/state_transition_function/2.wasm \
+    ./state_transition_bytecode.wasm
+
+# update local state_config with custom genesis coins config
+RUN jq '.coins = input' \
+    state_config.json genesis_coins.json > tmp.json \
+    && mv tmp.json state_config.json
+
+# update local state_config with testnet consensus parameters
+RUN jq '.consensus_parameters = input' \
+    state_config.json latest_consensus_parameters.json > tmp.json \
+    && mv tmp.json state_config.json
 
 # expose fuel node port
 ENV FUEL_IP="${FUEL_IP}"
