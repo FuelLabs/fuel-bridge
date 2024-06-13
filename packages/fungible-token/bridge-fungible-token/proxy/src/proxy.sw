@@ -2,7 +2,6 @@ contract;
 
 use std::{
     call_frames::first_param,
-    constants::ZERO_B256,
     execution::run_external,
     hash::Hash,
     hash::sha256,
