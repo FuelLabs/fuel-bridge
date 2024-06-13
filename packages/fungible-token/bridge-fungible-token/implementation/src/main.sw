@@ -184,10 +184,6 @@ impl Bridge for Contract {
     fn asset_to_l1_address(asset_id: AssetId) -> b256 {
         _asset_to_l1_address(asset_id)
     }
-
-    fn double_value(foo: u64) -> u64 {
-        foo * 2
-    }
 }
 
 impl SRC20 for Contract {

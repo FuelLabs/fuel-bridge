@@ -32,7 +32,7 @@ storage {
 }
 
 impl SRC14 for Contract {
-    #[storage(read,write)]
+    #[storage(write)]
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
         storage.target.write(new_target);
