@@ -470,21 +470,7 @@ mod success {
         
         let hex_bridged_token_gateway = format!("0x{}", hex::encode(bridged_token_gateway.0));
         assert_eq!(hex_bridged_token_gateway, MESSAGE_SENDER_ADDRESS.to_ascii_lowercase());
-
-        let debug = bridge
-            .methods()
-            .bridged_token_gateway()
-            .with_contract_ids(&[implementation_contractid])
-            .build_tx()
-            .await?;
-
-        // ContractCallHandler
-        // MultiContractCallHandler
-        dbg!(&debug);
-        dbg!(hex::encode(&debug.script()));
-        dbg!(hex::encode(&debug.script_data()));
-
-
+        
         Ok(())
     }
 
