@@ -169,7 +169,6 @@ impl Bridge for Contract {
         });
     }
 
-    #[storage(read)]
     fn bridged_token_gateway() -> b256 {
         BRIDGED_TOKEN_GATEWAY
     }

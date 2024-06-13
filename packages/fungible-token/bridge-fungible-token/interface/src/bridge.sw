@@ -27,7 +27,6 @@ abi Bridge {
     fn withdraw(to: b256);
 
     /// Get the address of the gateway that holds the bridged tokens
-    #[storage(read)]
     fn bridged_token_gateway() -> b256;
 
     // Recovers the sub_id used to generate an asset_id (= sha256(contract_id, sub_id))
