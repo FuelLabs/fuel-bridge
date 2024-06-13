@@ -22,7 +22,7 @@ mod success {
     };
     use fuels::{
         prelude::Address,
-        programs::contract::{ContractCallHandler, MultiContractCallHandler, SettableContract},
+        programs::contract::SettableContract,
         tx::Receipt,
         types::U256,
     };
