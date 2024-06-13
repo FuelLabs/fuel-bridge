@@ -66,7 +66,7 @@ impl SRC20 for Contract {
     /// }
     /// ```
     #[storage(read)]
-    fn total_supply(_asset: AssetId) -> Option<u64> {
+    fn total_supply(asset: AssetId) -> Option<u64> {
         None
     }
 
