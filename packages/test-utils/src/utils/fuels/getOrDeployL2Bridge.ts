@@ -168,30 +168,11 @@ export async function getOrDeployL2Bridge(
         addedSignatures: 0,
       });
 
-      // send transaction
-
+      // send deployment transaction
       debug('Deploying proxy contract...');
       const response = await fuelAcct.sendTransaction(proxyCreateTxRequest);
       await response.wait();
       debug(`Proxy contract deployed at ${proxyContractId}.`);
-
-      const proxyIface = new Contract(
-        proxyContractId,
-        proxyFactory.interface,
-        proxyFactory.account
-      );
-
-      const configuredTarget = await proxyIface.functions
-        ._proxy_target()
-        .dryRun();
-      debug('configuredTarget');
-      debug(configuredTarget.value);
-
-      const configuredOwner = await proxyIface.functions
-        ._proxy_owner()
-        .dryRun();
-      debug('configuredOwner');
-      debug(configuredOwner.value);
     }
 
     // create contract instance
