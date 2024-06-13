@@ -40,7 +40,7 @@ impl SRC14 for Contract {
 }
 
 #[fallback]
-#[storage(read,write)]
+#[storage(read)]
 fn fallback() {
     // pass through any other method call to the target
     run_external(storage.target.read())
