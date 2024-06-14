@@ -1,0 +1,5 @@
+# Everything else
+* @FuelLabs/onchain
+
+# Solidity contracts
+/solidity-contracts/ @FuelLabs/onchaincore
