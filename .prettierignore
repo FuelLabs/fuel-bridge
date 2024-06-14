@@ -8,6 +8,7 @@ package.json
 cache
 artifacts
 typechain
+packages/solidity-contracts/deployments
 
 # Cargo and Forc artifacts
 out
