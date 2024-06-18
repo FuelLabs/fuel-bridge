@@ -140,32 +140,32 @@ export async function setupEnvironment(
     );
   }
   const fuel_deployer = Wallet.fromPrivateKey(pk_fuel_deployer, fuel_provider);
-  const fuel_deployerBalance = await fuel_deployer.getBalance();
-  if (fuel_deployerBalance.lt(fuels_parseEther('5')) && skip_deployer_balance) {
-    throw new Error(
-      'Fuel deployer balance is very low (' +
-        fuels_formatEther(fuel_deployerBalance) +
-        'ETH)'
-    );
-  }
+  // const fuel_deployerBalance = await fuel_deployer.getBalance();
+  // if (fuel_deployerBalance.lt(fuels_parseEther('5')) && skip_deployer_balance) {
+  //   throw new Error(
+  //     'Fuel deployer balance is very low (' +
+  //       fuels_formatEther(fuel_deployerBalance) +
+  //       'ETH)'
+  //   );
+  // }
   const fuel_signer1 = Wallet.fromPrivateKey(pk_fuel_signer1, fuel_provider);
-  const fuel_signer1Balance = await fuel_signer1.getBalance();
-  if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
-    const tx = await fuel_deployer.transfer(
-      fuel_signer1.address,
-      fuels_parseEther('1').toHex()
-    );
-    await tx.wait();
-  }
+  // const fuel_signer1Balance = await fuel_signer1.getBalance();
+  // if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
+  //   const tx = await fuel_deployer.transfer(
+  //     fuel_signer1.address,
+  //     fuels_parseEther('1').toHex()
+  //   );
+  //   await tx.wait();
+  // }
   const fuel_signer2 = Wallet.fromPrivateKey(pk_fuel_signer2, fuel_provider);
-  const fuel_signer2Balance = await fuel_signer2.getBalance();
-  if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
-    const tx = await fuel_deployer.transfer(
-      fuel_signer2.address,
-      fuels_parseEther('1').toHex()
-    );
-    await tx.wait();
-  }
+  // const fuel_signer2Balance = await fuel_signer2.getBalance();
+  // if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
+  //   const tx = await fuel_deployer.transfer(
+  //     fuel_signer2.address,
+  //     fuels_parseEther('1').toHex()
+  //   );
+  //   await tx.wait();
+  // }
 
   // Create provider and signers from http_ethereum_client
   const eth_provider = new JsonRpcProvider(http_ethereum_client);

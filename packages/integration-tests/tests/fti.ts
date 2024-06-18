@@ -1,33 +1,19 @@
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
-import {
-  setupEnvironment,
-  fuels_parseEther,
-  createRelayMessageParams,
-  getMessageOutReceipt,
-  waitForMessage,
-  waitForBlockCommit,
-  waitForBlockFinalization,
-  getBlock,
-  FUEL_CALL_TX_PARAMS,
-} from '@fuel-bridge/test-utils';
+import { setupEnvironment, waitForTransaction } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import type { Signer } from 'ethers';
-import { keccak256, parseEther, toUtf8Bytes } from 'ethers';
-import { Address, bn, padFirst12BytesOfEvmAddress } from 'fuels';
-import type {
-  AbstractAddress,
-  WalletUnlocked as FuelWallet,
-  MessageProof,
-  BN,
-} from 'fuels';
+import { hexlify, solidityPacked } from 'ethers';
+import { sha256, transactionRequestify } from 'fuels';
+import type { WalletUnlocked as FuelWallet, BN } from 'fuels';
 
 const { expect } = chai;
+
+const MAX_GAS = 10000000;
 
 describe.only('Forced Transaction Inclusion', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
-  const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
   let BASE_ASSET_ID: string;
+  let CHAIN_ID: number;
 
   let env: TestEnvironment;
 
@@ -37,6 +23,7 @@ describe.only('Forced Transaction Inclusion', async function () {
   before(async () => {
     env = await setupEnvironment({});
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
+    CHAIN_ID = env.fuel.provider.getChainId();
   });
 
   describe('Send a transaction through Ethereum', async () => {
@@ -44,79 +31,93 @@ describe.only('Forced Transaction Inclusion', async function () {
     let ethSender: any;
     let fuelSender: FuelWallet;
     let fuelReceiver: FuelWallet;
-    let fuelSignerBalance: BN;
+    let fuelSenderBalance: BN;
+    let fuelReceiverBalance: BN;
 
     before(async () => {
       ethSender;
       fuelSender = env.fuel.deployer;
       fuelReceiver = env.fuel.signers[1];
-      fuelSignerBalance = await fuelSender.getBalance(BASE_ASSET_ID);
+      fuelSenderBalance = await fuelSender.getBalance(BASE_ASSET_ID);
+      fuelReceiverBalance = await fuelReceiver.getBalance(BASE_ASSET_ID);
     });
 
-    it('Send ETH via OutputMessage', async () => {
-      console.log('balance', fuelSignerBalance);
+    // it.skip('deposit to wallet address', async () => {
+    //   await env.eth.fuelMessagePortal.depositETH(fuelSender.address.toB256(), {
+    //     value: parseEther('1'),
+    //   });
 
+    //   let bal = await fuelSender.getBalance(BASE_ASSET_ID);
+
+    //   while (bal.toString() === '0') {
+    //     bal = await fuelSender.getBalance(BASE_ASSET_ID);
+    //   }
+
+    //   fuelSenderBalance = await fuelSender.getBalance(BASE_ASSET_ID);
+    // });
+
+    it('allows to send transactions', async () => {
       const transferRequest = await fuelSender.createTransfer(
         fuelReceiver.address,
-        fuelSignerBalance.div(10),
+        fuelSenderBalance.div(10),
         BASE_ASSET_ID
       );
-      const maxGas = transferRequest.calculateMaxGas(
-        (await env.fuel.provider.fetchChainAndNodeInfo()).chain,
-        bn(1)
-      );
-      console.log('maxGas', maxGas.toString());
-      const serializedTx = transferRequest.toTransactionBytes();
 
-      console.log('uhm', keccak256(toUtf8Bytes('GasLimit()')));
+      const transactionRequest = transactionRequestify(transferRequest);
+      await env.fuel.provider.estimateTxDependencies(transactionRequest);
 
-      console.log(await env.eth.fuelMessagePortal.GAS_LIMIT());
+      const signature = await fuelSender.signTransaction(transactionRequest);
+      transactionRequest.updateWitnessByOwner(fuelSender.address, signature);
 
-      await env.eth.fuelMessagePortal.sendTransaction(
-        maxGas.toString(),
-        serializedTx
+      const fuelSerializedTx = hexlify(transactionRequest.toTransactionBytes());
+
+      const ethTx = await env.eth.fuelMessagePortal.sendTransaction(
+        MAX_GAS,
+        fuelSerializedTx
       );
 
-      //   // withdraw ETH back to the base chain
-      //   const fWithdrawTx = await fuelSigner.withdrawToBaseLayer(
-      //     Address.fromString(
-      //       padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-      //     ),
-      //     fuels_parseEther(NUM_ETH),
-      //     FUEL_CALL_TX_PARAMS
-      //   );
-      //   const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      //   expect(fWithdrawTxResult.status).to.equal('success');
+      const { blockNumber } = await ethTx.wait();
 
-      //   // Wait for the commited block
-      //   const withdrawBlock = await getBlock(
-      //     env.fuel.provider.url,
-      //     fWithdrawTxResult.blockId
-      //   );
-      //   const commitHashAtL1 = await waitForBlockCommit(
-      //     env,
-      //     withdrawBlock.header.height
-      //   );
+      const [event] = await env.eth.fuelMessagePortal.queryFilter(
+        env.eth.fuelMessagePortal.filters.Transaction,
+        blockNumber,
+        blockNumber
+      );
 
-      //   // get message proof
-      //   const messageOutReceipt = getMessageOutReceipt(
-      //     fWithdrawTxResult.receipts
-      //   );
-      //   withdrawMessageProof = await fuelSigner.provider.getMessageProof(
-      //     fWithdrawTx.id,
-      //     messageOutReceipt.nonce,
-      //     commitHashAtL1
-      //   );
+      expect(event.args.canonically_serialized_tx).to.be.equal(
+        fuelSerializedTx
+      );
 
-      //   // check that the sender balance has decreased by the expected amount
-      //   const newSenderBalance = await fuelSigner.getBalance(BASE_ASSET_ID);
+      const payload = solidityPacked(
+        ['uint256', 'uint64', 'bytes'],
+        [
+          event.args.nonce,
+          event.args.max_gas,
+          event.args.canonically_serialized_tx,
+        ]
+      );
+      const relayedTxId = sha256(payload);
+      const fuelTxId = transactionRequest.getTransactionId(CHAIN_ID);
 
-      //   // Get just the first 3 digits of the balance to compare to the expected balance
-      //   // this is required because the payment of gas fees is not deterministic
-      //   const diffOnSenderBalance = newSenderBalance
-      //     .sub(fuelSignerBalance)
-      //     .formatUnits();
-      //   expect(diffOnSenderBalance.startsWith(NUM_ETH)).to.be.true;
+      const { response, error } = await waitForTransaction(
+        fuelTxId,
+        env.fuel.provider,
+        {
+          relayedTxId,
+        }
+      );
+
+      if (error) {
+        throw new Error(error);
+      }
+
+      const txResult = await response.waitForResult();
+
+      expect(txResult.status).to.equal('success');
     });
+
+    it('rejects transactions without signatures');
+
+    it('rejects transactions without gas');
   });
 });

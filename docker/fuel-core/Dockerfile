@@ -3,7 +3,7 @@
 # https://github.com/FuelLabs/chain-configuration/tree/master/upgradelog/ignition
 # and apply the latest state_transition_function and consensus_parameter
 # when upgrading fuel-core
-FROM ghcr.io/fuellabs/fuel-core:v0.28.0
+FROM ghcr.io/fuellabs/fuel-core:sha-c6112b0
 
 ARG FUEL_IP=0.0.0.0
 ARG FUEL_PORT=4001

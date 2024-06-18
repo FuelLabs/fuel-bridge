@@ -7,6 +7,7 @@ import {
   behavesLikeAccessControl,
   behavesLikeFuelMessagePortalV4,
 } from './behaviors';
+import { BLOCKS_PER_COMMIT_INTERVAL, TIME_TO_FINALIZE } from './utils';
 
 const DEPOSIT_LIMIT = MaxUint256;
 const GAS_LIMIT = 1_000;
@@ -21,11 +22,11 @@ describe.only('FuelMessagePortalV4', () => {
       const FuelChainState = await ethers.getContractFactory('FuelChainState');
       const fuelChainState = await upgrades.deployProxy(FuelChainState, {
         initializer: 'initialize',
-        // constructorArgs: [
-        //   TIME_TO_FINALIZE,
-        //   BLOCKS_PER_COMMIT_INTERVAL,
-        //   TIME_TO_FINALIZE,
-        // ],
+        constructorArgs: [
+          TIME_TO_FINALIZE,
+          BLOCKS_PER_COMMIT_INTERVAL,
+          TIME_TO_FINALIZE,
+        ],
       });
 
       const fuelMessagePortal = (await upgrades.deployProxy(
