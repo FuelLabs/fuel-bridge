@@ -5,10 +5,15 @@ use std::{
     execution::run_external,
     hash::{sha256, Hash},
     string::String,
+    constants::ZERO_B256,
 };
 use standards::{src14::SRC14, src20::SRC20, src5::{AccessError, SRC5, State}};
 use contract_message_receiver::MessageReceiver;
 use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
+
+pub enum ProxyErrors {
+    IdentityZero: (),
+}
 
 abi Proxy {
     #[storage(read)]
@@ -33,6 +38,7 @@ impl SRC14 for Contract {
     #[storage(write)]
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
+        require(new_target.bits() != ZERO_B256, ProxyErrors::IdentityZero);
         storage.target.write(new_target);
     }
 }
@@ -69,6 +75,7 @@ impl Proxy for Contract {
     #[storage(read, write)]
     fn _proxy_change_owner(new_owner: Identity) {
         only_owner();
+        require(new_owner.bits() != ZERO_B256, ProxyErrors::IdentityZero);
         storage.owner.write(State::Initialized(new_owner));
     }
 }

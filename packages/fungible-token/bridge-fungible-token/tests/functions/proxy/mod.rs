@@ -9,8 +9,7 @@ mod tests {
         prelude::AssetId,
         test_helpers::DEFAULT_COIN_AMOUNT,
         types::{
-            errors::{transaction::Reason, Error},
-            ContractId,
+            bech32::Bech32Address, errors::{transaction::Reason, Error}, ContractId
         },
     };
 
@@ -112,6 +111,49 @@ mod tests {
                 if address == new_owner.address().clone().into()
             ),
             "Ownership was not initialized or owner is not the expected address"
+        );
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn proxy_change_owner_cannot_be_zero() -> anyhow::Result<()> {
+        let mut wallet = create_wallet();
+        let new_owner = Bech32Address::default();
+
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        let wallet_funds = (DEFAULT_COIN_AMOUNT, AssetId::default());
+
+        let (_, bridge, _) = setup_environment(
+            &mut wallet,
+            vec![wallet_funds],
+            vec![],
+            None,
+            None,
+            configurables,
+        )
+        .await;
+
+        let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
+
+        let error_receipt = proxy
+            .methods()
+            ._proxy_change_owner(new_owner.into())
+            .with_contract_ids(&[proxy_id.into()])
+            .call()
+            .await
+            .unwrap_err();
+
+        assert!(
+            matches!(error_receipt,
+                Error::Transaction(Reason::Reverted {reason, ..})
+                if reason == "IdentityZero".to_string()
+            ),
+            "Transaction did not revert or reverted with a wrong reason"
         );
 
         Ok(())
@@ -236,4 +278,50 @@ mod tests {
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn proxy_set_target_id_cannot_be_zero() -> anyhow::Result<()> {
+        let mut wallet = create_wallet();
+
+        let new_target = ContractId::default();
+
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        let wallet_funds = (DEFAULT_COIN_AMOUNT, AssetId::default());
+
+        let (_, bridge, _) = setup_environment(
+            &mut wallet,
+            vec![wallet_funds],
+            vec![],
+            None,
+            None,
+            configurables,
+        )
+        .await;
+
+        let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
+
+        let error_receipt = proxy
+            .methods()
+            .set_proxy_target(new_target)
+            .with_contract_ids(&[proxy_id.into()])
+            .call()
+            .await
+            .unwrap_err();
+
+        assert!(
+            matches!(error_receipt,
+                Error::Transaction(Reason::Reverted {reason, ..})
+                if reason == "IdentityZero".to_string()
+            ),
+            "Transaction did not revert or reverted with a wrong reason"
+        );
+
+        Ok(())
+    }
+
+    
 }
