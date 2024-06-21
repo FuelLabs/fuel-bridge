@@ -19,6 +19,8 @@ jobs:
           # need this to get full git-history/clone in order to build changelogs and check changesets
           fetch-depth: 0
       - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          pnpm-version: 9.0.6
       - uses: FuelLabs/github-actions/setups/npm@master
         with:
           npm-token: ${{ secrets.NPM_TOKEN }}
