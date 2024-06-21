@@ -58,7 +58,7 @@
     "chai": "^4.3.7",
     "cors": "2.8.5",
     "dotenv": "^16.0.3",
-    "ethers": "6.11.0",
+    "ethers": "6.13.1",
     "express": "^4.18.2",
     "hardhat": "^2.20.1",
     "hardhat-deploy": "^0.11.44",
