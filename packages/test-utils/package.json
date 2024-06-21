@@ -17,7 +17,7 @@
   },
   "peerDependencies": {
    "fuels": "0.89.1",
-    "ethers": "6.11.0"
+    "ethers": "6.13.1"
   },
   "devDependencies": {
     "@fuel-bridge/fungible-token": "workspace:*",
