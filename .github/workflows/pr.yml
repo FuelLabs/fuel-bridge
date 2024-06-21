@@ -19,6 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          pnpm-version: 9.0.6
       - run: pnpm audit --prod --audit-level high
 
   check-packages-changed:
@@ -47,6 +49,8 @@ jobs:
           # need this to get full git-history/clone in order to build changelogs and check changesets
           fetch-depth: 0
       - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          pnpm-version: 9.0.6
       - run: pnpm changeset:check
 
   validate:
@@ -55,6 +59,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          pnpm-version: 9.0.6
       - uses: FuelLabs/github-actions/setups/docker@master
         with:
           username: ${{ github.repository_owner }}
