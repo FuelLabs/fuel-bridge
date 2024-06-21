@@ -1,5 +1,22 @@
 # @fuel-bridge/test-utils
 
+## 0.6.0
+
+### Minor Changes
+
+- Upgrade all dependencies to fuel-core 0.27, by [@SwayStar123](https://github.com/SwayStar123) (See [#201](https://github.com/FuelLabs/fuel-bridge/pull/201))
+- Architecture revamp featuring single asset issuer on L2, by [@DefiCake](https://github.com/DefiCake) (See [#150](https://github.com/FuelLabs/fuel-bridge/pull/150))
+- Bump all packages to adhere to fuel-core 0.26, forc 0.56, fuel-rs 0.60, fuel-ts 0.85, by [@DefiCake](https://github.com/DefiCake) (See [#180](https://github.com/FuelLabs/fuel-bridge/pull/180))
+- Update fuel-core to v0.26.0 and all sdk dependencies needed to track it, by [@DefiCake](https://github.com/DefiCake) (See [#161](https://github.com/FuelLabs/fuel-bridge/pull/161))
+
+### Patch Changes
+
+- Update documentation, by [@DefiCake](https://github.com/DefiCake) (See [#197](https://github.com/FuelLabs/fuel-bridge/pull/197))
+- Use ZeroBytes32 for witnesses at relayCommonMessage.ts, by [@DefiCake](https://github.com/DefiCake) (See [#193](https://github.com/FuelLabs/fuel-bridge/pull/193))
+- 🐞 Fix CI on pnpm audit, by [@DefiCake](https://github.com/DefiCake) (See [#217](https://github.com/FuelLabs/fuel-bridge/pull/217))
+- Removed unused and vulnerable npm dependencies, by [@DefiCake](https://github.com/DefiCake) (See [#212](https://github.com/FuelLabs/fuel-bridge/pull/212))
+- Bump forc and ts version, by [@DefiCake](https://github.com/DefiCake) (See [#162](https://github.com/FuelLabs/fuel-bridge/pull/162))
+
 ## 0.5.0
 
 ### Minor Changes
