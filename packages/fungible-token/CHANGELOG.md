@@ -1,5 +1,23 @@
 # @fuel-bridge/fungible-token
 
+## 0.6.0
+
+### Minor Changes
+
+- Upgrade all dependencies to fuel-core 0.27, by [@SwayStar123](https://github.com/SwayStar123) (See [#201](https://github.com/FuelLabs/fuel-bridge/pull/201))
+- Architecture revamp featuring single asset issuer on L2, by [@DefiCake](https://github.com/DefiCake) (See [#150](https://github.com/FuelLabs/fuel-bridge/pull/150))
+- Bump all packages to adhere to fuel-core 0.26, forc 0.56, fuel-rs 0.60, fuel-ts 0.85, by [@DefiCake](https://github.com/DefiCake) (See [#180](https://github.com/FuelLabs/fuel-bridge/pull/180))
+- Use custom error for relay unknown error reverts, by [@DefiCake](https://github.com/DefiCake) (See [#178](https://github.com/FuelLabs/fuel-bridge/pull/178))
+- Update fuel-core to v0.26.0 and all sdk dependencies needed to track it, by [@DefiCake](https://github.com/DefiCake) (See [#161](https://github.com/FuelLabs/fuel-bridge/pull/161))
+
+### Patch Changes
+
+- Update documentation, by [@DefiCake](https://github.com/DefiCake) (See [#197](https://github.com/FuelLabs/fuel-bridge/pull/197))
+- Use L1 token decimals to determine L2 token decimals, by [@DefiCake](https://github.com/DefiCake) (See [#166](https://github.com/FuelLabs/fuel-bridge/pull/166))
+- Add comments to Hexens audit. Fix some other in-code commentary, by [@DefiCake](https://github.com/DefiCake) (See [#177](https://github.com/FuelLabs/fuel-bridge/pull/177))
+- Removed unused and vulnerable npm dependencies, by [@DefiCake](https://github.com/DefiCake) (See [#212](https://github.com/FuelLabs/fuel-bridge/pull/212))
+- Bump forc and ts version, by [@DefiCake](https://github.com/DefiCake) (See [#162](https://github.com/FuelLabs/fuel-bridge/pull/162))
+
 ## 0.5.0
 
 ### Minor Changes
