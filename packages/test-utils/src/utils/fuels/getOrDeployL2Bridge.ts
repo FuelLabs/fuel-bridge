@@ -3,10 +3,11 @@ import {
   fungibleTokenABI,
   bridgeProxyBinary,
   bridgeProxyABI,
+  bridgeProxyStorageSlots,
 } from '@fuel-bridge/fungible-token';
 import type { AddressLike } from 'ethers';
-import type { StorageSlot, TxParams } from 'fuels';
-import { ContractFactory, Contract, sha256, toUtf8Bytes, BN } from 'fuels';
+import type { TxParams } from 'fuels';
+import { ContractFactory, Contract } from 'fuels';
 
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
@@ -73,14 +74,14 @@ export async function getOrDeployL2Bridge(
       env.fuel.deployer
     );
 
-    const configurableConstants: any = {
+    const implConfigurables: any = {
       BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGateway),
     };
 
-    if (DECIMALS !== undefined) configurableConstants['DECIMALS'] = DECIMALS;
+    if (DECIMALS !== undefined) implConfigurables['DECIMALS'] = DECIMALS;
 
     // Set the token gateway and token address in the contract
-    implFactory.setConfigurableConstants(configurableConstants);
+    implFactory.setConfigurableConstants(implConfigurables);
 
     const {
       contractId: implContractId,
@@ -112,49 +113,27 @@ export async function getOrDeployL2Bridge(
     debug('Creating proxy contract');
     const proxyFactory = new ContractFactory(
       bridgeProxyBinary,
-      bridgeProxyABI as any,
+      bridgeProxyABI,
       env.fuel.deployer
     );
 
-    const targetStorageSlot: StorageSlot = {
-      key: sha256(toUtf8Bytes('storage_SRC14_0')),
-      value: implContractId,
+    const proxyConfigurables: any = {
+      INITIAL_TARGET: { bits: implContractId },
+      INITIAL_OWNER: {
+        Initialized: {
+          Address: { bits: env.fuel.deployer.address.toHexString() },
+        },
+      },
     };
 
-    const ownerStorageSlotKey = new BN(sha256(toUtf8Bytes('storage_SRC14_1')));
-    const ownerStorageSlotValue_1 =
-      '0x00000000000000010000000000000000' +
-      env.fuel.deployer.address.toHexString().substring(2).slice(0, 32);
-    const ownerStorageSlotValue_2 =
-      '0x' +
-      env.fuel.deployer.address
-        .toHexString()
-        .substring(2)
-        .slice(32)
-        .padEnd(64, '0');
-
-    const ownerStorageSlots: StorageSlot[] = [
-      {
-        key: ownerStorageSlotKey.toHex(32),
-        value: ownerStorageSlotValue_1,
-      },
-      {
-        key: ownerStorageSlotKey.add(1).toHex(32),
-        value: ownerStorageSlotValue_2,
-      },
-    ];
-
-    const storageSlots = [targetStorageSlot, ...ownerStorageSlots];
-
-    debug('STORAGE SLOTS: ');
-    debug(storageSlots);
+    proxyFactory.setConfigurableConstants(proxyConfigurables);
 
     const {
       contractId: proxyContractId,
       transactionRequest: proxyCreateTxRequest,
     } = proxyFactory.createTransactionRequest({
       ...fuelTxParams,
-      storageSlots,
+      storageSlots: bridgeProxyStorageSlots,
     });
 
     {

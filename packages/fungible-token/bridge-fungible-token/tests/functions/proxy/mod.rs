@@ -48,7 +48,8 @@ mod tests {
                 State::Initialized(fuels::types::Identity::Address(address))
                 if address == wallet.address().clone().into()
             ),
-            "Ownership was not initialized or owner is not the expected address"
+            "Ownership was not initialized or owner is not the expected address. Value: {:?}",
+            owner
         );
 
         let target = proxy
@@ -110,11 +111,59 @@ mod tests {
                 State::Initialized(fuels::types::Identity::Address(address))
                 if address == new_owner.address().clone().into()
             ),
-            "Ownership was not initialized or owner is not the expected address"
+            "Ownership was not initialized or owner is not the expected address. Value: {:?}",
+            owner
         );
 
         Ok(())
     }
+
+    #[tokio::test]
+    async fn proxy_revoke_ownership() -> anyhow::Result<()> {
+        let mut wallet = create_wallet();
+
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        let wallet_funds = (DEFAULT_COIN_AMOUNT, AssetId::default());
+
+        let (_, bridge, _) = setup_environment(
+            &mut wallet,
+            vec![wallet_funds],
+            vec![],
+            None,
+            None,
+            configurables,
+        )
+        .await;
+
+        let proxy = BridgeProxy::new(bridge.contract_id().clone(), wallet.clone());
+
+        let _tx_id = proxy
+            .methods()
+            ._proxy_revoke_ownership()
+            .with_contract_ids(&[proxy_id.into()])
+            .call()
+            .await?
+            .tx_id
+            .unwrap();
+
+        let owner = proxy
+            .methods()
+            ._proxy_owner()
+            .with_contract_ids(&[proxy_id.into()])
+            .simulate()
+            .await?
+            .value;
+
+        assert_eq!(owner, State::Revoked);
+
+        Ok(())
+    }
+
+    
 
     #[tokio::test]
     async fn proxy_change_owner_cannot_be_zero() -> anyhow::Result<()> {
@@ -322,6 +371,4 @@ mod tests {
 
         Ok(())
     }
-
-    
 }

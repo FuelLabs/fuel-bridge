@@ -24,12 +24,20 @@ abi Proxy {
 
     #[storage(read, write)]
     fn _proxy_change_owner(new_owner: Identity);
+
+    #[storage(read, write)]
+    fn _proxy_revoke_ownership();
+}
+
+configurable {
+    INITIAL_OWNER: State = State::Uninitialized,
+    INITIAL_TARGET: ContractId = ContractId::from(ZERO_B256)
 }
 
 #[namespace(SRC14)]
 storage {
     // target is at sha256("storage_SRC14_0")
-    target: ContractId = ContractId::zero(),
+    target: Option<ContractId> = None,
     // owner is at sha256("storage_SRC14_1")
     owner: State = State::Uninitialized,
 }
@@ -39,7 +47,7 @@ impl SRC14 for Contract {
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
         require(new_target.bits() != ZERO_B256, ProxyErrors::IdentityZero);
-        storage.target.write(new_target);
+        storage.target.write(Some(new_target));
     }
 }
 
@@ -47,15 +55,19 @@ impl SRC14 for Contract {
 #[storage(read)]
 fn fallback() {
     // pass through any other method call to the target
-    run_external(storage.target.read())
+    run_external(storage.target.read().unwrap_or(INITIAL_TARGET))
 }
 
 #[storage(read)]
 fn only_owner() {
+
+    let owner = match storage.owner.read() {
+        State::Uninitialized => INITIAL_OWNER,
+        state => state,
+    };
+
     require(
-        storage
-            .owner
-            .read() == State::Initialized(msg_sender().unwrap()),
+        owner == State::Initialized(msg_sender().unwrap()),
         AccessError::NotOwner,
     );
 }
@@ -64,12 +76,17 @@ impl Proxy for Contract {
 
     #[storage(read)]
     fn _proxy_owner() -> State {
-        storage.owner.read()
+        let owner = storage.owner.read();
+
+        match owner {
+            State::Uninitialized => INITIAL_OWNER,
+            _ => owner, 
+        }
     }
 
     #[storage(read)]
     fn _proxy_target() -> ContractId {
-        storage.target.read()
+        storage.target.read().unwrap_or(INITIAL_TARGET)
     }
 
     #[storage(read, write)]
@@ -77,5 +94,11 @@ impl Proxy for Contract {
         only_owner();
         require(new_owner.bits() != ZERO_B256, ProxyErrors::IdentityZero);
         storage.owner.write(State::Initialized(new_owner));
+    }
+
+    #[storage(read,write)]
+    fn _proxy_revoke_ownership() {
+        only_owner();
+        storage.owner.write(State::Revoked);
     }
 }

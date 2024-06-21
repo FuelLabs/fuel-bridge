@@ -8,11 +8,11 @@ use crate::utils::{
 };
 use ethers::abi::Token;
 use fuel_core_types::{
-    fuel_crypto::{Hasher, SecretKey},
+    fuel_crypto::SecretKey,
     fuel_tx::{Bytes32, Output, TxId, TxPointer, UtxoId},
-    fuel_types::{canonical::Deserialize, Nonce, Word},
+    fuel_types::{Nonce, Word},
 };
-use fuels::core::{codec::ABIEncoder, traits::Tokenizable};
+
 
 use fuels::{
     accounts::{predicate::Predicate, wallet::WalletUnlocked, ViewOnlyAccount},
@@ -20,9 +20,9 @@ use fuels::{
         abigen, setup_custom_assets_coins, setup_test_provider, Address, AssetConfig, AssetId,
         Bech32ContractId, Contract, ContractId, LoadConfiguration, Provider, TxPolicies,
     },
-    programs::contract::StorageConfiguration,
+    
     test_helpers::{setup_single_message, DEFAULT_COIN_AMOUNT},
-    tx::StorageSlot,
+    
     types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
@@ -232,13 +232,13 @@ pub(crate) async fn setup_environment(
             .await
             .unwrap();
 
-    let storage_configuration = get_proxy_storage_config(
-        (*implementation_contract_id.clone().hash).into(),
-        State::Initialized(wallet.address().clone().into()),
-    );
+    let proxy_configurables = BridgeProxyConfigurables::default()
+        .with_INITIAL_OWNER(State::Initialized(wallet.address().into())).unwrap()
+        .with_INITIAL_TARGET(implementation_contract_id.clone().into()).unwrap();
 
     let proxy_config =
-        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+        LoadConfiguration::default().with_configurables(proxy_configurables);
+
     let proxy_contract_id = Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
         .unwrap()
         .deploy(&wallet.clone(), TxPolicies::default())
@@ -573,60 +573,15 @@ pub(crate) fn get_contract_ids(
             .unwrap()
             .contract_id();
 
-    let storage_configuration = get_proxy_storage_config(
-        Bytes32::from_bytes(implementation_contract_id.as_slice()).unwrap(),
-        State::Initialized(proxy_owner.address().clone().into()),
-    );
+    let proxy_configurables = BridgeProxyConfigurables::default()
+        .with_INITIAL_OWNER(State::Initialized(proxy_owner.address().clone().into())).unwrap()
+        .with_INITIAL_TARGET(implementation_contract_id.clone()).unwrap();
 
     let proxy_config =
-        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+        LoadConfiguration::default().with_configurables(proxy_configurables);
     let proxy_contract_id = Contract::load_from(BRIDGE_PROXY_BINARY, proxy_config)
         .unwrap()
         .contract_id();
 
     (proxy_contract_id, implementation_contract_id)
-}
-
-pub(crate) fn get_proxy_storage_config(
-    target_contract_id: Bytes32,
-    owner: State,
-) -> StorageConfiguration {
-    let target_key_hash = Hasher::hash("storage_SRC14_0");
-    let slot_override_target = StorageSlot::new(target_key_hash, target_contract_id);
-
-    let (owner_key_hash_1, owner_key_hash_2) = {
-        let owner_key_hash_1: Bytes32 = Hasher::hash("storage_SRC14_1");
-        let mut key_hash_slice = owner_key_hash_1.clone().as_slice().to_vec();
-
-        let last_index = key_hash_slice.len() - 1;
-        key_hash_slice[last_index] = key_hash_slice[last_index].wrapping_add(1);
-
-        let owner_key_hash_2 = Bytes32::from_bytes(&key_hash_slice).unwrap();
-
-        (owner_key_hash_1, owner_key_hash_2)
-    };
-
-    let (owner_value_1, owner_value_2) = {
-        let mut encoded_value = ABIEncoder::default().encode(&[owner.into_token()]).unwrap();
-
-        if encoded_value.len() < 64 {
-            encoded_value.resize(64, 0);
-        }
-
-        let owner_value_1: Bytes32 =
-            Bytes32::from_bytes(&mut encoded_value[0..32]).expect("Could not decode owner_value_1");
-        let owner_value_2: Bytes32 = Bytes32::from_bytes(&mut encoded_value[32..64])
-            .expect("Could not decode owner_value_2");
-
-        (owner_value_1, owner_value_2)
-    };
-
-    let slot_override_owner_1 = StorageSlot::new(owner_key_hash_1, owner_value_1);
-    let slot_override_owner_2 = StorageSlot::new(owner_key_hash_2, owner_value_2);
-
-    StorageConfiguration::default().add_slot_overrides([
-        slot_override_target,
-        slot_override_owner_1,
-        slot_override_owner_2,
-    ])
 }

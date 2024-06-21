@@ -145,4 +145,35 @@ describe('Proxy', async function () {
       expect(value.bits).to.be.equal(contractId);
     });
   });
+
+  describe('_proxy_revoke_ownership()', () => {
+    const contractId =
+      '0x7296ff960b5eb86b5f79aa587d7ebe1bae147c7cac046a16d062fbd7f3a753ec';
+    const contractIdentityInput = { bits: contractId.toString() };
+
+    it('revokes ownership', async () => {
+      fuel_proxy.account = env.fuel.deployer;
+      const tx = await fuel_proxy.functions._proxy_revoke_ownership().call();
+      const result = await tx.transactionResponse.waitForResult();
+      expect(result.status).to.equal('success');
+
+      const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
+      expect(value).to.have.property('Revoked');
+    });
+
+    it('disallows proxy upgrades', async () => {
+      fuel_proxy.account = env.fuel.deployer;
+      const tx = fuel_proxy.functions
+        .set_proxy_target(contractIdentityInput)
+        .call();
+      const [txResult] = await Promise.allSettled([tx]);
+
+      if (txResult.status === 'fulfilled') {
+        throw new Error('Transaction did not revert');
+      }
+      const { message } = txResult.reason as FuelError;
+
+      expect(message).contains('NotOwner');
+    });
+  });
 });
