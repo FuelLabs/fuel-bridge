@@ -6,7 +6,11 @@ import { randomInt } from 'crypto';
 import { parseEther, parseUnits, randomBytes } from 'ethers';
 
 import type { FuelMessagePortalV4 } from '../../typechain';
-import { haltBlockProduction, resumeInstantBlockProduction } from '../utils';
+import {
+  haltBlockProduction,
+  impersonateAccount,
+  resumeInstantBlockProduction,
+} from '../utils';
 
 export type FuelMessagePortalV4Fixture = {
   signers: HardhatEthersSigner[];
@@ -76,6 +80,8 @@ export function behavesLikeFuelMessagePortalV4(
         await expect(tx)
           .to.emit(fuelMessagePortal, 'Transaction')
           .withArgs(1, gas, serializedTx);
+
+        expect(await fuelMessagePortal.getTransactionNonce()).to.be.equal(2);
       });
 
       it('increments used gas', async () => {
@@ -88,6 +94,9 @@ export function behavesLikeFuelMessagePortalV4(
         const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
+        expect(await fuelMessagePortal.getCurrentUsedGas()).to.equal(0);
+
+        // This is needed to allow more than one transaction in a single block
         await haltBlockProduction(hre);
 
         const nonce = await signer.getNonce();
@@ -112,6 +121,24 @@ export function behavesLikeFuelMessagePortalV4(
         );
 
         expect(await fuelMessagePortal.getUsedGas()).to.be.equal(gas * 2);
+        expect(await fuelMessagePortal.getCurrentUsedGas()).to.equal(gas * 2);
+      });
+
+      it('updates last seen block', async () => {
+        const { fuelMessagePortal } = await fixture();
+        const payloadLength = Math.abs(randomInt(256));
+        const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const { blockNumber } = await fuelMessagePortal
+          .sendTransaction(gas, serializedTx, {
+            value: parseEther('1'),
+          })
+          .then((tx) => tx.wait());
+
+        expect(await fuelMessagePortal.getLastSeenBlock()).to.equal(
+          blockNumber
+        );
       });
 
       it('initializes gasPrice to MIN_GAS_PRICE', async () => {
@@ -127,22 +154,6 @@ export function behavesLikeFuelMessagePortalV4(
 
         expect(await fuelMessagePortal.getGasPrice()).to.be.equal(
           await fuelMessagePortal.MIN_GAS_PRICE()
-        );
-      });
-
-      it('rejects when block is full', async () => {
-        const { fuelMessagePortal } = await fixture();
-
-        const payloadLength = Math.abs(randomInt(256));
-        const serializedTx = randomBytes(payloadLength);
-
-        const tx = fuelMessagePortal.sendTransaction(
-          GAS_LIMIT + 1n,
-          serializedTx
-        );
-        await expect(tx).to.be.revertedWithCustomError(
-          fuelMessagePortal,
-          'GasLimit'
         );
       });
 
@@ -182,7 +193,36 @@ export function behavesLikeFuelMessagePortalV4(
         await expect(tx).to.changeEtherBalance(signer, -expectedFee);
       });
 
-      it('reject underfunded transactions', async () => {
+      it('rejects when block is full', async () => {
+        const { fuelMessagePortal } = await fixture();
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const tx = fuelMessagePortal.sendTransaction(
+          GAS_LIMIT + 1n,
+          serializedTx
+        );
+        await expect(tx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'GasLimit'
+        );
+      });
+
+      it('rejects transactions with not enough gas', async () => {
+        const { fuelMessagePortal } = await fixture();
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const tx = fuelMessagePortal.sendTransaction(0, serializedTx);
+        await expect(tx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'MinGas'
+        );
+      });
+
+      it('rejects underfunded transactions', async () => {
         const { fuelMessagePortal } = await fixture();
 
         const payloadLength = Math.abs(randomInt(256));
@@ -202,6 +242,71 @@ export function behavesLikeFuelMessagePortalV4(
         await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
           value: expectedFee,
         });
+      });
+
+      it('rejects if the excess fee cannot be forwarded', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [signer],
+        } = await fixture();
+
+        const receiverContract = await hre.ethers
+          .getContractFactory('EthReceiver')
+          .then((f) => f.deploy());
+        const receiver = await impersonateAccount(receiverContract, hre);
+        await signer.sendTransaction({
+          to: receiverContract,
+          value: parseEther('100'),
+        });
+
+        await receiverContract.setupRevert(true, '');
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+        const excessFee = parseEther('1');
+        const tx = fuelMessagePortal
+          .connect(receiver)
+          .sendTransaction(GAS_LIMIT, serializedTx, {
+            value: expectedFee + excessFee,
+          });
+
+        await expect(tx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'RecipientRejectedETH'
+        );
+      });
+
+      it('bubbles up revert reasons of ETH receiver', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [signer],
+        } = await fixture();
+
+        const receiverContract = await hre.ethers
+          .getContractFactory('EthReceiver')
+          .then((f) => f.deploy());
+        const receiver = await impersonateAccount(receiverContract, hre);
+        await signer.sendTransaction({
+          to: receiverContract,
+          value: parseEther('100'),
+        });
+        const revertReason = 'revertReason';
+        await receiverContract.setupRevert(true, revertReason);
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+        const excessFee = parseEther('1');
+        const tx = fuelMessagePortal
+          .connect(receiver)
+          .sendTransaction(GAS_LIMIT, serializedTx, {
+            value: expectedFee + excessFee,
+          });
+
+        await expect(tx).to.be.revertedWith(revertReason);
       });
 
       describe('with increasing congestion (used gas above target)', () => {
@@ -266,17 +371,15 @@ export function behavesLikeFuelMessagePortalV4(
             const gas = GAS_TARGET / 2n;
             const serializedTx = randomBytes(payloadLength);
 
-            await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 4 gwei
-            ]);
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Initialize to 1 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 2 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 4 gwei
 
             await fuelMessagePortal.sendTransaction(gas, serializedTx, {
               value: parseEther('1'),
@@ -301,17 +404,15 @@ export function behavesLikeFuelMessagePortalV4(
             const gas = 1;
             const serializedTx = randomBytes(payloadLength);
 
-            await Promise.all([
-              fuelMessagePortal.sendTransaction(1, serializedTx, {
-                value: parseEther('1'),
-              }), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 4 gwei
-            ]);
+            await fuelMessagePortal.sendTransaction(1, serializedTx, {
+              value: parseEther('1'),
+            }); // Initialize to 1 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 2 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 4 gwei
 
             await fuelMessagePortal.sendTransaction(gas, serializedTx, {
               value: parseEther('1'),
@@ -337,17 +438,15 @@ export function behavesLikeFuelMessagePortalV4(
             const gas = GAS_TARGET;
             const serializedTx = randomBytes(payloadLength);
 
-            await Promise.all([
-              fuelMessagePortal.sendTransaction(1, serializedTx, {
-                value: parseEther('1'),
-              }), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }), // Bump to 4 gwei
-            ]);
+            await fuelMessagePortal.sendTransaction(1, serializedTx, {
+              value: parseEther('1'),
+            }); // Initialize to 1 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 2 gwei
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            }); // Bump to 4 gwei
 
             await fuelMessagePortal.sendTransaction(gas, serializedTx, {
               value: parseEther('1'),
@@ -373,20 +472,18 @@ export function behavesLikeFuelMessagePortalV4(
             const payloadLength = Math.abs(randomInt(256));
             const serializedTx = randomBytes(payloadLength);
 
-            await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
-                value: parseEther('1'),
-              }),
-            ]);
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
+              value: parseEther('1'),
+            });
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
 
@@ -407,20 +504,18 @@ export function behavesLikeFuelMessagePortalV4(
             const payloadLength = Math.abs(randomInt(256));
             const serializedTx = randomBytes(payloadLength);
 
-            await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
-                value: parseEther('1'),
-              }),
-            ]);
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
+            await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+              value: parseEther('1'),
+            });
 
             await mine(200);
             await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
@@ -450,6 +545,28 @@ export function behavesLikeFuelMessagePortalV4(
           .connect(deployer)
           .grantRole(FEE_COLLECTOR_ROLE, mallory);
         await fuelMessagePortal.connect(mallory).collectFees();
+      });
+
+      it('reverts if caller cannot receive ETH', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [deployer],
+        } = await fixture();
+
+        const receiverContract = await hre.ethers
+          .getContractFactory('EthReceiver')
+          .then((f) => f.deploy());
+        const receiver = await impersonateAccount(receiverContract, hre);
+        await receiverContract.setupRevert(true, '');
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(FEE_COLLECTOR_ROLE, receiver);
+        const tx = fuelMessagePortal.connect(receiver).collectFees();
+        await expect(tx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'RecipientRejectedETH'
+        );
       });
 
       it('transfers fees to caller', async () => {
