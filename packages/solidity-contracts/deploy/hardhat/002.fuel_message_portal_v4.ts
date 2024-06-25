@@ -1,4 +1,4 @@
-import { MaxUint256 } from 'ethers';
+import { MaxUint256, parseUnits } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
@@ -6,6 +6,8 @@ import { FuelMessagePortalV4__factory as FuelMessagePortal } from '../../typecha
 
 const ETH_DEPOSIT_LIMIT = MaxUint256;
 const FTI_GAS_LIMIT = 2n ** 64n - 1n;
+const FTI_MIN_GAS_PRICE = parseUnits('1', 'gwei');
+const FTI_MIN_GAS_PER_TX = 1;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -17,21 +19,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: fuelChainState } = await get('FuelChainState');
 
-  console.log('holaaaa');
-  console.log(FTI_GAS_LIMIT);
-
   const contract = await deployProxy(
     new FuelMessagePortal(deployer),
     [fuelChainState],
     {
       initializer: 'initialize',
-      constructorArgs: [ETH_DEPOSIT_LIMIT, FTI_GAS_LIMIT],
+      constructorArgs: [
+        ETH_DEPOSIT_LIMIT,
+        FTI_GAS_LIMIT,
+        FTI_MIN_GAS_PER_TX,
+        FTI_MIN_GAS_PRICE,
+      ],
     }
   );
   await contract.waitForDeployment();
-
-  console.log('waaaat');
-  await contract.GAS_LIMIT().then(console.log);
 
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);

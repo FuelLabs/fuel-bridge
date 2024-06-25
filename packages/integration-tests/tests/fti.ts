@@ -7,7 +7,7 @@ import type { WalletUnlocked as FuelWallet, BN } from 'fuels';
 
 const { expect } = chai;
 
-const MAX_GAS = 10000000;
+const MAX_GAS = 10000000n;
 
 describe.only('Forced Transaction Inclusion', async function () {
   // Timeout 6 minutes
@@ -71,9 +71,13 @@ describe.only('Forced Transaction Inclusion', async function () {
 
       const fuelSerializedTx = hexlify(transactionRequest.toTransactionBytes());
 
+      const gasPrice = await env.eth.fuelMessagePortal.MIN_GAS_PRICE();
+      const expectedFee = gasPrice * MAX_GAS;
+
       const ethTx = await env.eth.fuelMessagePortal.sendTransaction(
         MAX_GAS,
-        fuelSerializedTx
+        fuelSerializedTx,
+        { value: expectedFee }
       );
 
       const { blockNumber } = await ethTx.wait();

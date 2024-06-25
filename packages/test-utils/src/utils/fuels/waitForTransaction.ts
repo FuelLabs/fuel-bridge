@@ -11,7 +11,7 @@ import { delay } from '../delay';
 import { debug } from '../logs';
 
 type Opts = {
-  relayedTxId?: string;
+  relayedTxId?: string; // This ID will only appear if the tx fails
   timeout?: number;
 };
 
@@ -38,6 +38,7 @@ export async function waitForTransaction(
   const startTime = new Date().getTime();
 
   if (opts.relayedTxId) {
+    // Note: getRelayedTransactionStatus will only return if the transaction failed
     const relayedTxError = await provider.getRelayedTransactionStatus(
       opts.relayedTxId
     );
