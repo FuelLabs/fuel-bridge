@@ -40,6 +40,7 @@ const config: HardhatUserConfig = {
         count: 128,
       },
       deploy: ['deploy/hardhat'],
+      gas: 'auto', // https://github.com/NomicFoundation/hardhat/issues/4090
     },
     localhost: {
       url: 'http://127.0.0.1:8545/',

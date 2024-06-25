@@ -1,4 +1,4 @@
-import { MaxUint256 } from 'ethers';
+import { MaxUint256, parseUnits } from 'ethers';
 import hre from 'hardhat';
 
 import type { FuelMessagePortalV4 } from '../typechain';
@@ -11,6 +11,8 @@ import { BLOCKS_PER_COMMIT_INTERVAL, TIME_TO_FINALIZE } from './utils';
 
 const DEPOSIT_LIMIT = MaxUint256;
 const GAS_LIMIT = 1_000;
+const MIN_GAS_PRICE = parseUnits('1', 'gwei');
+const MIN_GAS_PER_TX = 1;
 
 describe.only('FuelMessagePortalV4', () => {
   const fixture = hre.deployments.createFixture(
@@ -34,7 +36,12 @@ describe.only('FuelMessagePortalV4', () => {
         [await fuelChainState.getAddress()],
         {
           initializer: 'initialize',
-          constructorArgs: [DEPOSIT_LIMIT, GAS_LIMIT],
+          constructorArgs: [
+            DEPOSIT_LIMIT,
+            GAS_LIMIT,
+            MIN_GAS_PER_TX,
+            MIN_GAS_PRICE,
+          ],
         }
       )) as unknown as FuelMessagePortalV4;
 

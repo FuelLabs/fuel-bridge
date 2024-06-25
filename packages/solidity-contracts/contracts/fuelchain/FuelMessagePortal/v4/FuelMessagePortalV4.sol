@@ -8,50 +8,101 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
     event Transaction(uint256 indexed nonce, uint64 max_gas, bytes canonically_serialized_tx);
 
     error GasLimit();
+    error MinGas();
 
     uint64 public immutable GAS_LIMIT;
+    uint64 public immutable GAS_TARGET;
+    uint64 public immutable MIN_GAS_PER_TX;
+    uint256 public immutable MIN_GAS_PRICE;
 
     uint192 internal lastSeenBlock;
     uint64 internal usedGas;
-
+    uint256 internal gasPrice;
     uint256 internal transactionNonce;
 
-    constructor(uint256 _depositLimitGlobal, uint64 _gasLimit) FuelMessagePortalV3(_depositLimitGlobal) {
-        GAS_LIMIT = _gasLimit;
+    constructor(
+        uint256 depositLimitGlobal,
+        uint64 gasLimit,
+        uint64 minGasPerTx,
+        uint256 minGasPrice
+    ) FuelMessagePortalV3(depositLimitGlobal) {
+        GAS_LIMIT = gasLimit;
+        GAS_TARGET = gasLimit / 2;
+        MIN_GAS_PER_TX = minGasPerTx;
+        MIN_GAS_PRICE = minGasPrice;
     }
 
     function sendTransaction(uint64 gas, bytes calldata serializedTx) external payable virtual {
-        uint64 _usedGas = usedGas;
+        if (gas < MIN_GAS_PER_TX) {
+            revert MinGas();
+        }
 
-        if (lastSeenBlock == block.number) {
-            _usedGas += gas;
-        } else {
+        uint64 _usedGas = usedGas;
+        uint192 _lastSeenBlock = lastSeenBlock;
+        uint256 _gasPrice = gasPrice;
+
+        if (_lastSeenBlock < block.number) {
+            uint256 distance;
+            unchecked {
+                distance = block.number - uint256(_lastSeenBlock);
+            }
+
+            if (distance == 1) {
+                if (_usedGas > GAS_TARGET) {
+                    // Max increment: x2
+                    _gasPrice = (_gasPrice * PRECISION * _usedGas) / GAS_TARGET;
+                } else {
+                    // Max decrement: x0.5
+                    _gasPrice = (_gasPrice * (PRECISION + (_usedGas * PRECISION) / GAS_TARGET)) / 2;
+                }
+
+                _gasPrice /= PRECISION;
+            } else {
+                _gasPrice /= distance;
+            }
+
             _usedGas = gas;
+        } else {
+            _usedGas += gas;
         }
 
         if (_usedGas > GAS_LIMIT) {
             revert GasLimit();
         }
 
+        if (_gasPrice < MIN_GAS_PRICE) {
+            _gasPrice = MIN_GAS_PRICE;
+        }
+
         lastSeenBlock = uint192(block.number);
         usedGas = _usedGas;
+        gasPrice = _gasPrice;
+
         unchecked {
             emit Transaction(transactionNonce++, gas, serializedTx);
         }
     }
 
-    function getLastSeenBlock() public virtual returns (uint256) {
+    function getLastSeenBlock() public view virtual returns (uint256) {
         return uint256(lastSeenBlock);
     }
 
-    function getUsedGas() external virtual returns (uint64) {
+    function getUsedGas() external view returns (uint64) {
+        return usedGas;
+    }
+
+    function getTransactionNonce() external view virtual returns (uint256) {
+        return transactionNonce;
+    }
+
+    function getGasPrice() external view virtual returns (uint256) {
+        return gasPrice;
+    }
+
+    function getCurrentUsedGas() external view virtual returns (uint64) {
         if (getLastSeenBlock() == block.number) return usedGas;
 
         return 0;
-    }
-
-    function getCurrentTransactionNonce() external virtual returns (uint256) {
-        return transactionNonce;
     }
 
     /**
