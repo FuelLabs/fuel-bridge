@@ -22,13 +22,20 @@ export function behavesLikeFuelMessagePortalV4(
 ) {
   let GAS_LIMIT: bigint;
   let GAS_TARGET: bigint;
+  let MIN_GAS_PER_TX: number;
+  let MIN_GAS_PRICE: bigint;
 
   describe('Behaves like FuelMessagePortalV4', () => {
     before('cache gas limit', async () => {
       const { fuelMessagePortal } = await fixture();
       GAS_LIMIT = await fuelMessagePortal.GAS_LIMIT();
       GAS_TARGET = await fuelMessagePortal.GAS_TARGET();
+      MIN_GAS_PRICE = await fuelMessagePortal.MIN_GAS_PRICE();
+      MIN_GAS_PER_TX = Number(
+        (await fuelMessagePortal.MIN_GAS_PER_TX()).toString()
+      );
     });
+
     describe('sendTransaction()', () => {
       afterEach('restore block production', async () => {
         await resumeInstantBlockProduction(hre);
@@ -38,7 +45,7 @@ export function behavesLikeFuelMessagePortalV4(
         const { fuelMessagePortal } = await fixture();
 
         const payloadLength = Math.abs(randomInt(256));
-        const gas = Math.abs(randomInt(256));
+        const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
         const tx = fuelMessagePortal.sendTransaction(gas, serializedTx);
@@ -52,7 +59,7 @@ export function behavesLikeFuelMessagePortalV4(
         const { fuelMessagePortal } = await fixture();
 
         const payloadLength = Math.abs(randomInt(256));
-        const gas = Math.abs(randomInt(256));
+        const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
         await fuelMessagePortal.sendTransaction(gas, serializedTx);
@@ -70,7 +77,7 @@ export function behavesLikeFuelMessagePortalV4(
         } = await fixture();
 
         const payloadLength = Math.abs(randomInt(256));
-        const gas = Math.abs(randomInt(256));
+        const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
         await haltBlockProduction(hre);
@@ -101,7 +108,7 @@ export function behavesLikeFuelMessagePortalV4(
         const { fuelMessagePortal } = await fixture();
 
         const payloadLength = Math.abs(randomInt(256));
-        const gas = Math.abs(randomInt(256));
+        const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
         await fuelMessagePortal.sendTransaction(gas, serializedTx);
@@ -178,7 +185,7 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(1, serializedTx), // Initialize to 1 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Initialize to 1 gwei
               fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 2 gwei
               fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 4 gwei
             ]);
@@ -186,7 +193,7 @@ export function behavesLikeFuelMessagePortalV4(
             await fuelMessagePortal.sendTransaction(gas, serializedTx);
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
-            expect(initialGasPrice).to.equal(parseUnits('4', 'gwei'));
+            expect(initialGasPrice).to.equal(parseUnits('8', 'gwei'));
 
             await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
 
@@ -252,13 +259,12 @@ export function behavesLikeFuelMessagePortalV4(
             const { fuelMessagePortal } = await fixture();
 
             const payloadLength = Math.abs(randomInt(256));
-            const gas = GAS_LIMIT;
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(gas, serializedTx),
-              fuelMessagePortal.sendTransaction(gas, serializedTx),
-              fuelMessagePortal.sendTransaction(gas, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
               fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx),
             ]);
 
@@ -270,6 +276,27 @@ export function behavesLikeFuelMessagePortalV4(
 
             expect(await fuelMessagePortal.getGasPrice()).to.equal(
               initialGasPrice / BigInt(distance)
+            );
+          });
+
+          it('bottoms gas price at MIN_GAS_PRICE', async () => {
+            const { fuelMessagePortal } = await fixture();
+
+            const payloadLength = Math.abs(randomInt(256));
+            const serializedTx = randomBytes(payloadLength);
+
+            await Promise.all([
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+            ]);
+
+            await mine(200);
+            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx);
+
+            expect(await fuelMessagePortal.getGasPrice()).to.equal(
+              MIN_GAS_PRICE
             );
           });
         });
