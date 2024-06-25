@@ -3,7 +3,7 @@ import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signer
 import { mine } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import { randomInt } from 'crypto';
-import { parseUnits, randomBytes } from 'ethers';
+import { parseEther, parseUnits, randomBytes } from 'ethers';
 
 import type { FuelMessagePortalV4 } from '../../typechain';
 import { haltBlockProduction, resumeInstantBlockProduction } from '../utils';
@@ -24,6 +24,7 @@ export function behavesLikeFuelMessagePortalV4(
   let GAS_TARGET: bigint;
   let MIN_GAS_PER_TX: number;
   let MIN_GAS_PRICE: bigint;
+  let FEE_COLLECTOR_ROLE: string;
 
   describe('Behaves like FuelMessagePortalV4', () => {
     before('cache gas limit', async () => {
@@ -34,6 +35,7 @@ export function behavesLikeFuelMessagePortalV4(
       MIN_GAS_PER_TX = Number(
         (await fuelMessagePortal.MIN_GAS_PER_TX()).toString()
       );
+      FEE_COLLECTOR_ROLE = await fuelMessagePortal.FEE_COLLECTOR_ROLE();
     });
 
     describe('sendTransaction()', () => {
@@ -48,7 +50,9 @@ export function behavesLikeFuelMessagePortalV4(
         const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
-        const tx = fuelMessagePortal.sendTransaction(gas, serializedTx);
+        const tx = fuelMessagePortal.sendTransaction(gas, serializedTx, {
+          value: parseEther('1'),
+        });
 
         await expect(tx)
           .to.emit(fuelMessagePortal, 'Transaction')
@@ -62,8 +66,12 @@ export function behavesLikeFuelMessagePortalV4(
         const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
-        await fuelMessagePortal.sendTransaction(gas, serializedTx);
-        const tx = fuelMessagePortal.sendTransaction(gas, serializedTx);
+        await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+          value: parseEther('1'),
+        });
+        const tx = fuelMessagePortal.sendTransaction(gas, serializedTx, {
+          value: parseEther('1'),
+        });
 
         await expect(tx)
           .to.emit(fuelMessagePortal, 'Transaction')
@@ -88,11 +96,13 @@ export function behavesLikeFuelMessagePortalV4(
           .connect(signer)
           .sendTransaction(gas, serializedTx, {
             nonce,
+            value: parseEther('1'),
           });
         const tx2 = await fuelMessagePortal
           .connect(signer)
           .sendTransaction(gas, serializedTx, {
             nonce: nonce + 1,
+            value: parseEther('1'),
           });
 
         await mine();
@@ -111,7 +121,9 @@ export function behavesLikeFuelMessagePortalV4(
         const gas = Math.abs(randomInt(MIN_GAS_PER_TX, 256));
         const serializedTx = randomBytes(payloadLength);
 
-        await fuelMessagePortal.sendTransaction(gas, serializedTx);
+        await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+          value: parseEther('1'),
+        });
 
         expect(await fuelMessagePortal.getGasPrice()).to.be.equal(
           await fuelMessagePortal.MIN_GAS_PRICE()
@@ -134,6 +146,64 @@ export function behavesLikeFuelMessagePortalV4(
         );
       });
 
+      it('collects fees', async () => {
+        const { fuelMessagePortal } = await fixture();
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+
+        const tx = fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+          value: expectedFee,
+        });
+
+        await expect(tx).to.changeEtherBalance(fuelMessagePortal, expectedFee);
+      });
+
+      it('returns excess fees', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [signer],
+        } = await fixture();
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+        const excessFee = parseEther('1');
+        const tx = fuelMessagePortal
+          .connect(signer)
+          .sendTransaction(GAS_LIMIT, serializedTx, {
+            value: expectedFee + excessFee,
+          });
+
+        await expect(tx).to.changeEtherBalance(fuelMessagePortal, expectedFee);
+        await expect(tx).to.changeEtherBalance(signer, -expectedFee);
+      });
+
+      it('reject underfunded transactions', async () => {
+        const { fuelMessagePortal } = await fixture();
+
+        const payloadLength = Math.abs(randomInt(256));
+        const serializedTx = randomBytes(payloadLength);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+
+        const tx = fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+          value: expectedFee - 1n,
+        });
+
+        await expect(tx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'InsufficientFee'
+        );
+
+        await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+          value: expectedFee,
+        });
+      });
+
       describe('with increasing congestion (used gas above target)', () => {
         it('duplicates gas price for full blocks gasPrice', async () => {
           const { fuelMessagePortal } = await fixture();
@@ -141,14 +211,20 @@ export function behavesLikeFuelMessagePortalV4(
           const payloadLength = Math.abs(randomInt(256));
           const serializedTx = randomBytes(payloadLength);
 
-          await fuelMessagePortal.sendTransaction(1, serializedTx); // Initialize to 1 gwei
+          await fuelMessagePortal.sendTransaction(1, serializedTx, {
+            value: parseEther('1'),
+          }); // Initialize to 1 gwei
           const initialGasPrice = await fuelMessagePortal.getGasPrice();
           expect(initialGasPrice).to.equal(
             await fuelMessagePortal.MIN_GAS_PRICE()
           );
 
-          await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx); // Fills a block
-          await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
+          await fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+            value: parseEther('1'),
+          }); // Fills a block
+          await fuelMessagePortal.sendTransaction(1, serializedTx, {
+            value: parseEther('1'),
+          }); // Update gas price
 
           expect(await fuelMessagePortal.getGasPrice()).to.equal(
             initialGasPrice * 2n
@@ -162,12 +238,18 @@ export function behavesLikeFuelMessagePortalV4(
           const gas = GAS_TARGET + (GAS_LIMIT - GAS_TARGET) / 2n;
           const serializedTx = randomBytes(payloadLength);
 
-          await fuelMessagePortal.sendTransaction(1, serializedTx); // Initialize to 1 gwei
+          await fuelMessagePortal.sendTransaction(1, serializedTx, {
+            value: parseEther('1'),
+          }); // Initialize to 1 gwei
           const initialGasPrice = await fuelMessagePortal.getGasPrice();
 
-          await fuelMessagePortal.sendTransaction(gas, serializedTx);
+          await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+            value: parseEther('1'),
+          });
 
-          await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
+          await fuelMessagePortal.sendTransaction(1, serializedTx, {
+            value: parseEther('1'),
+          }); // Update gas price
 
           expect(await fuelMessagePortal.getGasPrice()).to.equal(
             (initialGasPrice * ONE_AND_A_HALF) / SCALED_UNIT
@@ -185,17 +267,27 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 4 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Initialize to 1 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 2 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 4 gwei
             ]);
 
-            await fuelMessagePortal.sendTransaction(gas, serializedTx);
+            await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+              value: parseEther('1'),
+            });
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
             expect(initialGasPrice).to.equal(parseUnits('8', 'gwei'));
 
-            await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
+            await fuelMessagePortal.sendTransaction(1, serializedTx, {
+              value: parseEther('1'),
+            }); // Update gas price
 
             expect(await fuelMessagePortal.getGasPrice()).to.equal(
               (initialGasPrice * 3n) / 4n
@@ -210,17 +302,27 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(1, serializedTx), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 4 gwei
+              fuelMessagePortal.sendTransaction(1, serializedTx, {
+                value: parseEther('1'),
+              }), // Initialize to 1 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 2 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 4 gwei
             ]);
 
-            await fuelMessagePortal.sendTransaction(gas, serializedTx);
+            await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+              value: parseEther('1'),
+            });
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
             expect(initialGasPrice).to.equal(parseUnits('4', 'gwei'));
 
-            await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
+            await fuelMessagePortal.sendTransaction(1, serializedTx, {
+              value: parseEther('1'),
+            }); // Update gas price
 
             expect(await fuelMessagePortal.getGasPrice()).to.be.within(
               initialGasPrice / 2n,
@@ -236,17 +338,27 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(1, serializedTx), // Initialize to 1 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 2 gwei
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx), // Bump to 4 gwei
+              fuelMessagePortal.sendTransaction(1, serializedTx, {
+                value: parseEther('1'),
+              }), // Initialize to 1 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 2 gwei
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }), // Bump to 4 gwei
             ]);
 
-            await fuelMessagePortal.sendTransaction(gas, serializedTx);
+            await fuelMessagePortal.sendTransaction(gas, serializedTx, {
+              value: parseEther('1'),
+            });
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
             expect(initialGasPrice).to.equal(parseUnits('4', 'gwei'));
 
-            await fuelMessagePortal.sendTransaction(1, serializedTx); // Update gas price
+            await fuelMessagePortal.sendTransaction(1, serializedTx, {
+              value: parseEther('1'),
+            }); // Update gas price
 
             expect(await fuelMessagePortal.getGasPrice()).to.equal(
               initialGasPrice
@@ -262,17 +374,27 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
+                value: parseEther('1'),
+              }),
             ]);
 
             const initialGasPrice = await fuelMessagePortal.getGasPrice();
 
             const distance = 3;
             await mine(distance - 1); // The last block will be mined by the tx
-            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx);
+            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
+              value: parseEther('1'),
+            });
 
             expect(await fuelMessagePortal.getGasPrice()).to.equal(
               initialGasPrice / BigInt(distance)
@@ -286,20 +408,72 @@ export function behavesLikeFuelMessagePortalV4(
             const serializedTx = randomBytes(payloadLength);
 
             await Promise.all([
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
-              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
+              fuelMessagePortal.sendTransaction(GAS_LIMIT, serializedTx, {
+                value: parseEther('1'),
+              }),
             ]);
 
             await mine(200);
-            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx);
+            await fuelMessagePortal.sendTransaction(GAS_TARGET, serializedTx, {
+              value: parseEther('1'),
+            });
 
             expect(await fuelMessagePortal.getGasPrice()).to.equal(
               MIN_GAS_PRICE
             );
           });
         });
+      });
+    });
+
+    describe('collectFees()', async () => {
+      it('rejects unauthorized calls', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [deployer, mallory],
+        } = await fixture();
+
+        const rogueTx = fuelMessagePortal.connect(mallory).collectFees();
+        const expectedError = `AccessControl: account ${mallory.address.toLowerCase()} is missing role ${FEE_COLLECTOR_ROLE}`;
+        await expect(rogueTx).to.be.revertedWith(expectedError);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(FEE_COLLECTOR_ROLE, mallory);
+        await fuelMessagePortal.connect(mallory).collectFees();
+      });
+
+      it('transfers fees to caller', async () => {
+        const {
+          fuelMessagePortal,
+          signers: [deployer, collector],
+        } = await fixture();
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(FEE_COLLECTOR_ROLE, collector);
+
+        const expectedFee = MIN_GAS_PRICE * GAS_LIMIT;
+        await fuelMessagePortal.sendTransaction(GAS_LIMIT, '0x', {
+          value: expectedFee,
+        });
+
+        const tx = fuelMessagePortal.connect(collector).collectFees();
+        await tx;
+
+        await expect(tx).to.changeEtherBalances(
+          [fuelMessagePortal, collector],
+          [-expectedFee, expectedFee]
+        );
       });
     });
   });

@@ -9,6 +9,10 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
 
     error GasLimit();
     error MinGas();
+    error InsufficientFee();
+    error RecipientRejectedETH();
+
+    bytes32 public constant FEE_COLLECTOR_ROLE = keccak256("FEE_COLLECTOR_ROLE");
 
     uint64 public immutable GAS_LIMIT;
     uint64 public immutable GAS_TARGET;
@@ -81,6 +85,30 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
         unchecked {
             emit Transaction(transactionNonce++, gas, serializedTx);
         }
+
+        uint256 fee = _gasPrice * gas;
+
+        if (msg.value != fee) {
+            if (msg.value < fee) {
+                revert InsufficientFee();
+            }
+
+            unchecked {
+                (bool success, bytes memory result) = _msgSender().call{value: msg.value - fee}("");
+                if (!success) {
+                    // Look for revert reason and bubble it up if present
+                    if (result.length > 0) {
+                        // The easiest way to bubble the revert reason is using memory via assembly
+                        /// @solidity memory-safe-assembly
+                        assembly {
+                            let returndata_size := mload(result)
+                            revert(add(32, result), returndata_size)
+                        }
+                    }
+                    revert RecipientRejectedETH();
+                }
+            }
+        }
     }
 
     function getLastSeenBlock() public view virtual returns (uint256) {
@@ -103,6 +131,11 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
         if (getLastSeenBlock() == block.number) return usedGas;
 
         return 0;
+    }
+
+    function collectFees() external onlyRole(FEE_COLLECTOR_ROLE) {
+        (bool success, ) = _msgSender().call{value: address(this).balance}("");
+        if (!success) revert RecipientRejectedETH();
     }
 
     /**
