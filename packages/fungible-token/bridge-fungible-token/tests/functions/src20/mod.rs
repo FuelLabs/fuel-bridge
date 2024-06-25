@@ -7,13 +7,13 @@ mod success {
 
     #[tokio::test]
     async fn check_total_supply() {
-        let (implementation_contractid, proxy_contract) = setup_test().await;
+        let (implementation_contract_id, proxy_contract) = setup_test().await;
         let asset_id = get_asset_id(proxy_contract.contract_id(), BRIDGED_TOKEN);
 
         let expected_total_supply: u64 = u64::MAX;
 
         assert_eq!(
-            total_supply(&implementation_contractid, &proxy_contract, asset_id)
+            total_supply(&implementation_contract_id, &proxy_contract, asset_id)
                 .await
                 .unwrap(),
             expected_total_supply
@@ -22,20 +22,20 @@ mod success {
 
     #[tokio::test]
     async fn check_total_assets() {
-        let (implementation_contractid, proxy_contract) = setup_test().await;
+        let (implementation_contract_id, proxy_contract) = setup_test().await;
 
         assert_eq!(
-            total_assets(&implementation_contractid, &proxy_contract).await,
+            total_assets(&implementation_contract_id, &proxy_contract).await,
             1
         );
     }
 
     #[tokio::test]
     async fn check_name() {
-        let (implementation_contractid, proxy_contract) = setup_test().await;
+        let (implementation_contract_id, proxy_contract) = setup_test().await;
         let asset_id = get_asset_id(proxy_contract.contract_id(), BRIDGED_TOKEN);
 
-        let response = name(&implementation_contractid, &proxy_contract, asset_id)
+        let response = name(&implementation_contract_id, &proxy_contract, asset_id)
             .await
             .unwrap();
 
@@ -44,10 +44,10 @@ mod success {
 
     #[tokio::test]
     async fn check_symbol() {
-        let (implementation_contractid, proxy_contract) = setup_test().await;
+        let (implementation_contract_id, proxy_contract) = setup_test().await;
         let asset_id = get_asset_id(proxy_contract.contract_id(), BRIDGED_TOKEN);
 
-        let response = symbol(&implementation_contractid, &proxy_contract, asset_id)
+        let response = symbol(&implementation_contract_id, &proxy_contract, asset_id)
             .await
             .unwrap();
 
@@ -56,10 +56,10 @@ mod success {
 
     #[tokio::test]
     async fn check_decimals() {
-        let (implementation_contractid, proxy_contract) = setup_test().await;
+        let (implementation_contract_id, proxy_contract) = setup_test().await;
         let asset_id = get_asset_id(proxy_contract.contract_id(), BRIDGED_TOKEN);
 
-        let response = decimals(&implementation_contractid, &proxy_contract, asset_id)
+        let response = decimals(&implementation_contract_id, &proxy_contract, asset_id)
             .await
             .unwrap();
 

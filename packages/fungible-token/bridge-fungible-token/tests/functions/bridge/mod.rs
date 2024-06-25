@@ -58,7 +58,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -111,7 +111,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
-            implementation_contractid,
+            implementation_contract_id,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -207,7 +207,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![topping_message, refundable_message],
@@ -262,7 +262,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
-            implementation_contractid,
+            implementation_contract_id,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -340,7 +340,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -384,7 +384,7 @@ mod success {
         let to = Bits256(*wallet.address().hash());
 
         let call_response =
-            withdraw(&bridge, implementation_contractid.clone(), to, amount, gas).await;
+            withdraw(&bridge, implementation_contract_id.clone(), to, amount, gas).await;
 
         let message_receipt = call_response
             .receipts
@@ -415,7 +415,7 @@ mod success {
 
         // Check that supply has decreased by withdrawal_amount
         let supply = total_supply(
-            &implementation_contractid,
+            &implementation_contract_id,
             &bridge,
             get_asset_id(bridge.contract_id(), BRIDGED_TOKEN),
         )
@@ -450,7 +450,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, _) = setup_environment(
+        let (implementation_contract_id, bridge, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -460,12 +460,12 @@ mod success {
         )
         .await;
 
-        dbg!(&implementation_contractid);
+        dbg!(&implementation_contract_id);
 
         let bridged_token_gateway: Bits256 = bridge
             .methods()
             .bridged_token_gateway()
-            .with_contract_ids(&[implementation_contractid.clone()])
+            .with_contract_ids(&[implementation_contract_id.clone()])
             .call()
             .await
             .unwrap()
@@ -510,7 +510,7 @@ mod revert {
         )
         .await;
 
-        let (implementation_contractid, bridge, _) = setup_environment(
+        let (implementation_contract_id, bridge, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -523,7 +523,7 @@ mod revert {
         bridge
             .methods()
             .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
-            .with_contract_ids(&[implementation_contractid])
+            .with_contract_ids(&[implementation_contract_id])
             .call()
             .await
             .unwrap();
@@ -556,7 +556,7 @@ mod revert {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -581,7 +581,7 @@ mod revert {
                 Bits256::from_hex_str(wrong_token).unwrap(),
                 Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
             )
-            .with_contract_ids(&[implementation_contractid])
+            .with_contract_ids(&[implementation_contract_id])
             .call()
             .await
             .unwrap();

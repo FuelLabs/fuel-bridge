@@ -526,7 +526,7 @@ pub(crate) async fn setup_test() -> (
     let metadata_message =
         create_metadata_message(BRIDGED_TOKEN, BRIDGED_TOKEN_ID, "Token", "TKN", proxy_id).await;
 
-    let (implementation_contractid, proxy_contract, utxo_inputs) = setup_environment(
+    let (implementation_contract_id, proxy_contract, utxo_inputs) = setup_environment(
         &mut wallet,
         vec![coin],
         vec![message, (0, metadata_message)],
@@ -555,7 +555,7 @@ pub(crate) async fn setup_test() -> (
     let tx_status = wallet.provider().unwrap().tx_status(&tx_id).await.unwrap();
     assert!(matches!(tx_status, TxStatus::Success { .. }));
 
-    (implementation_contractid, proxy_contract)
+    (implementation_contract_id, proxy_contract)
 }
 
 pub(crate) fn get_contract_ids(
