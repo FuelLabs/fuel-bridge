@@ -66,7 +66,7 @@ mod success {
         )
         .await;
 
-        let (implementation_contractid, bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
