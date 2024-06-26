@@ -31,7 +31,7 @@ abi Proxy {
 
 configurable {
     INITIAL_OWNER: State = State::Uninitialized,
-    INITIAL_TARGET: ContractId = ContractId::from(ZERO_B256)
+    INITIAL_TARGET: ContractId = ContractId::zero()
 }
 
 #[namespace(SRC14)]
