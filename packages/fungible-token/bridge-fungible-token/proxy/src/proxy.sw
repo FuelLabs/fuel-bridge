@@ -3,7 +3,6 @@ contract;
 use std::execution::run_external;
 use standards::{src14::SRC14, src5::{AccessError, State}};
 
-
 pub enum ProxyErrors {
     IdentityZero: (),
 }
@@ -24,7 +23,7 @@ abi Proxy {
 
 configurable {
     INITIAL_OWNER: State = State::Uninitialized,
-    INITIAL_TARGET: ContractId = ContractId::zero()
+    INITIAL_TARGET: ContractId = ContractId::zero(),
 }
 
 #[namespace(SRC14)]
@@ -53,7 +52,6 @@ fn fallback() {
 
 #[storage(read)]
 fn only_owner() {
-
     let owner = match storage.owner.read() {
         State::Uninitialized => INITIAL_OWNER,
         state => state,
@@ -66,14 +64,13 @@ fn only_owner() {
 }
 
 impl Proxy for Contract {
-
     #[storage(read)]
     fn _proxy_owner() -> State {
         let owner = storage.owner.read();
 
         match owner {
             State::Uninitialized => INITIAL_OWNER,
-            _ => owner, 
+            _ => owner,
         }
     }
 
@@ -89,7 +86,7 @@ impl Proxy for Contract {
         storage.owner.write(State::Initialized(new_owner));
     }
 
-    #[storage(read,write)]
+    #[storage(read, write)]
     fn _proxy_revoke_ownership() {
         only_owner();
         storage.owner.write(State::Revoked);
