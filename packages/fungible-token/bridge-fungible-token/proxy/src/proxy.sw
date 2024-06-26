@@ -5,7 +5,6 @@ use std::{
     execution::run_external,
     hash::{sha256, Hash},
     string::String,
-    constants::ZERO_B256,
 };
 use standards::{src14::SRC14, src20::SRC20, src5::{AccessError, SRC5, State}};
 use contract_message_receiver::MessageReceiver;
