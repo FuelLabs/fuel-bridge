@@ -46,7 +46,7 @@ impl SRC14 for Contract {
     #[storage(write)]
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
-        require(new_target.bits() != ZERO_B256, ProxyErrors::IdentityZero);
+        require(new_target.bits() != b256::zero(), ProxyErrors::IdentityZero);
         storage.target.write(Some(new_target));
     }
 }
