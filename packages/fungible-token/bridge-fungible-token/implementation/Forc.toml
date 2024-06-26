@@ -5,6 +5,7 @@ license = "Apache-2.0"
 name = "bridge_fungible_token"
 
 [dependencies]
-contract_message_receiver = { path = "../../message-predicates/contract-message-receiver" }
-src_20 = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.2.2" }
+contract_message_receiver = { path = "../../../message-predicates/contract-message-receiver" }
+interface = { path = "../interface" }
+standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.5.0" }
 sway_libs = { git = "https://github.com/FuelLabs/sway-libs", tag = "v0.21.0" }

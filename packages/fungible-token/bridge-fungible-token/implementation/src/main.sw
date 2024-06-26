@@ -12,7 +12,6 @@ contract;
 mod data_structures;
 mod errors;
 mod events;
-mod interface;
 mod utils;
 
 use contract_message_receiver::MessageReceiver;
@@ -62,7 +61,7 @@ use utils::{
     encode_data,
     encode_register_calldata,
 };
-use src_20::SRC20;
+use standards::src20::SRC20;
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
 const ZERO_U256 = 0x00u256;
@@ -71,6 +70,7 @@ configurable {
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
 }
 
+#[namespace(bridge)]
 storage {
     asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
     asset_to_token_id: StorageMap<AssetId, b256> = StorageMap {},

@@ -41,13 +41,13 @@ pub async fn build_contract_message_tx(
     for contract in contracts {
         tx_inputs.push(contract);
     }
-
     // Start building tx list of outputs
     tx_outputs.push(Output::contract(1u16, Bytes32::zeroed(), Bytes32::zeroed()));
+    tx_outputs.push(Output::contract(2u16, Bytes32::zeroed(), Bytes32::zeroed()));
 
-    // If there is more than 1 contract input, it means this is a deposit to contract.
-    if number_of_contracts > 1usize {
-        tx_outputs.push(Output::contract(2u16, Bytes32::zeroed(), Bytes32::zeroed()));
+    // If there is more than 2 contract inputs, it means this is a deposit to a contract.
+    if number_of_contracts > 2usize {
+        tx_outputs.push(Output::contract(3u16, Bytes32::zeroed(), Bytes32::zeroed()));
     };
 
     // Build a change output for the owner of the first provided coin input
