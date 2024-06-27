@@ -8,6 +8,7 @@ import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
 import 'solidity-coverage';
+import 'hardhat-gas-reporter';
 
 dotEnvConfig();
 
@@ -102,6 +103,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    enabled: true,
   },
 };
 
