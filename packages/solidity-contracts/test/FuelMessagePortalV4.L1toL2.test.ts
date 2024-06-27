@@ -41,7 +41,7 @@ const GAS_LIMIT = 1_000;
 const MIN_GAS_PRICE = parseUnits('1', 'gwei');
 const MIN_GAS_PER_TX = 1;
 
-describe.only('FuelMessagesPortalV4 - Outgoing messages', async () => {
+describe('FuelMessagesPortalV4 - Outgoing messages', async () => {
   const nonceList: string[] = [];
 
   let signers: HardhatEthersSigner[];
