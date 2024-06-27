@@ -20,7 +20,7 @@ const GAS_LIMIT = 1_000;
 const MIN_GAS_PRICE = parseUnits('1', 'gwei');
 const MIN_GAS_PER_TX = 1;
 
-describe.only('FuelMessagePortalV4', () => {
+describe('FuelMessagePortalV4 - Incoming messages', () => {
   const fixture = hre.deployments.createFixture(
     async ({ ethers, upgrades }) => {
       const signers = await ethers.getSigners();
