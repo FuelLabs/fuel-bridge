@@ -36,6 +36,12 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
         MIN_GAS_PRICE = minGasPrice;
     }
 
+    /// @notice sends a transaction to the L2. The sender pays the execution cost with a fee that
+    /// @notice depends on congestion of previous calls to this function.
+    /// @notice DA costs are paid by the ethereum transaction itself
+    /// @dev Excess fee will be returned to the sender. Checks-effects-interactions pattern followed
+    /// @param gas amount of gas forwarded for the transaction in L2
+    /// @param serializedTx Complete fuel transaction
     function sendTransaction(uint64 gas, bytes calldata serializedTx) external payable virtual {
         if (gas < MIN_GAS_PER_TX) {
             revert MinGas();
@@ -46,23 +52,39 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
         uint256 _gasPrice = gasPrice;
 
         if (_lastSeenBlock < block.number) {
+            // Update gas price
             uint256 distance;
             unchecked {
                 distance = block.number - uint256(_lastSeenBlock);
             }
 
+            // If we had transactions in the previous block, check previous block congestion
             if (distance == 1) {
                 if (_usedGas > GAS_TARGET) {
-                    // Max increment: x2
-                    _gasPrice = (_gasPrice * PRECISION * _usedGas) / GAS_TARGET;
+                    /**
+                     * Max increment: x2 (Gas limit = gas target x2, see constructor)
+                     *                              usedGas
+                     * new gasPrice = gasPrice x --------------
+                     *                             gasTarget
+                     */
+                    _gasPrice = _divByNonZero((_gasPrice * PRECISION * _usedGas), GAS_TARGET);
                 } else {
-                    // Max decrement: x0.5
-                    _gasPrice = (_gasPrice * (PRECISION + (_usedGas * PRECISION) / GAS_TARGET)) / 2;
+                    /**
+                     * Max decrement: x0.5. Min decrement: x1
+                     *                                   usedGas
+                     * new gasPrice = gasPrice x (1 + ---------------- ) x 0.5
+                     *                                  gasTarget
+                     */
+                    _gasPrice = _divByNonZero(
+                        _gasPrice * (PRECISION + _divByNonZero((_usedGas * PRECISION), GAS_TARGET)),
+                        2
+                    );
                 }
 
                 _gasPrice /= PRECISION;
             } else {
-                _gasPrice /= distance;
+                // If there were no transactions in the previous block, use distance to last congested block
+                _gasPrice = _divByNonZero(_gasPrice, distance);
             }
 
             _usedGas = gas;
@@ -88,6 +110,7 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
 
         uint256 fee = _gasPrice * gas;
 
+        // Check fee and return to sender if needed
         if (msg.value != fee) {
             if (msg.value < fee) {
                 revert InsufficientFee();
@@ -136,6 +159,13 @@ contract FuelMessagePortalV4 is FuelMessagePortalV3 {
     function collectFees() external onlyRole(FEE_COLLECTOR_ROLE) {
         (bool success, ) = _msgSender().call{value: address(this).balance}("");
         if (!success) revert RecipientRejectedETH();
+    }
+
+    /// @dev gas efficient division. Must be used with care, `_div` must be non zero
+    function _divByNonZero(uint256 _num, uint256 _div) internal pure returns (uint256 result) {
+        assembly {
+            result := div(_num, _div)
+        }
     }
 
     /**
