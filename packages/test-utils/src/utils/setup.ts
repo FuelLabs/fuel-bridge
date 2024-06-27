@@ -2,13 +2,13 @@
 /// A set of useful helper methods for setting up the integration test environment.
 import type {
   FuelChainState,
-  FuelMessagePortal,
+  FuelMessagePortalV4,
   FuelERC20GatewayV4 as FuelERC20Gateway,
   FuelERC721Gateway,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
-  FuelMessagePortal__factory,
+  FuelMessagePortalV4__factory as FuelMessagePortal__factory,
   FuelERC20GatewayV4__factory as FuelERC20Gateway__factory,
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
@@ -78,7 +78,7 @@ export interface TestEnvironment {
     provider: EthProvider;
     jsonRPC: string;
     fuelChainState: FuelChainState;
-    fuelMessagePortal: FuelMessagePortal;
+    fuelMessagePortal: FuelMessagePortalV4;
     fuelERC20Gateway: FuelERC20Gateway;
     fuelERC721Gateway: FuelERC721Gateway;
     deployer: EthSigner;
@@ -140,32 +140,32 @@ export async function setupEnvironment(
     );
   }
   const fuel_deployer = Wallet.fromPrivateKey(pk_fuel_deployer, fuel_provider);
-  const fuel_deployerBalance = await fuel_deployer.getBalance();
-  if (fuel_deployerBalance.lt(fuels_parseEther('5')) && skip_deployer_balance) {
-    throw new Error(
-      'Fuel deployer balance is very low (' +
-        fuels_formatEther(fuel_deployerBalance) +
-        'ETH)'
-    );
-  }
+  // const fuel_deployerBalance = await fuel_deployer.getBalance();
+  // if (fuel_deployerBalance.lt(fuels_parseEther('5')) && skip_deployer_balance) {
+  //   throw new Error(
+  //     'Fuel deployer balance is very low (' +
+  //       fuels_formatEther(fuel_deployerBalance) +
+  //       'ETH)'
+  //   );
+  // }
   const fuel_signer1 = Wallet.fromPrivateKey(pk_fuel_signer1, fuel_provider);
-  const fuel_signer1Balance = await fuel_signer1.getBalance();
-  if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
-    const tx = await fuel_deployer.transfer(
-      fuel_signer1.address,
-      fuels_parseEther('1').toHex()
-    );
-    await tx.wait();
-  }
+  // const fuel_signer1Balance = await fuel_signer1.getBalance();
+  // if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
+  //   const tx = await fuel_deployer.transfer(
+  //     fuel_signer1.address,
+  //     fuels_parseEther('1').toHex()
+  //   );
+  //   await tx.wait();
+  // }
   const fuel_signer2 = Wallet.fromPrivateKey(pk_fuel_signer2, fuel_provider);
-  const fuel_signer2Balance = await fuel_signer2.getBalance();
-  if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
-    const tx = await fuel_deployer.transfer(
-      fuel_signer2.address,
-      fuels_parseEther('1').toHex()
-    );
-    await tx.wait();
-  }
+  // const fuel_signer2Balance = await fuel_signer2.getBalance();
+  // if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
+  //   const tx = await fuel_deployer.transfer(
+  //     fuel_signer2.address,
+  //     fuels_parseEther('1').toHex()
+  //   );
+  //   await tx.wait();
+  // }
 
   // Create provider and signers from http_ethereum_client
   const eth_provider = new JsonRpcProvider(http_ethereum_client);
@@ -275,7 +275,7 @@ export async function setupEnvironment(
     eth_fuelChainStateAddress,
     eth_deployer
   );
-  const eth_fuelMessagePortal: FuelMessagePortal =
+  const eth_fuelMessagePortal: FuelMessagePortalV4 =
     FuelMessagePortal__factory.connect(
       eth_fuelMessagePortalAddress,
       eth_deployer

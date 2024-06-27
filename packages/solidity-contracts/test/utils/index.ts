@@ -5,3 +5,4 @@ export * from './impersonateAccount';
 export * from './merkle';
 export * from './deployProxy';
 export * from './createRandomWalletWithFunds';
+export * from './blockProduction';

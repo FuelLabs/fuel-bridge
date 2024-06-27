@@ -8,6 +8,7 @@ import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
 import 'solidity-coverage';
+import 'hardhat-gas-reporter';
 
 dotEnvConfig();
 
@@ -40,6 +41,7 @@ const config: HardhatUserConfig = {
         count: 128,
       },
       deploy: ['deploy/hardhat'],
+      gas: 'auto', // https://github.com/NomicFoundation/hardhat/issues/4090
     },
     localhost: {
       url: 'http://127.0.0.1:8545/',
@@ -101,6 +103,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: ETHERSCAN_API_KEY,
+  },
+  gasReporter: {
+    enabled: true,
   },
 };
 

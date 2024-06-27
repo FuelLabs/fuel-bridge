@@ -5,3 +5,4 @@ export * from './getTokenId';
 export * from './relayCommonMessage';
 export * from './transaction';
 export * from './waitForMessage';
+export * from './waitForTransaction';
