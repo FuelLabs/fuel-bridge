@@ -6,7 +6,7 @@ import {
   waitForMessage,
   createRelayMessageParams,
   getOrDeployECR20Contract,
-  getOrDeployFuelTokenContract,
+  getOrDeployL2Bridge,
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
@@ -39,8 +39,9 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_testToken: Contract;
-  let fuel_testContractId: string;
+  let fuel_bridge: Contract;
+  let fuel_bridgeImpl: Contract;
+  let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 
   // override the default test timeout from 2000ms
@@ -53,18 +54,23 @@ describe('Bridging ERC20 tokens', async function () {
     ).toLowerCase();
     eth_testToken = await getOrDeployECR20Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
-    fuel_testToken = await getOrDeployFuelTokenContract(
+
+    const { contract, implementation } = await getOrDeployL2Bridge(
       env,
       env.eth.fuelERC20Gateway,
       FUEL_TX_PARAMS
     );
 
-    fuel_testContractId = fuel_testToken.id.toHexString();
-    await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_testContractId);
-    fuel_testAssetId = getTokenId(fuel_testToken, eth_testTokenAddress);
+    fuel_bridge = contract;
+    fuel_bridgeImpl = implementation;
 
-    const { value: expectedGatewayContractId } = await fuel_testToken.functions
+    fuel_bridgeContractId = fuel_bridge.id.toHexString();
+    await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_bridgeContractId);
+    fuel_testAssetId = getTokenId(fuel_bridge, eth_testTokenAddress);
+
+    const { value: expectedGatewayContractId } = await fuel_bridge.functions
       .bridged_token_gateway()
+      .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams(FUEL_CALL_TX_PARAMS)
       .dryRun();
 
@@ -161,6 +167,7 @@ describe('Bridging ERC20 tokens', async function () {
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         gasLimit: 30000000,
         maturity: undefined,
+        contractIds: [fuel_bridgeImpl.id.toHexString()],
       });
 
       const txResult = await tx.waitForResult();
@@ -177,12 +184,14 @@ describe('Bridging ERC20 tokens', async function () {
     });
 
     it('Check metadata was registered', async () => {
-      await fuel_testToken.functions
+      await fuel_bridge.functions
         .asset_to_l1_address({ bits: fuel_testAssetId })
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
         .call();
 
-      const { value: l2_decimals } = await fuel_testToken.functions
+      const { value: l2_decimals } = await fuel_bridge.functions
         .decimals({ bits: fuel_testAssetId })
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
         .get();
 
       expect(l2_decimals).to.be.equal(9);
@@ -232,6 +241,7 @@ describe('Bridging ERC20 tokens', async function () {
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
         ...FUEL_TX_PARAMS,
         maturity: undefined,
+        contractIds: [fuel_bridgeImpl.id.toHexString()],
       });
 
       const txResult = await tx.waitForResult();
@@ -258,14 +268,15 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Bridge ERC20 via Fuel token contract', async () => {
       // withdraw tokens back to the base chain
-      fuel_testToken.account = fuelTokenSender;
+      fuel_bridge.account = fuelTokenSender;
       const paddedAddress =
         '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
       const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
         fuel_testAssetId
       );
-      const transactionRequest = await fuel_testToken.functions
+      const transactionRequest = await fuel_bridge.functions
         .withdraw(paddedAddress)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
         .txParams({
           tip: 0,
           gasLimit: 1_000_000,
