@@ -5,7 +5,7 @@ use standards::{src14::SRC14, src5::{AccessError, State}};
 use contract_message_receiver::MessageReceiver;
 
 abi ReentrancyAttacker {
-    #[storage(read,write)]
+    #[storage(read, write)]
     fn process_message(msg_idx: u64);
 
     #[storage(read)]
@@ -25,11 +25,11 @@ configurable {
 #[namespace(SRC14)]
 storage {
     attacking: bool = false,
-    success: bool = false
+    success: bool = false,
 }
 
 impl ReentrancyAttacker for Contract {
-    #[storage(read,write)]
+    #[storage(read, write)]
     fn process_message(msg_idx: u64) {
         if storage.success.read() {
             log(AttackStage::Finished);
