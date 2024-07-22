@@ -4,6 +4,7 @@ members = [
   "packages/fungible-token/bridge-fungible-token/interface",
   "packages/fungible-token/bridge-fungible-token/proxy",
   "packages/fungible-token/bridge-fungible-token/implementation",
+  "packages/fungible-token/bridge-fungible-token/reentrancy-attacker",
   "packages/message-predicates/contract-message-predicate",
   "packages/message-predicates/contract-message-receiver",
   "packages/base-asset",

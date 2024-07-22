@@ -7,6 +7,7 @@ pub(crate) const BRIDGE_FUNGIBLE_TOKEN_CONTRACT_BINARY: &str =
 pub(crate) const DEPOSIT_RECIPIENT_CONTRACT_BINARY: &str =
     "../test-deposit-recipient-contract/out/release/test_deposit_recipient_contract.bin";
 pub(crate) const BRIDGE_PROXY_BINARY: &str = "../bridge-fungible-token/proxy/out/release/proxy.bin";
+pub(crate) const REENTRANCY_ATTACKER_BINARY: &str = "../bridge-fungible-token/reentrancy-attacker/out/release/reentrancy-attacker.bin";
 
 pub(crate) const BRIDGED_TOKEN: &str =
     "0x00000000000000000000000000000000000000000000000000000000deadbeef";

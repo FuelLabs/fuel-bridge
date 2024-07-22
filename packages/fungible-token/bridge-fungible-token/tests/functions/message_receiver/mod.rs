@@ -1101,9 +1101,9 @@ mod success {
 }
 
 mod revert {
-    use fuels::types::tx_status::TxStatus;
+    use fuels::{accounts::wallet::WalletUnlocked, core::codec::LogDecoder, types::{tx_status::TxStatus, U256}, programs::contract::SettableContract};
 
-    use crate::utils::setup::get_contract_ids;
+    use crate::utils::setup::{ReentrancyAttacker, AttackStage, create_recipient_contract, create_reentrancy_attacker_contract, get_asset_id, get_contract_ids, precalculate_reentrant_attacker_id};
 
     use super::*;
 
@@ -1158,5 +1158,77 @@ mod revert {
                 panic!("Transaction did not revert");
             }
         }
+    }
+
+
+    #[tokio::test]
+    async fn rejects_reentrancy_attempts() {
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+        let deposit_contract_id = precalculate_reentrant_attacker_id(proxy_id.clone()).await;
+        let amount = u64::MAX;
+
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *deposit_contract_id,
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
+            proxy_id,
+            true,
+            Some(vec![11u8, 42u8, 69u8]),
+        )
+        .await;
+
+        let (_implementation_contract_id, bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        let provider = wallet.provider().expect("Needs provider");
+
+        let reentrant_attacker: ReentrancyAttacker<WalletUnlocked> 
+            = create_reentrancy_attacker_contract(wallet.clone(), proxy_id.clone()).await;
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+
+        let tx_status = provider.tx_status(&tx_id).await.unwrap();
+        assert!(matches!(tx_status, TxStatus::Revert { .. }));
+
+        let receipts: Vec<fuels::tx::Receipt> = provider.tx_status(&tx_id).await.unwrap().take_receipts();
+
+        let attack_stages = reentrant_attacker
+                .log_decoder()
+                .decode_logs_with_type::<AttackStage>(&receipts)
+                .unwrap();
+
+        assert_eq!(attack_stages.len(), 1);
+        assert_eq!(attack_stages[0], AttackStage::Attacking);
+
+        let attack_successful = reentrant_attacker
+            .methods()
+            .get_success()
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        assert!(!attack_successful);
     }
 }

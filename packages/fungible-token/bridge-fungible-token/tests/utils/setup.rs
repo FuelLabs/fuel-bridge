@@ -27,7 +27,7 @@ use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::Fr
 
 use super::constants::{
     BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG,
-    DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
+    DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG, REENTRANCY_ATTACKER_BINARY,
 };
 
 abigen!(
@@ -43,6 +43,10 @@ abigen!(
     Contract(
         name = "BridgeProxy",
         abi = "packages/fungible-token/bridge-fungible-token/proxy/out/release/proxy-abi.json",
+    ),
+    Contract(
+        name = "ReentrancyAttacker",
+        abi = "packages/fungible-token/bridge-fungible-token/reentrancy-attacker/out/release/reentrancy-attacker-abi.json",
     )
 );
 
@@ -344,6 +348,20 @@ pub(crate) async fn precalculate_deposit_id() -> ContractId {
     compiled.contract_id()
 }
 
+pub(crate) async fn precalculate_reentrant_attacker_id(target: ContractId) -> ContractId {
+    let configurables = ReentrancyAttackerConfigurables::default()
+        .with_TARGET(target)
+        .unwrap();
+
+    let compiled = Contract::load_from(
+        REENTRANCY_ATTACKER_BINARY,
+        LoadConfiguration::default().with_configurables(configurables),
+    )
+    .unwrap();
+
+    compiled.contract_id()
+}
+
 /// Prefixes the given bytes with the test contract ID
 pub(crate) fn prefix_contract_id(mut data: Vec<u8>, contract_id: ContractId) -> Vec<u8> {
     // Turn contract id into array with the given data appended to it
@@ -366,6 +384,26 @@ pub(crate) async fn create_recipient_contract(
     .unwrap();
 
     DepositRecipientContract::new(id, wallet)
+}
+
+pub(crate) async fn create_reentrancy_attacker_contract(
+    wallet: WalletUnlocked,
+    target: ContractId
+) -> ReentrancyAttacker<WalletUnlocked> {
+    let configurables = ReentrancyAttackerConfigurables::default()
+        .with_TARGET(target)
+        .unwrap();
+
+    let id = Contract::load_from(
+        REENTRANCY_ATTACKER_BINARY,
+        LoadConfiguration::default().with_configurables(configurables),
+    )
+    .unwrap()
+    .deploy(&wallet, TxPolicies::default())
+    .await
+    .unwrap();
+
+    ReentrancyAttacker::new(id, wallet)
 }
 
 /// Quickly converts the given hex string into a u8 vector
