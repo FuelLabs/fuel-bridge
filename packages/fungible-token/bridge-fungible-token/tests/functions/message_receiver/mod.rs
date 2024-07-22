@@ -1101,9 +1101,9 @@ mod success {
 }
 
 mod revert {
-    use fuels::{accounts::wallet::WalletUnlocked, core::codec::LogDecoder, types::{tx_status::TxStatus, U256}, programs::contract::SettableContract};
+    use fuels::{accounts::wallet::WalletUnlocked, types::{tx_status::TxStatus, U256}, programs::contract::SettableContract};
 
-    use crate::utils::setup::{ReentrancyAttacker, AttackStage, create_recipient_contract, create_reentrancy_attacker_contract, get_asset_id, get_contract_ids, precalculate_reentrant_attacker_id};
+    use crate::utils::setup::{ReentrancyAttacker, AttackStage, create_reentrancy_attacker_contract, get_contract_ids, precalculate_reentrant_attacker_id};
 
     use super::*;
 
@@ -1184,7 +1184,7 @@ mod revert {
         )
         .await;
 
-        let (_implementation_contract_id, bridge, utxo_inputs) = setup_environment(
+        let (_, _, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
