@@ -43,7 +43,6 @@ pub async fn build_contract_message_tx(
         .unwrap();
 
     let funding_utx0 = fetched_gas_coins.first().unwrap().to_owned();
-
     tx_inputs.push(Input::resource_signed(CoinType::Coin(funding_utx0.clone())));
     tx_outputs.push(Output::Change {
         to: wallet.address().into(),
