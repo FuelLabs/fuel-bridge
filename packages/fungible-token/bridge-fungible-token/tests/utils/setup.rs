@@ -27,7 +27,8 @@ use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::Fr
 
 use super::constants::{
     BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG,
-    DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG, REENTRANCY_ATTACKER_BINARY,
+    DEPOSIT_TO_CONTRACT_FLAG, DEPOSIT_WITH_DATA_FLAG, FROM, METADATA_MESSAGE_FLAG,
+    REENTRANCY_ATTACKER_BINARY,
 };
 
 abigen!(
@@ -388,7 +389,7 @@ pub(crate) async fn create_recipient_contract(
 
 pub(crate) async fn create_reentrancy_attacker_contract(
     wallet: WalletUnlocked,
-    target: ContractId
+    target: ContractId,
 ) -> ReentrancyAttacker<WalletUnlocked> {
     let configurables = ReentrancyAttackerConfigurables::default()
         .with_TARGET(target)

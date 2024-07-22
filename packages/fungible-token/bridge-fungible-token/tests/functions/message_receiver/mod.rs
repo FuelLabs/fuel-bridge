@@ -1101,9 +1101,16 @@ mod success {
 }
 
 mod revert {
-    use fuels::{accounts::wallet::WalletUnlocked, types::{tx_status::TxStatus, U256}, programs::contract::SettableContract};
+    use fuels::{
+        accounts::wallet::WalletUnlocked,
+        programs::contract::SettableContract,
+        types::{tx_status::TxStatus, U256},
+    };
 
-    use crate::utils::setup::{ReentrancyAttacker, AttackStage, create_reentrancy_attacker_contract, get_contract_ids, precalculate_reentrant_attacker_id};
+    use crate::utils::setup::{
+        create_reentrancy_attacker_contract, get_contract_ids, precalculate_reentrant_attacker_id,
+        AttackStage, ReentrancyAttacker,
+    };
 
     use super::*;
 
@@ -1160,7 +1167,6 @@ mod revert {
         }
     }
 
-
     #[tokio::test]
     async fn rejects_reentrancy_attempts() {
         let mut wallet = create_wallet();
@@ -1169,7 +1175,6 @@ mod revert {
             get_contract_ids(&wallet, configurables.clone());
         let deposit_contract_id = precalculate_reentrant_attacker_id(proxy_id.clone()).await;
         let amount = u64::MAX;
-
 
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
@@ -1196,8 +1201,8 @@ mod revert {
 
         let provider = wallet.provider().expect("Needs provider");
 
-        let reentrant_attacker: ReentrancyAttacker<WalletUnlocked> 
-            = create_reentrancy_attacker_contract(wallet.clone(), proxy_id.clone()).await;
+        let reentrant_attacker: ReentrancyAttacker<WalletUnlocked> =
+            create_reentrancy_attacker_contract(wallet.clone(), proxy_id.clone()).await;
 
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
@@ -1207,16 +1212,16 @@ mod revert {
         )
         .await;
 
-
         let tx_status = provider.tx_status(&tx_id).await.unwrap();
         assert!(matches!(tx_status, TxStatus::Revert { .. }));
 
-        let receipts: Vec<fuels::tx::Receipt> = provider.tx_status(&tx_id).await.unwrap().take_receipts();
+        let receipts: Vec<fuels::tx::Receipt> =
+            provider.tx_status(&tx_id).await.unwrap().take_receipts();
 
         let attack_stages = reentrant_attacker
-                .log_decoder()
-                .decode_logs_with_type::<AttackStage>(&receipts)
-                .unwrap();
+            .log_decoder()
+            .decode_logs_with_type::<AttackStage>(&receipts)
+            .unwrap();
 
         assert_eq!(attack_stages.len(), 1);
         assert_eq!(attack_stages[0], AttackStage::Attacking);
