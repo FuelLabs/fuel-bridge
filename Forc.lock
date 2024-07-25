@@ -50,6 +50,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "reentrancy-attacker"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "std",
+]
+
+[[package]]
 name = "standards"
 source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
 dependencies = ["std"]
