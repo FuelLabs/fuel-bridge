@@ -6,7 +6,7 @@ import {
   ProxyAbi,
   ProxyAbi__factory,
 } from '@fuel-bridge/fungible-token';
-import type { AddressLike } from 'ethers';
+import { resolveAddress, type AddressLike } from 'ethers';
 
 import { debug } from '../logs';
 import { eth_address_to_b256 } from '../parsers';
@@ -18,12 +18,7 @@ export async function getOrDeployL2Bridge(
   env: TestEnvironment,
   ethTokenGateway: AddressLike
 ) {
-  if (typeof ethTokenGateway !== 'string') {
-    ethTokenGateway =
-      'then' in ethTokenGateway
-        ? await ethTokenGateway
-        : await ethTokenGateway.getAddress();
-  }
+  ethTokenGateway = await resolveAddress(ethTokenGateway);
 
   const tokenGateway = ethTokenGateway.replace('0x', '');
   const fuelAcct = env.fuel.signers[1];
