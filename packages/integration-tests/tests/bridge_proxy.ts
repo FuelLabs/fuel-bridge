@@ -1,11 +1,8 @@
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
-import {
-  setupEnvironment,
-  getOrDeployL2Bridge,
-  FUEL_TX_PARAMS,
-} from '@fuel-bridge/test-utils';
+import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
+import { ProxyAbi } from '@fuel-bridge/fungible-token';
 
 const { expect } = chai;
 
@@ -16,15 +13,14 @@ describe('Proxy', async function () {
 
   let env: TestEnvironment;
   let fuel_bridgeImpl: Contract;
-  let fuel_proxy: Contract;
+  let fuel_proxy: ProxyAbi;
 
   before(async () => {
     env = await setupEnvironment({});
 
     const { proxy, implementation } = await getOrDeployL2Bridge(
       env,
-      env.eth.fuelERC20Gateway,
-      FUEL_TX_PARAMS
+      env.eth.fuelERC20Gateway
     );
 
     fuel_proxy = proxy;
@@ -73,8 +69,10 @@ describe('Proxy', async function () {
         const tx = await fuel_proxy.functions
           ._proxy_change_owner(addressIdentityInput)
           .call();
-        const result = await tx.transactionResponse.waitForResult();
-        expect(result.status).to.equal('success');
+        const { transactionResponse } = await tx.waitForResult();
+        const { status } = await transactionResponse.waitForResult();
+
+        expect(status).to.equal('success');
 
         const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
         expect(value).to.have.property('Initialized');
@@ -90,8 +88,9 @@ describe('Proxy', async function () {
         const tx = await fuel_proxy.functions
           ._proxy_change_owner(addressIdentityInput)
           .call();
-        const result = await tx.transactionResponse.waitForResult();
-        expect(result.status).to.equal('success');
+        const { transactionResponse } = await tx.waitForResult();
+        const { status } = await transactionResponse.waitForResult();
+        expect(status).to.equal('success');
 
         const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
         expect(value).to.have.property('Initialized');
@@ -138,8 +137,9 @@ describe('Proxy', async function () {
       const tx = await fuel_proxy.functions
         .set_proxy_target(contractIdentityInput)
         .call();
-      const result = await tx.transactionResponse.waitForResult();
-      expect(result.status).to.equal('success');
+      const { transactionResponse } = await tx.waitForResult();
+      const { status } = await transactionResponse.waitForResult();
+      expect(status).to.equal('success');
 
       const { value } = await fuel_proxy.functions._proxy_target().dryRun();
       expect(value.bits).to.be.equal(contractId);
@@ -154,11 +154,12 @@ describe('Proxy', async function () {
     it('revokes ownership', async () => {
       fuel_proxy.account = env.fuel.deployer;
       const tx = await fuel_proxy.functions._proxy_revoke_ownership().call();
-      const result = await tx.transactionResponse.waitForResult();
-      expect(result.status).to.equal('success');
+      const { transactionResponse } = await tx.waitForResult();
+      const { status } = await transactionResponse.waitForResult();
+      expect(status).to.equal('success');
 
       const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
-      expect(value).to.have.property('Revoked');
+      expect(value).to.equal('Revoked');
     });
 
     it('disallows proxy upgrades', async () => {

@@ -1,3 +1,4 @@
+import { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
@@ -39,8 +40,8 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_bridge: Contract;
-  let fuel_bridgeImpl: Contract;
+  let fuel_bridge: BridgeFungibleTokenAbi;
+  let fuel_bridgeImpl: BridgeFungibleTokenAbi;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 
@@ -57,8 +58,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     const { contract, implementation } = await getOrDeployL2Bridge(
       env,
-      env.eth.fuelERC20Gateway,
-      FUEL_TX_PARAMS
+      env.eth.fuelERC20Gateway
     );
 
     fuel_bridge = contract;

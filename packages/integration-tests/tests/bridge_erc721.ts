@@ -57,9 +57,7 @@ describe.skip('Bridging ERC721 tokens', async function () {
 
     const { contract } = await getOrDeployL2Bridge(
       env,
-      env.eth.fuelERC721Gateway,
-      FUEL_TX_PARAMS,
-      0
+      env.eth.fuelERC721Gateway
     );
 
     fuel_testToken = contract;
