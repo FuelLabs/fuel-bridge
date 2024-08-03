@@ -24,7 +24,7 @@ import type {
 
 const { expect } = chai;
 
-describe.only('Transferring ETH', async function () {
+describe('Transferring ETH', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
