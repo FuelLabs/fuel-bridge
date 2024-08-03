@@ -613,7 +613,7 @@ pub(crate) fn get_contract_ids(
     let proxy_configurables = BridgeProxyConfigurables::default()
         .with_INITIAL_OWNER(State::Initialized(proxy_owner.address().clone().into()))
         .unwrap()
-        .with_INITIAL_TARGET(implementation_contract_id.clone())
+        .with_INITIAL_TARGET(implementation_contract_id)
         .unwrap();
 
     let proxy_config = LoadConfiguration::default().with_configurables(proxy_configurables);

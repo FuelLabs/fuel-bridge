@@ -196,7 +196,7 @@ mod tests {
             )
             .await?;
 
-        let provider = wallet.provider().clone().unwrap().clone();
+        let provider = wallet.provider().unwrap().clone();
         mallory.set_provider(provider);
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), mallory.clone());
@@ -212,7 +212,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == "NotOwner".to_string()
+                if reason == *"NotOwner"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
@@ -255,7 +255,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == "IdentityZero".to_string()
+                if reason == *"IdentityZero"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
@@ -294,7 +294,7 @@ mod tests {
             )
             .await?;
 
-        let provider = wallet.provider().clone().unwrap().clone();
+        let provider = wallet.provider().unwrap().clone();
         mallory.set_provider(provider);
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), mallory.clone());
@@ -310,7 +310,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == "NotOwner".to_string()
+                if reason == *"NotOwner"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
@@ -418,7 +418,7 @@ mod tests {
             )
             .await?;
 
-        let provider = wallet.provider().clone().unwrap().clone();
+        let provider = wallet.provider().unwrap().clone();
         mallory.set_provider(provider);
 
         let proxy = BridgeProxy::new(bridge.contract_id().clone(), mallory.clone());
@@ -434,7 +434,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == "NotOwner".to_string()
+                if reason == *"NotOwner"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
@@ -478,7 +478,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == "IdentityZero".to_string()
+                if reason == *"IdentityZero"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
