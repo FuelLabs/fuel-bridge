@@ -9,6 +9,8 @@ import {
   waitForBlockFinalization,
   getBlock,
   FUEL_CALL_TX_PARAMS,
+  debug,
+  waitForBlock,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Signer } from 'ethers';
@@ -22,7 +24,7 @@ import type {
 
 const { expect } = chai;
 
-describe('Transferring ETH', async function () {
+describe.only('Transferring ETH', async function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
@@ -39,20 +41,18 @@ describe('Transferring ETH', async function () {
   });
 
   describe('Send ETH to Fuel', async () => {
-    const NUM_ETH = '0.1';
+    const NUM_ETH = '10';
     let ethereumETHSender: Signer;
     let ethereumETHSenderAddress: string;
-    let ethereumETHSenderBalance: bigint;
+
     let fuelETHReceiver: AbstractAddress;
     let fuelETHReceiverAddress: string;
     let fuelETHReceiverBalance: BN;
     let fuelETHMessageNonce: BN;
+
     before(async () => {
       ethereumETHSender = env.eth.signers[0];
       ethereumETHSenderAddress = await ethereumETHSender.getAddress();
-      ethereumETHSenderBalance = await env.eth.provider.getBalance(
-        ethereumETHSender
-      );
       fuelETHReceiver = env.fuel.signers[0].address;
       fuelETHReceiverAddress = fuelETHReceiver.toHexString();
 
@@ -93,12 +93,20 @@ describe('Transferring ETH', async function () {
 
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await env.eth.provider.getBalance(
-        ethereumETHSenderAddress
+        ethereumETHSenderAddress,
+        receipt.blockNumber
       );
 
-      const txCost = receipt.gasUsed * receipt.gasPrice;
+      const txCost = receipt.fee;
+
       const expectedSenderBalance =
-        ethereumETHSenderBalance - txCost - parseEther(NUM_ETH);
+        (await env.eth.provider.getBalance(
+          ethereumETHSender,
+          receipt.blockNumber - 1
+        )) -
+        txCost -
+        parseEther(NUM_ETH);
+
       expect(newSenderBalance).to.be.eq(expectedSenderBalance);
     });
 
@@ -127,7 +135,7 @@ describe('Transferring ETH', async function () {
   });
 
   describe('Send ETH from Fuel', async () => {
-    const NUM_ETH = '0.1';
+    const NUM_ETH = '0.001';
     let fuelETHSender: FuelWallet;
     let fuelETHSenderBalance: BN;
     let ethereumETHReceiver: Signer;
@@ -186,6 +194,126 @@ describe('Transferring ETH', async function () {
         .sub(fuelETHSenderBalance)
         .formatUnits();
       expect(diffOnSenderBalance.startsWith(NUM_ETH)).to.be.true;
+    });
+
+    it('Relay Message from Fuel on Ethereum', async () => {
+      // wait for block finalization
+      await waitForBlockFinalization(env, withdrawMessageProof);
+
+      // construct relay message proof data
+      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
+
+      // relay message
+      await env.eth.fuelMessagePortal.relayMessage(
+        relayMessageParams.message,
+        relayMessageParams.rootBlockHeader,
+        relayMessageParams.blockHeader,
+        relayMessageParams.blockInHistoryProof,
+        relayMessageParams.messageInBlockProof
+      );
+    });
+
+    it('Check ETH arrived on Ethereum', async () => {
+      // check that the recipient balance has increased by the expected amount
+      const newReceiverBalance = await env.eth.provider.getBalance(
+        ethereumETHReceiver
+      );
+      expect(
+        newReceiverBalance === ethereumETHReceiverBalance + parseEther(NUM_ETH)
+      ).to.be.true;
+    });
+  });
+
+  describe('Send ETH from Fuel in the last block of a commit interval', async () => {
+    const NUM_ETH = '0.001';
+    let fuelETHSender: FuelWallet;
+    let fuelETHSenderBalance: BN;
+    let ethereumETHReceiver: Signer;
+    let ethereumETHReceiverAddress: string;
+    let ethereumETHReceiverBalance: bigint;
+    let withdrawMessageProof: MessageProof;
+
+    before(async () => {
+      fuelETHSender = env.fuel.signers[1];
+      fuelETHSenderBalance = await fuelETHSender.getBalance(BASE_ASSET_ID);
+      ethereumETHReceiver = env.eth.signers[1];
+      ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
+      ethereumETHReceiverBalance = await env.eth.provider.getBalance(
+        ethereumETHReceiver
+      );
+    });
+
+    it('Send ETH via OutputMessage', async () => {
+      // withdraw ETH back to the base chain
+      const blocksPerCommitInterval =
+        await env.eth.fuelChainState.BLOCKS_PER_COMMIT_INTERVAL();
+      while (true) {
+        const currentBlock = await env.fuel.provider.getBlockNumber();
+        debug(`Current block ${currentBlock.toString()}`);
+        const { mod, div } = currentBlock.divmod(
+          blocksPerCommitInterval.toString()
+        );
+
+        let desiredBlock = mod.isZero()
+          ? currentBlock.add((blocksPerCommitInterval - 1n).toString())
+          : div.add(1).mul(30).sub(1);
+
+        if (
+          desiredBlock.eq(currentBlock) ||
+          desiredBlock.eq(currentBlock.add(1))
+        ) {
+          debug('Desired block just passed, skipping');
+          desiredBlock = desiredBlock.add(30);
+        }
+
+        debug(`Desired block ${desiredBlock.toString()}`);
+        await waitForBlock(desiredBlock.sub(1), env.fuel.provider);
+
+        const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
+          Address.fromString(
+            padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
+          ),
+          fuels_parseEther(NUM_ETH),
+          FUEL_CALL_TX_PARAMS
+        );
+        const fWithdrawTxResult = await fWithdrawTx.waitForResult();
+        expect(fWithdrawTxResult.status).to.equal('success');
+
+        // Wait for the commited block
+        const withdrawBlock = await getBlock(
+          env.fuel.provider.url,
+          fWithdrawTxResult.blockId
+        );
+
+        debug(`Sent transaction at block ${withdrawBlock.header.height}`);
+
+        if (withdrawBlock.header.height !== desiredBlock.toString()) {
+          debug(
+            `${
+              withdrawBlock.header.height
+            } !== ${desiredBlock.toString()}, retrying`
+          );
+          continue;
+        }
+
+        const commitHashAtL1 = await waitForBlockCommit(
+          env,
+          withdrawBlock.header.height
+        );
+
+        // get message proof
+        const messageOutReceipt = getMessageOutReceipt(
+          fWithdrawTxResult.receipts
+        );
+
+        withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
+          fWithdrawTx.id,
+          messageOutReceipt.nonce,
+          commitHashAtL1
+        );
+
+        break;
+      }
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
