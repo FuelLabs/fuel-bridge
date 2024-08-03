@@ -6,3 +6,4 @@ export * from './relayCommonMessage';
 export * from './transaction';
 export * from './waitForMessage';
 export * from './waitForTransaction';
+export * from './waitForBlock';
