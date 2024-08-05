@@ -434,7 +434,7 @@ mod tests {
         assert!(
             matches!(error_receipt,
                 Error::Transaction(Reason::Reverted {reason, ..})
-                if reason == *"NotOwner"
+                if reason == "NotOwner"
             ),
             "Transaction did not revert or reverted with a wrong reason"
         );
