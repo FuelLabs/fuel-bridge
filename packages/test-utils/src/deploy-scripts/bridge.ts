@@ -11,13 +11,13 @@ import {
 } from '@fuel-bridge/fungible-token';
 
 import {
+  B256Coder,
   DeployContractResult,
   Provider,
   Wallet,
   WalletUnlocked,
   ZeroBytes32,
 } from 'fuels';
-import { eth_address_to_b256 } from '../utils';
 
 const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
@@ -46,9 +46,9 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   const implConfigurables: any = {
-    BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(
-      L1_TOKEN_GATEWAY?.replace('0x', '')
-    ),
+    BRIDGED_TOKEN_GATEWAY:
+      '0x000000000000000000000000' +
+      L1_TOKEN_GATEWAY.replace('0x', '').toLowerCase(),
   };
 
   const implementation = await BridgeFungibleTokenAbi__factory.deployContract(
