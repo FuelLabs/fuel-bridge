@@ -17,7 +17,7 @@ import {
   WalletUnlocked,
   ZeroBytes32,
 } from 'fuels';
-import { delay, eth_address_to_b256 } from '../utils';
+import { eth_address_to_b256 } from '../utils';
 
 const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
@@ -38,7 +38,7 @@ function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
 }
 
 const main = async () => {
-  const provider = await Provider.create(L2_RPC);
+  const provider = await Provider.create(L2_RPC, { cacheUtxo: -1 });
   const wallet = Wallet.fromPrivateKey(L2_SIGNER, provider);
 
   console.log('\t> L2 Bridge deployment script initiated');
@@ -60,12 +60,6 @@ const main = async () => {
     .then(({ contract }) => contract);
 
   console.log('Implementation at ', implementation.id.toB256());
-
-  // TODO: Research and fix a weird interaction with fuel-core 0.31.
-  // Squeezed out txs due to contract redeployment
-  // Freeze the wallet for around 20 seconds
-  console.log('Waiting a cooldown of 20 seconds...');
-  await delay(20_000);
 
   const proxyConfigurables: any = {
     INITIAL_TARGET: { bits: implementation.id.toB256() },
