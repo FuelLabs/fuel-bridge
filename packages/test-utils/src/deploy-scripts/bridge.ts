@@ -21,7 +21,7 @@ import {
 
 const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
-// This helper avoids an exception in case that the contract
+// This helper avoids an exception in the case that the contract
 // was already deployed, and returns the contract instead
 function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
   return async (tx: DeployContractResult) => {
