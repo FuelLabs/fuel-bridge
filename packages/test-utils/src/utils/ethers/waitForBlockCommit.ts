@@ -8,7 +8,7 @@ import { debug } from '../logs';
 import type { TestEnvironment } from '../setup';
 
 export async function waitForBlockCommit(env: TestEnvironment, height: string) {
-  debug('Check block is commited on L1...');
+  debug(`Check block ${height} is commited on L1...`);
   // connect to FuelChainState contract as the permissioned block comitter
   const fuelChainState = env.eth.fuelChainState.connect(env.eth.provider);
   const blocksPerCommitInterval = (
