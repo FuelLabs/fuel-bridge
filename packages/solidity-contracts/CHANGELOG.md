@@ -1,5 +1,38 @@
 # @fuel-bridge/solidity-contracts
 
+## 0.6.0
+
+### Minor Changes
+
+- Adds FuelMessagePortalV3 with increased granularity on withdrawals control, by [@DefiCake](https://github.com/DefiCake) (See [#148](https://github.com/FuelLabs/fuel-bridge/pull/148))
+- Deploy devnet and testnet contracts, by [@DefiCake](https://github.com/DefiCake) (See [#175](https://github.com/FuelLabs/fuel-bridge/pull/175))
+- 🐞 Fix ECDSA test flakiness, by [@DefiCake](https://github.com/DefiCake) (See [#144](https://github.com/FuelLabs/fuel-bridge/pull/144))
+- Add recommit protection in FuelChainState, by [@DefiCake](https://github.com/DefiCake) (See [#174](https://github.com/FuelLabs/fuel-bridge/pull/174))
+- Architecture revamp featuring single asset issuer on L2, by [@DefiCake](https://github.com/DefiCake) (See [#150](https://github.com/FuelLabs/fuel-bridge/pull/150))
+- Ported @fuel-contracts/merkle-sol utils, by [@DefiCake](https://github.com/DefiCake) (See [#196](https://github.com/FuelLabs/fuel-bridge/pull/196))
+- FuelChainState is now configurable in deployment scripts, by [@DefiCake](https://github.com/DefiCake) (See [#204](https://github.com/FuelLabs/fuel-bridge/pull/204))
+- Bump all packages to adhere to fuel-core 0.26, forc 0.56, fuel-rs 0.60, fuel-ts 0.85, by [@DefiCake](https://github.com/DefiCake) (See [#180](https://github.com/FuelLabs/fuel-bridge/pull/180))
+- Added upgradability to bridge contracts, by [@DefiCake](https://github.com/DefiCake) (See [#164](https://github.com/FuelLabs/fuel-bridge/pull/164))
+- Extract CommonPredicates lib into its own file, by [@DefiCake](https://github.com/DefiCake) (See [#142](https://github.com/FuelLabs/fuel-bridge/pull/142))
+- Use custom error for relay unknown error reverts, by [@DefiCake](https://github.com/DefiCake) (See [#178](https://github.com/FuelLabs/fuel-bridge/pull/178))
+- Update fuel-core to v0.26.0 and all sdk dependencies needed to track it, by [@DefiCake](https://github.com/DefiCake) (See [#161](https://github.com/FuelLabs/fuel-bridge/pull/161))
+
+### Patch Changes
+
+- Deployment of new devnet, by [@DefiCake](https://github.com/DefiCake) (See [#157](https://github.com/FuelLabs/fuel-bridge/pull/157))
+- Add deprecation notices and use better folder grouping, by [@DefiCake](https://github.com/DefiCake) (See [#171](https://github.com/FuelLabs/fuel-bridge/pull/171))
+- Update documentation, by [@DefiCake](https://github.com/DefiCake) (See [#197](https://github.com/FuelLabs/fuel-bridge/pull/197))
+- Add nonce to FTI interface, by [@DefiCake](https://github.com/DefiCake) (See [#155](https://github.com/FuelLabs/fuel-bridge/pull/155))
+- 🐞 Fix encoding issue on FuelERC20GatewayV4.sendMetadata(), by [@DefiCake](https://github.com/DefiCake) (See [#169](https://github.com/FuelLabs/fuel-bridge/pull/169))
+- Add migration files of FuelChainState testnet upgrade - withdrawal period extension, by [@DefiCake](https://github.com/DefiCake) (See [#207](https://github.com/FuelLabs/fuel-bridge/pull/207))
+- Use L1 token decimals to determine L2 token decimals, by [@DefiCake](https://github.com/DefiCake) (See [#166](https://github.com/FuelLabs/fuel-bridge/pull/166))
+- 🐞 Fix CI on pnpm audit, by [@DefiCake](https://github.com/DefiCake) (See [#217](https://github.com/FuelLabs/fuel-bridge/pull/217))
+- Add FTI interface, by [@DefiCake](https://github.com/DefiCake) (See [#151](https://github.com/FuelLabs/fuel-bridge/pull/151))
+- Improve granularity of blacklisting permissions for messages in FuelMessagePortal, by [@DefiCake](https://github.com/DefiCake) (See [#168](https://github.com/FuelLabs/fuel-bridge/pull/168))
+- Add comments to Hexens audit. Fix some other in-code commentary, by [@DefiCake](https://github.com/DefiCake) (See [#177](https://github.com/FuelLabs/fuel-bridge/pull/177))
+- Update testnet and devnet contracts, by [@DefiCake](https://github.com/DefiCake) (See [#185](https://github.com/FuelLabs/fuel-bridge/pull/185))
+- Removed unused and vulnerable npm dependencies, by [@DefiCake](https://github.com/DefiCake) (See [#212](https://github.com/FuelLabs/fuel-bridge/pull/212))
+
 ## 0.5.0
 
 ### Minor Changes
