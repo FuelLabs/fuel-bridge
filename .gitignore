@@ -19,5 +19,8 @@ target
 */out
 */target
 
-# Genearal dist folders
+# fuels-ts typegen artifacts
+packages/fungible-token/exports/types
+
+# General dist folders
 dist

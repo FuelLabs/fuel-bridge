@@ -9,3 +9,5 @@ import _bridgeProxyBinary from '../bridge-fungible-token/proxy/out/release/proxy
 
 export const fungibleTokenBinary = _fungibleTokenBinary;
 export const bridgeProxyBinary = _bridgeProxyBinary;
+
+export * from './types';

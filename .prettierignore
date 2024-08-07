@@ -19,5 +19,8 @@ target
 # Genearal dist folders
 dist
 
+# Forc abi-typegen
+packages/fungible-token/exports/types
+
 ## Ignore lock files
 pnpm-lock.yaml

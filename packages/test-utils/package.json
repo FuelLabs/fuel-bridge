@@ -13,10 +13,11 @@
   ],
   "scripts": {
     "build": "tsup",
-    "build:watch": "tsup --watch"
+    "build:watch": "tsup --watch",
+    "deploy:bridge": "pnpm ts-node src/deploy-scripts/bridge.ts"
   },
   "peerDependencies": {
-   "fuels": "0.89.1",
+    "fuels": "0.93.0",
     "ethers": "6.13.1"
   },
   "devDependencies": {
@@ -24,6 +25,7 @@
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/solidity-contracts": "workspace:*",
     "dotenv": "^16.0.3",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "ts-node": "^10.9.1"
   }
 }

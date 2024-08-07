@@ -1173,7 +1173,7 @@ mod revert {
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
         let (proxy_id, _implementation_contract_id) =
             get_contract_ids(&wallet, configurables.clone());
-        let deposit_contract_id = precalculate_reentrant_attacker_id(proxy_id.clone()).await;
+        let deposit_contract_id = precalculate_reentrant_attacker_id(proxy_id).await;
         let amount = u64::MAX;
 
         let (message, coin, deposit_contract) = create_deposit_message(
@@ -1202,7 +1202,7 @@ mod revert {
         let provider = wallet.provider().expect("Needs provider");
 
         let reentrant_attacker: ReentrancyAttacker<WalletUnlocked> =
-            create_reentrancy_attacker_contract(wallet.clone(), proxy_id.clone()).await;
+            create_reentrancy_attacker_contract(wallet.clone(), proxy_id).await;
 
         // Relay the test message to the bridge contract
         let tx_id = relay_message_to_contract(
