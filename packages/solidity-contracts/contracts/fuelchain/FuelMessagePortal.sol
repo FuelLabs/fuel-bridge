@@ -77,6 +77,9 @@ contract FuelMessagePortal is
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
+    /// @dev The rate limit setter role
+    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
+
     /// @dev The number of decimals that the base Fuel asset uses
     uint256 public constant FUEL_BASE_ASSET_DECIMALS = 9;
     uint256 public constant ETH_DECIMALS = 18;
@@ -125,6 +128,7 @@ contract FuelMessagePortal is
         //grant initial roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
+        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
 
         //chain state contract
         _fuelChainState = fuelChainState;

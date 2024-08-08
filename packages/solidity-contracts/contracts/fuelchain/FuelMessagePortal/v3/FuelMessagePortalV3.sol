@@ -9,13 +9,36 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
 
     error MessageBlacklisted();
-    error WithdrawalsPaused();
     error MessageRelayFailed();
+    error RateLimitExceeded();
+    error WithdrawalsPaused();
 
+    /// @notice Duration after which rate limit resets.
+    uint256 public immutable rateLimitDuration;
+
+    /// @notice The time at which the current period ends at.
+    uint256 public currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount.
+    uint256 public limitAmount;
+
+    /// @notice Amounts already withdrawn this period.
+    uint256 public currentPeriodAmount;
+
+    /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
+
     mapping(bytes32 => bool) public messageIsBlacklisted;
 
-    constructor(uint256 _depositLimitGlobal) FuelMessagePortalV2(_depositLimitGlobal) {}
+    constructor(
+        uint256 _depositLimitGlobal,
+        uint256 _rateLimitDuration,
+        uint256 _limitAmount
+    ) FuelMessagePortalV2(_depositLimitGlobal) {
+        rateLimitDuration = _rateLimitDuration;
+        currentPeriodEnd = block.timestamp + _rateLimitDuration;
+        limitAmount = _limitAmount;
+    }
 
     function pauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
         withdrawalsPaused = true;
@@ -31,6 +54,34 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
     function removeMessageFromBlacklist(bytes32 messageId) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         messageIsBlacklisted[messageId] = false;
+    }
+
+    /**
+     * @notice Resets the rate limit amount.
+     * @param _amount The amount to reset the limit to.
+     */
+    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        uint256 withdrawalLimitAmountToSet;
+        bool amountWithdrawnLoweredToLimit;
+        bool withdrawalAmountResetToZero;
+        
+        // if period has expired then currentPeriodAmount is zero
+        if (currentPeriodEnd < block.timestamp) {
+            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            withdrawalAmountResetToZero = true;
+        } else {
+            // If the withdrawn amount is higher, it is set to the new limit amount
+            if (_amount < currentPeriodAmount) {
+                withdrawalLimitAmountToSet = _amount;
+                amountWithdrawnLoweredToLimit = true;
+            }
+        }
+
+        limitAmount = _amount;
+
+        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
+            currentPeriodAmount = withdrawalLimitAmountToSet;
+        }
     }
 
     ///////////////////////////////////////
@@ -112,6 +163,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             // Underflow check enabled since the amount is coded in `message`
             totalDeposited -= withdrawnAmount;
 
+            // rate limit check
+            _addWithdrawnAmount(withdrawnAmount);
+
             (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
         } else {
             (success, result) = address(uint160(uint256(message.recipient))).call(message.data);
@@ -138,6 +192,28 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
         //emit event for successful message relay
         emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
+    }
+
+    /**
+     * @notice Increments the amount withdrawn in the period.
+     * @dev Reverts if the withdrawn limit is breached.
+     * @param _withdrawnAmount The amount withdrawn to be added.
+     */
+    function _addWithdrawnAmount(uint256 _withdrawnAmount) internal {
+        uint256 currentPeriodAmountTemp;
+
+        if (currentPeriodEnd < block.timestamp) {
+            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            currentPeriodAmountTemp = _withdrawnAmount;
+        } else {
+            currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
+        }
+
+        if (currentPeriodAmountTemp > limitAmount) {
+            revert RateLimitExceeded();
+        }
+
+        currentPeriodAmount = currentPeriodAmountTemp;
     }
 
     /**
