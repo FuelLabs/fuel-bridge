@@ -16,12 +16,6 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice Duration after which rate limit resets.
     uint256 public immutable rateLimitDuration;
 
-    /// @notice The time at which the current period ends at.
-    uint256 public currentPeriodEnd;
-
-    /// @notice The eth withdrawal limit amount.
-    uint256 public limitAmount;
-
     /// @notice Amounts already withdrawn this period.
     uint256 public currentPeriodAmount;
 
@@ -30,14 +24,8 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
     mapping(bytes32 => bool) public messageIsBlacklisted;
 
-    constructor(
-        uint256 _depositLimitGlobal,
-        uint256 _rateLimitDuration,
-        uint256 _limitAmount
-    ) FuelMessagePortalV2(_depositLimitGlobal) {
+    constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
         rateLimitDuration = _rateLimitDuration;
-        currentPeriodEnd = block.timestamp + _rateLimitDuration;
-        limitAmount = _limitAmount;
     }
 
     function pauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {

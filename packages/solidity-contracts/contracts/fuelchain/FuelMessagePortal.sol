@@ -104,6 +104,12 @@ contract FuelMessagePortal is
     /// @notice Nonce for the next message to be sent
     uint256 internal _outgoingMessageNonce;
 
+    /// @notice The time at which the current period ends at.
+    uint256 public currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount.
+    uint256 public limitAmount;
+
     /// @notice Mapping of message hash to boolean success value
     mapping(bytes32 => bool) internal _incomingMessageSuccessful;
 
@@ -119,7 +125,7 @@ contract FuelMessagePortal is
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelChainState Chain state contract
-    function initialize(FuelChainState fuelChainState) public initializer {
+    function initialize(FuelChainState fuelChainState, uint256 _limitAmount, uint256 _rateLimitDuration) public initializer {
         __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
@@ -138,6 +144,10 @@ contract FuelMessagePortal is
 
         //incoming message data
         _incomingMessageSender = NULL_MESSAGE_SENDER;
+        
+        // initializing rate limit vars
+        currentPeriodEnd = block.timestamp + _rateLimitDuration;
+        limitAmount = _limitAmount;
     }
 
     /////////////////////
