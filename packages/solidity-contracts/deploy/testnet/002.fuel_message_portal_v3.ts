@@ -4,6 +4,11 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
 
+import {
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION
+} from '../../protocol/constants';
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
@@ -14,12 +19,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: fuelChainState } = await get('FuelChainState');
 
-  const rateLimitAmount = 10e18;
-  const rateLimitDuration = 604800;
-
   const contract = await deployProxy(
     new FuelMessagePortal(deployer),
-    [fuelChainState, rateLimitAmount, rateLimitDuration],
+    [fuelChainState, RATE_LIMIT_AMOUNT.toString(), RATE_LIMIT_DURATION],
     {
       initializer: 'initialize',
       constructorArgs: [MaxUint256],
