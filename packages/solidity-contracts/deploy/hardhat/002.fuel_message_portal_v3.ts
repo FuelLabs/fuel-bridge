@@ -24,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     [fuelChainState, RATE_LIMIT_AMOUNT.toString(), RATE_LIMIT_DURATION],
     {
       initializer: 'initialize',
-      constructorArgs: [MaxUint256],
+      constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
     }
   );
   await contract.waitForDeployment();
