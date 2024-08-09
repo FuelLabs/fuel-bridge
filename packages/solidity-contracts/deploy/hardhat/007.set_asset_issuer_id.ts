@@ -24,6 +24,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ASSET_ISSUER_ID
   );
 
+  await deployments.save('FuelL2BridgeId', {
+    address: ASSET_ISSUER_ID,
+    abi: [],
+  });
+
   return true;
 };
 

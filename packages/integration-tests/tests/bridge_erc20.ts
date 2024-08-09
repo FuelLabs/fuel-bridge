@@ -23,7 +23,6 @@ import type { Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
-  Contract,
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
@@ -65,6 +64,7 @@ describe('Bridging ERC20 tokens', async function () {
     fuel_bridgeImpl = implementation;
 
     fuel_bridgeContractId = fuel_bridge.id.toHexString();
+
     await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_bridgeContractId);
     fuel_testAssetId = getTokenId(fuel_bridge, eth_testTokenAddress);
 
@@ -84,11 +84,17 @@ describe('Bridging ERC20 tokens', async function () {
 
     // mint tokens as starting balances
 
-    await eth_testToken.mint(await env.eth.deployer.getAddress(), 10_000);
+    await eth_testToken
+      .mint(await env.eth.deployer.getAddress(), 10_000)
+      .then((tx) => tx.wait());
 
-    await eth_testToken.mint(await env.eth.signers[0].getAddress(), 10_000);
+    await eth_testToken
+      .mint(await env.eth.signers[0].getAddress(), 10_000)
+      .then((tx) => tx.wait());
 
-    await eth_testToken.mint(await env.eth.signers[1].getAddress(), 10_000);
+    await eth_testToken
+      .mint(await env.eth.signers[1].getAddress(), 10_000)
+      .then((tx) => tx.wait());
   });
 
   describe('Bridge ERC20 to Fuel', async () => {
@@ -105,7 +111,10 @@ describe('Bridging ERC20 tokens', async function () {
     before(async () => {
       ethereumTokenSender = env.eth.signers[0];
       ethereumTokenSenderAddress = await ethereumTokenSender.getAddress();
-      await eth_testToken.mint(ethereumTokenSenderAddress, NUM_TOKENS);
+
+      await eth_testToken
+        .mint(ethereumTokenSenderAddress, NUM_TOKENS)
+        .then((tx) => tx.wait());
 
       ethereumTokenSenderBalance = await eth_testToken.balanceOf(
         ethereumTokenSenderAddress
@@ -121,14 +130,15 @@ describe('Bridging ERC20 tokens', async function () {
       // approve FuelERC20Gateway to spend the tokens
       await eth_testToken
         .connect(ethereumTokenSender)
-        .approve(eth_erc20GatewayAddress, NUM_TOKENS);
+        .approve(eth_erc20GatewayAddress, NUM_TOKENS)
+        .then((tx) => tx.wait());
 
       // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
-      const tx = await env.eth.fuelERC20Gateway
+      const receipt = await env.eth.fuelERC20Gateway
         .connect(ethereumTokenSender)
-        .deposit(fuelTokenReceiverAddress, eth_testTokenAddress, NUM_TOKENS);
+        .deposit(fuelTokenReceiverAddress, eth_testTokenAddress, NUM_TOKENS)
+        .then((tx) => tx.wait());
 
-      const receipt = await tx.wait();
       expect(receipt.status).to.equal(1);
 
       // parse events from logs
