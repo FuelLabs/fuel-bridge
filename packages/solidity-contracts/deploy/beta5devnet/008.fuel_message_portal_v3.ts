@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     new FuelMessagePortalV3(deployer),
     {
       unsafeAllow: ['constructor'],
-      constructorArgs: [MaxUint256],
+      constructorArgs: [MaxUint256, 604800], // rate limit duration => 1 week
     }
   );
   const address = await contract.getAddress();

@@ -8,7 +8,7 @@ import { computeBlockId } from '../protocol/blockHeader';
 import {
   CONSENSUS_PARAMETERS_VERSION,
   EMPTY,
-  STATE_TRANSITION_BYTECODE_VERSION,
+  STATE_TRANSITION_BYTECODE_VERSION
 } from '../protocol/constants';
 import { setupFuel } from '../protocol/harness';
 import type { HarnessObject } from '../protocol/harness';

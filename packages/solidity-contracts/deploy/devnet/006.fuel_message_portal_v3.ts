@@ -18,7 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     fuelMessagePortalAddress,
     new FuelMessagePortal(deployer),
     {
-      constructorArgs: [MaxUint256],
+      constructorArgs: [MaxUint256, 604800], // rate limit duration => 1 week
     }
   );
   await contract.waitForDeployment();

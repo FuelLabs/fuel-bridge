@@ -24,6 +24,12 @@ import {
   COMMIT_COOLDOWN,
   TIME_TO_FINALIZE,
 } from './utils';
+
+import {
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION
+} from '../protocol/constants';
+
 import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;
@@ -82,7 +88,7 @@ describe('FuelMessagesPortalV2 - Outgoing messages', async () => {
         .then(async (factory) =>
           deployProxy(
             factory,
-            [await fuelChainState.getAddress()],
+            [await fuelChainState.getAddress(), RATE_LIMIT_AMOUNT.toString(), RATE_LIMIT_DURATION],
             proxyOptions
           )
         )

@@ -14,9 +14,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: fuelChainState } = await get('FuelChainState');
 
+  const rateLimitAmount = 10e18;
+  const rateLimitDuration = 604800;
+
   const contract = await deployProxy(
     new FuelMessagePortal(deployer),
-    [fuelChainState],
+    [fuelChainState, rateLimitAmount, rateLimitDuration],
     {
       initializer: 'initialize',
       constructorArgs: [MaxUint256],

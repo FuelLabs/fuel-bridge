@@ -18,6 +18,11 @@ import {
   FuelERC721Gateway__factory,
 } from '../typechain';
 
+import {
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION
+} from '../protocol/constants';
+
 // All deployable contracts.
 export interface DeployedContracts {
   fuelMessagePortal: FuelMessagePortal;
@@ -167,7 +172,7 @@ export async function deployFuel(
   );
 
   const fuelMessagePortal = await upgrades
-    .deployProxy(FuelMessagePortal, [await fuelChainState.getAddress()], {
+    .deployProxy(FuelMessagePortal, [await fuelChainState.getAddress(), RATE_LIMIT_AMOUNT.toString(), RATE_LIMIT_DURATION], {
       initializer: 'initialize',
     })
     .then((tx) => tx.waitForDeployment())
