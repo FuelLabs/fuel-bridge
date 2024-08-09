@@ -60,18 +60,16 @@ COPY turbo.json .
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
 
 FROM base-builder as sway-contracts
+RUN cd /fuel-bridge/packages/esbuild-bin-loader && pnpm build
 RUN cd /fuel-bridge && forc build --release
 RUN cd /fuel-bridge/packages/fungible-token && pnpm build
-
-FROM base-builder as esbuild-bin-loader
-RUN cd /fuel-bridge/packages/esbuild-bin-loader && pnpm build
 
 FROM base-builder as solidity-contracts
 RUN cd /fuel-bridge/packages/solidity-contracts && pnpm build
 
 FROM solidity-contracts as full-env
 
-COPY --from=esbuild-bin-loader /fuel-bridge/packages/esbuild-bin-loader /fuel-bridge/packages/esbuild-bin-loader 
+COPY --from=sway-contracts /fuel-bridge/packages/esbuild-bin-loader /fuel-bridge/packages/esbuild-bin-loader 
 COPY --from=sway-contracts /fuel-bridge/packages/fungible-token /fuel-bridge/packages/fungible-token
 
 RUN cd /fuel-bridge/packages/test-utils && pnpm build
