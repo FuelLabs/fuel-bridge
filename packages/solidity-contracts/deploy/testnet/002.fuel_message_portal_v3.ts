@@ -6,7 +6,7 @@ import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typecha
 
 import {
   RATE_LIMIT_AMOUNT,
-  RATE_LIMIT_DURATION
+  RATE_LIMIT_DURATION,
 } from '../../protocol/constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {

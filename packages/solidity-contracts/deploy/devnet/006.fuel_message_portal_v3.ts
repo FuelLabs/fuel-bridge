@@ -4,9 +4,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
 
-import {
-  RATE_LIMIT_DURATION
-} from '../../protocol/constants';
+import { RATE_LIMIT_DURATION } from '../../protocol/constants';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
