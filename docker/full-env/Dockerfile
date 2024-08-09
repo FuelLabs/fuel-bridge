@@ -72,8 +72,6 @@ FROM solidity-contracts as full-env
 COPY --from=sway-contracts /fuel-bridge/packages/esbuild-bin-loader /fuel-bridge/packages/esbuild-bin-loader 
 COPY --from=sway-contracts /fuel-bridge/packages/fungible-token /fuel-bridge/packages/fungible-token
 
-RUN cd /fuel-bridge/packages/test-utils && pnpm build
-
 COPY docker/full-env/run.sh /run.sh
 
 ENTRYPOINT [ "bash", "/run.sh" ]
