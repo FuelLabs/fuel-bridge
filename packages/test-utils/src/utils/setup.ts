@@ -52,7 +52,7 @@ const def_pk_eth_signer1: string = eth_private_keys[3];
 const def_pk_eth_signer2: string = eth_private_keys[4];
 
 const def_pk_fuel_deployer: string =
-  '0xba9e8401405cd4327119548bccf0cd8b195c3fb716c848d9571c60bb230c6978';
+  '0xde97d8624a438121b86a1956544bd72ed68cd69f2c99555b08b1e8c51ffd511c';
 const def_pk_fuel_signer1: string =
   '0xa349d39f614a3085b7f7f8cef63fd5189136924fc1238e6d25ccdaa43a901cd0';
 const def_pk_fuel_signer2: string =

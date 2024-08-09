@@ -1,7 +1,12 @@
 #!/bin/bash
 
 #### ETHEREUM BOOTSTRAP
-pm2 --name eth start "/root/.foundry/bin/anvil --host 0.0.0.0 --block-time 12 --mixed-mining --slots-in-an-epoch 1"
+pm2 --name eth start "/root/.foundry/bin/anvil \
+    --host 0.0.0.0 \
+    --block-time 12 \
+    --mixed-mining \
+    --slots-in-an-epoch 1"
+
 cd /fuel-bridge/packages/solidity-contracts \
     && npx hardhat deploy --network localhost --reset \
     && cd -

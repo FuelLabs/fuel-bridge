@@ -4,6 +4,7 @@ FROM ghcr.io/fuellabs/fuel-core:v0.31.0 as fuel-core
 FROM ghcr.io/fuellabs/fuel-block-committer:v0.4.0 as fuel-committer
 
 FROM node:20-slim as base
+USER 0
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
@@ -34,7 +35,6 @@ RUN curl -L https://foundry.paradigm.xyz | bash
 RUN /root/.foundry/bin/foundryup
 
 FROM base as base-builder
-USER 0
 
 COPY --from=fuel-core /root/fuel-core /root/fuel-core
 COPY --from=fuel-committer /root/fuel-block-committer /root/fuel-block-committer
@@ -78,5 +78,4 @@ RUN cd /fuel-bridge/packages/test-utils && pnpm build
 
 COPY docker/full-env/run.sh /run.sh
 
-# ENTRYPOINT [ "/root/fuel-block-committer", "--help" ]
 ENTRYPOINT [ "bash", "/run.sh" ]
