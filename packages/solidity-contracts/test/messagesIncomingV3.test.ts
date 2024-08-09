@@ -30,6 +30,8 @@ import {
   getLeafIndexKey,
 } from './utils/merkle';
 
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
+
 const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
 const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
@@ -248,7 +250,11 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         .then(async (factory) =>
           deployProxy(
             factory,
-            [await fuelChainState.getAddress()],
+            [
+              await fuelChainState.getAddress(),
+              RATE_LIMIT_AMOUNT.toString(),
+              RATE_LIMIT_DURATION,
+            ],
             proxyOptions
           )
         )
@@ -302,7 +308,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
     await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
       unsafeAllow: ['constructor'],
-      constructorArgs: [0],
+      constructorArgs: [0, RATE_LIMIT_DURATION],
     });
 
     await fuelMessagePortal.pauseWithdrawals();
@@ -329,7 +335,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
+        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
       });
 
       await setupMessages(
@@ -622,7 +628,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
+        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
       });
 
       await setupMessages(

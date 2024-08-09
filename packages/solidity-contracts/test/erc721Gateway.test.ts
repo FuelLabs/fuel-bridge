@@ -32,6 +32,9 @@ import {
   TIME_TO_FINALIZE,
   COMMIT_COOLDOWN,
 } from './utils';
+
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
+
 import { createBlock } from './utils/createBlock';
 
 const { expect } = chai;
@@ -106,7 +109,15 @@ const fixture = deployments.createFixture(
     const fuelMessagePortal = (await ethers
       .getContractFactory('FuelMessagePortal', deployer)
       .then(async (factory) =>
-        deployProxy(factory, [await fuelChainState.getAddress()], proxyOptions)
+        deployProxy(
+          factory,
+          [
+            await fuelChainState.getAddress(),
+            RATE_LIMIT_AMOUNT.toString(),
+            RATE_LIMIT_DURATION,
+          ],
+          proxyOptions
+        )
       )
       .then((tx) => tx.waitForDeployment())) as FuelMessagePortal;
 

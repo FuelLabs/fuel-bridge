@@ -5,6 +5,9 @@ import type {
   DeployedContractAddresses,
   HarnessObject,
 } from '../protocol/harness';
+
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
+
 import { setupFuel, upgradeFuel } from '../protocol/harness';
 import type { UpgradeableTester } from '../typechain';
 
@@ -65,7 +68,11 @@ describe('Contract Upgradability', async () => {
         'Initializable: contract is already initialized'
       );
       await expect(
-        env.fuelMessagePortal.initialize(fuelChainStateAddress)
+        env.fuelMessagePortal.initialize(
+          fuelChainStateAddress,
+          RATE_LIMIT_AMOUNT.toString(),
+          RATE_LIMIT_DURATION
+        )
       ).to.be.revertedWith('Initializable: contract is already initialized');
       await expect(
         env.fuelERC20Gateway.initialize(fuelMessagePortalAddress)
