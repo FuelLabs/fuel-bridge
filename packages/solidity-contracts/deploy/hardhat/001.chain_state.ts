@@ -33,8 +33,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelChainState.abi],
     implementation,
   });
-
-  return true;
 };
 
 func.tags = ['state', 'chain-state', 'chain_state', 'FuelChainState'];

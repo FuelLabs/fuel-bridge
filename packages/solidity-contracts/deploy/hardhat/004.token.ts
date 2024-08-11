@@ -13,8 +13,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const [deployer] = await ethers.getSigners();
 
   await deploy('Token', { from: deployer.address, log: true });
-
-  return true;
 };
 
 func.tags = ['token'];

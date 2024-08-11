@@ -43,11 +43,17 @@ pm2 --name committer start "/root/fuel-block-committer \
 
 #### L2 BRIDGE DEPLOYMENT
 export L2_BRIDGE_DEPLOYER=${L2_BRIDGE_DEPLOYER:-0xde97d8624a438121b86a1956544bd72ed68cd69f2c99555b08b1e8c51ffd511c}
-cd /fuel-bridge/packages/test-utils \
+export ASSET_ISSUER_ID=$(cd /fuel-bridge/packages/test-utils \
     &&  L1_TOKEN_GATEWAY=$GATEWAY_ADDRESS \
         L2_SIGNER=$L2_BRIDGE_DEPLOYER \
         L2_RPC=http://localhost:4000/v1/graphql \
-        pnpm deploy:bridge
+        pnpm deploy:bridge 2>&1 | grep "Proxy at" | awk '{print $3}')
+
+echo "Asset issuer ID is at $ASSET_ISSUER_ID"
+
+cd /fuel-bridge/packages/solidity-contracts \
+    && npx hardhat deploy --network localhost --tags set_asset_issuer_id,all \
+    && cd -
 
 #### HTTP SERVER FOR BACKWARDS COMPAT
 pm2 --name deployments start "pnpm run serve-deployments" --cwd /fuel-bridge/packages/solidity-contracts

@@ -44,7 +44,6 @@ COPY --from=foundry-downloader /root/.foundry /root/.foundry
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
-RUN corepack enable
 RUN npm i -g pm2
 
 WORKDIR /fuel-bridge
