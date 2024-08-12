@@ -41,7 +41,7 @@ describe('Transferring ETH', async function () {
   });
 
   describe('Send ETH to Fuel', async () => {
-    const NUM_ETH = '10';
+    const NUM_ETH = '20';
     let ethereumETHSender: Signer;
     let ethereumETHSenderAddress: string;
 
@@ -410,19 +410,21 @@ describe('Transferring ETH', async function () {
         relayMessageParams.messageInBlockProof
       );
 
+      const totalETHWithdrawn = new BN((9.002e18).toString());
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
-      // expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
+
+      expect(new BN(currentPeriodAmount.toString()).eq(totalETHWithdrawn)).to.be
+        .true;
     });
 
     it('Relays ETH after the rate limit is updated', async () => {
-      // const deployer = await env.eth.deployer;
-      // const newRateLimit = `22`;
-      NUM_ETH = '5';
+      const deployer = await env.eth.deployer;
+      const newRateLimit = `22`;
 
-      // await env.eth.fuelMessagePortal
-      //   .connect(deployer)
-      //   .resetRateLimitAmount(parseEther(newRateLimit));
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(newRateLimit));
 
       // withdraw ETH back to the base chain
       const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
@@ -469,8 +471,13 @@ describe('Transferring ETH', async function () {
         relayMessageParams.blockInHistoryProof,
         relayMessageParams.messageInBlockProof
       );
-      // const currentPeriodAmount = await env.eth.fuelMessagePortal.currentPeriodAmount();
-      // expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
+
+      const totalETHWithdrawn = new BN((18.002e18).toString());
+      const currentPeriodAmount =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
+      expect(new BN(currentPeriodAmount.toString()).eq(totalETHWithdrawn)).to.be
+        .true;
     });
   });
 });
