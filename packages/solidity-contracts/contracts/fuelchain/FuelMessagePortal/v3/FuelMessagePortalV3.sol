@@ -152,7 +152,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             totalDeposited -= withdrawnAmount;
 
             // rate limit check
-            // _addWithdrawnAmount(withdrawnAmount);
+            _addWithdrawnAmount(withdrawnAmount);
 
             (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
         } else {
