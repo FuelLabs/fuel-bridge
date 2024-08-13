@@ -1,9 +1,14 @@
 #!/bin/bash
 
 #### ETHEREUM BOOTSTRAP
+export ETH_BLOCK_TIME=${ETH_BLOCK_TIME:-12}
+export ETH_ACCOUNTS=${ETH_ACCOUNTS:-20}
+export ETH_MNEMONIC="${ETH_MNEMONIC:-test test test test test test test test test test test junk}"
 pm2 --name eth start "/root/.foundry/bin/anvil \
     --host 0.0.0.0 \
-    --block-time 12 \
+    --mnemonic "$ETH_MNEMONIC" \
+    --accounts $ETH_ACCOUNTS \
+    --block-time $ETH_BLOCK_TIME \
     --mixed-mining \
     --slots-in-an-epoch 1"
 
