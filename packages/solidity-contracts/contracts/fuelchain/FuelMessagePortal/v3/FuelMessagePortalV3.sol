@@ -13,6 +13,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     error RateLimitExceeded();
     error WithdrawalsPaused();
 
+    /// @dev The rate limit setter role
+    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
+
     /// @notice Duration after which rate limit resets.
     uint256 public immutable rateLimitDuration;
 
@@ -22,11 +25,28 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
 
+    /// @notice The time at which the current period ends at.
+    uint256 public currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount.
+    uint256 public limitAmount;
+
     mapping(bytes32 => bool) public messageIsBlacklisted;
 
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
         rateLimitDuration = _rateLimitDuration;
     }
+
+    function initialize(FuelChainState fuelChainState) public override initializer {
+        // set rate limiter role
+        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
+        
+        // initializing rate limit var
+        currentPeriodEnd = block.timestamp + rateLimitDuration;
+
+        super.initialize(fuelChainState);
+    }
+
 
     function pauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
         withdrawalsPaused = true;

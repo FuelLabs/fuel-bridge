@@ -77,9 +77,6 @@ contract FuelMessagePortal is
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
 
-    /// @dev The rate limit setter role
-    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
-
     /// @dev The number of decimals that the base Fuel asset uses
     uint256 public constant FUEL_BASE_ASSET_DECIMALS = 9;
     uint256 public constant ETH_DECIMALS = 18;
@@ -104,12 +101,6 @@ contract FuelMessagePortal is
     /// @notice Nonce for the next message to be sent
     uint256 internal _outgoingMessageNonce;
 
-    /// @notice The time at which the current period ends at.
-    uint256 public currentPeriodEnd;
-
-    /// @notice The eth withdrawal limit amount.
-    uint256 public limitAmount;
-
     /// @notice Mapping of message hash to boolean success value
     mapping(bytes32 => bool) internal _incomingMessageSuccessful;
 
@@ -125,7 +116,7 @@ contract FuelMessagePortal is
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelChainState Chain state contract
-    function initialize(FuelChainState fuelChainState, uint256 _limitAmount, uint256 _rateLimitDuration) public initializer {
+    function initialize(FuelChainState fuelChainState) public virtual initializer {
         __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();
@@ -134,7 +125,6 @@ contract FuelMessagePortal is
         //grant initial roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
-        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
 
         //chain state contract
         _fuelChainState = fuelChainState;
@@ -144,10 +134,6 @@ contract FuelMessagePortal is
 
         //incoming message data
         _incomingMessageSender = NULL_MESSAGE_SENDER;
-        
-        // initializing rate limit vars
-        currentPeriodEnd = block.timestamp + _rateLimitDuration;
-        limitAmount = _limitAmount;
     }
 
     /////////////////////
