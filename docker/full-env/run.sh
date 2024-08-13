@@ -6,7 +6,7 @@ export ETH_ACCOUNTS=${ETH_ACCOUNTS:-20}
 export ETH_MNEMONIC="${ETH_MNEMONIC:-test test test test test test test test test test test junk}"
 pm2 --name eth start "/root/.foundry/bin/anvil \
     --host 0.0.0.0 \
-    --mnemonic "$ETH_MNEMONIC" \
+    --mnemonic \"$ETH_MNEMONIC\" \
     --accounts $ETH_ACCOUNTS \
     --block-time $ETH_BLOCK_TIME \
     --mixed-mining \
