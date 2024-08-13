@@ -4,8 +4,6 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelMessagePortalV3__factory as FuelMessagePortalV3 } from '../../typechain';
 
-import { RATE_LIMIT_DURATION } from '../../protocol/constants';
-
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
@@ -21,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     new FuelMessagePortalV3(deployer),
     {
       unsafeAllow: ['constructor'],
-      constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+      constructorArgs: [MaxUint256],
     }
   );
   const address = await contract.getAddress();
