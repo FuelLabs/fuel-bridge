@@ -474,7 +474,32 @@ describe('Transferring ETH', async function () {
         .true;
     });
 
+    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
+      const deployer = await env.eth.deployer;
+      const newRateLimit = `10`;
+
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(newRateLimit));
+
+      const currentWithdrawnAmountAfterSettingLimit =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
+      expect(
+        new BN(currentWithdrawnAmountAfterSettingLimit.toString()).eq(
+          new BN(parseEther(newRateLimit).toString())
+        )
+      ).to.be.true;
+    });
+
     it('Rate limit parameters are updated when the initial duration is over', async () => {
+      const deployer = await env.eth.deployer;
+      const newRateLimit = `30`;
+
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(newRateLimit));
+
       rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
 
       // fast forward time
@@ -556,7 +581,7 @@ describe('Transferring ETH', async function () {
 
       const deployer = await env.eth.deployer;
       const newRateLimit = `40`;
-      
+
       // fast forward time
       await hardhatSkipTime(
         env.eth.provider as JsonRpcProvider,
