@@ -169,15 +169,9 @@ export async function deployFuel(
   );
 
   const fuelMessagePortal = await upgrades
-    .deployProxy(
-      FuelMessagePortal,
-      [
-        await fuelChainState.getAddress()
-      ],
-      {
-        initializer: 'initialize',
-      }
-    )
+    .deployProxy(FuelMessagePortal, [await fuelChainState.getAddress()], {
+      initializer: 'initialize',
+    })
     .then((tx) => tx.waitForDeployment())
     .then((tx) => FuelMessagePortal__factory.connect(tx as any, tx.runner));
   const fuelMessagePortalAddress = await fuelMessagePortal.getAddress();

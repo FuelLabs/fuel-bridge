@@ -254,9 +254,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         .then(async (factory) =>
           deployProxy(
             factory,
-            [
-              await fuelChainState.getAddress()
-            ],
+            [await fuelChainState.getAddress()],
             proxyOptions
           )
         )
@@ -273,7 +271,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       const fuelMessagePortal = V3Implementation.attach(deployment).connect(
         deployment.runner
       ) as FuelMessagePortalV3;
-      
+
       // re-in initialize
       // await fuelMessagePortal.reinitializeV3(RATE_LIMIT_AMOUNT.toString());
 
@@ -294,14 +292,18 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         V3Implementation,
         messageTester,
         addresses: signers.map(({ address }) => address),
-        upgradeProxyOptions
+        upgradeProxyOptions,
       };
     }
   );
 
   it('can upgrade from V1 to V2 to V3', async () => {
-    const { fuelMessagePortal, V2Implementation, V3Implementation, upgradeProxyOptions } =
-      await fixture();
+    const {
+      fuelMessagePortal,
+      V2Implementation,
+      V3Implementation,
+      upgradeProxyOptions,
+    } = await fixture();
 
     await expect(fuelMessagePortal.depositLimitGlobal()).to.be.reverted;
 
@@ -315,8 +317,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
       unsafeAllow: ['constructor'],
       constructorArgs: [0, RATE_LIMIT_DURATION],
-      call: {fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()]},
-      ...upgradeProxyOptions
+      call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+      ...upgradeProxyOptions,
     });
 
     await fuelMessagePortal.pauseWithdrawals();
@@ -344,8 +346,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
         constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
-        call: {fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()]},
-        ...upgradeProxyOptions
+        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+        ...upgradeProxyOptions,
       });
 
       await setupMessages(
@@ -639,8 +641,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
         constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
-        call: {fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()]},
-        ...upgradeProxyOptions
+        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+        ...upgradeProxyOptions,
       });
 
       await setupMessages(

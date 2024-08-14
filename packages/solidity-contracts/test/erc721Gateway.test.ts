@@ -107,13 +107,7 @@ const fixture = deployments.createFixture(
     const fuelMessagePortal = (await ethers
       .getContractFactory('FuelMessagePortal', deployer)
       .then(async (factory) =>
-        deployProxy(
-          factory,
-          [
-            await fuelChainState.getAddress()
-          ],
-          proxyOptions
-        )
+        deployProxy(factory, [await fuelChainState.getAddress()], proxyOptions)
       )
       .then((tx) => tx.waitForDeployment())) as FuelMessagePortal;
 

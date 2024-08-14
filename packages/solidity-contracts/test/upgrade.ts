@@ -68,9 +68,7 @@ describe('Contract Upgradability', async () => {
         'Initializable: contract is already initialized'
       );
       await expect(
-        env.fuelMessagePortal.initialize(
-          fuelChainStateAddress
-        )
+        env.fuelMessagePortal.initialize(fuelChainStateAddress)
       ).to.be.revertedWith('Initializable: contract is already initialized');
       await expect(
         env.fuelERC20Gateway.initialize(fuelMessagePortalAddress)

@@ -249,9 +249,7 @@ describe('FuelMessagePortalV2 - Incoming messages', () => {
         .then(async (factory) =>
           deployProxy(
             factory,
-            [
-              await fuelChainState.getAddress()
-            ],
+            [await fuelChainState.getAddress()],
             proxyOptions
           )
         )
