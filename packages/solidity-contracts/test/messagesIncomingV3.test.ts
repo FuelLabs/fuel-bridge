@@ -62,6 +62,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   let messageBadSender: Message;
   let messageBadRecipient: Message;
   let messageBadData: Message;
+  let messageExceedingRateLimit: Message;
   let messageEOA: Message;
   let messageEOANoAmount: Message;
 
@@ -149,6 +150,14 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       randomBytes32(),
       randomBytes32()
     );
+    // message with exceeded rate limit
+    messageExceedingRateLimit = new Message(
+      randomBytes32(),
+      addressToB256(addresses[2]),
+      parseEther('11') / BASE_ASSET_CONVERSION,
+      randomBytes32(),
+      '0x'
+    );
     // message to EOA
     messageEOA = new Message(
       randomBytes32(),
@@ -174,6 +183,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     messageIds.push(computeMessageId(messageBadSender));
     messageIds.push(computeMessageId(messageBadRecipient));
     messageIds.push(computeMessageId(messageBadData));
+    messageIds.push(computeMessageId(messageExceedingRateLimit));
     messageIds.push(computeMessageId(messageEOA));
     messageIds.push(computeMessageId(messageEOANoAmount));
     messageNodes = constructTree(messageIds);
@@ -932,6 +942,34 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           msgInBlock
         )
       ).to.be.revertedWithCustomError(fuelMessagePortal, 'MessageRelayFailed');
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(false);
+    });
+
+    it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageExceedingRateLimit,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      await expect(
+        fuelMessagePortal.relayMessage(
+          messageExceedingRateLimit,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        )
+      ).to.be.revertedWithCustomError(fuelMessagePortal, 'RateLimitExceeded');
+
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);

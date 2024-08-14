@@ -42,7 +42,6 @@ describe('Transferring ETH', async function () {
     ethereumETHReceiverAddress: string,
     NUM_ETH: string
   ): Promise<MessageProof> {
-
     // withdraw ETH back to the base chain
     const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
       Address.fromString(
@@ -65,22 +64,19 @@ describe('Transferring ETH', async function () {
     );
 
     // get message proof
-    const messageOutReceipt = getMessageOutReceipt(
-      fWithdrawTxResult.receipts
-    );
+    const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
 
     return await fuelETHSender.provider.getMessageProof(
       fWithdrawTx.id,
       messageOutReceipt.nonce,
       commitHashAtL1
     );
-
   }
 
   async function relayMessage(
     env: TestEnvironment,
     withdrawMessageProof: MessageProof
-  ) { 
+  ) {
     // wait for block finalization
     await waitForBlockFinalization(env, withdrawMessageProof);
 
@@ -220,7 +216,7 @@ describe('Transferring ETH', async function () {
         ethereumETHReceiverAddress,
         NUM_ETH
       );
-      
+
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await fuelETHSender.getBalance(BASE_ASSET_ID);
 
@@ -372,7 +368,7 @@ describe('Transferring ETH', async function () {
         ethereumETHReceiverAddress,
         NUM_ETH
       );
-     
+
       await relayMessage(env, withdrawMessageProof);
 
       const totalETHWithdrawn = new BN((9.002e18).toString());
