@@ -116,7 +116,7 @@ contract FuelMessagePortal is
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelChainState Chain state contract
-    function initialize(FuelChainState fuelChainState) public virtual initializer {
+    function initialize(FuelChainState fuelChainState) public initializer {
         __Pausable_init();
         __AccessControl_init();
         __ReentrancyGuard_init();

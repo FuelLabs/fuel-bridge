@@ -37,14 +37,18 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         rateLimitDuration = _rateLimitDuration;
     }
 
-    function initialize(FuelChainState fuelChainState) public override initializer {
+    function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public initializer {
+        super.initialize(fuelChainState);
+        reinitializeV3(_limitAmount);
+    }
+
+    function reinitializeV3(uint256 _limitAmount) reinitializer(3) public {
         // set rate limiter role
         _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
         
         // initializing rate limit var
         currentPeriodEnd = block.timestamp + rateLimitDuration;
-
-        super.initialize(fuelChainState);
+        limitAmount = _limitAmount;
     }
 
 
