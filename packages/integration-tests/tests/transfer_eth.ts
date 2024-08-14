@@ -37,6 +37,66 @@ describe('Transferring ETH', async function () {
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
+  async function generateWithdrawalMessageProof(
+    fuelETHSender: FuelWallet,
+    ethereumETHReceiverAddress: string,
+    NUM_ETH: string
+  ): Promise<MessageProof> {
+
+    // withdraw ETH back to the base chain
+    const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
+      Address.fromString(
+        padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
+      ),
+      fuels_parseEther(NUM_ETH),
+      FUEL_CALL_TX_PARAMS
+    );
+    const fWithdrawTxResult = await fWithdrawTx.waitForResult();
+    expect(fWithdrawTxResult.status).to.equal('success');
+
+    // Wait for the commited block
+    const withdrawBlock = await getBlock(
+      env.fuel.provider.url,
+      fWithdrawTxResult.blockId
+    );
+    const commitHashAtL1 = await waitForBlockCommit(
+      env,
+      withdrawBlock.header.height
+    );
+
+    // get message proof
+    const messageOutReceipt = getMessageOutReceipt(
+      fWithdrawTxResult.receipts
+    );
+
+    return await fuelETHSender.provider.getMessageProof(
+      fWithdrawTx.id,
+      messageOutReceipt.nonce,
+      commitHashAtL1
+    );
+
+  }
+
+  async function relayMessage(
+    env: TestEnvironment,
+    withdrawMessageProof: MessageProof
+  ) { 
+    // wait for block finalization
+    await waitForBlockFinalization(env, withdrawMessageProof);
+
+    // construct relay message proof data
+    const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
+
+    // relay message
+    await env.eth.fuelMessagePortal.relayMessage(
+      relayMessageParams.message,
+      relayMessageParams.rootBlockHeader,
+      relayMessageParams.blockHeader,
+      relayMessageParams.blockInHistoryProof,
+      relayMessageParams.messageInBlockProof
+    );
+  }
+
   before(async () => {
     env = await setupEnvironment({});
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
@@ -155,37 +215,12 @@ describe('Transferring ETH', async function () {
     });
 
     it('Send ETH via OutputMessage', async () => {
-      // withdraw ETH back to the base chain
-      const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(
-          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-        ),
-        fuels_parseEther(NUM_ETH),
-        FUEL_CALL_TX_PARAMS
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuelETHSender,
+        ethereumETHReceiverAddress,
+        NUM_ETH
       );
-      const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
-      );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
-      );
-
-      // get message proof
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
-        fWithdrawTx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
-      );
-
+      
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await fuelETHSender.getBalance(BASE_ASSET_ID);
 
@@ -198,20 +233,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
-      // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+      await relayMessage(env, withdrawMessageProof);
     });
 
     it('Check ETH arrived on Ethereum', async () => {
@@ -316,20 +338,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
-      // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+      await relayMessage(env, withdrawMessageProof);
     });
 
     it('Check ETH arrived on Ethereum', async () => {
@@ -358,51 +367,13 @@ describe('Transferring ETH', async function () {
     });
 
     it('Checks rate limit params after relaying', async () => {
-      // withdraw ETH back to the base chain
-      const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(
-          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-        ),
-        fuels_parseEther(NUM_ETH),
-        FUEL_CALL_TX_PARAMS
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuelETHSender,
+        ethereumETHReceiverAddress,
+        NUM_ETH
       );
-      const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
-      );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
-      );
-
-      // get message proof
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
-        fWithdrawTx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
-      );
-
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
-      // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+     
+      await relayMessage(env, withdrawMessageProof);
 
       const totalETHWithdrawn = new BN((9.002e18).toString());
       const currentPeriodAmount =
@@ -420,51 +391,13 @@ describe('Transferring ETH', async function () {
         .connect(deployer)
         .resetRateLimitAmount(parseEther(newRateLimit));
 
-      // withdraw ETH back to the base chain
-      const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(
-          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-        ),
-        fuels_parseEther(NUM_ETH),
-        FUEL_CALL_TX_PARAMS
-      );
-      const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
-      );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuelETHSender,
+        ethereumETHReceiverAddress,
+        NUM_ETH
       );
 
-      // get message proof
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
-        fWithdrawTx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
-      );
-
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
-      // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+      await relayMessage(env, withdrawMessageProof);
 
       const totalETHWithdrawn = new BN((18.002e18).toString());
       const currentPeriodAmount =
@@ -508,54 +441,16 @@ describe('Transferring ETH', async function () {
         new BN(rateLimitDuration.toString()).mul(new BN('2')).toString()
       );
 
-      // withdraw ETH back to the base chain
-      const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-        Address.fromString(
-          padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-        ),
-        fuels_parseEther(NUM_ETH),
-        FUEL_CALL_TX_PARAMS
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuelETHSender,
+        ethereumETHReceiverAddress,
+        NUM_ETH
       );
-      const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
-      );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
-      );
-
-      // get message proof
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
-        fWithdrawTx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
-      );
-
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       const currentPeriodEndBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-      // relay message
-      await env.eth.fuelMessagePortal.relayMessage(
-        relayMessageParams.message,
-        relayMessageParams.rootBlockHeader,
-        relayMessageParams.blockHeader,
-        relayMessageParams.blockInHistoryProof,
-        relayMessageParams.messageInBlockProof
-      );
+      await relayMessage(env, withdrawMessageProof);
 
       const currentPeriodEndAfterRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
