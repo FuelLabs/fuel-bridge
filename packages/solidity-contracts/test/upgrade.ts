@@ -69,9 +69,7 @@ describe('Contract Upgradability', async () => {
       );
       await expect(
         env.fuelMessagePortal.initialize(
-          fuelChainStateAddress,
-          RATE_LIMIT_AMOUNT.toString(),
-          RATE_LIMIT_DURATION
+          fuelChainStateAddress
         )
       ).to.be.revertedWith('Initializable: contract is already initialized');
       await expect(

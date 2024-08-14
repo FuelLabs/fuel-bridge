@@ -33,8 +33,6 @@ import {
   COMMIT_COOLDOWN,
 } from './utils';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
-
 import { createBlock } from './utils/createBlock';
 
 const { expect } = chai;
@@ -112,9 +110,7 @@ const fixture = deployments.createFixture(
         deployProxy(
           factory,
           [
-            await fuelChainState.getAddress(),
-            RATE_LIMIT_AMOUNT.toString(),
-            RATE_LIMIT_DURATION,
+            await fuelChainState.getAddress()
           ],
           proxyOptions
         )
