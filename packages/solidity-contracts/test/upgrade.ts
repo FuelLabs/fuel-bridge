@@ -6,8 +6,6 @@ import type {
   HarnessObject,
 } from '../protocol/harness';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
-
 import { setupFuel, upgradeFuel } from '../protocol/harness';
 import type { UpgradeableTester } from '../typechain';
 

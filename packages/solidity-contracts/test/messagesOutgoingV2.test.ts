@@ -25,8 +25,6 @@ import {
   TIME_TO_FINALIZE,
 } from './utils';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
-
 import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;

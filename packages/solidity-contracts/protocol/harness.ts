@@ -18,8 +18,6 @@ import {
   FuelERC721Gateway__factory,
 } from '../typechain';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
-
 // All deployable contracts.
 export interface DeployedContracts {
   fuelMessagePortal: FuelMessagePortal;
