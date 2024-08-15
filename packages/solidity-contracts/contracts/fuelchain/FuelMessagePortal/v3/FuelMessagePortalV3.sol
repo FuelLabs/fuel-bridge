@@ -19,6 +19,8 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice Duration after which rate limit resets.
     uint256 public immutable rateLimitDuration;
 
+    mapping(bytes32 => bool) public messageIsBlacklisted;
+
     /// @notice Amounts already withdrawn this period.
     uint256 public currentPeriodAmount;
 
@@ -31,14 +33,12 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice The eth withdrawal limit amount.
     uint256 public limitAmount;
 
-    mapping(bytes32 => bool) public messageIsBlacklisted;
-
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
         rateLimitDuration = _rateLimitDuration;
     }
 
     function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public initializer {
-        super.initialize(fuelChainState);
+        FuelMessagePortal.initialize(fuelChainState);
         _setInitParams(_limitAmount);
     }
 
@@ -74,7 +74,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         
         // if period has expired then currentPeriodAmount is zero
         if (currentPeriodEnd < block.timestamp) {
-            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            unchecked {
+                currentPeriodEnd = block.timestamp + rateLimitDuration;
+            }
             withdrawalAmountResetToZero = true;
         } else {
             // If the withdrawn amount is higher, it is set to the new limit amount
@@ -213,7 +215,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             currentPeriodEnd = block.timestamp + rateLimitDuration;
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
-            currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
+            unchecked {
+               currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
+            }
         }
 
         if (currentPeriodAmountTemp > limitAmount) {
