@@ -438,7 +438,7 @@ describe('Transferring ETH', async function () {
       // fast forward time
       await hardhatSkipTime(
         env.eth.provider as JsonRpcProvider,
-        new BN(rateLimitDuration.toString()).mul(new BN('2')).toString()
+        rateLimitDuration * 2n
       );
 
       withdrawMessageProof = await generateWithdrawalMessageProof(
@@ -473,7 +473,7 @@ describe('Transferring ETH', async function () {
       // fast forward time
       await hardhatSkipTime(
         env.eth.provider as JsonRpcProvider,
-        new BN(rateLimitDuration.toString()).mul(new BN('2')).toString()
+        rateLimitDuration * 2n
       );
 
       const currentWithdrawnAmountBeforeSettingLimit =
