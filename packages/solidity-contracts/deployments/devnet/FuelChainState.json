@@ -1,14 +1,45 @@
 {
-  "address": "0x8097500F4168240f4334589170d99fE8797b6fF8",
+  "address": "0x2e87c41C9B3d932b6DA3C805baEfB7bbe863fCc6",
   "abi": [
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "timeToFinalize",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "blocksPerCommitInterval",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint32",
+          "name": "commitCooldown",
+          "type": "uint32"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
     {
       "inputs": [],
       "name": "CannotRecommit",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "CommitCooldownTooLarge",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "FinalizationIsGtCooldown",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "TimeToFinalizeTooLarge",
       "type": "error"
     },
     {
@@ -541,6 +572,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 3,
-  "implementation": "0x99448d0C551a9B2A5c6280E586c36A8A33BAA968"
+  "numDeployments": 4,
+  "implementation": "0xdCF1bdBF5341c15e9C1285202f6F6bEA70Db6172"
 }
