@@ -11,7 +11,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
     upgrades: { deployProxy, erc1967 },
-    deployments: { save, execute },
+    deployments: { save },
   } = hre;
   const [deployer] = await ethers.getSigners();
 
@@ -33,12 +33,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelChainState.abi],
     implementation,
   });
-
-  await execute(
-    'FuelChainState',
-    { log: true, from: deployer.address },
-    'pause'
-  );
 
   return true;
 };
