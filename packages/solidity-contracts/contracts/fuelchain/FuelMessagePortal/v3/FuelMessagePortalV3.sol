@@ -7,7 +7,8 @@ import "../v2/FuelMessagePortalV2.sol";
 contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
-
+    
+    error AlreadyInitialized();
     error MessageBlacklisted();
     error MessageRelayFailed();
     error RateLimitExceeded();
@@ -19,13 +20,13 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice Duration after which rate limit resets.
     uint256 public immutable rateLimitDuration;
 
+    /// @notice Flag to indicate whether withdrawals are paused or not.
+    bool public withdrawalsPaused;
+
     mapping(bytes32 => bool) public messageIsBlacklisted;
 
     /// @notice Amounts already withdrawn this period.
     uint256 public currentPeriodAmount;
-
-    /// @notice Flag to indicate whether withdrawals are paused or not.
-    bool public withdrawalsPaused;
 
     /// @notice The time at which the current period ends at.
     uint256 public currentPeriodEnd;
@@ -37,8 +38,12 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         rateLimitDuration = _rateLimitDuration;
     }
 
-    function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public initializer {
-        FuelMessagePortal.initialize(fuelChainState);
+    function initialize(FuelChainState) public virtual override {
+        revert AlreadyInitialized();
+    }
+
+    function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public reinitializer(3) {
+        initializerV1(fuelChainState);
         _setInitParams(_limitAmount);
     }
 
