@@ -369,14 +369,17 @@ describe('Transferring ETH', async function () {
         NUM_ETH
       );
 
+      const withdrawnAmountBeforeRelay =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
       await relayMessage(env, withdrawMessageProof);
 
-      const totalETHWithdrawn = new BN((9.002e18).toString());
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      expect(new BN(currentPeriodAmount.toString()).eq(totalETHWithdrawn)).to.be
-        .true;
+      expect(
+        currentPeriodAmount === parseEther(NUM_ETH) + withdrawnAmountBeforeRelay
+      ).to.be.true;
     });
 
     it('Relays ETH after the rate limit is updated', async () => {
@@ -393,14 +396,17 @@ describe('Transferring ETH', async function () {
         NUM_ETH
       );
 
+      const withdrawnAmountBeforeRelay =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
       await relayMessage(env, withdrawMessageProof);
 
-      const totalETHWithdrawn = new BN((18.002e18).toString());
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      expect(new BN(currentPeriodAmount.toString()).eq(totalETHWithdrawn)).to.be
-        .true;
+      expect(
+        currentPeriodAmount === parseEther(NUM_ETH) + withdrawnAmountBeforeRelay
+      ).to.be.true;
     });
 
     it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
@@ -415,9 +421,7 @@ describe('Transferring ETH', async function () {
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
       expect(
-        new BN(currentWithdrawnAmountAfterSettingLimit.toString()).eq(
-          new BN(parseEther(newRateLimit).toString())
-        )
+        currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
       ).to.be.true;
     });
 
@@ -451,20 +455,13 @@ describe('Transferring ETH', async function () {
       const currentPeriodEndAfterRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-      expect(
-        new BN(currentPeriodEndAfterRelay.toString()).gt(
-          new BN(currentPeriodEndBeforeRelay.toString())
-        )
-      );
+      expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
+        .true;
 
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      expect(
-        new BN(currentPeriodAmount.toString()).eq(
-          new BN(parseEther(NUM_ETH).toString())
-        )
-      ).to.be.true;
+      expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
@@ -494,20 +491,15 @@ describe('Transferring ETH', async function () {
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
       expect(
-        new BN(currentPeriodEndAfterSettingLimit.toString()).gt(
-          new BN(currentPeriodEndBeforeSettingLimit.toString())
-        )
-      );
+        currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
+      ).to.be.true;
 
       expect(
-        new BN(currentWithdrawnAmountBeforeSettingLimit.toString()).gt(
-          new BN(currentWithdrawnAmountAfterSettingLimit.toString())
-        )
-      );
+        currentWithdrawnAmountBeforeSettingLimit >
+          currentWithdrawnAmountAfterSettingLimit
+      ).to.be.true;
 
-      expect(
-        new BN(currentWithdrawnAmountAfterSettingLimit.toString()).isZero()
-      );
+      expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
     });
   });
 });
