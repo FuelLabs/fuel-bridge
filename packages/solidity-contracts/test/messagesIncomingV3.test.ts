@@ -346,20 +346,104 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         addresses
       );
     });
+    describe('pauseWithdrawals', () => {
+      it('pauses all withdrawals', async () => {
+        const [, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
 
-    describe('Blacklisting', () => {
-      describe('pauseWithdrawals', () => {
-        it('pauses all withdrawals', async () => {
-          const [, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-            messageEOA,
-            blockHeaders,
-            prevBlockNodes,
-            blockIds,
-            messageNodes
-          );
+        await fuelMessagePortal.pauseWithdrawals();
+        expect(await fuelMessagePortal.withdrawalsPaused()).to.be.true;
 
-          await fuelMessagePortal.pauseWithdrawals();
-          expect(await fuelMessagePortal.withdrawalsPaused()).to.be.true;
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageEOA,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
+
+        await expect(relayTx).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'WithdrawalsPaused'
+        );
+      });
+    });
+
+    describe('unpauseWithdrawals', () => {
+      it('unpauses withdrawals', async () => {
+        const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
+        const depositedAmount = withdrawnAmount * 2n;
+        await fuelMessagePortal.depositETH(messageEOA.recipient, {
+          value: depositedAmount,
+        });
+
+        await fuelMessagePortal.pauseWithdrawals();
+        const [, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        await fuelMessagePortal.unpauseWithdrawals();
+        expect(await fuelMessagePortal.withdrawalsPaused()).to.be.false;
+
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageEOA,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
+
+        await expect(relayTx).not.to.be.reverted;
+      });
+    });
+
+    describe('addMessageToBlacklist', () => {
+      it('can only be called by pauser role', async () => {
+        const mallory = await createRandomWalletWithFunds();
+
+        const [msgID] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        const PAUSER_ROLE = await fuelMessagePortal.PAUSER_ROLE();
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .addMessageToBlacklist(msgID);
+
+        const expectedErrorMsg =
+          `AccessControl: account ${mallory.address.toLowerCase()} ` +
+          `is missing role ${PAUSER_ROLE}`;
+
+        await expect(tx).to.be.revertedWith(expectedErrorMsg);
+      });
+
+      it('prevents withdrawals', async () => {
+        // Blacklisted message
+        {
+          const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
+            generateProof(
+              messageEOA,
+              blockHeaders,
+              prevBlockNodes,
+              blockIds,
+              messageNodes
+            );
+
+          await fuelMessagePortal.addMessageToBlacklist(msgID);
 
           const relayTx = fuelMessagePortal.relayMessage(
             messageEOA,
@@ -371,30 +455,74 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
           await expect(relayTx).to.be.revertedWithCustomError(
             fuelMessagePortal,
-            'WithdrawalsPaused'
+            'MessageBlacklisted'
           );
-        });
-      });
+        }
 
-      describe('unpauseWithdrawals', () => {
-        it('unpauses withdrawals', async () => {
+        // Non blacklisted message
+        {
+          const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
+            generateProof(
+              messageEOANoAmount,
+              blockHeaders,
+              prevBlockNodes,
+              blockIds,
+              messageNodes
+            );
+          expect(
+            await fuelMessagePortal.incomingMessageSuccessful(msgID)
+          ).to.be.equal(false);
+          const relayTx = fuelMessagePortal.relayMessage(
+            messageEOANoAmount,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          );
+          await expect(relayTx).to.not.be.reverted;
+        }
+      });
+    });
+
+    describe('removeMessageFromBlacklist', () => {
+      it('can only be called by admin role', async () => {
+        const mallory = await createRandomWalletWithFunds();
+        const [msgID] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        const ADMIN_ROLE = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .removeMessageFromBlacklist(msgID);
+
+        const expectedErrorMsg =
+          `AccessControl: account ${mallory.address.toLowerCase()} ` +
+          `is missing role ${ADMIN_ROLE}`;
+        expect(tx).to.be.revertedWith(expectedErrorMsg);
+      });
+      it('restores ability to withdraw', async () => {
+        // Whitelist back the blacklisted message
+        {
+          const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
+            generateProof(
+              messageEOA,
+              blockHeaders,
+              prevBlockNodes,
+              blockIds,
+              messageNodes
+            );
+
           const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
           const depositedAmount = withdrawnAmount * 2n;
           await fuelMessagePortal.depositETH(messageEOA.recipient, {
             value: depositedAmount,
           });
-
-          await fuelMessagePortal.pauseWithdrawals();
-          const [, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-            messageEOA,
-            blockHeaders,
-            prevBlockNodes,
-            blockIds,
-            messageNodes
-          );
-
-          await fuelMessagePortal.unpauseWithdrawals();
-          expect(await fuelMessagePortal.withdrawalsPaused()).to.be.false;
+          await fuelMessagePortal.removeMessageFromBlacklist(msgID);
 
           const relayTx = fuelMessagePortal.relayMessage(
             messageEOA,
@@ -405,142 +533,11 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           );
 
           await expect(relayTx).not.to.be.reverted;
-        });
-      });
-
-      describe('addMessageToBlacklist', () => {
-        it('can only be called by pauser role', async () => {
-          const mallory = await createRandomWalletWithFunds();
-
-          const [msgID] = generateProof(
-            messageEOA,
-            blockHeaders,
-            prevBlockNodes,
-            blockIds,
-            messageNodes
-          );
-
-          const PAUSER_ROLE = await fuelMessagePortal.PAUSER_ROLE();
-
-          const tx = fuelMessagePortal
-            .connect(mallory)
-            .addMessageToBlacklist(msgID);
-
-          const expectedErrorMsg =
-            `AccessControl: account ${mallory.address.toLowerCase()} ` +
-            `is missing role ${PAUSER_ROLE}`;
-
-          await expect(tx).to.be.revertedWith(expectedErrorMsg);
-        });
-
-        it('prevents withdrawals', async () => {
-          // Blacklisted message
-          {
-            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
-              generateProof(
-                messageEOA,
-                blockHeaders,
-                prevBlockNodes,
-                blockIds,
-                messageNodes
-              );
-
-            await fuelMessagePortal.addMessageToBlacklist(msgID);
-
-            const relayTx = fuelMessagePortal.relayMessage(
-              messageEOA,
-              endOfCommitIntervalHeaderLite,
-              msgBlockHeader,
-              blockInRoot,
-              msgInBlock
-            );
-
-            await expect(relayTx).to.be.revertedWithCustomError(
-              fuelMessagePortal,
-              'MessageBlacklisted'
-            );
-          }
-
-          // Non blacklisted message
-          {
-            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
-              generateProof(
-                messageEOANoAmount,
-                blockHeaders,
-                prevBlockNodes,
-                blockIds,
-                messageNodes
-              );
-            expect(
-              await fuelMessagePortal.incomingMessageSuccessful(msgID)
-            ).to.be.equal(false);
-            const relayTx = fuelMessagePortal.relayMessage(
-              messageEOANoAmount,
-              endOfCommitIntervalHeaderLite,
-              msgBlockHeader,
-              blockInRoot,
-              msgInBlock
-            );
-            await expect(relayTx).to.not.be.reverted;
-          }
-        });
-      });
-
-      describe('removeMessageFromBlacklist', () => {
-        it('can only be called by admin role', async () => {
-          const mallory = await createRandomWalletWithFunds();
-          const [msgID] = generateProof(
-            messageEOA,
-            blockHeaders,
-            prevBlockNodes,
-            blockIds,
-            messageNodes
-          );
-
-          const ADMIN_ROLE = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
-          const tx = fuelMessagePortal
-            .connect(mallory)
-            .removeMessageFromBlacklist(msgID);
-
-          const expectedErrorMsg =
-            `AccessControl: account ${mallory.address.toLowerCase()} ` +
-            `is missing role ${ADMIN_ROLE}`;
-          expect(tx).to.be.revertedWith(expectedErrorMsg);
-        });
-        it('restores ability to withdraw', async () => {
-          // Whitelist back the blacklisted message
-          {
-            const [msgID, msgBlockHeader, blockInRoot, msgInBlock] =
-              generateProof(
-                messageEOA,
-                blockHeaders,
-                prevBlockNodes,
-                blockIds,
-                messageNodes
-              );
-
-            const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
-            const depositedAmount = withdrawnAmount * 2n;
-            await fuelMessagePortal.depositETH(messageEOA.recipient, {
-              value: depositedAmount,
-            });
-            await fuelMessagePortal.removeMessageFromBlacklist(msgID);
-
-            const relayTx = fuelMessagePortal.relayMessage(
-              messageEOA,
-              endOfCommitIntervalHeaderLite,
-              msgBlockHeader,
-              blockInRoot,
-              msgInBlock
-            );
-
-            await expect(relayTx).not.to.be.reverted;
-          }
-        });
+        }
       });
     });
 
-    describe('Updating Fuel Chain State - setFuelChainState()', () => {
+    describe('setFuelChainState()', () => {
       it('can only be called by DEFAULT_ADMIN_ROLE', async () => {
         const [deployer] = await ethers.getSigners();
 
