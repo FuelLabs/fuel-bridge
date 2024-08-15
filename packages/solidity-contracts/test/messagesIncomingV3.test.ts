@@ -63,6 +63,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   let messageBadRecipient: Message;
   let messageBadData: Message;
   let messageExceedingRateLimit: Message;
+  let messageAfterRateLimitDurationCompletes: Message;
   let messageEOA: Message;
   let messageEOANoAmount: Message;
 
@@ -158,6 +159,14 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       randomBytes32(),
       '0x'
     );
+    // message after rate limit duration is over
+    messageAfterRateLimitDurationCompletes = new Message(
+      randomBytes32(),
+      addressToB256(addresses[2]),
+      parseEther('5') / BASE_ASSET_CONVERSION,
+      randomBytes32(),
+      '0x'
+    );
     // message to EOA
     messageEOA = new Message(
       randomBytes32(),
@@ -184,6 +193,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     messageIds.push(computeMessageId(messageBadRecipient));
     messageIds.push(computeMessageId(messageBadData));
     messageIds.push(computeMessageId(messageExceedingRateLimit));
+    messageIds.push(computeMessageId(messageAfterRateLimitDurationCompletes));
     messageIds.push(computeMessageId(messageEOA));
     messageIds.push(computeMessageId(messageEOANoAmount));
     messageNodes = constructTree(messageIds);
@@ -560,640 +570,694 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     });
   });
 
-  describe('Behaves like V2 - Accounting', () => {
-    beforeEach('fixture', async () => {
-      const fixt = await fixture();
-      const { V2Implementation } = fixt;
-      ({
-        provider,
-        fuelMessagePortal,
-        fuelChainState,
-        messageTester,
-        addresses,
-        signers,
-      } = fixt);
-
-      await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
-        unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
-      });
-
-      await setupMessages(
-        await fuelMessagePortal.getAddress(),
-        messageTester,
-        fuelChainState,
-        addresses
-      );
-    });
-
-    // Simulates the case when withdrawn amount < initial deposited amount
-    it('should update the amount of deposited ether', async () => {
-      const recipient = b256ToAddress(messageEOA.recipient);
-      const txSender = signers.find((_, i) => addresses[i] === recipient);
-      const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
-      const depositedAmount = withdrawnAmount * 2n;
-
-      await fuelMessagePortal
-        .connect(txSender)
-        .depositETH(messageEOA.recipient, {
-          value: depositedAmount,
-        });
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageEOA,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-
-      const relayTx = fuelMessagePortal.relayMessage(
-        messageEOA,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-      await expect(relayTx).to.not.be.reverted;
-      await expect(relayTx).to.changeEtherBalances(
-        [await fuelMessagePortal.getAddress(), recipient],
-        [withdrawnAmount * -1n, withdrawnAmount]
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-
-      const expectedDepositedAmount = depositedAmount - withdrawnAmount;
-      expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
-        expectedDepositedAmount
-      );
-    });
-  });
-
-  // This is essentially a copy - paste from `messagesIncoming.ts`
-  describe('Behaves like V1 - Relay both valid and invalid messages', async () => {
-    before(async () => {
-      const fixt = await fixture();
-      const { V3Implementation, upgradeProxyOptions } = fixt;
-      ({
-        provider,
-        fuelMessagePortal,
-        fuelChainState,
-        messageTester,
-        addresses,
-      } = fixt);
-
-      await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
-        unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
-        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
-        ...upgradeProxyOptions,
-      });
-
-      await setupMessages(
-        await fuelMessagePortal.getAddress(),
-        messageTester,
-        fuelChainState,
-        addresses
-      );
-    });
-
-    it('Should not get a valid message sender outside of relaying', async () => {
+  describe('V3 Proxy Initialization', () => {
+    it('v3 proxy cannot be initialized again', async () => {
       await expect(
-        fuelMessagePortal.messageSender()
-      ).to.be.revertedWithCustomError(
-        fuelMessagePortal,
-        'CurrentMessageSenderNotSet'
-      );
-    });
-
-    it('Should not be able to relay message with bad root block', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        message1,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message1,
-          generateBlockHeaderLite(
-            createBlock('', BLOCKS_PER_COMMIT_INTERVAL * 20 - 1)
-          ),
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelChainState, 'UnknownBlock');
-
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message1,
-          generateBlockHeaderLite(unfinalizedBlock),
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelMessagePortal, 'UnfinalizedBlock');
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-    });
-
-    it('Should not be able to relay message with bad proof in root block', async () => {
-      const portalBalance = await provider.getBalance(fuelMessagePortal);
-      const messageTesterBalance = await provider.getBalance(messageTester);
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        message1,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      blockInRoot.key = blockInRoot.key + 1;
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message1,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(
-        fuelMessagePortal,
-        'InvalidBlockInHistoryProof'
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
-        portalBalance
-      );
-      expect(await provider.getBalance(messageTester)).to.be.equal(
-        messageTesterBalance
-      );
-    });
-
-    it('Should be able to relay valid message', async () => {
-      const portalBalance = await provider.getBalance(fuelMessagePortal);
-      const messageTesterBalance = await provider.getBalance(messageTester);
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        message1,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message1,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.not.be.reverted;
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-      expect(await messageTester.data1()).to.be.equal(messageTestData1);
-      expect(await messageTester.data2()).to.be.equal(messageTestData2);
-      expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
-        portalBalance
-      );
-      expect(await provider.getBalance(messageTester)).to.be.equal(
-        messageTesterBalance
-      );
-    });
-
-    it('Should not be able to relay already relayed message', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        message1,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message1,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelMessagePortal, 'AlreadyRelayed');
-    });
-
-    it('Should not be able to relay message with low gas', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageWithAmount,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      const options = {
-        gasLimit: 140000,
-      };
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageWithAmount,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock,
-          options
+        fuelMessagePortal.initializerV3(
+          await fuelChainState.getAddress(),
+          RATE_LIMIT_AMOUNT.toString()
         )
       ).to.be.reverted;
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
+
+      await expect(
+        fuelMessagePortal.reinitializeV3(RATE_LIMIT_AMOUNT.toString())
+      ).to.be.reverted;
     });
 
-    it('Should be able to relay message with amount', async () => {
-      const expectedWithdrawnAmount =
-        messageWithAmount.amount * BASE_ASSET_CONVERSION;
+    describe('Behaves like V2 - Accounting', () => {
+      beforeEach('fixture', async () => {
+        const fixt = await fixture();
+        const { V2Implementation } = fixt;
+        ({
+          provider,
+          fuelMessagePortal,
+          fuelChainState,
+          messageTester,
+          addresses,
+          signers,
+        } = fixt);
 
-      await fuelMessagePortal.depositETH(messageWithAmount.sender, {
-        value: expectedWithdrawnAmount,
+        await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
+          unsafeAllow: ['constructor'],
+          constructorArgs: [MaxUint256],
+        });
+
+        await setupMessages(
+          await fuelMessagePortal.getAddress(),
+          messageTester,
+          fuelChainState,
+          addresses
+        );
       });
 
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageWithAmount,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
+      // Simulates the case when withdrawn amount < initial deposited amount
+      it('should update the amount of deposited ether', async () => {
+        const recipient = b256ToAddress(messageEOA.recipient);
+        const txSender = signers.find((_, i) => addresses[i] === recipient);
+        const withdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
+        const depositedAmount = withdrawnAmount * 2n;
 
-      const relayTx = fuelMessagePortal.relayMessage(
-        messageWithAmount,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
+        await fuelMessagePortal
+          .connect(txSender)
+          .depositETH(messageEOA.recipient, {
+            value: depositedAmount,
+          });
 
-      await expect(relayTx).to.not.be.reverted;
-      await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal, messageTester],
-        [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
 
-      expect(await messageTester.data1()).to.be.equal(messageTestData2);
-      expect(await messageTester.data2()).to.be.equal(messageTestData3);
-    });
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
 
-    it('Should not be able to relay message from untrusted sender', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageBadSender,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageBadSender,
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageEOA,
           endOfCommitIntervalHeaderLite,
           msgBlockHeader,
           blockInRoot,
           msgInBlock
-        )
-      ).to.be.revertedWithCustomError(messageTester, 'InvalidMessageSender');
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
+        );
+        await expect(relayTx).to.not.be.reverted;
+        await expect(relayTx).to.changeEtherBalances(
+          [await fuelMessagePortal.getAddress(), recipient],
+          [withdrawnAmount * -1n, withdrawnAmount]
+        );
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+
+        const expectedDepositedAmount = depositedAmount - withdrawnAmount;
+        expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
+          expectedDepositedAmount
+        );
+      });
     });
 
-    it('Should not be able to relay message to bad recipient', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageBadRecipient,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageBadRecipient,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelMessagePortal, 'MessageRelayFailed');
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-    });
+    // This is essentially a copy - paste from `messagesIncoming.ts`
+    describe('Behaves like V1 - Relay both valid and invalid messages', async () => {
+      before(async () => {
+        const fixt = await fixture();
+        const { V3Implementation, upgradeProxyOptions } = fixt;
+        ({
+          provider,
+          fuelMessagePortal,
+          fuelChainState,
+          messageTester,
+          addresses,
+        } = fixt);
 
-    it('Should not be able to relay message with bad data', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageBadData,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageBadData,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelMessagePortal, 'MessageRelayFailed');
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-    });
+        await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
+          unsafeAllow: ['constructor'],
+          constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+          call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+          ...upgradeProxyOptions,
+        });
 
-    it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
-      await fuelMessagePortal.depositETH(messageEOA.sender, {
-        value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
+        await setupMessages(
+          await fuelMessagePortal.getAddress(),
+          messageTester,
+          fuelChainState,
+          addresses
+        );
       });
 
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageExceedingRateLimit,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageExceedingRateLimit,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(fuelMessagePortal, 'RateLimitExceeded');
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-    });
-
-    it('Should be able to relay message to EOA', async () => {
-      const expectedWithdrawnAmount = messageEOA.amount * BASE_ASSET_CONVERSION;
-      const expectedRecipient = b256ToAddress(messageEOA.recipient);
-
-      await fuelMessagePortal.depositETH(messageEOA.sender, {
-        value: expectedWithdrawnAmount,
+      it('Should not get a valid message sender outside of relaying', async () => {
+        await expect(
+          fuelMessagePortal.messageSender()
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'CurrentMessageSenderNotSet'
+        );
       });
 
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageEOA,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-
-      const relayTx = fuelMessagePortal.relayMessage(
-        messageEOA,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-      await expect(relayTx).to.not.be.reverted;
-      await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal, expectedRecipient],
-        [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-    });
-
-    it('Should be able to relay message to EOA with no amount', async () => {
-      const messageRecipient = b256ToAddress(messageEOANoAmount.recipient);
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageEOANoAmount,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-      const relayTx = fuelMessagePortal.relayMessage(
-        messageEOANoAmount,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-      await expect(relayTx).to.not.be.reverted;
-      await expect(relayTx).to.changeEtherBalances(
-        [fuelMessagePortal, messageRecipient],
-        [0, 0]
-      );
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-    });
-
-    it('Should not be able to relay valid message with different amount', async () => {
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        message2,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      const diffBlock = {
-        sender: message2.sender,
-        recipient: message2.recipient,
-        nonce: message2.nonce,
-        amount: message2.amount + parseEther('1.0'),
-        data: message2.data,
-      };
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(false);
-
-      await expect(
-        fuelMessagePortal.relayMessage(
-          diffBlock,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(
-        fuelMessagePortal,
-        'InvalidMessageInBlockProof'
-      );
-    });
-
-    it('Should not be able to relay non-existent message', async () => {
-      const [, msgBlockHeader, blockInRoot] = generateProof(
-        message2,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-      const msgInBlock = {
-        key: 0,
-        proof: [],
-      };
-      await expect(
-        fuelMessagePortal.relayMessage(
-          message2,
-          endOfCommitIntervalHeaderLite,
-          msgBlockHeader,
-          blockInRoot,
-          msgInBlock
-        )
-      ).to.be.revertedWithCustomError(
-        fuelMessagePortal,
-        'InvalidMessageInBlockProof'
-      );
-    });
-
-    it('Should not be able to relay reentrant messages', async () => {
-      // create a message that attempts to relay another message
-      const [, rTestMsgBlockHeader, rTestBlockInRoot, rTestMsgInBlock] =
-        generateProof(
+      it('Should not be able to relay message with bad root block', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
           message1,
           blockHeaders,
           prevBlockNodes,
           blockIds,
           messageNodes
         );
-      const reentrantTestData = fuelMessagePortal.interface.encodeFunctionData(
-        'relayMessage',
-        [
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message1,
+            generateBlockHeaderLite(
+              createBlock('', BLOCKS_PER_COMMIT_INTERVAL * 20 - 1)
+            ),
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(fuelChainState, 'UnknownBlock');
+
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message1,
+            generateBlockHeaderLite(unfinalizedBlock),
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(fuelMessagePortal, 'UnfinalizedBlock');
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
+
+      it('Should not be able to relay message with bad proof in root block', async () => {
+        const portalBalance = await provider.getBalance(fuelMessagePortal);
+        const messageTesterBalance = await provider.getBalance(messageTester);
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
           message1,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        blockInRoot.key = blockInRoot.key + 1;
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message1,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'InvalidBlockInHistoryProof'
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
+          portalBalance
+        );
+        expect(await provider.getBalance(messageTester)).to.be.equal(
+          messageTesterBalance
+        );
+      });
+
+      it('Should be able to relay valid message', async () => {
+        const portalBalance = await provider.getBalance(fuelMessagePortal);
+        const messageTesterBalance = await provider.getBalance(messageTester);
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          message1,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message1,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.not.be.reverted;
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+        expect(await messageTester.data1()).to.be.equal(messageTestData1);
+        expect(await messageTester.data2()).to.be.equal(messageTestData2);
+        expect(await provider.getBalance(fuelMessagePortal)).to.be.equal(
+          portalBalance
+        );
+        expect(await provider.getBalance(messageTester)).to.be.equal(
+          messageTesterBalance
+        );
+      });
+
+      it('Should not be able to relay already relayed message', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          message1,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message1,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(fuelMessagePortal, 'AlreadyRelayed');
+      });
+
+      it('Should not be able to relay message with low gas', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageWithAmount,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        const options = {
+          gasLimit: 140000,
+        };
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageWithAmount,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock,
+            options
+          )
+        ).to.be.reverted;
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
+
+      it('Should be able to relay message with amount', async () => {
+        const expectedWithdrawnAmount =
+          messageWithAmount.amount * BASE_ASSET_CONVERSION;
+
+        await fuelMessagePortal.depositETH(messageWithAmount.sender, {
+          value: expectedWithdrawnAmount,
+        });
+
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageWithAmount,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageWithAmount,
           endOfCommitIntervalHeaderLite,
-          rTestMsgBlockHeader,
-          rTestBlockInRoot,
-          rTestMsgInBlock,
-        ]
-      );
-      const messageReentrant = new Message(
-        trustedSenderAddress,
-        b256_fuelMessagePortalAddress,
-        BigInt(0),
-        randomBytes32(),
-        reentrantTestData
-      );
-      const messageReentrantId = computeMessageId(messageReentrant);
-      const messageReentrantMessages = [messageReentrantId];
-      const messageReentrantMessageNodes = constructTree(
-        messageReentrantMessages
-      );
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
 
-      // create block that contains this message
-      const tai64Time =
-        BigInt(Math.floor(new Date().getTime() / 1000)) + 4611686018427387914n;
-      const reentrantTestMessageBlock = createBlock(
-        '',
-        blockIds.length,
-        toBeHex(tai64Time),
-        '1',
-        calcRoot(messageReentrantMessages)
-      );
-      const reentrantTestMessageBlockId = computeBlockId(
-        reentrantTestMessageBlock
-      );
-      blockIds.push(reentrantTestMessageBlockId);
+        await expect(relayTx).to.not.be.reverted;
+        await expect(relayTx).to.changeEtherBalances(
+          [fuelMessagePortal, messageTester],
+          [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
 
-      // commit and finalize a block that contains the block with the message
-      const reentrantTestRootBlock = createBlock(
-        calcRoot(blockIds),
-        blockIds.length,
-        toBeHex(tai64Time)
-      );
-      const reentrantTestPrevBlockNodes = constructTree(blockIds);
-      const reentrantTestRootBlockId = computeBlockId(reentrantTestRootBlock);
-      await fuelChainState.commit(reentrantTestRootBlockId, 1);
-      ethers.provider.send('evm_increaseTime', [TIME_TO_FINALIZE]);
+        expect(await messageTester.data1()).to.be.equal(messageTestData2);
+        expect(await messageTester.data2()).to.be.equal(messageTestData3);
+      });
 
-      // generate proof for relaying reentrant message
-      const messageBlockLeafIndexKey = getLeafIndexKey(
-        reentrantTestPrevBlockNodes,
-        reentrantTestMessageBlockId
-      );
-      const blockInHistoryProof = {
-        key: messageBlockLeafIndexKey,
-        proof: getProof(reentrantTestPrevBlockNodes, messageBlockLeafIndexKey),
-      };
-      const messageLeafIndexKey = getLeafIndexKey(
-        messageReentrantMessageNodes,
-        messageReentrantId
-      );
-      const messageInBlockProof = {
-        key: messageLeafIndexKey,
-        proof: getProof(messageReentrantMessageNodes, messageLeafIndexKey),
-      };
+      it('Should not be able to relay message from untrusted sender', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageBadSender,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageBadSender,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(messageTester, 'InvalidMessageSender');
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
 
-      // re-enter via relayMessage
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(messageReentrantId)
-      ).to.be.equal(false);
-      await expect(
-        fuelMessagePortal.relayMessage(
-          messageReentrant,
-          generateBlockHeaderLite(reentrantTestRootBlock),
-          reentrantTestMessageBlock,
-          blockInHistoryProof,
-          messageInBlockProof
-        )
-      ).to.be.revertedWith('ReentrancyGuard: reentrant call');
+      it('Should not be able to relay message to bad recipient', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageBadRecipient,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageBadRecipient,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'MessageRelayFailed'
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
+
+      it('Should not be able to relay message with bad data', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageBadData,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageBadData,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'MessageRelayFailed'
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
+
+      it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
+        await fuelMessagePortal.depositETH(messageEOA.sender, {
+          value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
+        });
+
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageExceedingRateLimit,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageExceedingRateLimit,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(fuelMessagePortal, 'RateLimitExceeded');
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+      });
+
+      it('Should be able to relay message after rate limit duration is over', async () => {
+        await fuelMessagePortal.depositETH(messageEOA.sender, {
+          value:
+            messageAfterRateLimitDurationCompletes.amount *
+            BASE_ASSET_CONVERSION,
+        });
+
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageAfterRateLimitDurationCompletes,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
+
+        await fuelMessagePortal.relayMessage(
+          messageAfterRateLimitDurationCompletes,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+      });
+
+      it('Should be able to relay message to EOA', async () => {
+        const expectedWithdrawnAmount =
+          messageEOA.amount * BASE_ASSET_CONVERSION;
+        const expectedRecipient = b256ToAddress(messageEOA.recipient);
+
+        await fuelMessagePortal.depositETH(messageEOA.sender, {
+          value: expectedWithdrawnAmount,
+        });
+
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageEOA,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageEOA,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
+        await expect(relayTx).to.not.be.reverted;
+        await expect(relayTx).to.changeEtherBalances(
+          [fuelMessagePortal, expectedRecipient],
+          [expectedWithdrawnAmount * -1n, expectedWithdrawnAmount]
+        );
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+      });
+
+      it('Should be able to relay message to EOA with no amount', async () => {
+        const messageRecipient = b256ToAddress(messageEOANoAmount.recipient);
+
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          messageEOANoAmount,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+        const relayTx = fuelMessagePortal.relayMessage(
+          messageEOANoAmount,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        );
+        await expect(relayTx).to.not.be.reverted;
+        await expect(relayTx).to.changeEtherBalances(
+          [fuelMessagePortal, messageRecipient],
+          [0, 0]
+        );
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(true);
+      });
+
+      it('Should not be able to relay valid message with different amount', async () => {
+        const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+          message2,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+
+        const diffBlock = {
+          sender: message2.sender,
+          recipient: message2.recipient,
+          nonce: message2.nonce,
+          amount: message2.amount + parseEther('1.0'),
+          data: message2.data,
+        };
+
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(msgID)
+        ).to.be.equal(false);
+
+        await expect(
+          fuelMessagePortal.relayMessage(
+            diffBlock,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'InvalidMessageInBlockProof'
+        );
+      });
+
+      it('Should not be able to relay non-existent message', async () => {
+        const [, msgBlockHeader, blockInRoot] = generateProof(
+          message2,
+          blockHeaders,
+          prevBlockNodes,
+          blockIds,
+          messageNodes
+        );
+        const msgInBlock = {
+          key: 0,
+          proof: [],
+        };
+        await expect(
+          fuelMessagePortal.relayMessage(
+            message2,
+            endOfCommitIntervalHeaderLite,
+            msgBlockHeader,
+            blockInRoot,
+            msgInBlock
+          )
+        ).to.be.revertedWithCustomError(
+          fuelMessagePortal,
+          'InvalidMessageInBlockProof'
+        );
+      });
+
+      it('Should not be able to relay reentrant messages', async () => {
+        // create a message that attempts to relay another message
+        const [, rTestMsgBlockHeader, rTestBlockInRoot, rTestMsgInBlock] =
+          generateProof(
+            message1,
+            blockHeaders,
+            prevBlockNodes,
+            blockIds,
+            messageNodes
+          );
+        const reentrantTestData =
+          fuelMessagePortal.interface.encodeFunctionData('relayMessage', [
+            message1,
+            endOfCommitIntervalHeaderLite,
+            rTestMsgBlockHeader,
+            rTestBlockInRoot,
+            rTestMsgInBlock,
+          ]);
+        const messageReentrant = new Message(
+          trustedSenderAddress,
+          b256_fuelMessagePortalAddress,
+          BigInt(0),
+          randomBytes32(),
+          reentrantTestData
+        );
+        const messageReentrantId = computeMessageId(messageReentrant);
+        const messageReentrantMessages = [messageReentrantId];
+        const messageReentrantMessageNodes = constructTree(
+          messageReentrantMessages
+        );
+
+        // create block that contains this message
+        const tai64Time =
+          BigInt(Math.floor(new Date().getTime() / 1000)) +
+          4611686018427387914n;
+        const reentrantTestMessageBlock = createBlock(
+          '',
+          blockIds.length,
+          toBeHex(tai64Time),
+          '1',
+          calcRoot(messageReentrantMessages)
+        );
+        const reentrantTestMessageBlockId = computeBlockId(
+          reentrantTestMessageBlock
+        );
+        blockIds.push(reentrantTestMessageBlockId);
+
+        // commit and finalize a block that contains the block with the message
+        const reentrantTestRootBlock = createBlock(
+          calcRoot(blockIds),
+          blockIds.length,
+          toBeHex(tai64Time)
+        );
+        const reentrantTestPrevBlockNodes = constructTree(blockIds);
+        const reentrantTestRootBlockId = computeBlockId(reentrantTestRootBlock);
+        await fuelChainState.commit(reentrantTestRootBlockId, 1);
+        ethers.provider.send('evm_increaseTime', [TIME_TO_FINALIZE]);
+
+        // generate proof for relaying reentrant message
+        const messageBlockLeafIndexKey = getLeafIndexKey(
+          reentrantTestPrevBlockNodes,
+          reentrantTestMessageBlockId
+        );
+        const blockInHistoryProof = {
+          key: messageBlockLeafIndexKey,
+          proof: getProof(
+            reentrantTestPrevBlockNodes,
+            messageBlockLeafIndexKey
+          ),
+        };
+        const messageLeafIndexKey = getLeafIndexKey(
+          messageReentrantMessageNodes,
+          messageReentrantId
+        );
+        const messageInBlockProof = {
+          key: messageLeafIndexKey,
+          proof: getProof(messageReentrantMessageNodes, messageLeafIndexKey),
+        };
+
+        // re-enter via relayMessage
+        expect(
+          await fuelMessagePortal.incomingMessageSuccessful(messageReentrantId)
+        ).to.be.equal(false);
+        await expect(
+          fuelMessagePortal.relayMessage(
+            messageReentrant,
+            generateBlockHeaderLite(reentrantTestRootBlock),
+            reentrantTestMessageBlock,
+            blockInHistoryProof,
+            messageInBlockProof
+          )
+        ).to.be.revertedWith('ReentrancyGuard: reentrant call');
+      });
     });
   });
 });
