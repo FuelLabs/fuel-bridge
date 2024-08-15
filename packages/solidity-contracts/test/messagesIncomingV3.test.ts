@@ -346,6 +346,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         addresses
       );
     });
+
     describe('pauseWithdrawals', () => {
       it('pauses all withdrawals', async () => {
         const [, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
