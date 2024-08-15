@@ -1,35 +1,44 @@
+import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelMessagePortal__factory as FuelMessagePortal } from '../../typechain';
+import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
     upgrades: { deployProxy, erc1967 },
-    deployments: { get, save },
+    deployments: { get, save, execute },
   } = hre;
   const [deployer] = await ethers.getSigners();
 
   const { address: fuelChainState } = await get('FuelChainState');
 
-  const { deployTransaction, address } = await deployProxy(
+  const contract = await deployProxy(
     new FuelMessagePortal(deployer),
     [fuelChainState],
     {
       initializer: 'initialize',
+      constructorArgs: [MaxUint256],
     }
   );
+  await contract.waitForDeployment();
 
-  await deployTransaction.wait();
+  const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
   console.log('Deployed FuelMessagePortal at', address);
   await save('FuelMessagePortal', {
     address,
-    abi: [],
+    abi: [...FuelMessagePortal.abi],
     implementation,
   });
+
+  await execute(
+    'FuelMessagePortal',
+    { log: true, from: deployer.address },
+    'pause'
+  );
 
   return true;
 };
