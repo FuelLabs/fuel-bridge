@@ -1,7 +1,14 @@
 import { calcRoot, constructTree, getProof } from '@fuel-ts/merkle';
 import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { MaxUint256, parseEther, toBeHex, type Provider } from 'ethers';
+import {
+  MaxUint256,
+  parseEther,
+  toBeHex,
+  type Provider,
+  Wallet,
+  ZeroAddress,
+} from 'ethers';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -309,7 +316,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     expect(await fuelMessagePortal.withdrawalsPaused()).to.be.true;
   });
 
-  describe('Behaves like V3 - Blacklisting', () => {
+  describe('Behaves like V3', () => {
     beforeEach('fixture', async () => {
       const fixt = await fixture();
       const { V2Implementation, V3Implementation } = fixt;
@@ -528,6 +535,62 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
           await expect(relayTx).not.to.be.reverted;
         }
+      });
+    });
+
+    describe('setFuelChainState()', () => {
+      it('can only be called by DEFAULT_ADMIN_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
+
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .setFuelChainState(ZeroAddress);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${defaultAdminRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(defaultAdminRole, mallory);
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .setFuelChainState(ZeroAddress);
+
+        await expect(tx).not.to.be.reverted;
+      });
+
+      it('changes the fuel chain state address', async () => {
+        const [deployer] = await ethers.getSigners();
+        const newFuelChainStateAddress = Wallet.createRandom().address;
+        const oldFuelChainStateAddress =
+          await fuelMessagePortal.fuelChainStateContract();
+
+        const receipt = await fuelMessagePortal
+          .setFuelChainState(newFuelChainStateAddress)
+          .then((tx) => tx.wait());
+
+        const [event] = await fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.FuelChainStateUpdated,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+
+        expect(event.args.sender).to.equal(deployer.address);
+        expect(event.args.oldValue).to.equal(oldFuelChainStateAddress);
+        expect(event.args.newValue).to.equal(newFuelChainStateAddress);
+
+        expect(await fuelMessagePortal.fuelChainStateContract()).to.equal(
+          newFuelChainStateAddress
+        );
       });
     });
   });
