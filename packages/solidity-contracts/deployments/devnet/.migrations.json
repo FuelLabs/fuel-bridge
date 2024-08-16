@@ -12,5 +12,7 @@
   "chain_state_redeploy": 1723732789,
   "redeploy_register_committer": 1723733641,
   "fuel_erc20_gateway_v4": 1723539697,
-  "set_asset_issuer": 1723539711
+  "set_asset_issuer": 1723539711,
+  "portal_upgrade_2": 1723815805,
+  "portal_set_chain_state": 1723815819
 }
