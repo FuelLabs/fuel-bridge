@@ -32,8 +32,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelERC20Gateway.abi],
     implementation,
   });
-
-  return true;
 };
 
 func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV4'];

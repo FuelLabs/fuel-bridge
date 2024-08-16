@@ -43,6 +43,8 @@ const config: HardhatUserConfig = {
     },
     localhost: {
       url: 'http://127.0.0.1:8545/',
+      deploy: ['deploy/hardhat'],
+      accounts: CONTRACTS_DEPLOYER_KEY ? [CONTRACTS_DEPLOYER_KEY] : undefined,
     },
     custom: {
       url: 'http://127.0.0.1:8545/',

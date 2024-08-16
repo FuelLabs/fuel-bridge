@@ -1,5 +1,5 @@
 # ====== Build Image ======
-FROM node:18-alpine AS BUILD_IMAGE
+FROM node:20-alpine AS BUILD_IMAGE
 
 ARG L1_IP=0.0.0.0
 ARG L1_PORT=9545
