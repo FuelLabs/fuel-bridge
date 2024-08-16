@@ -11,6 +11,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 //      public addr: `0x6b63804cfbf9856e68e5b6e7aef238dc8311ec55bec04df774003a2c96e0418e`
 //      private key: `0xde97d8624a438121b86a1956544bd72ed68cd69f2c99555b08b1e8c51ffd511c`
 const ASSET_ISSUER_ID =
+  process.env.ASSET_ISSUER_ID ||
   '0x5434af870bc7f3b589719c737a82c67c8a562bea28bba0db82e7a22a8a1f7e87';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -24,7 +25,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ASSET_ISSUER_ID
   );
 
-  return true;
+  await deployments.save('FuelL2BridgeId', {
+    address: ASSET_ISSUER_ID,
+    abi: [],
+  });
 };
 
 func.tags = ['set_asset_issuer_id'];

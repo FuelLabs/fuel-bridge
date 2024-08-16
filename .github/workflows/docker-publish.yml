@@ -22,7 +22,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build and push Fuel Bridge Ethereum Test Image
+      - name: Build and push a test image containing only the ETH node and contracts
         uses: ./.github/actions/docker-publish
         id: publish
         with:
@@ -30,3 +30,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
           image: ghcr.io/fuellabs/fuel-bridge
           dockerfile: docker/l1-chain/Dockerfile
+
+      - name: Build and push a test image containing all components for e2e tests
+        uses: ./.github/actions/docker-publish
+        id: publish-full
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          image: ghcr.io/fuellabs/fuel-bridge-full
+          dockerfile: docker/full-env/Dockerfile
