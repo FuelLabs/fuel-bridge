@@ -1,8 +1,5 @@
-import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-
-import { FuelMessagePortalV3__factory as FuelMessagePortalV3 } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
