@@ -32,7 +32,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const implementation = await erc1967.getImplementationAddress(address);
 
-  console.log('Upgraded FuelMessagePortal to', address);
+  console.log('Upgraded FuelMessagePortal to', implementation);
   await save('FuelMessagePortal', {
     address,
     abi: [...FuelMessagePortalV3.abi],
