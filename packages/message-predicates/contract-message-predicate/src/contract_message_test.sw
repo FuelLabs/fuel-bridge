@@ -45,21 +45,21 @@ impl MessageReceiver for Contract {
         storage.counter.write(storage.counter.read() + 1);
 
         // Parse the message data
-        let data_length = input_message_data_length(msg_idx);
-        if (data_length >= 32u16) {
-            let contract_id: b256 = input_message_data(msg_idx, 0).into();
+        let data_length = input_message_data_length(msg_idx).unwrap();
+        if (data_length >= 32u64) {
+            let contract_id: b256 = input_message_data(msg_idx, 0).unwrap().into();
             storage.data1.write(ContractId::from(contract_id));
         }
-        if (data_length >= 32u16 + 8u16) {
-            let num: u64 = into_u64(input_message_data(msg_idx, 32));
+        if (data_length >= 32u64 + 8u64) {
+            let num: u64 = into_u64(input_message_data(msg_idx, 32).unwrap());
             storage.data2.write(num);
         }
-        if (data_length >= 32u16 + 8u16 + 32u16) {
-            let big_num: b256 = input_message_data(msg_idx, 32 + 8).into();
+        if (data_length >= 32u64 + 8u64 + 32u64) {
+            let big_num: b256 = input_message_data(msg_idx, 32 + 8).unwrap().into();
             storage.data3.write(big_num);
         }
-        if (data_length >= 32u16 + 8u16 + 32u16 + 32u16) {
-            let address: b256 = input_message_data(msg_idx, 32 + 8 + 32).into();
+        if (data_length >= 32u64 + 8u64 + 32u64 + 32u64) {
+            let address: b256 = input_message_data(msg_idx, 32 + 8 + 32).unwrap().into();
             storage.data4.write(Address::from(address));
         }
     }
