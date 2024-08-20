@@ -5,14 +5,11 @@ mod tests {
     };
     use ethers::core::rand::{self, Rng};
     use fuels::{
-        accounts::{wallet::WalletUnlocked, Account},
-        prelude::AssetId,
-        test_helpers::DEFAULT_COIN_AMOUNT,
-        types::{
+        accounts::{wallet::WalletUnlocked, Account}, prelude::AssetId, programs::calls::Execution, test_helpers::DEFAULT_COIN_AMOUNT, types::{
             bech32::Bech32Address,
             errors::{transaction::Reason, Error},
             ContractId,
-        },
+        }
     };
 
     #[tokio::test]
@@ -41,7 +38,7 @@ mod tests {
             .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
@@ -58,7 +55,7 @@ mod tests {
             .methods()
             ._proxy_target()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
@@ -104,7 +101,7 @@ mod tests {
             .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
@@ -156,7 +153,7 @@ mod tests {
             .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
@@ -319,7 +316,7 @@ mod tests {
             .methods()
             ._proxy_owner()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
@@ -374,7 +371,7 @@ mod tests {
             .methods()
             ._proxy_target()
             .with_contract_ids(&[proxy_id.into()])
-            .simulate()
+            .simulate(Execution::Realistic)
             .await?
             .value;
 
