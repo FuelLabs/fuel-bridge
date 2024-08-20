@@ -2,13 +2,13 @@
 /// A set of useful helper methods for setting up the integration test environment.
 import type {
   FuelChainState,
-  FuelMessagePortal,
+  FuelMessagePortalV3 as FuelMessagePortal,
   FuelERC20GatewayV4 as FuelERC20Gateway,
   FuelERC721Gateway,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
-  FuelMessagePortal__factory,
+  FuelMessagePortalV3__factory as FuelMessagePortal__factory,
   FuelERC20GatewayV4__factory as FuelERC20Gateway__factory,
   FuelERC721Gateway__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
