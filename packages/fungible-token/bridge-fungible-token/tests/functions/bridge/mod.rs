@@ -20,7 +20,7 @@ mod success {
         interface::{bridge::claim_refund, src20::total_supply},
         setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
+    use fuels::{prelude::Address, programs::calls::ContractDependency, tx::Receipt, types::U256};
     use primitive_types::H160;
     use std::str::FromStr;
 

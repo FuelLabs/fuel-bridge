@@ -25,7 +25,7 @@ mod success {
     use fuels::types::bech32::{Bech32Address, FUEL_BECH32_HRP};
     use fuels::types::{Bytes32, U256};
     use fuels::{
-        programs::contract::SettableContract,
+        programs::calls::ContractDependency,
         types::{tx_status::TxStatus, Bits256},
     };
 
@@ -1103,7 +1103,7 @@ mod success {
 mod revert {
     use fuels::{
         accounts::wallet::WalletUnlocked,
-        programs::contract::SettableContract,
+        programs::calls::ContractDependency,
         types::{tx_status::TxStatus, U256},
     };
 
