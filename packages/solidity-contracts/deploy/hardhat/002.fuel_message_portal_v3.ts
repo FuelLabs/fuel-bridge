@@ -38,8 +38,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [],
     implementation,
   });
-
-  return true;
 };
 
 func.tags = ['portal', 'message_portal', 'FuelMessagePortal'];

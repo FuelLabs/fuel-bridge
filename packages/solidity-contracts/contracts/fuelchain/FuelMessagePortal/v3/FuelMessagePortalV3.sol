@@ -7,7 +7,9 @@ import "../v2/FuelMessagePortalV2.sol";
 contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
-    
+
+    event FuelChainStateUpdated(address indexed sender, address indexed oldValue, address indexed newValue);
+
     error MessageBlacklisted();
     error MessageRelayFailed();
     error NotSupported();
@@ -208,6 +210,11 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
     }
 
+    function setFuelChainState(address newFuelChainState) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit FuelChainStateUpdated(msg.sender, address(_fuelChainState), newFuelChainState);
+        _fuelChainState = FuelChainState(newFuelChainState);
+    }
+
     /**
      * @notice Increments the amount withdrawn in the period.
      * @dev Reverts if the withdrawn limit is breached.
@@ -252,3 +259,4 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
      */
     uint256[49] private __gap;
 }
+

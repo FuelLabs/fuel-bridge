@@ -3,8 +3,8 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory as FuelChainState } from '../../typechain';
 
-const BLOCKS_PER_COMMIT_INTERVAL = 30;
-const TIME_TO_FINALIZE = 5;
+const BLOCKS_PER_COMMIT_INTERVAL = 10800;
+const TIME_TO_FINALIZE = 3600 * 24 * 7; // 7 days of finalization
 const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -33,8 +33,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelChainState.abi],
     implementation,
   });
+
+  return true;
 };
 
 func.tags = ['state', 'chain-state', 'chain_state', 'FuelChainState'];
-func.id = 'chain_state';
+func.id = 'chain_state_redeploy';
 export default func;

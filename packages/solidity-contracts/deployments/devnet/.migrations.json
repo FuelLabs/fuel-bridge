@@ -1,7 +1,6 @@
 {
   "chain_state": 1714255660,
   "fuel_message_portal": 1714255695,
-  "fuel_erc20_gateway_v4": 1714255717,
   "token": 1714255743,
   "register_committer": 1714731217,
   "fuel_message_portal_redeploy": 1715106411,
@@ -9,5 +8,9 @@
   "state_redeploy": 1715107035,
   "state_unpause": 1715107035,
   "portal_upgrade": 1716102431,
-  "state_upgrade": 1716102805
+  "state_upgrade": 1716102805,
+  "chain_state_redeploy": 1723732789,
+  "redeploy_register_committer": 1723733641,
+  "fuel_erc20_gateway_v4": 1723539697,
+  "set_asset_issuer": 1723539711
 }

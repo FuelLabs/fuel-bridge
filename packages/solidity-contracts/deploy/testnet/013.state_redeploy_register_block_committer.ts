@@ -3,7 +3,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory } from '../../typechain';
 
-const COMMITTER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const COMMITTER_ADDRESS = '0x802f534Fe839fbE6a5FeD2F9eD5120FB1646C9df';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
@@ -19,8 +19,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     .then((tx) => tx.wait());
 
   console.log('Granted role COMMITTER_ROLE to', COMMITTER_ADDRESS);
+
+  return true;
 };
 
-func.tags = ['register_committer'];
-func.id = 'register_committer';
+func.tags = ['redeploy_register_committer'];
+func.id = 'redeploy_register_committer';
 export default func;
