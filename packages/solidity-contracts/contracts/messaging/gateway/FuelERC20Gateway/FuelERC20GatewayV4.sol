@@ -56,6 +56,8 @@ contract FuelERC20GatewayV4 is
 
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    /// @dev The rate limit setter role
+    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
     uint256 public constant FUEL_ASSET_DECIMALS = 9;
     uint256 constant NO_DECIMALS = type(uint256).max;
 
@@ -66,14 +68,26 @@ contract FuelERC20GatewayV4 is
     bool public whitelistRequired;
     bytes32 public assetIssuerId;
 
-    mapping(address => uint256) internal _deposits;
-    mapping(address => uint256) internal _depositLimits;
-    mapping(address => uint256) internal _decimalsCache;
-    mapping(bytes32 => bool) internal _isBridge;
+    mapping(address => uint256) _deposits;
+    mapping(address => uint256) _depositLimits;
+    mapping(address => uint256) _decimalsCache;
+    mapping(bytes32 => bool) _isBridge;
+
+    /// @notice Amounts already withdrawn this period for each token.
+    mapping(address => uint256) rateLimitDuration;
+
+    /// @notice Amounts already withdrawn this period for each token.
+    mapping(address => uint256) currentPeriodAmount;
+
+    /// @notice The time at which the current period ends at for each token.
+    mapping(address => uint256) currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount for each token.
+    mapping(address => uint256) limitAmount;
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
-    function initialize(FuelMessagePortal fuelMessagePortal) public initializer {
+    function initialize(FuelMessagePortal fuelMessagePortal, uint256 _limitAmount, uint256 _rateLimitDuration) public initializer {
         __FuelMessagesEnabled_init(fuelMessagePortal);
         __Pausable_init();
         __AccessControl_init();
@@ -82,6 +96,8 @@ contract FuelERC20GatewayV4 is
         //grant initial roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
+        // set rate limiter role
+        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
     }
 
     /////////////////////
@@ -120,6 +136,37 @@ contract FuelERC20GatewayV4 is
         (bool success, ) = address(msg.sender).call{value: address(this).balance}("");
         require(success);
     }
+
+    /**
+     * @notice Resets the rate limit amount.
+     * @param _amount The amount to reset the limit to.
+     */
+    function resetRateLimitAmount(address _token, uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        uint256 withdrawalLimitAmountToSet;
+        bool amountWithdrawnLoweredToLimit;
+        bool withdrawalAmountResetToZero;
+        
+        // if period has expired then currentPeriodAmount is zero
+        if (currentPeriodEnd[_token] < block.timestamp) {
+            unchecked {
+                currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+            }
+            withdrawalAmountResetToZero = true;
+        } else {
+            // If the withdrawn amount is higher, it is set to the new limit amount
+            if (_amount < currentPeriodAmount[_token]) {
+                withdrawalLimitAmountToSet = _amount;
+                amountWithdrawnLoweredToLimit = true;
+            }
+        }
+
+        limitAmount[_token] = _amount;
+
+        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
+            currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
+        }
+    }
+
 
     //////////////////////
     // Public Functions //
