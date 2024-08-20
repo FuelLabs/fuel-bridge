@@ -5,11 +5,15 @@ mod tests {
     };
     use ethers::core::rand::{self, Rng};
     use fuels::{
-        accounts::{wallet::WalletUnlocked, Account}, prelude::AssetId, programs::calls::Execution, test_helpers::DEFAULT_COIN_AMOUNT, types::{
+        accounts::{wallet::WalletUnlocked, Account},
+        prelude::AssetId,
+        programs::calls::Execution,
+        test_helpers::DEFAULT_COIN_AMOUNT,
+        types::{
             bech32::Bech32Address,
             errors::{transaction::Reason, Error},
             ContractId,
-        }
+        },
     };
 
     #[tokio::test]
