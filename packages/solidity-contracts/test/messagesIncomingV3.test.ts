@@ -573,13 +573,14 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   describe('V3 Proxy Initialization', () => {
     it('v3 proxy cannot be initialized again', async () => {
       const [deployer] = await ethers.getSigners();
+      const fcsAddress = await fuelChainState.getAddress();
 
       const portal = (await ethers
         .getContractFactory('FuelMessagePortalV3', deployer)
         .then(async (factory) =>
           upgrades.deployProxy(
             factory,
-            [await fuelChainState.getAddress(), 0],
+            [fcsAddress, 0],
             {
               initializer: 'initializerV3',
               constructorArgs: [MaxUint256, 0],
@@ -588,8 +589,14 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         )
         .then((tx) => tx.waitForDeployment())) as FuelMessagePortalV3;
 
-      const tx = portal.reinitializeV3(MaxUint256);
-      await expect(tx).to.have.reverted;
+      let tx = portal.reinitializeV3(MaxUint256);
+      await expect(tx).to.be.revertedWith('Initializable: contract is already initialized');
+
+      tx = portal.initializerV3(fcsAddress, 0);
+      await expect(tx).to.be.revertedWith('Initializable: contract is already initialized');
+
+      tx = portal.initialize(fcsAddress);
+      await expect(tx).to.be.revertedWithCustomError(portal, 'NotSupported');
     });
 
     describe('Behaves like V2 - Accounting', () => {
