@@ -8,9 +8,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
     
-    error AlreadyInitialized();
     error MessageBlacklisted();
     error MessageRelayFailed();
+    error NotSupported();
     error RateLimitExceeded();
     error WithdrawalsPaused();
 
@@ -39,7 +39,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     }
 
     function initialize(FuelChainState) public virtual override {
-        revert AlreadyInitialized();
+        revert NotSupported();
     }
 
     function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public reinitializer(3) {
