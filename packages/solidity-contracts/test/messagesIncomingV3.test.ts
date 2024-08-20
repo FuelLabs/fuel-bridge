@@ -299,9 +299,6 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         deployment.runner
       ) as FuelMessagePortalV3;
 
-      // re-in initialize
-      // await fuelMessagePortal.reinitializeV3(RATE_LIMIT_AMOUNT.toString());
-
       const messageTester = await ethers
         .getContractFactory('MessageTester', deployer)
         .then(
