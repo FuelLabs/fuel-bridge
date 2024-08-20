@@ -641,22 +641,22 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       const portal = (await ethers
         .getContractFactory('FuelMessagePortalV3', deployer)
         .then(async (factory) =>
-          upgrades.deployProxy(
-            factory,
-            [fcsAddress, 0],
-            {
-              initializer: 'initializerV3',
-              constructorArgs: [MaxUint256, 0],
-            }
-          )
+          upgrades.deployProxy(factory, [fcsAddress, 0], {
+            initializer: 'initializerV3',
+            constructorArgs: [MaxUint256, 0],
+          })
         )
         .then((tx) => tx.waitForDeployment())) as FuelMessagePortalV3;
 
       let tx = portal.reinitializeV3(MaxUint256);
-      await expect(tx).to.be.revertedWith('Initializable: contract is already initialized');
+      await expect(tx).to.be.revertedWith(
+        'Initializable: contract is already initialized'
+      );
 
       tx = portal.initializerV3(fcsAddress, 0);
-      await expect(tx).to.be.revertedWith('Initializable: contract is already initialized');
+      await expect(tx).to.be.revertedWith(
+        'Initializable: contract is already initialized'
+      );
 
       tx = portal.initialize(fcsAddress);
       await expect(tx).to.be.revertedWithCustomError(portal, 'NotSupported');
