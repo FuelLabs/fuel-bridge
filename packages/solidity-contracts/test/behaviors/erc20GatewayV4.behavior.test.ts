@@ -13,7 +13,12 @@ import type { BytesLike } from 'ethers';
 import hre from 'hardhat';
 import { random } from 'lodash';
 
-import { CONTRACT_MESSAGE_PREDICATE } from '../../protocol/constants';
+import {
+  CONTRACT_MESSAGE_PREDICATE,
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION,
+  STANDARD_TOKEN_DECIMALS,
+} from '../../protocol/constants';
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
@@ -1008,6 +1013,17 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               assetIssuerId,
             } = env;
 
+            const rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await erc20Gateway
+              .connect(deployer)
+              .initializeRateLimit(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
+
             const amount = parseUnits(
               random(0.01, 1, true).toFixed(decimals),
               Number(decimals)
@@ -1124,6 +1140,14 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
           await token.mint(user, amount);
           await token.approve(erc20Gateway, MaxUint256);
+
+          await erc20Gateway
+            .connect(deployer)
+            .initializeRateLimit(
+              token.getAddress(),
+              amount.toString(),
+              RATE_LIMIT_DURATION
+            );
 
           await erc20Gateway.connect(user).deposit(recipient, token, amount);
           const withdrawAmount = amount / 4n;

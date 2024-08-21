@@ -2,11 +2,14 @@ import { zeroPadValue } from 'ethers';
 import hre, { deployments } from 'hardhat';
 
 import { randomBytes32 } from '../protocol/utils';
+
 import {
   FuelERC20GatewayV4__factory,
   type MockFuelMessagePortal,
   type Token,
 } from '../typechain';
+
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 
 import { behavesLikeErc20GatewayV4 } from './behaviors';
 import { deployProxy } from './utils';
@@ -36,6 +39,14 @@ describe('erc20GatewayV4', () => {
     );
 
     await erc20Gateway.connect(deployer).setAssetIssuerId(assetIssuerId);
+
+    await erc20Gateway
+      .connect(deployer)
+      .initializeRateLimit(
+        token.getAddress(),
+        RATE_LIMIT_AMOUNT.toString(),
+        RATE_LIMIT_DURATION
+      );
 
     return {
       fuelMessagePortal,
