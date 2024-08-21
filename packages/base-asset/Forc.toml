@@ -5,4 +5,4 @@ license = "Apache-2.0"
 name = "base-asset-contract"
 
 [dependencies]
-standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.5.0" }
+standards = { git = "https://github.com/FuelLabs/sway-standards", tag = "v0.5.2" }

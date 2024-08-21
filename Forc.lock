@@ -2,7 +2,7 @@
 name = "base-asset-contract"
 source = "member"
 dependencies = [
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "standards",
     "std",
 ]
 
@@ -12,7 +12,7 @@ source = "member"
 dependencies = [
     "contract_message_receiver",
     "interface",
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "standards",
     "std",
     "sway_libs",
 ]
@@ -45,7 +45,7 @@ source = "member"
 dependencies = [
     "contract_message_receiver",
     "interface",
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "standards",
     "std",
 ]
 
@@ -54,18 +54,13 @@ name = "reentrancy-attacker"
 source = "member"
 dependencies = [
     "contract_message_receiver",
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "standards",
     "std",
 ]
 
 [[package]]
 name = "standards"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2"
-dependencies = ["std"]
-
-[[package]]
-name = "standards"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.5.2#270350e69bd7455b7e99f0aae2e29a94d42324bd"
 dependencies = ["std"]
 
 [[package]]
@@ -75,9 +70,9 @@ dependencies = ["core"]
 
 [[package]]
 name = "sway_libs"
-source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.21.0#6a227ed34c86fe1ebd334dbdfeccf66c43e3915b"
+source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.23.1#50be622109e3c584efc29edac5390c96f1ccc43a"
 dependencies = [
-    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
+    "standards",
     "std",
 ]
 
