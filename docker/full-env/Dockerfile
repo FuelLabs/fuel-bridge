@@ -17,12 +17,13 @@ RUN apt install -y curl git file jq
 FROM base as forc-downloader
 
 COPY fuel-toolchain.toml .
+
 RUN ARCH=$(uname -m) && \
     FORC_VERSION=$(awk -F'"' '/forc = / {print $2}' fuel-toolchain.toml) && \
     if [ "$ARCH" = "aarch64" ]; then \
-        FORC_URL="https://github.com/FuelLabs/sway/releases/download/$FORC_VERSION/forc-binaries-linux_arm64.tar.gz"; \
+        FORC_URL="https://github.com/FuelLabs/sway/releases/download/v$FORC_VERSION/forc-binaries-linux_arm64.tar.gz"; \
     elif [ "$ARCH" = "x86_64" ]; then \
-        FORC_URL="https://github.com/FuelLabs/sway/releases/download/$FORC_VERSION/forc-binaries-linux_amd64.tar.gz"; \
+        FORC_URL="https://github.com/FuelLabs/sway/releases/download/v$FORC_VERSION/forc-binaries-linux_amd64.tar.gz"; \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
