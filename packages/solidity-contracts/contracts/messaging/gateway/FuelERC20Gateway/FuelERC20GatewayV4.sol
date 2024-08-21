@@ -36,6 +36,9 @@ contract FuelERC20GatewayV4 is
     error CannotWithdrawZero();
     error InvalidSender();
     error InvalidAmount();
+    error RateLimitAlreadySet();
+    error RateLimitExceeded();
+    error RateLimitNotInitialized();
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
     event Deposit(bytes32 indexed sender, address indexed tokenAddress, uint256 amount);
@@ -87,7 +90,7 @@ contract FuelERC20GatewayV4 is
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
-    function initialize(FuelMessagePortal fuelMessagePortal, uint256 _limitAmount, uint256 _rateLimitDuration) public initializer {
+    function initialize(FuelMessagePortal fuelMessagePortal) public initializer {
         __FuelMessagesEnabled_init(fuelMessagePortal);
         __Pausable_init();
         __AccessControl_init();
@@ -138,7 +141,22 @@ contract FuelERC20GatewayV4 is
     }
 
     /**
+     * @notice Intitializing rate limit params for each token. 
+     * @param _token The token address to set rate limit params for.
+     * @param _limitAmount The amount to reset the limit to.
+     * @param _rateLimitDuration rate limit duration.
+     */
+    function initializeRateLimit(address _token, uint256 _limitAmount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        if (currentPeriodEnd[_token] != 0) revert RateLimitAlreadySet();
+        
+        rateLimitDuration[_token] = _rateLimitDuration;
+        currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
+        limitAmount[_token] = _limitAmount;
+    }
+
+    /**
      * @notice Resets the rate limit amount.
+     * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
      */
     function resetRateLimitAmount(address _token, uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
@@ -146,8 +164,13 @@ contract FuelERC20GatewayV4 is
         bool amountWithdrawnLoweredToLimit;
         bool withdrawalAmountResetToZero;
         
+        // avoid multiple SLOADS
+        uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
+
+        if (rateLimitDurationEndTimestamp == 0) revert RateLimitNotInitialized();
+        
         // if period has expired then currentPeriodAmount is zero
-        if (currentPeriodEnd[_token] < block.timestamp) {
+        if (rateLimitDurationEndTimestamp < block.timestamp) {
             unchecked {
                 currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
             }
@@ -273,6 +296,9 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
+        // rate limit check
+        _addWithdrawnAmount(tokenAddress, amount);
+
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
         IERC20MetadataUpgradeable(tokenAddress).safeTransfer(to, amount);
@@ -374,6 +400,31 @@ contract FuelERC20GatewayV4 is
     // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
         //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
+    }
+
+    /**
+     * @notice Increments the amount withdrawn in the period.
+     * @dev Reverts if the withdrawn limit is breached.
+     * @param _token Token address to update withdrawn amount for.
+     * @param _withdrawnAmount The amount withdrawn to be added.
+     */
+    function _addWithdrawnAmount(address _token, uint256 _withdrawnAmount) internal {
+        uint256 currentPeriodAmountTemp;
+
+        if (currentPeriodEnd[_token] < block.timestamp) {
+            currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+            currentPeriodAmountTemp = _withdrawnAmount;
+        } else {
+            unchecked {
+               currentPeriodAmountTemp = currentPeriodAmount[_token] + _withdrawnAmount;
+            }
+        }
+
+        if (currentPeriodAmountTemp > limitAmount[_token]) {
+            revert RateLimitExceeded();
+        }
+
+        currentPeriodAmount[_token] = currentPeriodAmountTemp;
     }
 
     /**
