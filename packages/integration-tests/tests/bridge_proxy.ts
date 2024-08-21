@@ -101,10 +101,10 @@ describe('Proxy', async function () {
     });
   });
 
-  describe('_proxy_target()', () => {
+  describe('proxy_target()', () => {
     it('correctly initializes the proxy target', async () => {
       fuel_proxy.account = env.fuel.deployer;
-      const { value } = await fuel_proxy.functions._proxy_target().dryRun();
+      const { value } = await fuel_proxy.functions.proxy_target().dryRun();
       expect(value.bits).to.be.equal(fuel_bridgeImpl.id.toHexString());
     });
   });
@@ -141,7 +141,7 @@ describe('Proxy', async function () {
       const { status } = await transactionResponse.waitForResult();
       expect(status).to.equal('success');
 
-      const { value } = await fuel_proxy.functions._proxy_target().dryRun();
+      const { value } = await fuel_proxy.functions.proxy_target().dryRun();
       expect(value.bits).to.be.equal(contractId);
     });
   });
