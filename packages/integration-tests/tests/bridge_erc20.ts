@@ -2,6 +2,10 @@ import { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION,
+} from '@fuel-bridge/solidity-contracts/protocol/constants';
+import {
   setupEnvironment,
   relayCommonMessage,
   waitForMessage,
@@ -18,7 +22,7 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { toBeHex } from 'ethers';
+import { toBeHex, parseEther } from 'ethers';
 import type { Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
@@ -52,6 +56,7 @@ describe('Bridging ERC20 tokens', async function () {
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
     ).toLowerCase();
+
     eth_testToken = await getOrDeployECR20Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
 
@@ -67,6 +72,15 @@ describe('Bridging ERC20 tokens', async function () {
 
     await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_bridgeContractId);
     fuel_testAssetId = getTokenId(fuel_bridge, eth_testTokenAddress);
+
+    // initializing rate limit params for the token
+    await env.eth.fuelERC20Gateway
+      .connect(env.eth.deployer)
+      .initializeRateLimit(
+        eth_testTokenAddress,
+        RATE_LIMIT_AMOUNT.toString(),
+        RATE_LIMIT_DURATION
+      );
 
     const { value: expectedGatewayContractId } = await fuel_bridge.functions
       .bridged_token_gateway()
@@ -335,6 +349,14 @@ describe('Bridging ERC20 tokens', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
+      const withdrawnAmountBeforeRelay =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
+
+      const rateLimitEndDuratioBeforeRelay =
+        await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
+
       // wait for block finalization
       await waitForBlockFinalization(env, withdrawMessageProof);
 
@@ -352,6 +374,22 @@ describe('Bridging ERC20 tokens', async function () {
           relayMessageParams.blockInHistoryProof,
           relayMessageParams.messageInBlockProof
         );
+
+      // check rate limit params
+      const withdrawnAmountAfterRelay =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
+
+      const rateLimitEndDuratioAfterRelay =
+        await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
+
+      expect(rateLimitEndDuratioAfterRelay === rateLimitEndDuratioBeforeRelay)
+        .to.be.true;
+
+      expect(
+        withdrawnAmountAfterRelay === NUM_TOKENS + withdrawnAmountBeforeRelay
+      ).to.be.true;
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {
