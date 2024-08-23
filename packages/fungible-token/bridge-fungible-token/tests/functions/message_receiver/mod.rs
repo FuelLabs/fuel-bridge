@@ -4,7 +4,7 @@ use crate::utils::{
     },
     setup::{
         create_deposit_message, create_wallet, relay_message_to_contract, setup_environment,
-        BridgeFungibleTokenContractConfigurables
+        BridgeFungibleTokenContractConfigurables,
     },
 };
 use fuels::prelude::Address;

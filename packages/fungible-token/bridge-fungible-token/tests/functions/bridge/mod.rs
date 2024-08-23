@@ -1,7 +1,5 @@
 use crate::utils::{
-    constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM,
-    },
+    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM},
     interface::bridge::withdraw,
     setup::{
         create_deposit_message, create_wallet, decode_hex, encode_hex, parse_output_message_data,

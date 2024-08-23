@@ -152,7 +152,6 @@ pub(crate) async fn setup_environment(
 
     let proxy_bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
 
-
     // Build inputs for provided messages
     let message_inputs = all_messages
         .into_iter()
