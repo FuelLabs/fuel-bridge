@@ -77,16 +77,16 @@ contract FuelERC20GatewayV4 is
     mapping(bytes32 => bool) _isBridge;
 
     /// @notice Amounts already withdrawn this period for each token.
-    mapping(address => uint256) rateLimitDuration;
+    mapping(address => uint256) public rateLimitDuration;
 
     /// @notice Amounts already withdrawn this period for each token.
-    mapping(address => uint256) currentPeriodAmount;
+    mapping(address => uint256) public currentPeriodAmount;
 
     /// @notice The time at which the current period ends at for each token.
-    mapping(address => uint256) currentPeriodEnd;
+    mapping(address => uint256) public currentPeriodEnd;
 
     /// @notice The eth withdrawal limit amount for each token.
-    mapping(address => uint256) limitAmount;
+    mapping(address => uint256) public limitAmount;
 
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
