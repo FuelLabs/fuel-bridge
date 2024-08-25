@@ -1005,6 +1005,66 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             ).connect(user);
           });
 
+          it('reverts when rate limit is reset without initializing it first', async () => {
+            const {
+              erc20Gateway,
+              signers: [deployer, user],
+            } = env;
+
+            const rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await expect(
+              erc20Gateway
+                .connect(deployer)
+                .resetRateLimitAmount(
+                  token.getAddress(),
+                  rateLimitAmount.toString()
+                )
+            ).to.be.revertedWithCustomError(
+              erc20Gateway,
+              'RateLimitNotInitialized'
+            );
+          });
+
+          it('reverts when rate limit is initialized again', async () => {
+            const {
+              erc20Gateway,
+              signers: [deployer, user],
+            } = env;
+
+            const rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await erc20Gateway
+              .connect(deployer)
+              .initializeRateLimit(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
+
+            await erc20Gateway
+              .connect(deployer)
+              .resetRateLimitAmount(
+                token.getAddress(),
+                rateLimitAmount.toString()
+              );
+
+            await expect(
+              erc20Gateway
+                .connect(deployer)
+                .initializeRateLimit(
+                  token.getAddress(),
+                  rateLimitAmount.toString(),
+                  RATE_LIMIT_DURATION
+                )
+            ).to.be.revertedWithCustomError(
+              erc20Gateway,
+              'RateLimitAlreadySet'
+            );
+          });
+
           it('reduces deposits and transfers out without upscaling', async () => {
             const {
               erc20Gateway,
@@ -1100,6 +1160,13 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                   token,
                   withdrawAmount
                 );
+
+              // check rate limit params
+              const withdrawnAmountAfterRelay =
+                await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+              await expect(withdrawnAmountAfterRelay == withdrawAmount * 2n).to
+                .be.true;
             }
           });
         });
