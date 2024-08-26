@@ -2,7 +2,7 @@ import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
-import { Proxy } from '@fuel-bridge/fungible-token';
+import { ProxyAbi } from '@fuel-bridge/fungible-token';
 
 const { expect } = chai;
 
@@ -13,7 +13,7 @@ describe('Proxy', async function () {
 
   let env: TestEnvironment;
   let fuel_bridgeImpl: Contract;
-  let fuel_proxy: Proxy;
+  let fuel_proxy: ProxyAbi;
 
   before(async () => {
     env = await setupEnvironment({});

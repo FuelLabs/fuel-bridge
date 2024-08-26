@@ -44,8 +44,8 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_bridge: BridgeFungibleToken;
-  let fuel_bridgeImpl: BridgeFungibleToken;
+  let fuel_bridge: BridgeFungibleTokenAbi;
+  let fuel_bridgeImpl: BridgeFungibleTokenAbi;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 
