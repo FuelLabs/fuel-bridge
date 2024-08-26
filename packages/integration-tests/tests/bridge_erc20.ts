@@ -1,4 +1,4 @@
-import { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
+import { BridgeFungibleToken } from '@fuel-bridge/fungible-token';
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
@@ -39,8 +39,8 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_bridge: BridgeFungibleTokenAbi;
-  let fuel_bridgeImpl: BridgeFungibleTokenAbi;
+  let fuel_bridge: BridgeFungibleToken;
+  let fuel_bridgeImpl: BridgeFungibleToken;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 

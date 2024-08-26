@@ -12,6 +12,7 @@ node_modules
 # Hardhat files
 cache
 artifacts
+packages/solidity-contracts/.env
 
 # Cargo and Forc artifacts
 out

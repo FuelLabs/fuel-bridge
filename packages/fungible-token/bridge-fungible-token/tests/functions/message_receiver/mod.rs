@@ -4,7 +4,7 @@ use crate::utils::{
     },
     setup::{
         create_deposit_message, create_wallet, relay_message_to_contract, setup_environment,
-        BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        BridgeFungibleTokenContractConfigurables,
     },
 };
 use fuels::prelude::Address;
@@ -25,7 +25,7 @@ mod success {
     use fuels::types::bech32::{Bech32Address, FUEL_BECH32_HRP};
     use fuels::types::{Bytes32, U256};
     use fuels::{
-        programs::contract::SettableContract,
+        programs::calls::ContractDependency,
         types::{tx_status::TxStatus, Bits256},
     };
 
@@ -1103,7 +1103,7 @@ mod success {
 mod revert {
     use fuels::{
         accounts::wallet::WalletUnlocked,
-        programs::contract::SettableContract,
+        programs::calls::ContractDependency,
         types::{tx_status::TxStatus, U256},
     };
 
@@ -1118,7 +1118,6 @@ mod revert {
     async fn verification_fails_with_incorrect_sender() {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let bad_sender: &str = "0x5555550000000000000000000000000000000000000000000000000005555555";
 
         let (proxy_id, _implementation_contract_id) =
@@ -1129,7 +1128,7 @@ mod revert {
             BRIDGED_TOKEN_ID,
             FROM,
             *Address::from_str(TO).unwrap(),
-            config.amount.min,
+            U256::from(1),
             BRIDGED_TOKEN_DECIMALS,
             proxy_id,
             false,

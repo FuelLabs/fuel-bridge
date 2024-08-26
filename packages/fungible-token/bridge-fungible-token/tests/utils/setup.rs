@@ -51,108 +51,10 @@ abigen!(
     )
 );
 
-/// Used for setting up tests with various message values
-#[derive(Debug)]
-pub struct BridgingConfig {
-    pub adjustment: Adjustment,
-    pub amount: TxAmount,
-    pub overflow: Overflow,
-}
-
-#[derive(Debug)]
-pub struct Adjustment {
-    pub factor: U256,
-    pub is_div: bool,
-}
-
-#[derive(Debug)]
-pub struct TxAmount {
-    pub min: U256,
-    pub max: U256,
-    pub test: U256,
-    pub not_enough: U256,
-}
-
-#[derive(Debug)]
-pub struct Overflow {
-    pub one: U256,
-    pub two: U256,
-    pub three: U256,
-}
-
 #[derive(Debug)]
 pub struct UTXOInputs {
     pub contract: Vec<Input>,
-    pub coin: Vec<Input>,
     pub message: Vec<Input>,
-}
-
-impl BridgingConfig {
-    pub fn new(bridge_decimals: u64, proxy_decimals: u64) -> Self {
-        let bridged_token_decimals = U256::from(bridge_decimals);
-        let proxy_token_decimals = U256::from(proxy_decimals);
-        let one = U256::from(1);
-
-        let adjustment_factor = match (bridged_token_decimals, proxy_token_decimals) {
-            (bridged_token_decimals, proxy_token_decimals)
-                if bridged_token_decimals > proxy_token_decimals =>
-            {
-                U256::from(10).pow(bridged_token_decimals - proxy_token_decimals)
-            }
-            (bridged_token_decimals, proxy_token_decimals)
-                if bridged_token_decimals < proxy_token_decimals =>
-            {
-                U256::from(10).pow(proxy_token_decimals - bridged_token_decimals)
-            }
-            _ => one,
-        };
-
-        let adjustment_is_div = bridged_token_decimals < proxy_token_decimals;
-
-        let min_amount = if bridged_token_decimals > proxy_token_decimals {
-            U256::from(1) * adjustment_factor
-        } else {
-            one
-        };
-
-        let max_amount = match (bridged_token_decimals, proxy_token_decimals) {
-            (bridged_token_decimals, proxy_token_decimals)
-                if bridged_token_decimals > proxy_token_decimals =>
-            {
-                U256::from(u64::MAX) * adjustment_factor
-            }
-            (bridged_token_decimals, proxy_token_decimals)
-                if bridged_token_decimals < proxy_token_decimals =>
-            {
-                U256::from(u64::MAX) / adjustment_factor
-            }
-            (_, _) => one,
-        };
-
-        let test_amount = (min_amount + max_amount) / U256::from(2);
-        let not_enough = min_amount - one;
-        let overflow_1 = max_amount + one;
-        let overflow_2 = max_amount + (one << 160);
-        let overflow_3 = max_amount + (one << 224);
-
-        Self {
-            adjustment: Adjustment {
-                factor: adjustment_factor,
-                is_div: adjustment_is_div,
-            },
-            amount: TxAmount {
-                min: min_amount,
-                max: max_amount,
-                test: test_amount,
-                not_enough,
-            },
-            overflow: Overflow {
-                one: overflow_1,
-                two: overflow_2,
-                three: overflow_3,
-            },
-        }
-    }
 }
 
 pub(crate) fn create_wallet() -> WalletUnlocked {
@@ -250,12 +152,6 @@ pub(crate) async fn setup_environment(
 
     let proxy_bridge = BridgeFungibleTokenContract::new(proxy_contract_id.clone(), wallet.clone());
 
-    // Build inputs for provided coins
-    let coin_inputs = all_coins
-        .into_iter()
-        .map(|coin| Input::resource_signed(fuels::types::coin_type::CoinType::Coin(coin)))
-        .collect();
-
     // Build inputs for provided messages
     let message_inputs = all_messages
         .into_iter()
@@ -300,7 +196,6 @@ pub(crate) async fn setup_environment(
         proxy_bridge,
         UTXOInputs {
             contract: contract_inputs,
-            coin: coin_inputs,
             message: message_inputs,
         },
     )
