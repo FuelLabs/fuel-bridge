@@ -6,7 +6,7 @@ mod utils {
 // Test that input messages can be relayed to a contract
 // and that the contract can successfully parse the message data
 mod success {
-    use std::{str::FromStr, u64};
+    use std::str::FromStr;
 
     use crate::utils::{builder, environment as env};
     use fuel_tx::Bytes32;
