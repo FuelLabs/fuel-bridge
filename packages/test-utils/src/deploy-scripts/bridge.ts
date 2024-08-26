@@ -4,13 +4,18 @@
  */
 
 import {
-  fungibleTokenBinary,
-  bridgeProxyBinary,
-  BridgeFungibleTokenAbi__factory,
-  ProxyAbi__factory,
+  BridgeFungibleToken,
+  BridgeFungibleTokenFactory,
+  ProxyFactory,
 } from '@fuel-bridge/fungible-token';
-import type { DeployContractResult, WalletUnlocked } from 'fuels';
-import { B256Coder, Provider, Wallet, ZeroBytes32 } from 'fuels';
+
+import {
+  DeployContractResult,
+  Provider,
+  Wallet,
+  WalletUnlocked,
+  ZeroBytes32,
+} from 'fuels';
 
 const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
@@ -24,14 +29,14 @@ function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
     else {
       await tx.waitForResult().catch(() => {});
       return {
-        contract: BridgeFungibleTokenAbi__factory.connect(contract.id, wallet),
+        contract: new BridgeFungibleToken(contract.id, wallet),
       };
     }
   };
 }
 
 const main = async () => {
-  const provider = await Provider.create(L2_RPC, { cacheUtxo: -1 });
+  const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
   const wallet = Wallet.fromPrivateKey(L2_SIGNER, provider);
 
   console.log('\t> L2 Bridge deployment script initiated');
@@ -44,11 +49,10 @@ const main = async () => {
       L1_TOKEN_GATEWAY.replace('0x', '').toLowerCase(),
   };
 
-  const implementation = await BridgeFungibleTokenAbi__factory.deployContract(
-    fungibleTokenBinary,
-    wallet,
-    { configurableConstants: implConfigurables, salt: ZeroBytes32 }
-  )
+  const implementation = await BridgeFungibleTokenFactory.deploy(wallet, {
+    configurableConstants: implConfigurables,
+    salt: ZeroBytes32,
+  })
     .then(fetchIfDeployed(provider, wallet))
     .then(({ contract }) => contract);
 
@@ -63,14 +67,10 @@ const main = async () => {
     },
   };
 
-  const proxy = await ProxyAbi__factory.deployContract(
-    bridgeProxyBinary,
-    wallet,
-    {
-      configurableConstants: proxyConfigurables,
-      salt: ZeroBytes32,
-    }
-  )
+  const proxy = await ProxyFactory.deploy(wallet, {
+    configurableConstants: proxyConfigurables,
+    salt: ZeroBytes32,
+  })
     .then(fetchIfDeployed(provider, wallet))
     .then(({ contract }) => contract);
 

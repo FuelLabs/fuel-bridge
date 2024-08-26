@@ -1,12 +1,10 @@
 use crate::utils::{
-    constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
-    },
+    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM},
     interface::bridge::withdraw,
     setup::{
         create_deposit_message, create_wallet, decode_hex, encode_hex, parse_output_message_data,
         relay_message_to_contract, setup_environment, wallet_balance,
-        BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        BridgeFungibleTokenContractConfigurables,
     },
 };
 use fuels::{prelude::AssetId, types::Bits256};
@@ -20,7 +18,7 @@ mod success {
         interface::{bridge::claim_refund, src20::total_supply},
         setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
+    use fuels::{prelude::Address, programs::calls::ContractDependency, tx::Receipt, types::U256};
     use primitive_types::H160;
     use std::str::FromStr;
 
@@ -479,6 +477,8 @@ mod success {
 mod revert {
     use std::str::FromStr;
 
+    use fuels::types::U256;
+
     use super::*;
 
     #[tokio::test]
@@ -488,7 +488,6 @@ mod revert {
         // - Verify that it reverts with an AssetNotFound error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_asset_id: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
@@ -497,7 +496,7 @@ mod revert {
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.overflow.two,
+            U256::from(1),
             BRIDGED_TOKEN_DECIMALS,
             Default::default(),
             false,
@@ -532,7 +531,6 @@ mod revert {
         // - Verify that trying to withdraw a completely different asset results in a NoRefundAvailable error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
         let wrong_token: &str =
@@ -543,7 +541,7 @@ mod revert {
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.overflow.two,
+            U256::from(1),
             BRIDGED_TOKEN_DECIMALS,
             Default::default(),
             false,

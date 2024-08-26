@@ -37,10 +37,10 @@ impl MetadataMessage {
     // to the first bytes
     pub fn parse(msg_idx: u64) -> Self {
         // EVM message payload, stripped of anything that was added by FuelVM
-        let data: Bytes = input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS);
+        let data: Bytes = input_message_data(msg_idx, OFFSET_TOKEN_ADDRESS).unwrap();
 
         // Get the EVM payload offset at which the symbol is encoded as [len, ...utf_bytes]
-        let symbol_offset: u64 = <u64 as TryFrom<u256>>::try_from(b256::from(input_message_data(msg_idx, OFFSET_SYMBOL_PTR)).as_u256()).unwrap();
+        let symbol_offset: u64 = <u64 as TryFrom<u256>>::try_from(b256::from(input_message_data(msg_idx, OFFSET_SYMBOL_PTR).unwrap()).as_u256()).unwrap();
 
         // Isolate the symbol string payload from the rest of the data:
         let (data, symbol_payload) = data.split_at(symbol_offset);
@@ -49,7 +49,7 @@ impl MetadataMessage {
         let symbol: String = get_string_from_evm_bytes(symbol_payload);
 
         // Repeat the same operation with the name:
-        let name_offset: u64 = <u64 as TryFrom<u256>>::try_from(b256::from(input_message_data(msg_idx, OFFSET_NAME_PTR)).as_u256()).unwrap();
+        let name_offset: u64 = <u64 as TryFrom<u256>>::try_from(b256::from(input_message_data(msg_idx, OFFSET_NAME_PTR).unwrap()).as_u256()).unwrap();
 
         let (data, name_payload) = data.split_at(name_offset);
 

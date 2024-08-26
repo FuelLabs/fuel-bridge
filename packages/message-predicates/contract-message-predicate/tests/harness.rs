@@ -6,12 +6,13 @@ mod utils {
 // Test that input messages can be relayed to a contract
 // and that the contract can successfully parse the message data
 mod success {
-    use std::{str::FromStr, u64};
+    use std::str::FromStr;
 
     use crate::utils::{builder, environment as env};
     use fuel_tx::Bytes32;
     use fuels::{
         prelude::{Address, AssetId, ContractId},
+        programs::calls::Execution,
         test_helpers::DEFAULT_COIN_AMOUNT,
         types::Bits256,
     };
@@ -42,7 +43,12 @@ mod success {
         let test_contract_id: ContractId = test_contract.contract_id().into();
         let methods = test_contract.methods();
 
-        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
+        let prev_counter = methods
+            .test_counter()
+            .simulate(Execution::Realistic)
+            .await
+            .unwrap()
+            .value;
 
         let _tx_id = env::relay_message_to_contract(
             &wallet,
@@ -65,7 +71,12 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message value was received by the test contract
-        let counter = methods.test_counter().simulate().await.unwrap().value;
+        let counter = methods
+            .test_counter()
+            .simulate(Execution::Realistic)
+            .await
+            .unwrap()
+            .value;
         assert_eq!(counter, prev_counter + 1);
     }
 
@@ -86,7 +97,12 @@ mod success {
         let test_contract_id: ContractId = test_contract.contract_id().into();
         let methods = test_contract.methods();
 
-        let prev_counter = methods.test_counter().simulate().await.unwrap().value;
+        let prev_counter = methods
+            .test_counter()
+            .simulate(Execution::Realistic)
+            .await
+            .unwrap()
+            .value;
 
         let tx = builder::build_contract_message_tx(
             message_inputs[0].clone(),
@@ -114,7 +130,12 @@ mod success {
         assert_eq!(test_contract_data4, data_address);
 
         // Verify the message values were received by the test contract
-        let counter = methods.test_counter().simulate().await.unwrap().value;
+        let counter = methods
+            .test_counter()
+            .simulate(Execution::Realistic)
+            .await
+            .unwrap()
+            .value;
         assert_eq!(counter, prev_counter + 1);
     }
 }

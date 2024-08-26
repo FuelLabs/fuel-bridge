@@ -1,12 +1,8 @@
-import type {
-  BridgeFungibleTokenAbi,
-  ProxyAbi,
-} from '@fuel-bridge/fungible-token';
 import {
-  fungibleTokenBinary,
-  bridgeProxyBinary,
-  BridgeFungibleTokenAbi__factory,
-  ProxyAbi__factory,
+  BridgeFungibleToken,
+  BridgeFungibleTokenFactory,
+  Proxy,
+  ProxyFactory,
 } from '@fuel-bridge/fungible-token';
 import { resolveAddress, type AddressLike } from 'ethers';
 
@@ -25,27 +21,24 @@ export async function getOrDeployL2Bridge(
   const tokenGateway = ethTokenGateway.replace('0x', '');
   const fuelAcct = env.fuel.signers[1];
 
-  let l2Bridge: BridgeFungibleTokenAbi;
-  let proxy: ProxyAbi;
-  let implementation: BridgeFungibleTokenAbi;
+  let l2Bridge: BridgeFungibleToken;
+  let proxy: Proxy;
+  let implementation: BridgeFungibleToken;
 
   if (FUEL_FUNGIBLE_TOKEN_ADDRESS) {
     try {
-      proxy = ProxyAbi__factory.connect(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
+      proxy = new Proxy(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
 
       const { value: implementationContractId } = await proxy.functions
         ._proxy_target()
         .dryRun();
 
-      implementation = BridgeFungibleTokenAbi__factory.connect(
+      implementation = new BridgeFungibleToken(
         implementationContractId.bits,
         fuelAcct
       );
 
-      l2Bridge = BridgeFungibleTokenAbi__factory.connect(
-        FUEL_FUNGIBLE_TOKEN_ADDRESS,
-        fuelAcct
-      );
+      l2Bridge = new BridgeFungibleToken(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
 
       return { contract: l2Bridge, proxy, implementation };
     } catch (e) {
@@ -61,11 +54,9 @@ export async function getOrDeployL2Bridge(
     BRIDGED_TOKEN_GATEWAY: eth_address_to_b256(tokenGateway),
   };
 
-  implementation = await BridgeFungibleTokenAbi__factory.deployContract(
-    fungibleTokenBinary,
-    fuelAcct,
-    { configurableConstants: implConfigurables }
-  )
+  implementation = await BridgeFungibleTokenFactory.deploy(fuelAcct, {
+    configurableConstants: implConfigurables,
+  })
     .then((tx) => tx.waitForResult())
     .then(({ contract }) => contract);
 
@@ -79,17 +70,14 @@ export async function getOrDeployL2Bridge(
     },
   };
 
-  proxy = await ProxyAbi__factory.deployContract(bridgeProxyBinary, fuelAcct, {
+  proxy = await ProxyFactory.deploy(fuelAcct, {
     configurableConstants: proxyConfigurables,
   })
     .then((tx) => tx.waitForResult())
     .then(({ contract }) => contract);
 
   // create contract instance
-  l2Bridge = BridgeFungibleTokenAbi__factory.connect(
-    proxy.id.toB256(),
-    fuelAcct
-  );
+  l2Bridge = new BridgeFungibleToken(proxy.id.toB256(), fuelAcct);
 
   const [fuelSigner] = env.fuel.signers;
   l2Bridge.account = fuelSigner;
