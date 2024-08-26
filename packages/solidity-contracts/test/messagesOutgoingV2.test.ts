@@ -24,7 +24,6 @@ import {
   COMMIT_COOLDOWN,
   TIME_TO_FINALIZE,
 } from './utils';
-
 import { addressToB256 } from './utils/addressConversion';
 
 const { expect } = chai;

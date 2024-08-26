@@ -1,9 +1,11 @@
+import type {
+  BridgeFungibleTokenAbi,
+  ProxyAbi,
+} from '@fuel-bridge/fungible-token';
 import {
   fungibleTokenBinary,
   bridgeProxyBinary,
-  BridgeFungibleTokenAbi,
   BridgeFungibleTokenAbi__factory,
-  ProxyAbi,
   ProxyAbi__factory,
 } from '@fuel-bridge/fungible-token';
 import { resolveAddress, type AddressLike } from 'ethers';

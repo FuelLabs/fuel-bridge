@@ -1,10 +1,10 @@
-import { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
-import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
-import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import type { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
 import {
   RATE_LIMIT_AMOUNT,
   RATE_LIMIT_DURATION,
 } from '@fuel-bridge/solidity-contracts/protocol/constants';
+import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
   relayCommonMessage,
@@ -23,9 +23,8 @@ import {
   hardhatSkipTime,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import type { JsonRpcProvider } from 'ethers';
 import { toBeHex, parseEther } from 'ethers';
-import type { Signer } from 'ethers';
+import type { JsonRpcProvider, Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,

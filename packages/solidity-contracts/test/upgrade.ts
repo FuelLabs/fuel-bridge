@@ -5,7 +5,6 @@ import type {
   DeployedContractAddresses,
   HarnessObject,
 } from '../protocol/harness';
-
 import { setupFuel, upgradeFuel } from '../protocol/harness';
 import type { UpgradeableTester } from '../typechain';
 

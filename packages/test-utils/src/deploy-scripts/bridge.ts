@@ -9,15 +9,8 @@ import {
   BridgeFungibleTokenAbi__factory,
   ProxyAbi__factory,
 } from '@fuel-bridge/fungible-token';
-
-import {
-  B256Coder,
-  DeployContractResult,
-  Provider,
-  Wallet,
-  WalletUnlocked,
-  ZeroBytes32,
-} from 'fuels';
+import type { DeployContractResult, WalletUnlocked } from 'fuels';
+import { B256Coder, Provider, Wallet, ZeroBytes32 } from 'fuels';
 
 const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
