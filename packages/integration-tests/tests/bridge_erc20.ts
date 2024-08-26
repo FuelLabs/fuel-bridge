@@ -53,6 +53,89 @@ describe('Bridging ERC20 tokens', async function () {
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
+  async function generateWithdrawalMessageProof(
+    fuel_bridge: BridgeFungibleTokenAbi,
+    fuelTokenSender: FuelWallet,
+    ethereumTokenReceiverAddress: string,
+    NUM_TOKENS: bigint,
+    DECIMAL_DIFF: bigint
+  ): Promise<MessageProof> {
+    // withdraw tokens back to the base chain
+    fuel_bridge.account = fuelTokenSender;
+    const paddedAddress =
+      '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
+    const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
+      fuel_testAssetId
+    );
+    const transactionRequest = await fuel_bridge.functions
+      .withdraw(paddedAddress)
+      .addContracts([fuel_bridge, fuel_bridgeImpl])
+      .txParams({
+        tip: 0,
+        gasLimit: 1_000_000,
+        maxFee: 1,
+      })
+      .callParams({
+        forward: {
+          amount: new BN(NUM_TOKENS.toString()).div(
+            new BN(DECIMAL_DIFF.toString())
+          ),
+          assetId: fuel_testAssetId,
+        },
+      })
+      .fundWithRequiredCoins();
+
+    const tx = await fuelTokenSender.sendTransaction(transactionRequest);
+    const fWithdrawTxResult = await tx.waitForResult();
+    expect(fWithdrawTxResult.status).to.equal('success');
+
+    // check that the sender balance has decreased by the expected amount
+    const newSenderBalance = await fuelTokenSender.getBalance(fuel_testAssetId);
+
+    expect(
+      newSenderBalance.eq(
+        fuelTokenSenderBalance.sub(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
+      )
+    ).to.be.true;
+
+    // Wait for the commited block
+    const withdrawBlock = await getBlock(
+      env.fuel.provider.url,
+      fWithdrawTxResult.blockId
+    );
+    const commitHashAtL1 = await waitForBlockCommit(
+      env,
+      withdrawBlock.header.height
+    );
+
+    const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
+    return await fuelTokenSender.provider.getMessageProof(
+      tx.id,
+      messageOutReceipt.nonce,
+      commitHashAtL1
+    );
+  }
+
+  async function relayMessage(
+    env: TestEnvironment,
+    withdrawMessageProof: MessageProof
+  ) {
+    // wait for block finalization
+    await waitForBlockFinalization(env, withdrawMessageProof);
+
+    // construct relay message proof data
+    const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
+
+    // relay message
+    await env.eth.fuelMessagePortal.relayMessage(
+      relayMessageParams.message,
+      relayMessageParams.rootBlockHeader,
+      relayMessageParams.blockHeader,
+      relayMessageParams.blockInHistoryProof,
+      relayMessageParams.messageInBlockProof
+    );
+  }
+
   before(async () => {
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
@@ -294,62 +377,12 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Bridge ERC20 via Fuel token contract', async () => {
       // withdraw tokens back to the base chain
-      fuel_bridge.account = fuelTokenSender;
-      const paddedAddress =
-        '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
-      const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
-        fuel_testAssetId
-      );
-      const transactionRequest = await fuel_bridge.functions
-        .withdraw(paddedAddress)
-        .addContracts([fuel_bridge, fuel_bridgeImpl])
-        .txParams({
-          tip: 0,
-          gasLimit: 1_000_000,
-          maxFee: 1,
-        })
-        .callParams({
-          forward: {
-            amount: new BN(NUM_TOKENS.toString()).div(
-              new BN(DECIMAL_DIFF.toString())
-            ),
-            assetId: fuel_testAssetId,
-          },
-        })
-        .fundWithRequiredCoins();
-
-      const tx = await fuelTokenSender.sendTransaction(transactionRequest);
-      const fWithdrawTxResult = await tx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // check that the sender balance has decreased by the expected amount
-      const newSenderBalance = await fuelTokenSender.getBalance(
-        fuel_testAssetId
-      );
-
-      expect(
-        newSenderBalance.eq(
-          fuelTokenSenderBalance.sub(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
-        )
-      ).to.be.true;
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
-      );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
-      );
-
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelTokenSender.provider.getMessageProof(
-        tx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuel_bridge,
+        fuelTokenSender,
+        ethereumTokenReceiverAddress,
+        NUM_TOKENS,
+        DECIMAL_DIFF
       );
     });
 
@@ -362,22 +395,8 @@ describe('Bridging ERC20 tokens', async function () {
       const rateLimitEndDuratioBeforeRelay =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
 
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
-
       // relay message
-      await env.eth.fuelMessagePortal
-        .connect(env.eth.signers[0])
-        .relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        );
+      await relayMessage(env, withdrawMessageProof);
 
       // check rate limit params
       const withdrawnAmountAfterRelay =
@@ -434,67 +453,16 @@ describe('Bridging ERC20 tokens', async function () {
         .resetRateLimitAmount(eth_testTokenAddress, parseEther(newRateLimit));
 
       // withdraw tokens back to the base chain
-      fuel_bridge.account = fuelTokenSender;
-      const paddedAddress =
-        '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
-
-      const transactionRequest = await fuel_bridge.functions
-        .withdraw(paddedAddress)
-        .addContracts([fuel_bridge, fuel_bridgeImpl])
-        .txParams({
-          tip: 0,
-          gasLimit: 1_000_000,
-          maxFee: 1,
-        })
-        .callParams({
-          forward: {
-            amount: new BN(NUM_TOKENS.toString()).div(
-              new BN(DECIMAL_DIFF.toString())
-            ),
-            assetId: fuel_testAssetId,
-          },
-        })
-        .fundWithRequiredCoins();
-
-      const tx = await fuelTokenSender.sendTransaction(transactionRequest);
-      const fWithdrawTxResult = await tx.waitForResult();
-      expect(fWithdrawTxResult.status).to.equal('success');
-
-      // Wait for the commited block
-      const withdrawBlock = await getBlock(
-        env.fuel.provider.url,
-        fWithdrawTxResult.blockId
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuel_bridge,
+        fuelTokenSender,
+        ethereumTokenReceiverAddress,
+        NUM_TOKENS,
+        DECIMAL_DIFF
       );
-      const commitHashAtL1 = await waitForBlockCommit(
-        env,
-        withdrawBlock.header.height
-      );
-
-      const messageOutReceipt = getMessageOutReceipt(
-        fWithdrawTxResult.receipts
-      );
-      withdrawMessageProof = await fuelTokenSender.provider.getMessageProof(
-        tx.id,
-        messageOutReceipt.nonce,
-        commitHashAtL1
-      );
-
-      // wait for block finalization
-      await waitForBlockFinalization(env, withdrawMessageProof);
-
-      // construct relay message proof data
-      const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
       // relay message
-      await env.eth.fuelMessagePortal
-        .connect(env.eth.signers[0])
-        .relayMessage(
-          relayMessageParams.message,
-          relayMessageParams.rootBlockHeader,
-          relayMessageParams.blockHeader,
-          relayMessageParams.blockInHistoryProof,
-          relayMessageParams.messageInBlockProof
-        );
+      await relayMessage(env, withdrawMessageProof);
 
       const currentPeriodEndAfterRelay =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
@@ -511,7 +479,8 @@ describe('Bridging ERC20 tokens', async function () {
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
-      const rateLimitDuration = await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
+      const rateLimitDuration =
+        await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
 
       const deployer = await env.eth.deployer;
       const newRateLimit = `40`;
@@ -523,7 +492,9 @@ describe('Bridging ERC20 tokens', async function () {
       );
 
       const currentWithdrawnAmountBeforeSettingLimit =
-        await env.eth.fuelERC20Gateway.currentPeriodAmount(eth_testTokenAddress);
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
       const currentPeriodEndBeforeSettingLimit =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
 
@@ -534,7 +505,9 @@ describe('Bridging ERC20 tokens', async function () {
       const currentPeriodEndAfterSettingLimit =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
       const currentWithdrawnAmountAfterSettingLimit =
-        await env.eth.fuelERC20Gateway.currentPeriodAmount(eth_testTokenAddress);
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
 
       expect(
         currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
@@ -553,8 +526,9 @@ describe('Bridging ERC20 tokens', async function () {
       const newReceiverBalance = await eth_testToken.balanceOf(
         ethereumTokenReceiverAddress
       );
-      expect(newReceiverBalance === ethereumTokenReceiverBalance + NUM_TOKENS * 2n)
-        .to.be.true;
+      expect(
+        newReceiverBalance === ethereumTokenReceiverBalance + NUM_TOKENS * 2n
+      ).to.be.true;
     });
   });
 });
