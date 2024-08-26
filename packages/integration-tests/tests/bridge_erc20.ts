@@ -1,4 +1,4 @@
-import type { BridgeFungibleTokenAbi } from '@fuel-bridge/fungible-token';
+import type { BridgeFungibleToken } from '@fuel-bridge/fungible-token';
 import {
   RATE_LIMIT_AMOUNT,
   RATE_LIMIT_DURATION,
@@ -44,8 +44,8 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_bridge: BridgeFungibleTokenAbi;
-  let fuel_bridgeImpl: BridgeFungibleTokenAbi;
+  let fuel_bridge: BridgeFungibleToken;
+  let fuel_bridgeImpl: BridgeFungibleToken;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 
@@ -53,7 +53,7 @@ describe('Bridging ERC20 tokens', async function () {
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   async function generateWithdrawalMessageProof(
-    fuel_bridge: BridgeFungibleTokenAbi,
+    fuel_bridge: BridgeFungibleToken,
     fuelTokenSender: FuelWallet,
     ethereumTokenReceiverAddress: string,
     NUM_TOKENS: bigint,
