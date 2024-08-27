@@ -230,7 +230,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         uint256 currentPeriodAmountTemp;
 
         if (currentPeriodEnd < block.timestamp) {
-            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            unchecked {
+               currentPeriodEnd = block.timestamp + rateLimitDuration;
+            }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
             unchecked {

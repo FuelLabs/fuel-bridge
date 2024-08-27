@@ -421,7 +421,9 @@ contract FuelERC20GatewayV4 is
         uint256 currentPeriodAmountTemp;
 
         if (currentPeriodEnd[_token] < block.timestamp) {
-            currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+            unchecked {
+               currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+            }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
             unchecked {
