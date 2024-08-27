@@ -74,10 +74,10 @@ contract FuelERC20GatewayV4 is
     bool public whitelistRequired;
     bytes32 public assetIssuerId;
 
-    mapping(address => uint256) private _deposits;
-    mapping(address => uint256) private _depositLimits;
-    mapping(address => uint256) private _decimalsCache;
-    mapping(bytes32 => bool) private _isBridge;
+    mapping(address => uint256) _deposits;
+    mapping(address => uint256) _depositLimits;
+    mapping(address => uint256) _decimalsCache;
+    mapping(bytes32 => bool) _isBridge;
 
     /// @notice Amounts already withdrawn this period for each token.
     mapping(address => uint256) public rateLimitDuration;
