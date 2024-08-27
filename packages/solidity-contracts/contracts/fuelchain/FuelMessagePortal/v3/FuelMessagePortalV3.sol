@@ -38,6 +38,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
         rateLimitDuration = _rateLimitDuration;
+        _disableInitializers();
     }
 
     function initialize(FuelChainState) public virtual override {
