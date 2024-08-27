@@ -17,7 +17,6 @@ import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 import type {
@@ -37,6 +36,8 @@ import {
   generateProof,
   getLeafIndexKey,
 } from './utils/merkle';
+
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 
 const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
