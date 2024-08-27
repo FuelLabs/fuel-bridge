@@ -34,6 +34,7 @@ contract FuelERC20GatewayV4 is
     error GlobalDepositLimit();
     error CannotDepositZero();
     error CannotWithdrawZero();
+    error InvalidAssetIssuerID();
     error InvalidSender();
     error InvalidAmount();
 
@@ -100,6 +101,8 @@ contract FuelERC20GatewayV4 is
 
     /// @notice sets the entity on L2 that will mint the tokens
     function setAssetIssuerId(bytes32 id) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (id == bytes32(0)) revert InvalidAssetIssuerID();
+
         assetIssuerId = id;
     }
 
