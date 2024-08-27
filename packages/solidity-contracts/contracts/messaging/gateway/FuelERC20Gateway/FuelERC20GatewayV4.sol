@@ -307,8 +307,8 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
-        // rate limit check
-        _addWithdrawnAmount(tokenAddress, amount);
+        // rate limit check only if rate limit is initialized
+        if (currentPeriodEnd[tokenAddress] != 0) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
