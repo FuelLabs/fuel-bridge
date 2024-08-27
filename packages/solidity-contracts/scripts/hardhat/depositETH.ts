@@ -3,7 +3,7 @@ import type { Signer } from 'ethers';
 import { isB256, isBech32, toB256 } from 'fuels';
 import { task } from 'hardhat/config';
 
-task('depositETH', 'grants a given role to a given adress')
+task('depositETH', 'deposits ETH to Fuel')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
   .addParam('amount', 'amount of ETH to send (e.g. 1.0123456...')
   .addParam('recipient', 'fuel address that will receive the deposit')

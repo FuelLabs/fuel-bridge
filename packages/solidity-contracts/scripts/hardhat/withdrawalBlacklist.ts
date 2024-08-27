@@ -2,7 +2,7 @@ import { Wallet, getBytes } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
 
-task('withdrawalBlacklist', 'pauses all l2 > l1 messages')
+task('withdrawalBlacklist', 'blacklists a l2 -> l1 message')
   .addParam('id', 'messageId to blacklist')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
   .setAction(async (taskArgs, hre) => {
