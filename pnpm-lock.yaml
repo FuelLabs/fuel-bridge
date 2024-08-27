@@ -7,6 +7,12 @@ settings:
 overrides:
   braces: '>=3.0.3'
   ws@<7.5.10: 7.5.10
+  axios@>=0.8.1 <0.28.0: '>=0.28.0'
+  axios@>=1.3.2 <=1.7.3: '>=1.7.4'
+  elliptic@>=4.0.0 <=6.5.6: '>=6.5.7'
+  elliptic@>=2.0.0 <=6.5.6: '>=6.5.7'
+  elliptic@>=5.2.1 <=6.5.6: '>=6.5.7'
+  micromatch@<4.0.8: '>=4.0.8'
 
 importers:
 
@@ -200,8 +206,8 @@ importers:
         specifier: ^2.20.1
         version: 2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)
       hardhat-deploy:
-        specifier: ^0.11.44
-        version: 0.11.45(bufferutil@4.0.5)(utf-8-validate@5.0.7)
+        specifier: ^0.12.4
+        version: 0.12.4(bufferutil@4.0.5)(utf-8-validate@5.0.7)
       inquirer:
         specifier: ^10.1.8
         version: 10.1.8
@@ -2014,11 +2020,8 @@ packages:
     resolution: {integrity: sha512-M0JtH+hlOL5pLQwHOLNYZaXuhqmvS8oExsqB1SBYgA4Dk7u/xx+YdGHXaK5pyUfed5mYXdlYiphWq3G8cRi5JQ==}
     engines: {node: '>=4'}
 
-  axios@0.21.4:
-    resolution: {integrity: sha512-ut5vewkiu8jjGBdqpM44XxjuCjq9LAKeHVmoVfHVzy8eHgxxq8SbAVQNovDA8mVi05kP0Ea/n/UzcSHcTJQfNg==}
-
-  axios@1.6.8:
-    resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
+  axios@1.7.5:
+    resolution: {integrity: sha512-fZu86yCo+svH3uqJ/yTdQ0QHpQu5oL+/QE+QPSv6BZSkDAoky9vytxp7u5qk83OJFS3kEBcesWni9WTZAv3tSw==}
 
   axobject-query@3.2.1:
     resolution: {integrity: sha512-jsyHu61e6N4Vbz/v18DHwWYKK0bSWLqn47eeDSKPB7m8tqMHF9YJ+mhIk2lVteyZrY8tnSj/jHOv4YiTCuCJgg==}
@@ -2505,11 +2508,8 @@ packages:
   ee-first@1.1.1:
     resolution: {integrity: sha512-WMwm9LhRUo+WUaRN+vRuETqG89IgZphVSNkdFgeb6sS/E4OrDIN7t48CAewSHXc6C8lefD8KKfr5vY61brQlow==}
 
-  elliptic@6.5.4:
-    resolution: {integrity: sha512-iLhC6ULemrljPZb+QutR5TQGB+pdW6KGD5RSegS+8sorOZT+rdQFbsQFJgvN3eRqNALqJer4oQ16YvJHlU8hzQ==}
-
-  elliptic@6.5.5:
-    resolution: {integrity: sha512-7EjbcmUm17NQFu4Pmgmq2olYMj8nwMnpcddByChSUjArp8F5DQWcIcpriwO4ZToLNAJig0yiyjswfyGNje/ixw==}
+  elliptic@6.5.7:
+    resolution: {integrity: sha512-ESVCtTwiA+XhY3wyh24QqRGBoP3rEdDUl3EDUUo9tft074fi19IrdpH7hLCMMP3CIj7jb3W96rn8lt/BqIlt5Q==}
 
   emoji-regex@7.0.3:
     resolution: {integrity: sha512-CwBLREIQ7LvYFB0WyRvwhq5N5qPhc6PMjD6bYggFlI5YyDgl+0vxq5VHbMOFqLg7hfWzmu8T5Z1QofhmTIhItA==}
@@ -3155,8 +3155,8 @@ packages:
     resolution: {integrity: sha512-VIZB+ibDhx7ObhAe7OVtoEbuP4h/MuOTHJ+J8h/eBXotJYl0fBgR72xDFCKgIh22OJZIOVNxBMWuhAr10r8HdA==}
     engines: {node: '>=6'}
 
-  hardhat-deploy@0.11.45:
-    resolution: {integrity: sha512-aC8UNaq3JcORnEUIwV945iJuvBwi65tjHVDU3v6mOcqik7WAzHVCJ7cwmkkipsHrWysrB5YvGF1q9S1vIph83w==}
+  hardhat-deploy@0.12.4:
+    resolution: {integrity: sha512-bYO8DIyeGxZWlhnMoCBon9HNZb6ji0jQn7ngP1t5UmGhC8rQYhji7B73qETMOFhzt5ECZPr+U52duj3nubsqdQ==}
 
   hardhat@2.22.3:
     resolution: {integrity: sha512-k8JV2ECWNchD6ahkg2BR5wKVxY0OiKot7fuxiIpRK0frRqyOljcR2vKwgWSLw6YIeDcNNA4xybj7Og7NSxr2hA==}
@@ -3728,8 +3728,8 @@ packages:
   micro-ftch@0.3.1:
     resolution: {integrity: sha512-/0LLxhzP0tfiR5hcQebtudP56gUurs2CLkGarnCiB/OqEyUFQ6U3paQi/tgLv0hBJYt2rnr9MNpxz4fiiugstg==}
 
-  micromatch@4.0.5:
-    resolution: {integrity: sha512-DMy+ERcEW2q8Z2Po+WNXuw3c5YaUSFjAO5GsJqfEl7UjvtIuFKO6ZrKvcItdy98dwFI2N1tg3zNIdKaQT+aNdA==}
+  micromatch@4.0.8:
+    resolution: {integrity: sha512-PXwfBhYu0hBCPw8Dn0E+WDYb7af3dSLVWKi3HGv84IdF4TyFoC0ysxFd0Goxw7nSv4T/PzEJQxsYsEiFCKo2BA==}
     engines: {node: '>=8.6'}
 
   mime-db@1.52.0:
@@ -5218,11 +5218,11 @@ packages:
   yup@1.4.0:
     resolution: {integrity: sha512-wPbgkJRCqIf+OHyiTBQoJiP5PFuAXaWiJK6AmYkzQAh5/c2K9hzSApBZG5wV9KoKSePF7sAxmNSvh/13YHkFDg==}
 
-  zksync-web3@0.14.4:
-    resolution: {integrity: sha512-kYehMD/S6Uhe1g434UnaMN+sBr9nQm23Ywn0EUP5BfQCsbjcr3ORuS68PosZw8xUTu3pac7G6YMSnNHk+fwzvg==}
-    deprecated: This package has been deprecated in favor of zksync-ethers@5.0.0
+  zksync-ethers@5.9.2:
+    resolution: {integrity: sha512-Y2Mx6ovvxO6UdC2dePLguVzvNToOY8iLWeq5ne+jgGSJxAi/f4He/NF6FNsf6x1aWX0o8dy4Df8RcOQXAkj5qw==}
+    engines: {node: '>=16.0.0'}
     peerDependencies:
-      ethers: ^5.7.0
+      ethers: ~5.7.0
 
 snapshots:
 
@@ -5341,7 +5341,7 @@ snapshots:
       '@changesets/types': 6.0.0
       '@manypkg/get-packages': 1.1.3
       fs-extra: 7.0.1
-      micromatch: 4.0.5
+      micromatch: 4.0.8
 
   '@changesets/errors@0.2.0':
     dependencies:
@@ -5381,7 +5381,7 @@ snapshots:
       '@changesets/types': 6.0.0
       '@manypkg/get-packages': 1.1.3
       is-subdir: 1.2.0
-      micromatch: 4.0.5
+      micromatch: 4.0.8
       spawndamnit: 2.0.0
 
   '@changesets/logger@0.1.0':
@@ -5851,7 +5851,7 @@ snapshots:
       '@ethersproject/logger': 5.7.0
       '@ethersproject/properties': 5.7.0
       bn.js: 5.2.1
-      elliptic: 6.5.4
+      elliptic: 6.5.7
       hash.js: 1.1.7
 
   '@ethersproject/solidity@5.7.0':
@@ -6536,7 +6536,7 @@ snapshots:
   '@openzeppelin/defender-admin-client@1.54.1(bufferutil@4.0.5)(debug@4.3.4)(utf-8-validate@5.0.7)':
     dependencies:
       '@openzeppelin/defender-base-client': 1.54.1(debug@4.3.4)
-      axios: 1.6.8(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       ethers: 5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7)
       lodash: 4.17.21
       node-fetch: 2.7.0
@@ -6550,7 +6550,7 @@ snapshots:
     dependencies:
       amazon-cognito-identity-js: 6.3.12
       async-retry: 1.3.3
-      axios: 1.6.8(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       lodash: 4.17.21
       node-fetch: 2.7.0
     transitivePeerDependencies:
@@ -6567,7 +6567,7 @@ snapshots:
   '@openzeppelin/defender-sdk-deploy-client@1.12.0(debug@4.3.4)':
     dependencies:
       '@openzeppelin/defender-sdk-base-client': 1.12.0
-      axios: 1.6.8(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       lodash: 4.17.21
     transitivePeerDependencies:
       - debug
@@ -6576,7 +6576,7 @@ snapshots:
   '@openzeppelin/defender-sdk-network-client@1.12.0(debug@4.3.4)':
     dependencies:
       '@openzeppelin/defender-sdk-base-client': 1.12.0
-      axios: 1.6.8(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       lodash: 4.17.21
     transitivePeerDependencies:
       - debug
@@ -7337,13 +7337,7 @@ snapshots:
 
   axe-core@4.7.0: {}
 
-  axios@0.21.4(debug@4.3.4):
-    dependencies:
-      follow-redirects: 1.15.6(debug@4.3.4)
-    transitivePeerDependencies:
-      - debug
-
-  axios@1.6.8(debug@4.3.4):
+  axios@1.7.5(debug@4.3.4):
     dependencies:
       follow-redirects: 1.15.6(debug@4.3.4)
       form-data: 4.0.0
@@ -7858,17 +7852,7 @@ snapshots:
 
   ee-first@1.1.1: {}
 
-  elliptic@6.5.4:
-    dependencies:
-      bn.js: 4.12.0
-      brorand: 1.1.0
-      hash.js: 1.1.7
-      hmac-drbg: 1.0.1
-      inherits: 2.0.4
-      minimalistic-assert: 1.0.1
-      minimalistic-crypto-utils: 1.0.1
-
-  elliptic@6.5.5:
+  elliptic@6.5.7:
     dependencies:
       bn.js: 4.12.0
       brorand: 1.1.0
@@ -8422,7 +8406,7 @@ snapshots:
       '@types/bn.js': 4.11.6
       bn.js: 4.12.0
       create-hash: 1.2.0
-      elliptic: 6.5.5
+      elliptic: 6.5.7
       ethereum-cryptography: 0.1.3
       ethjs-util: 0.1.6
       rlp: 2.2.7
@@ -8571,7 +8555,7 @@ snapshots:
       '@nodelib/fs.walk': 1.2.8
       glob-parent: 5.1.2
       merge2: 1.4.1
-      micromatch: 4.0.5
+      micromatch: 4.0.8
 
   fast-json-stable-stringify@2.1.0: {}
 
@@ -8631,7 +8615,7 @@ snapshots:
 
   find-yarn-workspace-root2@1.2.16:
     dependencies:
-      micromatch: 4.0.5
+      micromatch: 4.0.8
       pkg-dir: 4.2.0
 
   flat-cache@2.0.1:
@@ -8949,7 +8933,7 @@ snapshots:
 
   hard-rejection@2.1.0: {}
 
-  hardhat-deploy@0.11.45(bufferutil@4.0.5)(utf-8-validate@5.0.7):
+  hardhat-deploy@0.12.4(bufferutil@4.0.5)(utf-8-validate@5.0.7):
     dependencies:
       '@ethersproject/abi': 5.7.0
       '@ethersproject/abstract-signer': 5.7.0
@@ -8963,7 +8947,7 @@ snapshots:
       '@ethersproject/transactions': 5.7.0
       '@ethersproject/wallet': 5.7.0
       '@types/qs': 6.9.15
-      axios: 0.21.4(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       chalk: 4.1.2
       chokidar: 3.6.0
       debug: 4.3.4(supports-color@8.1.1)
@@ -8974,7 +8958,7 @@ snapshots:
       match-all: 1.2.6
       murmur-128: 0.2.1
       qs: 6.12.1
-      zksync-web3: 0.14.4(ethers@5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7))
+      zksync-ethers: 5.9.2(ethers@5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7))
     transitivePeerDependencies:
       - bufferutil
       - supports-color
@@ -9570,7 +9554,7 @@ snapshots:
 
   micro-ftch@0.3.1: {}
 
-  micromatch@4.0.5:
+  micromatch@4.0.8:
     dependencies:
       braces: 3.0.3
       picomatch: 2.3.1
@@ -10267,7 +10251,7 @@ snapshots:
 
   secp256k1@4.0.3:
     dependencies:
-      elliptic: 6.5.5
+      elliptic: 6.5.7
       node-addon-api: 2.0.2
       node-gyp-build: 4.8.0
 
@@ -11245,6 +11229,6 @@ snapshots:
       toposort: 2.0.2
       type-fest: 2.19.0
 
-  zksync-web3@0.14.4(ethers@5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7)):
+  zksync-ethers@5.9.2(ethers@5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7)):
     dependencies:
       ethers: 5.7.2(bufferutil@4.0.5)(utf-8-validate@5.0.7)
