@@ -13,11 +13,11 @@ The contract deployed on the Fuel Network which implements the SRC-20 standard f
 
 ## Contract ID
 
-The `ContractId` of the base asset SRC-20 implementation is `0xa20eb159e6460c47f438cb9e9f653a8d5084146ca115c774181c0620608d15a3`. This is calculated using the zero salt (`0x00..00`).
+The `ContractId` of the base asset SRC-20 implementation is `0xf746b8dfe2a6545119b421753ab465a9c21094709f0df7926c6d33cb90797d45`. This is calculated using the zero salt (`0x00..00`).
 
 ## Asset Id
 
-The `AssetId` fo the base asset SRC-20 implementation is `0xa48cdc6b0bc20843b9a755a6fffc6ff9a0965b1aff0d58cc9247dc72b8bbd61f`. This calculated by taking the SHA256 hash digest of the ContractId and the zero SubId (`0x00..00`) i.e. sha256((contract_id, sub_id)).
+The `AssetId` fo the base asset SRC-20 implementation is `0x2361e96b094f3bb902d53d86f3172333587054de09c7ab6c639bd3c52e252aa7`. This calculated by taking the SHA256 hash digest of the ContractId and the zero SubId (`0x00..00`) i.e. sha256((contract_id, sub_id)).
 
 ## Compiled Output
 
