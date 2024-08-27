@@ -357,6 +357,28 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             );
           });
 
+          it('reverts when asset issuer id is not set', async () => {
+            const {
+              erc20Gateway,
+              token,
+              signers: [deployer, user],
+            } = env;
+
+            const depositTo = randomBytes32();
+            const depositAmount = MaxUint256;
+
+            await erc20Gateway.connect(deployer).setAssetIssuerId(ZeroHash);
+
+            const tx = erc20Gateway
+              .connect(user)
+              .deposit(depositTo, token, depositAmount);
+
+            await expect(tx).to.be.revertedWithCustomError(
+              erc20Gateway,
+              'InvalidAssetIssuerID'
+            );
+          });
+
           it('calls FuelMessagePortal', async () => {
             const {
               erc20Gateway,
