@@ -2,5 +2,6 @@
   "chain_state": 1724767852,
   "fuel_message_portal": 1724767873,
   "register_committer": 1724767885,
-  "register_watchtower": 1724767898
+  "register_watchtower": 1724767898,
+  "register_watchtower_portal": 1724768943
 }
