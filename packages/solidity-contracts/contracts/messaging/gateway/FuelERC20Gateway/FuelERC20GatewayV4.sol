@@ -101,8 +101,6 @@ contract FuelERC20GatewayV4 is
 
     /// @notice sets the entity on L2 that will mint the tokens
     function setAssetIssuerId(bytes32 id) external payable virtual onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (id == bytes32(0)) revert InvalidAssetIssuerID();
-
         assetIssuerId = id;
     }
 
@@ -148,6 +146,8 @@ contract FuelERC20GatewayV4 is
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
     function deposit(bytes32 to, address tokenAddress, uint256 amount) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -176,6 +176,8 @@ contract FuelERC20GatewayV4 is
         uint256 amount,
         bytes calldata data
     ) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -194,6 +196,8 @@ contract FuelERC20GatewayV4 is
     }
 
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
             uint256(MessageType.METADATA),
