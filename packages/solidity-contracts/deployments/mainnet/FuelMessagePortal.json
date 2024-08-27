@@ -1103,13 +1103,13 @@
       "type": "function"
     }
   ],
-  "numDeployments": 1,
+  "numDeployments": 2,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
     "constructorArgs": [
-      "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+      "100000000000000000000",
       604800
     ]
   },
-  "implementation": "0x5A725F508659F9846E5877E8625F9ea32B57d577"
+  "implementation": "0x6d67857224F66d7A677f063B861B6BACafB10639"
 }

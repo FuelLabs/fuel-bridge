@@ -3,5 +3,6 @@
   "fuel_message_portal": 1724767873,
   "register_committer": 1724767885,
   "register_watchtower": 1724767898,
-  "register_watchtower_portal": 1724768943
+  "register_watchtower_portal": 1724768943,
+  "set_deposit_limit_eth": 1724774569
 }
