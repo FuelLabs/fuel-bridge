@@ -8,6 +8,7 @@ import '@typechain/hardhat';
 import '@openzeppelin/hardhat-upgrades';
 import 'hardhat-deploy';
 import 'solidity-coverage';
+import './scripts/hardhat';
 
 dotEnvConfig();
 
