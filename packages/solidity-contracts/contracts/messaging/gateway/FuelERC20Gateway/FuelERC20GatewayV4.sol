@@ -156,7 +156,7 @@ contract FuelERC20GatewayV4 is
         currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
         limitAmount[_token] = _limitAmount;
 
-        emit RateLimitUpdated(_token, _amount);
+        emit RateLimitUpdated(_token, _limitAmount);
     }
 
     /**
