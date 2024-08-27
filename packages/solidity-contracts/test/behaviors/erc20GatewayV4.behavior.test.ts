@@ -1071,6 +1071,68 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             );
           });
 
+          it('does not update rate limit vars when it is not initialized', async () => {
+            const {
+              erc20Gateway,
+              fuelMessagePortal,
+              signers: [deployer, user],
+              assetIssuerId,
+            } = env;
+
+            const amount = parseUnits(
+              random(0.01, 1, true).toFixed(decimals),
+              Number(decimals)
+            );
+            let recipient = randomBytes32();
+
+            await fuelMessagePortal
+              .connect(deployer)
+              .setMessageSender(assetIssuerId);
+
+            const impersonatedPortal = await impersonateAccount(
+              fuelMessagePortal,
+              hre
+            );
+
+            await token.mint(user, amount);
+            await token.approve(erc20Gateway, MaxUint256);
+
+            await erc20Gateway.connect(user).deposit(recipient, token, amount);
+            const withdrawAmount = amount / 4n;
+
+            // Withdrawal
+            recipient = randomAddress();
+            const withdrawalTx = erc20Gateway
+              .connect(impersonatedPortal)
+              .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+            await withdrawalTx;
+
+            const expectedTokenTotals = amount - withdrawAmount;
+            expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+              expectedTokenTotals
+            );
+
+            await expect(withdrawalTx).to.changeTokenBalances(
+              token,
+              [erc20Gateway, recipient],
+              [withdrawAmount * -1n, withdrawAmount]
+            );
+            await expect(withdrawalTx)
+              .to.emit(erc20Gateway, 'Withdrawal')
+              .withArgs(
+                zeroPadValue(recipient, 32).toLowerCase(),
+                token,
+                withdrawAmount
+              );
+
+            // check rate limit params
+            const withdrawnAmountAfterRelay =
+              await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+            await expect(withdrawnAmountAfterRelay == 0n).to.be.true;
+          });
+
           it('reduces deposits and transfers out without upscaling', async () => {
             const {
               erc20Gateway,
