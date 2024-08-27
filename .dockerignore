@@ -1,0 +1,27 @@
+# OS
+.DS_Store
+# Node.js
+node_modules
+.env
+.turbo
+
+# Misc
+.idea
+.DS_Store
+
+# Hardhat files
+cache
+artifacts
+packages/solidity-contracts/.env
+
+# Cargo and Forc artifacts
+out
+target
+*/out
+*/target
+
+# fuels-ts typegen artifacts
+packages/fungible-token/exports/types
+
+# General dist folders
+dist

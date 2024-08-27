@@ -8,14 +8,51 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
 
-    error MessageBlacklisted();
-    error WithdrawalsPaused();
-    error MessageRelayFailed();
+    event FuelChainStateUpdated(address indexed sender, address indexed oldValue, address indexed newValue);
 
+    error MessageBlacklisted();
+    error MessageRelayFailed();
+    error NotSupported();
+    error RateLimitExceeded();
+    error WithdrawalsPaused();
+
+    /// @dev The rate limit setter role
+    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
+
+    /// @notice Duration after which rate limit resets.
+    uint256 public immutable rateLimitDuration;
+
+    /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
+
     mapping(bytes32 => bool) public messageIsBlacklisted;
 
-    constructor(uint256 _depositLimitGlobal) FuelMessagePortalV2(_depositLimitGlobal) {}
+    /// @notice Amounts already withdrawn this period.
+    uint256 public currentPeriodAmount;
+
+    /// @notice The time at which the current period ends at.
+    uint256 public currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount.
+    uint256 public limitAmount;
+
+    constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
+        rateLimitDuration = _rateLimitDuration;
+    }
+
+    function initialize(FuelChainState) public virtual override {
+        revert NotSupported();
+    }
+
+    function initializerV3(FuelChainState fuelChainState, uint256 _limitAmount) public reinitializer(3) {
+        initializerV1(fuelChainState);
+        _setInitParams(_limitAmount);
+    }
+
+    function reinitializeV3(uint256 _limitAmount) reinitializer(3) public {
+        _setInitParams(_limitAmount);
+    }
+
 
     function pauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
         withdrawalsPaused = true;
@@ -31,6 +68,36 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
     function removeMessageFromBlacklist(bytes32 messageId) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         messageIsBlacklisted[messageId] = false;
+    }
+
+    /**
+     * @notice Resets the rate limit amount.
+     * @param _amount The amount to reset the limit to.
+     */
+    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        uint256 withdrawalLimitAmountToSet;
+        bool amountWithdrawnLoweredToLimit;
+        bool withdrawalAmountResetToZero;
+        
+        // if period has expired then currentPeriodAmount is zero
+        if (currentPeriodEnd < block.timestamp) {
+            unchecked {
+                currentPeriodEnd = block.timestamp + rateLimitDuration;
+            }
+            withdrawalAmountResetToZero = true;
+        } else {
+            // If the withdrawn amount is higher, it is set to the new limit amount
+            if (_amount < currentPeriodAmount) {
+                withdrawalLimitAmountToSet = _amount;
+                amountWithdrawnLoweredToLimit = true;
+            }
+        }
+
+        limitAmount = _amount;
+
+        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
+            currentPeriodAmount = withdrawalLimitAmountToSet;
+        }
     }
 
     ///////////////////////////////////////
@@ -112,6 +179,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             // Underflow check enabled since the amount is coded in `message`
             totalDeposited -= withdrawnAmount;
 
+            // rate limit check
+            _addWithdrawnAmount(withdrawnAmount);
+
             (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
         } else {
             (success, result) = address(uint160(uint256(message.recipient))).call(message.data);
@@ -140,6 +210,48 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         emit MessageRelayed(messageId, message.sender, message.recipient, message.amount);
     }
 
+    function setFuelChainState(address newFuelChainState) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        emit FuelChainStateUpdated(msg.sender, address(_fuelChainState), newFuelChainState);
+        _fuelChainState = FuelChainState(newFuelChainState);
+    }
+
+    /**
+     * @notice Increments the amount withdrawn in the period.
+     * @dev Reverts if the withdrawn limit is breached.
+     * @param _withdrawnAmount The amount withdrawn to be added.
+     */
+    function _addWithdrawnAmount(uint256 _withdrawnAmount) internal {
+        uint256 currentPeriodAmountTemp;
+
+        if (currentPeriodEnd < block.timestamp) {
+            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            currentPeriodAmountTemp = _withdrawnAmount;
+        } else {
+            unchecked {
+               currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
+            }
+        }
+
+        if (currentPeriodAmountTemp > limitAmount) {
+            revert RateLimitExceeded();
+        }
+
+        currentPeriodAmount = currentPeriodAmountTemp;
+    }
+
+    /**
+     * @notice Sets rate limiter role and other params
+     * @param _limitAmount rate limit amount.
+     */
+    function _setInitParams(uint256 _limitAmount) internal {
+        // set rate limiter role
+        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
+        
+        // initializing rate limit var
+        currentPeriodEnd = block.timestamp + rateLimitDuration;
+        limitAmount = _limitAmount;
+    }
+
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new
      * variables without shifting down storage in the inheritance chain.
@@ -147,3 +259,4 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
      */
     uint256[49] private __gap;
 }
+

@@ -2,7 +2,7 @@
 name = "base-asset-contract"
 source = "member"
 dependencies = [
-    "standards",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
     "std",
 ]
 
@@ -11,7 +11,8 @@ name = "bridge_fungible_token"
 source = "member"
 dependencies = [
     "contract_message_receiver",
-    "src_20",
+    "interface",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
     "std",
     "sway_libs",
 ]
@@ -31,12 +32,31 @@ dependencies = [
 
 [[package]]
 name = "core"
-source = "path+from-root-E19CE48B3E858B72"
+source = "path+from-root-D19F39D92CA9923C"
 
 [[package]]
-name = "src_20"
-source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.2.2#6989cf8224b0d8aabea62f3d3c648fc754948705"
+name = "interface"
+source = "member"
 dependencies = ["std"]
+
+[[package]]
+name = "proxy"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "interface",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "std",
+]
+
+[[package]]
+name = "reentrancy-attacker"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18",
+    "std",
+]
 
 [[package]]
 name = "standards"
@@ -44,15 +64,20 @@ source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff24
 dependencies = ["std"]
 
 [[package]]
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.5.0#348f7175df4c012b23c86cdb18aab79025ca1f18"
+dependencies = ["std"]
+
+[[package]]
 name = "std"
-source = "git+https://github.com/fuellabs/sway?tag=v0.60.0#2f0392ee35a1e4dd80bd8034962d5b4083dfb8b6"
+source = "git+https://github.com/fuellabs/sway?tag=v0.63.1#169f91ae0a6a698bd1cb459c4c203bab646a38ec"
 dependencies = ["core"]
 
 [[package]]
 name = "sway_libs"
 source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.21.0#6a227ed34c86fe1ebd334dbdfeccf66c43e3915b"
 dependencies = [
-    "standards",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.4.3#6f63eb7dff2458a7d976184e565b5cbf26f61da2",
     "std",
 ]
 

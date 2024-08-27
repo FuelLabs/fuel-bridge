@@ -1,5 +1,5 @@
 # ====== Build Image ======
-FROM node:18-alpine AS BUILD_IMAGE
+FROM node:20-alpine AS BUILD_IMAGE
 
 ARG L1_IP=0.0.0.0
 ARG L1_PORT=9545
@@ -25,11 +25,9 @@ RUN pnpm compile
 
 # replace the fuel chain consts values and change contract code
 ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
-ADD ./packages/solidity-contracts/scripts/replaceFuelChainConsts.ts /l1chain/fuel-v2-contracts/scripts/replaceFuelChainConsts.ts
 ADD ./packages/solidity-contracts/contracts /l1chain/fuel-v2-contracts/contracts
 ADD ./packages/solidity-contracts/deploy /l1chain/fuel-v2-contracts/deploy
 ADD ./packages/solidity-contracts/protocol /l1chain/fuel-v2-contracts/protocol
-RUN pnpm ts-node scripts/replaceFuelChainConsts.ts
 
 
 # remove build dependencies

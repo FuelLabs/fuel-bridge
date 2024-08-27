@@ -1,7 +1,14 @@
 import { calcRoot, constructTree, getProof } from '@fuel-ts/merkle';
 import type { HardhatEthersSigner } from '@nomicfoundation/hardhat-ethers/signers';
 import { expect } from 'chai';
-import { MaxUint256, parseEther, toBeHex, type Provider } from 'ethers';
+import {
+  MaxUint256,
+  parseEther,
+  toBeHex,
+  type Provider,
+  Wallet,
+  ZeroAddress,
+} from 'ethers';
 import { deployments, ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
@@ -24,10 +31,13 @@ import { createBlock } from './utils/createBlock';
 import type { TreeNode } from './utils/merkle';
 import {
   BLOCKS_PER_COMMIT_INTERVAL,
+  COMMIT_COOLDOWN,
   TIME_TO_FINALIZE,
   generateProof,
   getLeafIndexKey,
 } from './utils/merkle';
+
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 
 const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
@@ -59,6 +69,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   let messageBadSender: Message;
   let messageBadRecipient: Message;
   let messageBadData: Message;
+  let messageExceedingRateLimit: Message;
+  let messageAfterRateLimitDurationCompletes: Message;
   let messageEOA: Message;
   let messageEOANoAmount: Message;
 
@@ -146,6 +158,22 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       randomBytes32(),
       randomBytes32()
     );
+    // message with exceeded rate limit
+    messageExceedingRateLimit = new Message(
+      randomBytes32(),
+      addressToB256(addresses[2]),
+      parseEther('11') / BASE_ASSET_CONVERSION,
+      randomBytes32(),
+      '0x'
+    );
+    // message after rate limit duration is over
+    messageAfterRateLimitDurationCompletes = new Message(
+      randomBytes32(),
+      addressToB256(addresses[2]),
+      parseEther('5') / BASE_ASSET_CONVERSION,
+      randomBytes32(),
+      '0x'
+    );
     // message to EOA
     messageEOA = new Message(
       randomBytes32(),
@@ -171,6 +199,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     messageIds.push(computeMessageId(messageBadSender));
     messageIds.push(computeMessageId(messageBadRecipient));
     messageIds.push(computeMessageId(messageBadData));
+    messageIds.push(computeMessageId(messageExceedingRateLimit));
+    messageIds.push(computeMessageId(messageAfterRateLimitDurationCompletes));
     messageIds.push(computeMessageId(messageEOA));
     messageIds.push(computeMessageId(messageEOANoAmount));
     messageNodes = constructTree(messageIds);
@@ -228,9 +258,22 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         initializer: 'initialize',
       };
 
+      const upgradeProxyOptions = {
+        initializer: 'reinitializeV3',
+      };
+
       const fuelChainState = (await ethers
         .getContractFactory('FuelChainState', deployer)
-        .then(async (factory) => deployProxy(factory, [], proxyOptions))
+        .then(async (factory) =>
+          deployProxy(factory, [], {
+            ...proxyOptions,
+            constructorArgs: [
+              TIME_TO_FINALIZE,
+              BLOCKS_PER_COMMIT_INTERVAL,
+              COMMIT_COOLDOWN,
+            ],
+          })
+        )
         .then((tx) => tx.waitForDeployment())) as FuelChainState;
 
       const deployment = await ethers
@@ -273,13 +316,18 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         V3Implementation,
         messageTester,
         addresses: signers.map(({ address }) => address),
+        upgradeProxyOptions,
       };
     }
   );
 
   it('can upgrade from V1 to V2 to V3', async () => {
-    const { fuelMessagePortal, V2Implementation, V3Implementation } =
-      await fixture();
+    const {
+      fuelMessagePortal,
+      V2Implementation,
+      V3Implementation,
+      upgradeProxyOptions,
+    } = await fixture();
 
     await expect(fuelMessagePortal.depositLimitGlobal()).to.be.reverted;
 
@@ -292,17 +340,19 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
     await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
       unsafeAllow: ['constructor'],
-      constructorArgs: [0],
+      constructorArgs: [0, RATE_LIMIT_DURATION],
+      call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+      ...upgradeProxyOptions,
     });
 
     await fuelMessagePortal.pauseWithdrawals();
     expect(await fuelMessagePortal.withdrawalsPaused()).to.be.true;
   });
 
-  describe('Behaves like V3 - Blacklisting', () => {
+  describe('Behaves like V3', () => {
     beforeEach('fixture', async () => {
       const fixt = await fixture();
-      const { V2Implementation, V3Implementation } = fixt;
+      const { V2Implementation, V3Implementation, upgradeProxyOptions } = fixt;
       ({
         provider,
         fuelMessagePortal,
@@ -319,7 +369,9 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
+        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+        ...upgradeProxyOptions,
       });
 
       await setupMessages(
@@ -520,6 +572,92 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         }
       });
     });
+
+    describe('setFuelChainState()', () => {
+      it('can only be called by DEFAULT_ADMIN_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const defaultAdminRole = await fuelMessagePortal.DEFAULT_ADMIN_ROLE();
+
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .setFuelChainState(ZeroAddress);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${defaultAdminRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(defaultAdminRole, mallory);
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .setFuelChainState(ZeroAddress);
+
+        await expect(tx).not.to.be.reverted;
+      });
+
+      it('changes the fuel chain state address', async () => {
+        const [deployer] = await ethers.getSigners();
+        const newFuelChainStateAddress = Wallet.createRandom().address;
+        const oldFuelChainStateAddress =
+          await fuelMessagePortal.fuelChainStateContract();
+
+        const receipt = await fuelMessagePortal
+          .setFuelChainState(newFuelChainStateAddress)
+          .then((tx) => tx.wait());
+
+        const [event] = await fuelMessagePortal.queryFilter(
+          fuelMessagePortal.filters.FuelChainStateUpdated,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+
+        expect(event.args.sender).to.equal(deployer.address);
+        expect(event.args.oldValue).to.equal(oldFuelChainStateAddress);
+        expect(event.args.newValue).to.equal(newFuelChainStateAddress);
+
+        expect(await fuelMessagePortal.fuelChainStateContract()).to.equal(
+          newFuelChainStateAddress
+        );
+      });
+    });
+  });
+
+  describe('V3 Proxy Initialization', () => {
+    it('v3 proxy cannot be initialized again', async () => {
+      const [deployer] = await ethers.getSigners();
+      const fcsAddress = await fuelChainState.getAddress();
+
+      const portal = (await ethers
+        .getContractFactory('FuelMessagePortalV3', deployer)
+        .then(async (factory) =>
+          upgrades.deployProxy(factory, [fcsAddress, 0], {
+            initializer: 'initializerV3',
+            constructorArgs: [MaxUint256, 0],
+          })
+        )
+        .then((tx) => tx.waitForDeployment())) as FuelMessagePortalV3;
+
+      let tx = portal.reinitializeV3(MaxUint256);
+      await expect(tx).to.be.revertedWith(
+        'Initializable: contract is already initialized'
+      );
+
+      tx = portal.initializerV3(fcsAddress, 0);
+      await expect(tx).to.be.revertedWith(
+        'Initializable: contract is already initialized'
+      );
+
+      tx = portal.initialize(fcsAddress);
+      await expect(tx).to.be.revertedWithCustomError(portal, 'NotSupported');
+    });
   });
 
   describe('Behaves like V2 - Accounting', () => {
@@ -601,7 +739,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
   describe('Behaves like V1 - Relay both valid and invalid messages', async () => {
     before(async () => {
       const fixt = await fixture();
-      const { V3Implementation } = fixt;
+      const { V3Implementation, upgradeProxyOptions } = fixt;
       ({
         provider,
         fuelMessagePortal,
@@ -612,7 +750,9 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
+        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
+        ...upgradeProxyOptions,
       });
 
       await setupMessages(
@@ -905,6 +1045,63 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
+    });
+
+    it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageExceedingRateLimit,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      await expect(
+        fuelMessagePortal.relayMessage(
+          messageExceedingRateLimit,
+          endOfCommitIntervalHeaderLite,
+          msgBlockHeader,
+          blockInRoot,
+          msgInBlock
+        )
+      ).to.be.revertedWithCustomError(fuelMessagePortal, 'RateLimitExceeded');
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(false);
+    });
+
+    it('Should be able to relay message after rate limit duration is over', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value:
+          messageAfterRateLimitDurationCompletes.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageAfterRateLimitDurationCompletes,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
+
+      await fuelMessagePortal.relayMessage(
+        messageAfterRateLimitDurationCompletes,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
     });
 
     it('Should be able to relay message to EOA', async () => {

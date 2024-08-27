@@ -10,7 +10,7 @@ use ::data_structures::{
     deposit_message::DepositMessage,
     metadata_message::MetadataMessage,
 };
-use std::{constants::ZERO_B256, inputs::{input_message_data, input_message_data_length}};
+use std::{constants::ZERO_B256, inputs::input_message_data};
 
 pub enum MessageData {
     Deposit: DepositMessage,
@@ -19,7 +19,7 @@ pub enum MessageData {
 
 impl MessageData {
     pub fn parse(msg_idx: u64) -> Self {
-        let message_type: u8 = input_message_data(msg_idx, OFFSET_MESSAGE_TYPE).get(31).unwrap(); // Get the last byte
+        let message_type: u8 = input_message_data(msg_idx, OFFSET_MESSAGE_TYPE).unwrap().get(31).unwrap(); // Get the last byte
         match message_type {
             DEPOSIT => MessageData::Deposit(DepositMessage::parse_deposit_to_address(msg_idx)),
             CONTRACT_DEPOSIT => MessageData::Deposit(DepositMessage::parse_deposit_to_contract(msg_idx)),

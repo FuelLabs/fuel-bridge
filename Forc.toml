@@ -1,7 +1,10 @@
 [workspace]
 members = [
   "packages/fungible-token/test-deposit-recipient-contract",
-  "packages/fungible-token/bridge-fungible-token",
+  "packages/fungible-token/bridge-fungible-token/interface",
+  "packages/fungible-token/bridge-fungible-token/proxy",
+  "packages/fungible-token/bridge-fungible-token/implementation",
+  "packages/fungible-token/bridge-fungible-token/reentrancy-attacker",
   "packages/message-predicates/contract-message-predicate",
   "packages/message-predicates/contract-message-receiver",
   "packages/base-asset",

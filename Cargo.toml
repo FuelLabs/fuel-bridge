@@ -15,18 +15,18 @@ keywords = ["blockchain", "cryptocurrencies"]
 license = "Apache-2.0"
 repository = "https://github.com/FuelLabs/fuel-bridge"
 version = "0.3.0"
-rust-version = "1.72.0"
+rust-version = "1.80.1"
 
 [workspace.dependencies]
 # Dependencies from fuel-vm repository:
-fuel-asm = "0.50.0"
-fuel-tx = "0.50.0"
+fuel-asm = "0.56.0"
+fuel-tx = "0.56.0"
 
 # Dependencies from fuel-core repository:
-fuel-core-types = { version = "0.27.0", default-features = false }
+fuel-core-types = { version = "0.32.1", default-features = false }
 
 # Dependencies from fuels-rs repository:    
-fuels = { version = "0.63.0", features = ["fuel-core-lib"] }
+fuels = { version = "0.66.1", features = ["fuel-core-lib"] }
 
 # Third-party dependencies
 tokio = { version = "1.32.0", features = ["rt", "macros"] }

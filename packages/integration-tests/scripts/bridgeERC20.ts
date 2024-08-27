@@ -9,7 +9,7 @@ import {
   createRelayMessageParams,
   getOrDeployECR20Contract,
   mintECR20,
-  getOrDeployFuelTokenContract,
+  getOrDeployL2Bridge,
   validateFundgibleContracts,
   getMessageOutReceipt,
   FUEL_MESSAGE_TIMEOUT_MS,
@@ -48,7 +48,7 @@ const TOKEN_AMOUNT = '10';
   const ethTestToken = await getOrDeployECR20Contract(env);
 
   // load Fuel side fungible token contract
-  const fuelTestToken = await getOrDeployFuelTokenContract(
+  const fuelTestToken = await getOrDeployL2Bridge(
     env,
     ethTestToken,
     env.eth.fuelERC20Gateway,

@@ -19,8 +19,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     .then((tx) => tx.wait());
 
   console.log('Granted role COMMITTER_ROLE to', COMMITTER_ADDRESS);
-
-  return true;
 };
 
 func.tags = ['register_committer'];

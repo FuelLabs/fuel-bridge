@@ -1,12 +1,10 @@
 use crate::utils::{
-    constants::{
-        BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS,
-    },
+    constants::{BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM},
     interface::bridge::withdraw,
     setup::{
-        create_deposit_message, create_token, create_wallet, decode_hex, encode_hex,
-        parse_output_message_data, relay_message_to_contract, setup_environment, wallet_balance,
-        BridgeFungibleTokenContractConfigurables, BridgingConfig,
+        create_deposit_message, create_wallet, decode_hex, encode_hex, parse_output_message_data,
+        relay_message_to_contract, setup_environment, wallet_balance,
+        BridgeFungibleTokenContractConfigurables,
     },
 };
 use fuels::{prelude::AssetId, types::Bits256};
@@ -16,14 +14,11 @@ mod success {
     use super::*;
 
     use crate::utils::{
-        constants::BRIDGED_TOKEN_GATEWAY,
-        interface::{
-            bridge::{bridged_token_gateway, claim_refund},
-            src20::total_supply,
-        },
-        setup::{get_asset_id, ClaimRefundEvent, RefundRegisteredEvent},
+        constants::{BRIDGED_TOKEN_GATEWAY, MESSAGE_SENDER_ADDRESS},
+        interface::{bridge::claim_refund, src20::total_supply},
+        setup::{get_asset_id, get_contract_ids, ClaimRefundEvent, RefundRegisteredEvent},
     };
-    use fuels::{prelude::Address, programs::contract::SettableContract, tx::Receipt, types::U256};
+    use fuels::{prelude::Address, programs::calls::ContractDependency, tx::Receipt, types::U256};
     use primitive_types::H160;
     use std::str::FromStr;
 
@@ -40,6 +35,9 @@ mod success {
             hex::encode([vec![0u8; 12], H160::random().to_fixed_bytes().to_vec()].concat())
         );
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (message, coin, deposit_contract) = create_deposit_message(
             &token_address,
             BRIDGED_TOKEN_ID,
@@ -47,13 +45,13 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -106,6 +104,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
+            implementation_contract_id,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -172,6 +171,9 @@ mod success {
         );
         let deposit_amount = U256::from(1);
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (topping_message, coin, deposit_contract) = create_deposit_message(
             &token_address,
             BRIDGED_TOKEN_ID,
@@ -179,7 +181,7 @@ mod success {
             *wallet.address().hash(),
             U256::from(u64::MAX),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
@@ -192,13 +194,13 @@ mod success {
             *wallet.address().hash(),
             deposit_amount,
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![topping_message, refundable_message],
@@ -253,6 +255,7 @@ mod success {
 
         let response = claim_refund(
             &bridge,
+            implementation_contract_id,
             Bits256::from_hex_str(FROM).unwrap(),
             Bits256::from_hex_str(&token_address).unwrap(),
             Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
@@ -314,6 +317,9 @@ mod success {
 
         let amount = 10u64;
 
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
         let (message, coin, deposit_contract) = create_deposit_message(
             BRIDGED_TOKEN,
             BRIDGED_TOKEN_ID,
@@ -321,13 +327,13 @@ mod success {
             *wallet.address().hash(),
             U256::from(amount),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            proxy_id,
             false,
             None,
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -361,8 +367,7 @@ mod success {
             }
         }
 
-        let balance =
-            wallet_balance(&wallet, &get_asset_id(bridge.contract_id(), BRIDGED_TOKEN)).await;
+        let balance = wallet_balance(&wallet, &get_asset_id(&proxy_id.into(), BRIDGED_TOKEN)).await;
 
         // Check that wallet now has bridged coins
         assert_eq!(balance, amount);
@@ -371,7 +376,8 @@ mod success {
         let gas = 200_000;
         let to = Bits256(*wallet.address().hash());
 
-        let call_response = withdraw(&bridge, to, amount, gas).await;
+        let call_response =
+            withdraw(&bridge, implementation_contract_id.clone(), to, amount, gas).await;
 
         let message_receipt = call_response
             .receipts
@@ -401,27 +407,77 @@ mod success {
         assert_eq!(amount, amount);
 
         // Check that supply has decreased by withdrawal_amount
-        let supply = total_supply(&bridge, get_asset_id(bridge.contract_id(), BRIDGED_TOKEN))
-            .await
-            .unwrap();
+        let supply = total_supply(
+            &implementation_contract_id,
+            &bridge,
+            get_asset_id(bridge.contract_id(), BRIDGED_TOKEN),
+        )
+        .await
+        .unwrap();
         assert_eq!(supply, 0);
     }
 
     #[tokio::test]
-    async fn check_bridged_token_gateway() {
-        let contract = create_token().await;
+    async fn bridge_bridged_token_gateway() -> anyhow::Result<()> {
+        // perform successful deposit first, verify it, then withdraw and verify balances
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
-        let response = bridged_token_gateway(&contract).await;
+        let amount = 10u64;
 
-        assert_eq!(
-            response,
-            Bits256(*Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        dbg!(&proxy_id);
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
+            proxy_id,
+            false,
+            None,
         )
+        .await;
+
+        let (implementation_contract_id, bridge, _) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        dbg!(&implementation_contract_id);
+
+        let bridged_token_gateway: Bits256 = bridge
+            .methods()
+            .bridged_token_gateway()
+            .with_contract_ids(&[implementation_contract_id.clone()])
+            .call()
+            .await
+            .unwrap()
+            .value;
+
+        let hex_bridged_token_gateway = format!("0x{}", hex::encode(bridged_token_gateway.0));
+        assert_eq!(
+            hex_bridged_token_gateway,
+            MESSAGE_SENDER_ADDRESS.to_ascii_lowercase()
+        );
+
+        Ok(())
     }
 }
 
 mod revert {
     use std::str::FromStr;
+
+    use fuels::types::U256;
 
     use super::*;
 
@@ -432,7 +488,6 @@ mod revert {
         // - Verify that it reverts with an AssetNotFound error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_asset_id: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
 
@@ -441,15 +496,15 @@ mod revert {
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.overflow.two,
+            U256::from(1),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
         .await;
 
-        let (bridge, _) = setup_environment(
+        let (implementation_contract_id, bridge, _) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -462,6 +517,7 @@ mod revert {
         bridge
             .methods()
             .asset_to_sub_id(AssetId::from_str(incorrect_asset_id).unwrap())
+            .with_contract_ids(&[implementation_contract_id])
             .call()
             .await
             .unwrap();
@@ -475,7 +531,6 @@ mod revert {
         // - Verify that trying to withdraw a completely different asset results in a NoRefundAvailable error
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
-        let config = BridgingConfig::new(BRIDGED_TOKEN_DECIMALS, PROXY_TOKEN_DECIMALS);
         let incorrect_token: &str =
             "0x1111110000000000000000000000000000000000000000000000000000111111";
         let wrong_token: &str =
@@ -486,15 +541,15 @@ mod revert {
             BRIDGED_TOKEN_ID,
             FROM,
             *wallet.address().hash(),
-            config.overflow.two,
+            U256::from(1),
             BRIDGED_TOKEN_DECIMALS,
-            configurables.clone(),
+            Default::default(),
             false,
             None,
         )
         .await;
 
-        let (bridge, utxo_inputs) = setup_environment(
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
             &mut wallet,
             vec![coin],
             vec![message],
@@ -519,6 +574,7 @@ mod revert {
                 Bits256::from_hex_str(wrong_token).unwrap(),
                 Bits256::from_hex_str(BRIDGED_TOKEN_ID).unwrap(),
             )
+            .with_contract_ids(&[implementation_contract_id])
             .call()
             .await
             .unwrap();
