@@ -1,10 +1,12 @@
 import { Wallet, getBytes } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
+import { enterPrivateKey } from './utils';
 
 task('withdrawalWhitelist', 'removes blacklist from a l2 > l1 message')
   .addParam('id', 'messageId to remove from black list')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
+  .addFlag('i', 'use this flag to input a private key')
   .setAction(async (taskArgs, hre) => {
     let signer: Signer;
 
@@ -13,7 +15,10 @@ task('withdrawalWhitelist', 'removes blacklist from a l2 > l1 message')
       return;
     }
 
-    if (taskArgs.env) {
+    if (taskArgs.i) {
+      const privateKey = await enterPrivateKey();
+      signer = new Wallet(privateKey, hre.ethers.provider);
+    } else if (taskArgs.env) {
       signer = new Wallet(process.env.PRIVATE_KEY!, hre.ethers.provider);
     } else {
       const signers = await hre.ethers.getSigners();

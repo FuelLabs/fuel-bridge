@@ -2,10 +2,15 @@ import { Wallet, isAddress } from 'ethers';
 import type { Signer, TransactionResponse } from 'ethers';
 import { task } from 'hardhat/config';
 
-import { getDeploymentByName, requireConfirmation } from './utils';
+import {
+  enterPrivateKey,
+  getDeploymentByName,
+  requireConfirmation,
+} from './utils';
 
 task('grantRole', 'grants a given role to a given adress')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
+  .addFlag('i', 'use this flag to input a private key')
   .addParam('contract', 'name of the contract')
   .addParam('role', 'name of the role')
   .addParam('address', 'address that will receive the role')
@@ -17,7 +22,10 @@ task('grantRole', 'grants a given role to a given adress')
 
     let signer: Signer;
 
-    if (taskArgs.env) {
+    if (taskArgs.i) {
+      const privateKey = await enterPrivateKey();
+      signer = new Wallet(privateKey, hre.ethers.provider);
+    } else if (taskArgs.env) {
       signer = new Wallet(process.env.PRIVATE_KEY!, hre.ethers.provider);
     } else {
       const signers = await hre.ethers.getSigners();
