@@ -22,6 +22,14 @@ task('withdrawalPause', 'pauses all l2 > l1 messages')
       signer
     );
 
+    const hasRole = await contract
+      .PAUSER_ROLE()
+      .then((role) => contract.hasRole(role, signer));
+
+    if (!hasRole) {
+      console.log(`Loaded signer ${await signer.getAddress()} unauthorized`);
+    }
+
     const tx = await contract.pauseWithdrawals();
     console.log(`Transaction sent with hash=${tx.hash}`);
 
