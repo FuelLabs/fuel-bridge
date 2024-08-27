@@ -1019,7 +1019,8 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                 .connect(deployer)
                 .resetRateLimitAmount(
                   token.getAddress(),
-                  rateLimitAmount.toString()
+                  rateLimitAmount.toString(),
+                  RATE_LIMIT_DURATION
                 )
             ).to.be.revertedWithCustomError(
               erc20Gateway,
@@ -1048,7 +1049,8 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               .connect(deployer)
               .resetRateLimitAmount(
                 token.getAddress(),
-                rateLimitAmount.toString()
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
               );
 
             await expect(tx)

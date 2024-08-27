@@ -420,7 +420,11 @@ describe('Bridging ERC20 tokens', async function () {
 
       await env.eth.fuelERC20Gateway
         .connect(deployer)
-        .resetRateLimitAmount(eth_testTokenAddress, parseEther(newRateLimit));
+        .resetRateLimitAmount(
+          eth_testTokenAddress,
+          parseEther(newRateLimit),
+          RATE_LIMIT_DURATION
+        );
 
       const currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelERC20Gateway.currentPeriodAmount(
@@ -449,7 +453,11 @@ describe('Bridging ERC20 tokens', async function () {
 
       await env.eth.fuelERC20Gateway
         .connect(deployer)
-        .resetRateLimitAmount(eth_testTokenAddress, parseEther(newRateLimit));
+        .resetRateLimitAmount(
+          eth_testTokenAddress,
+          parseEther(newRateLimit),
+          RATE_LIMIT_DURATION
+        );
 
       // withdraw tokens back to the base chain
       withdrawMessageProof = await generateWithdrawalMessageProof(
@@ -499,7 +507,11 @@ describe('Bridging ERC20 tokens', async function () {
 
       await env.eth.fuelERC20Gateway
         .connect(deployer)
-        .resetRateLimitAmount(eth_testTokenAddress, parseEther(newRateLimit));
+        .resetRateLimitAmount(
+          eth_testTokenAddress,
+          parseEther(newRateLimit),
+          RATE_LIMIT_DURATION
+        );
 
       const currentPeriodEndAfterSettingLimit =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
