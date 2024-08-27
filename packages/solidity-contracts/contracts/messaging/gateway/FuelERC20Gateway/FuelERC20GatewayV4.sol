@@ -161,8 +161,9 @@ contract FuelERC20GatewayV4 is
      * @notice Resets the rate limit amount.
      * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
+     * @param _rateLimitDuration The new rate limit duration.
      */
-    function resetRateLimitAmount(address _token, uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
+    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
         uint256 withdrawalLimitAmountToSet;
         bool amountWithdrawnLoweredToLimit;
         bool withdrawalAmountResetToZero;
@@ -170,12 +171,14 @@ contract FuelERC20GatewayV4 is
         // avoid multiple SLOADS
         uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
 
+        rateLimitDuration[_token] = _rateLimitDuration;
+
         if (rateLimitDurationEndTimestamp == 0) revert RateLimitNotInitialized();
         
         // if period has expired then currentPeriodAmount is zero
         if (rateLimitDurationEndTimestamp < block.timestamp) {
             unchecked {
-                currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+                currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
             }
             withdrawalAmountResetToZero = true;
         } else {
