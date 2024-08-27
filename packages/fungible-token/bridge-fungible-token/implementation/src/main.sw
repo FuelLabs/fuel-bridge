@@ -61,7 +61,7 @@ use utils::{
     encode_data,
     encode_register_calldata,
 };
-use standards::src20::SRC20;
+use standards::src20::{SetDecimalsEvent, SetNameEvent, SetSymbolEvent, SRC20, TotalSupplyEvent,};
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
 const ZERO_U256 = 0x00u256;
@@ -144,16 +144,20 @@ impl Bridge for Contract {
         let l1_address = _asset_to_l1_address(asset_id);
 
         // Hexens Fuel1-4: Might benefit from a custom error message
+        let new_total_supply = storage.tokens_minted.get(asset_id).read() - amount;
         storage
             .tokens_minted
             .insert(
                 asset_id,
-                storage
-                    .tokens_minted
-                    .get(asset_id)
-                    .read() - amount,
+                new_total_supply,
             );
         burn(sub_id, amount);
+
+        log(TotalSupplyEvent {
+            asset: asset_id,
+            supply: new_total_supply,
+            sender: msg_sender().unwrap(),
+        });
 
         // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
@@ -218,6 +222,7 @@ impl SRC20 for Contract {
 
 impl SRC7 for Contract {
     // TODO: implement SRC-8
+    // TODO: Must emit SetMetadataEvent
     #[storage(read)]
     fn metadata(asset: AssetId, _key: String) -> Option<Metadata> {
         let _todo = _asset_to_sub_id(asset);
@@ -339,14 +344,32 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
             storage
                 .decimals
                 .insert(message_data.token_address, message_data.decimals);
+            
+            log(SetDecimalsEvent {
+                asset: asset_id,
+                decimals: message_data.decimals,
+                sender: msg_sender().unwrap(),
+            });
         } else {
             storage
                 .decimals
                 .insert(message_data.token_address, FUEL_ASSET_DECIMALS);
+        
+            log(SetDecimalsEvent {
+                asset: asset_id,
+                decimals: FUEL_ASSET_DECIMALS,
+                sender: msg_sender().unwrap(),
+            });
         }
     };
     // mint tokens & update storage
     mint(sub_id, amount);
+
+    log(TotalSupplyEvent {
+        asset: asset_id,
+        supply: new_total_supply,
+        sender: msg_sender().unwrap(),
+    });
 
     match message_data.deposit_type {
         DepositType::Address | DepositType::Contract => {
@@ -389,6 +412,18 @@ fn _process_metadata(metadata: MetadataMessage) {
         token_address: metadata.token_address,
         // symbol: metadata.symbol,
         // name: metadata.name
+    });
+
+    log(SetNameEvent {
+        asset: asset_id,
+        name: Some(metadata.name),
+        sender: msg_sender().unwrap(),
+    });
+
+    log(SetSymbolEvent {
+        asset: asset_id,
+        symbol: Some(metadata.symbol),
+        sender: msg_sender().unwrap(),
     });
 }
 
