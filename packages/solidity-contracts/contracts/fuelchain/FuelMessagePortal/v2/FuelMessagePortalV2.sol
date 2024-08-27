@@ -16,6 +16,7 @@ contract FuelMessagePortalV2 is FuelMessagePortal {
     constructor(uint256 _depositLimitGlobal) {
         /// @custom:oz-upgrades-unsafe-allow state-variable-assignment
         depositLimitGlobal = _depositLimitGlobal;
+        _disableInitializers();
     }
 
     ////////////////////////
