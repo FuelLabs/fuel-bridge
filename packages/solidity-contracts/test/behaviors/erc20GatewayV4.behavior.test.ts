@@ -1054,7 +1054,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               );
 
             await expect(tx)
-              .to.emit(erc20Gateway, 'ResetRateLimit')
+              .to.emit(erc20Gateway, 'RateLimitUpdated')
               .withArgs(token.getAddress(), rateLimitAmount.toString());
 
             await expect(

@@ -47,7 +47,7 @@ contract FuelERC20GatewayV4 is
     event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, uint256 amount);
 
     /// @dev Emitted when rate limit is reset
-    event ResetRateLimit(address indexed tokenAddress, uint256 amount);
+    event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
 
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
@@ -74,10 +74,10 @@ contract FuelERC20GatewayV4 is
     bool public whitelistRequired;
     bytes32 public assetIssuerId;
 
-    mapping(address => uint256) _deposits;
-    mapping(address => uint256) _depositLimits;
-    mapping(address => uint256) _decimalsCache;
-    mapping(bytes32 => bool) _isBridge;
+    mapping(address => uint256) private _deposits;
+    mapping(address => uint256) private _depositLimits;
+    mapping(address => uint256) private _decimalsCache;
+    mapping(bytes32 => bool) private _isBridge;
 
     /// @notice Amounts already withdrawn this period for each token.
     mapping(address => uint256) public rateLimitDuration;
@@ -155,6 +155,8 @@ contract FuelERC20GatewayV4 is
         rateLimitDuration[_token] = _rateLimitDuration;
         currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
         limitAmount[_token] = _limitAmount;
+
+        emit RateLimitUpdated(_token, _amount);
     }
 
     /**
@@ -196,7 +198,7 @@ contract FuelERC20GatewayV4 is
             currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
         }
 
-        emit ResetRateLimit(_token, _amount);
+        emit RateLimitUpdated(_token, _amount);
     }
 
 
