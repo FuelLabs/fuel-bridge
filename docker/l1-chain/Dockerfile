@@ -19,14 +19,14 @@ RUN pnpm install
 
 # Take advantage of cache by putting a placeholder and downloading the compiler
 ADD ./docker/l1-chain/Placeholder.sol /l1chain/fuel-v2-contracts/contracts/Placeholder.sol
-COPY ./packages/solidity-contracts/hardhat.config.ts .
+ADD ./packages/solidity-contracts/hardhat.config.ts .
+ADD ./packages/solidity-contracts/scripts /l1chain/fuel-v2-contracts/scripts
 RUN pnpm compile
 
 # replace the fuel chain consts values and change contract code
 ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
 ADD ./packages/solidity-contracts/contracts /l1chain/fuel-v2-contracts/contracts
 ADD ./packages/solidity-contracts/deploy /l1chain/fuel-v2-contracts/deploy
-ADD ./packages/solidity-contracts/scripts /l1chain/fuel-v2-contracts/scripts
 ADD ./packages/solidity-contracts/protocol /l1chain/fuel-v2-contracts/protocol
 
 
