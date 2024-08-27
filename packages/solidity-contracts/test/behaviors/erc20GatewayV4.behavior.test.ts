@@ -1044,12 +1044,16 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                 RATE_LIMIT_DURATION
               );
 
-            await erc20Gateway
+            const tx = erc20Gateway
               .connect(deployer)
               .resetRateLimitAmount(
                 token.getAddress(),
                 rateLimitAmount.toString()
               );
+
+            await expect(tx)
+              .to.emit(erc20Gateway, 'ResetRateLimit')
+              .withArgs(token.getAddress(), rateLimitAmount.toString());
 
             await expect(
               erc20Gateway
