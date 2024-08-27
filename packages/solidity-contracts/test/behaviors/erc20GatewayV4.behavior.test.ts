@@ -166,14 +166,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             await mallory.getAddress()
           ).toLowerCase()} ` + `is missing role ${ZeroHash}`;
 
-        let tx = erc20Gateway.connect(mallory).setAssetIssuerId(ZeroHash);
+        const tx = erc20Gateway.connect(mallory).setAssetIssuerId(ZeroHash);
         await expect(tx).to.be.revertedWith(expectedErrorMsg);
 
-        tx = erc20Gateway.connect(deployer).setAssetIssuerId(ZeroHash);
-        await expect(tx).to.be.revertedWithCustomError(
-          erc20Gateway,
-          'InvalidAssetIssuerID'
-        );
+        await erc20Gateway.connect(deployer).setAssetIssuerId(ZeroHash);
       });
     });
 
