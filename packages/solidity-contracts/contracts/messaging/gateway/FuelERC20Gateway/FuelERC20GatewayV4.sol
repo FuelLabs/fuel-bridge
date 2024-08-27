@@ -46,6 +46,9 @@ contract FuelERC20GatewayV4 is
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
     event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, uint256 amount);
 
+    /// @dev Emitted when rate limit is reset
+    event ResetRateLimit(address indexed tokenAddress, uint256 amount);
+
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
         DEPOSIT_TO_CONTRACT,
@@ -188,6 +191,8 @@ contract FuelERC20GatewayV4 is
         if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
             currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
         }
+
+        emit ResetRateLimit(_token, _amount);
     }
 
 
