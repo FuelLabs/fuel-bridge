@@ -56,7 +56,7 @@
     "express": "^4.18.2",
     "fuels": "0.94.0",
     "hardhat": "^2.20.1",
-    "hardhat-deploy": "^0.11.44",
+    "hardhat-deploy": "^0.12.4",
     "inquirer": "^10.1.8",
     "lodash": "^4.17.21",
     "markdownlint": "^0.26.2",
