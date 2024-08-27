@@ -4,4 +4,4 @@
 '@fuel-bridge/test-utils': minor
 ---
 
-Bump dependencies to mainnet
+Implement SRC-7 and SRC-20
