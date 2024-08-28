@@ -29,11 +29,11 @@ storage {
         target: Option<ContractId> = None,
         // owner is at sha256("storage_SRC14_1")
         owner: State = State::Uninitialized,
-    }
+    },
 }
 
 impl SRC14 for Contract {
-    #[storage(read,write)]
+    #[storage(read, write)]
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
         require(new_target.bits() != b256::zero(), ProxyErrors::IdentityZero);

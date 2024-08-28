@@ -397,7 +397,6 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
             sender,
         });
 
-        
         if message_data.decimals < FUEL_ASSET_DECIMALS {
             storage::bridge
                 .decimals
