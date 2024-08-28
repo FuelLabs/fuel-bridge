@@ -8,5 +8,12 @@ export default {
   esbuildPlugins: [esbuildBinLoader],
   format: ['cjs', 'esm'],
   minify: false,
+  external: [
+    "bn.js",
+    "bech32",
+    "webidl-conversions",
+    "whatwg-url",
+    "tr46"
+  ],
   entry: ['./exports/index.ts'],
 };
