@@ -160,7 +160,7 @@ describe('Bridging ERC20 tokens', async function () {
     // initializing rate limit params for the token
     await env.eth.fuelERC20Gateway
       .connect(env.eth.deployer)
-      .initializeRateLimit(
+      .resetRateLimitAmount(
         eth_testTokenAddress,
         RATE_LIMIT_AMOUNT.toString(),
         RATE_LIMIT_DURATION

@@ -38,14 +38,6 @@ describe('erc20GatewayV4', () => {
 
     await erc20Gateway.connect(deployer).setAssetIssuerId(assetIssuerId);
 
-    await erc20Gateway
-      .connect(deployer)
-      .initializeRateLimit(
-        token.getAddress(),
-        RATE_LIMIT_AMOUNT.toString(),
-        RATE_LIMIT_DURATION
-      );
-
     return {
       fuelMessagePortal,
       erc20Gateway,

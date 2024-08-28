@@ -1005,7 +1005,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             ).connect(user);
           });
 
-          it('reverts when rate limit is reset without initializing it first', async () => {
+          it('emits event when rate limit is set', async () => {
             const {
               erc20Gateway,
               signers: [deployer, user],
@@ -1013,37 +1013,6 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
             const rateLimitAmount =
               RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
-
-            await expect(
-              erc20Gateway
-                .connect(deployer)
-                .resetRateLimitAmount(
-                  token.getAddress(),
-                  rateLimitAmount.toString(),
-                  RATE_LIMIT_DURATION
-                )
-            ).to.be.revertedWithCustomError(
-              erc20Gateway,
-              'RateLimitNotInitialized'
-            );
-          });
-
-          it('reverts when rate limit is initialized again', async () => {
-            const {
-              erc20Gateway,
-              signers: [deployer, user],
-            } = env;
-
-            const rateLimitAmount =
-              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
-
-            await erc20Gateway
-              .connect(deployer)
-              .initializeRateLimit(
-                token.getAddress(),
-                rateLimitAmount.toString(),
-                RATE_LIMIT_DURATION
-              );
 
             const tx = erc20Gateway
               .connect(deployer)
@@ -1056,19 +1025,6 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             await expect(tx)
               .to.emit(erc20Gateway, 'RateLimitUpdated')
               .withArgs(token.getAddress(), rateLimitAmount.toString());
-
-            await expect(
-              erc20Gateway
-                .connect(deployer)
-                .initializeRateLimit(
-                  token.getAddress(),
-                  rateLimitAmount.toString(),
-                  RATE_LIMIT_DURATION
-                )
-            ).to.be.revertedWithCustomError(
-              erc20Gateway,
-              'RateLimitAlreadySet'
-            );
           });
 
           it('does not update rate limit vars when it is not initialized', async () => {
@@ -1146,7 +1102,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
             await erc20Gateway
               .connect(deployer)
-              .initializeRateLimit(
+              .resetRateLimitAmount(
                 token.getAddress(),
                 rateLimitAmount.toString(),
                 RATE_LIMIT_DURATION
@@ -1278,7 +1234,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
           await erc20Gateway
             .connect(deployer)
-            .initializeRateLimit(
+            .resetRateLimitAmount(
               token.getAddress(),
               amount.toString(),
               RATE_LIMIT_DURATION
