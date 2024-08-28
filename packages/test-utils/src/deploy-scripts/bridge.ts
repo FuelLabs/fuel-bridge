@@ -10,10 +10,10 @@ import {
 } from '@fuel-bridge/fungible-token';
 
 import {
-  DeployContractResult,
+  type DeployContractResult,
   Provider,
   Wallet,
-  WalletUnlocked,
+  type WalletUnlocked,
   ZeroBytes32,
 } from 'fuels';
 

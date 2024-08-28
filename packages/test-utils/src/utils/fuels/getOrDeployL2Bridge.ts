@@ -1,7 +1,7 @@
 import {
   BridgeFungibleToken,
   BridgeFungibleTokenFactory,
-  Proxy,
+  Proxy as _Proxy,
   ProxyFactory,
 } from '@fuel-bridge/fungible-token';
 import { resolveAddress, type AddressLike } from 'ethers';
@@ -22,12 +22,12 @@ export async function getOrDeployL2Bridge(
   const fuelAcct = env.fuel.signers[1];
 
   let l2Bridge: BridgeFungibleToken;
-  let proxy: Proxy;
+  let proxy: _Proxy;
   let implementation: BridgeFungibleToken;
 
   if (FUEL_FUNGIBLE_TOKEN_ADDRESS) {
     try {
-      proxy = new Proxy(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
+      proxy = new _Proxy(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
 
       const { value: implementationContractId } = await proxy.functions
         ._proxy_target()
