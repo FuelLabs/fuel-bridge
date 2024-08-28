@@ -1,29 +1,15 @@
-import { Wallet, parseEther, parseUnits } from 'ethers';
+import { Wallet, parseUnits } from 'ethers';
 import type { Signer } from 'ethers';
-import { isB256, isBech32, toB256 } from 'fuels';
 import { task } from 'hardhat/config';
 import { enterPrivateKey } from './utils';
 
-task('depositToken', 'deposits a token to Fuel')
+task('resetERC20RateLimit', 'sets/resets erc20 token rate limit')
   .addFlag('env', 'use this flag to send transactions from env var PRIVATE_KEY')
   .addFlag('i', 'use this flag to input a private key')
   .addParam('token', 'address of the Token')
-  .addParam('amount', 'amount of token to send (e.g. 1.0123456...')
-  .addParam('recipient', 'fuel address that will receive the deposit')
+  .addParam('rateLimitAmount', 'rate limit amount for the Token')
+  .addParam('rateLimitDuration', 'rate limit duration for the Token')
   .setAction(async (taskArgs, hre) => {
-    let recipient: string;
-
-    if (isB256(taskArgs.recipient)) {
-      recipient = taskArgs.recipient;
-    } else if (isBech32(taskArgs.recipient)) {
-      recipient = toB256(taskArgs.recipient);
-    } else {
-      console.log(
-        `--recipient ${taskArgs.recipient} is not a valid FuelVM address`
-      );
-      return;
-    }
-
     let signer: Signer;
 
     if (taskArgs.i) {
@@ -50,7 +36,7 @@ task('depositToken', 'deposits a token to Fuel')
       decimals = 18n;
     }
 
-    const value = parseUnits(taskArgs.amount, decimals);
+    const value = parseUnits(taskArgs.rateLimitAmount, decimals);
 
     const contract = await hre.ethers.getContractAt(
       'FuelERC20GatewayV4',
@@ -60,9 +46,11 @@ task('depositToken', 'deposits a token to Fuel')
       signer
     );
 
-    await token.approve(contract, value).then((tx) => tx.wait());
-
-    const tx = await contract.deposit(recipient, taskArgs.token, value);
+    const tx = await contract.resetRateLimitAmount(
+      taskArgs.token,
+      value,
+      taskArgs.rateLimitDuration
+    );
 
     console.log(`Transaction sent with hash=${tx.hash}`);
 
