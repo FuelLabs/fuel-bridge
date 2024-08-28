@@ -34,6 +34,7 @@ contract FuelERC20GatewayV4 is
     error GlobalDepositLimit();
     error CannotDepositZero();
     error CannotWithdrawZero();
+    error InvalidAssetIssuerID();
     error InvalidSender();
     error InvalidAmount();
 
@@ -145,6 +146,8 @@ contract FuelERC20GatewayV4 is
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
     function deposit(bytes32 to, address tokenAddress, uint256 amount) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -173,6 +176,8 @@ contract FuelERC20GatewayV4 is
         uint256 amount,
         bytes calldata data
     ) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -191,6 +196,8 @@ contract FuelERC20GatewayV4 is
     }
 
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
             uint256(MessageType.METADATA),
