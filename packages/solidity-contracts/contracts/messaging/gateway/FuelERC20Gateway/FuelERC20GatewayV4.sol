@@ -36,9 +36,7 @@ contract FuelERC20GatewayV4 is
     error CannotWithdrawZero();
     error InvalidSender();
     error InvalidAmount();
-    error RateLimitAlreadySet();
     error RateLimitExceeded();
-    error RateLimitNotInitialized();
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
     event Deposit(bytes32 indexed sender, address indexed tokenAddress, uint256 amount);
@@ -74,10 +72,10 @@ contract FuelERC20GatewayV4 is
     bool public whitelistRequired;
     bytes32 public assetIssuerId;
 
-    mapping(address => uint256) _deposits;
-    mapping(address => uint256) _depositLimits;
-    mapping(address => uint256) _decimalsCache;
-    mapping(bytes32 => bool) _isBridge;
+    mapping(address => uint256) internal _deposits;
+    mapping(address => uint256) internal _depositLimits;
+    mapping(address => uint256) internal _decimalsCache;
+    mapping(bytes32 => bool) internal _isBridge;
 
     /// @notice Amounts already withdrawn this period for each token.
     mapping(address => uint256) public rateLimitDuration;
@@ -144,22 +142,6 @@ contract FuelERC20GatewayV4 is
     }
 
     /**
-     * @notice Intitializing rate limit params for each token. 
-     * @param _token The token address to set rate limit params for.
-     * @param _limitAmount The amount to reset the limit to.
-     * @param _rateLimitDuration rate limit duration.
-     */
-    function initializeRateLimit(address _token, uint256 _limitAmount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
-        if (currentPeriodEnd[_token] != 0) revert RateLimitAlreadySet();
-        
-        rateLimitDuration[_token] = _rateLimitDuration;
-        currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
-        limitAmount[_token] = _limitAmount;
-
-        emit RateLimitUpdated(_token, _limitAmount);
-    }
-
-    /**
      * @notice Resets the rate limit amount.
      * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
@@ -172,8 +154,6 @@ contract FuelERC20GatewayV4 is
         
         // avoid multiple SLOADS
         uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
-
-        if (rateLimitDurationEndTimestamp == 0) revert RateLimitNotInitialized();
         
         // set new rate limit duration
         rateLimitDuration[_token] = _rateLimitDuration;
