@@ -1,6 +1,6 @@
 # This image is built for external projects that want to have
 # an e2e test environment
-FROM ghcr.io/fuellabs/fuel-core:v0.31.0 as fuel-core
+FROM ghcr.io/fuellabs/fuel-core:v0.33.0 as fuel-core
 FROM ghcr.io/fuellabs/fuel-block-committer:v0.4.0 as fuel-committer
 
 FROM node:20-slim as base
@@ -16,12 +16,14 @@ RUN apt install -y curl git file jq
 # Download and install forc binaries
 FROM base as forc-downloader
 
-ENV FORC_VERSION=v0.60.0
+COPY fuel-toolchain.toml .
+
 RUN ARCH=$(uname -m) && \
+    FORC_VERSION=$(awk -F'"' '/forc = / {print $2}' fuel-toolchain.toml) && \
     if [ "$ARCH" = "aarch64" ]; then \
-        FORC_URL="https://github.com/FuelLabs/sway/releases/download/$FORC_VERSION/forc-binaries-linux_arm64.tar.gz"; \
+        FORC_URL="https://github.com/FuelLabs/sway/releases/download/v$FORC_VERSION/forc-binaries-linux_arm64.tar.gz"; \
     elif [ "$ARCH" = "x86_64" ]; then \
-        FORC_URL="https://github.com/FuelLabs/sway/releases/download/$FORC_VERSION/forc-binaries-linux_amd64.tar.gz"; \
+        FORC_URL="https://github.com/FuelLabs/sway/releases/download/v$FORC_VERSION/forc-binaries-linux_amd64.tar.gz"; \
     else \
         echo "Unsupported architecture: $ARCH" && exit 1; \
     fi && \
