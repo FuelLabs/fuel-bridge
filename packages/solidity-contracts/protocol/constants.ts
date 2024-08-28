@@ -10,5 +10,6 @@ export const CONTRACT_MESSAGE_PREDICATE =
 // From application header: https://github.com/FuelLabs/fuel-specs/blob/master/src/protocol/block-header.md
 export const CONSENSUS_PARAMETERS_VERSION = 0n;
 export const STATE_TRANSITION_BYTECODE_VERSION = 0n;
+export const STANDARD_TOKEN_DECIMALS = 18;
 export const RATE_LIMIT_AMOUNT = 10e18; // 10 ether
 export const RATE_LIMIT_DURATION = 604800; // 1 week
