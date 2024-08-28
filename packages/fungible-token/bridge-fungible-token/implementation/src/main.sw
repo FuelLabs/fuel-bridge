@@ -29,7 +29,7 @@ use data_structures::{
     message_data::MessageData,
     metadata_message::MetadataMessage,
 };
-use events::{ClaimRefundEvent, DepositEvent, MetadataEvent, RefundRegisteredEvent, WithdrawalEvent};
+use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
 use interface::bridge::Bridge;
 use sway_libs::reentrancy::reentrancy_guard;
 use std::{
@@ -363,7 +363,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         .insert(asset_id, new_total_supply);
 
     // Store asset metadata if it is the first time that funds are bridged
-    let sender = msg_sender().unwrap();
+    let sender = Identity::Address(Address::from(BRIDGED_TOKEN_GATEWAY));
     if storage::bridge.asset_to_sub_id.get(asset_id).try_read().is_none()
     {
         log(SetMetadataEvent {
@@ -397,6 +397,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
             sender,
         });
 
+        
         if message_data.decimals < FUEL_ASSET_DECIMALS {
             storage::bridge
                 .decimals
@@ -478,25 +479,21 @@ fn _process_metadata(metadata: MetadataMessage) {
         .get(l1_address)
         .write_slice(metadata.symbol);
 
-    log(MetadataEvent {
-        token_address: metadata.token_address,
-        // symbol: metadata.symbol,
-        // name: metadata.name
-    });
+    let sender = Identity::Address(Address::from(BRIDGED_TOKEN_GATEWAY));
 
     log(SetNameEvent {
         asset: asset_id,
         name: Some(metadata.name),
-        sender: msg_sender().unwrap(),
+        sender,
     });
 
     log(SetSymbolEvent {
         asset: asset_id,
         symbol: Some(metadata.symbol),
-        sender: msg_sender().unwrap(),
+        sender,
     });
 }
 
 fn _generate_sub_id_from_metadata(token_address: b256, token_id: b256) -> b256 {
-    sha256((token_address, token_id))
+    sha256((token_address, token_id, String::from_ascii_str("1")))
 }
