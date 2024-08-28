@@ -14,7 +14,7 @@ export function getTokenId(
 
   if (dataLength(tokenId) < 32) tokenId = zeroPadValue(tokenId, 32);
 
-  const subId = sha256(concat([tokenAddress, tokenId, toUtf8Bytes(chainId)]));
+  const subId = sha256(concat([toUtf8Bytes(chainId), tokenAddress, tokenId]));
   const assetId = sha256(concat([contract.id.toHexString(), subId]));
 
   return assetId;

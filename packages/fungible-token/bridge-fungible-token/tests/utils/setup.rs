@@ -23,7 +23,7 @@ use fuels::{
     types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
-use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
+use std::{io::Read, mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
     BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG,
@@ -418,17 +418,15 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
 }
 
 pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
-    let data: Vec<u8> = Bits256::from_hex_str(token)
-        .unwrap()
-        .0
+    let chain_id = "1".as_bytes();
+    let data: Vec<u8> = chain_id
         .iter()
+        .chain(Bits256::from_hex_str(token).unwrap().0.iter())
         .chain(Bits256::zeroed().0.iter())
-        .chain("1".as_bytes())
         .cloned()
         .collect();
 
     let sub_id = sha2::Sha256::digest(data);
-
     contract_id.asset_id(&Bits256::from_hex_str(&hex::encode(sub_id)).unwrap())
 }
 
