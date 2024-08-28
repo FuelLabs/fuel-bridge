@@ -3,8 +3,8 @@ use crate::utils::{
         BRIDGED_TOKEN, BRIDGED_TOKEN_DECIMALS, BRIDGED_TOKEN_ID, FROM, PROXY_TOKEN_DECIMALS, TO,
     },
     setup::{
-        create_deposit_message, create_wallet, relay_message_to_contract, setup_environment, SetNameEvent, SetSymbolEvent,
-        BridgeFungibleTokenContractConfigurables,
+        create_deposit_message, create_wallet, relay_message_to_contract, setup_environment,
+        BridgeFungibleTokenContractConfigurables, SetNameEvent, SetSymbolEvent,
     },
 };
 use fuels::prelude::Address;
@@ -18,7 +18,7 @@ mod success {
 
     use crate::utils::setup::{
         contract_balance, create_metadata_message, create_recipient_contract, encode_hex,
-        get_asset_id, get_contract_ids, precalculate_deposit_id, wallet_balance, 
+        get_asset_id, get_contract_ids, precalculate_deposit_id, wallet_balance,
         RefundRegisteredEvent,
     };
     use fuel_core_types::fuel_types::canonical::Deserialize;
@@ -88,7 +88,6 @@ mod success {
             utxo_inputs.contract,
         )
         .await;
-    
 
         let tx_status = wallet.provider().unwrap().tx_status(&_tx_id).await.unwrap();
 
@@ -539,16 +538,12 @@ mod success {
         );
     }
 
-
     #[test_case(18u64, PROXY_TOKEN_DECIMALS as u8; "With 18 decimals")]
     #[test_case(9u64, PROXY_TOKEN_DECIMALS as u8; "With 9 decimals")]
     #[test_case(8u64, 8u8; "With 8 decimals")]
     #[test_case(6u64, 6u8; "With 6 decimals")]
     #[tokio::test]
-    async fn register_metadata(
-        decimals: u64,
-        expected_l2_decimals: u8
-    ) {
+    async fn register_metadata(decimals: u64, expected_l2_decimals: u8) {
         let mut wallet = create_wallet();
         let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
 
@@ -634,7 +629,7 @@ mod success {
         assert!(matches!(tx_status, TxStatus::Success { .. }));
 
         for receipt in receipts.clone() {
-            if let Receipt::LogData { data, ..} = receipt {
+            if let Receipt::LogData { data, .. } = receipt {
                 dbg!(hex::encode(data.unwrap()));
             }
         }
@@ -649,7 +644,10 @@ mod success {
 
         assert_eq!(set_name_event.asset, asset_id);
         assert_eq!(set_name_event.name, Some(name.clone()));
-        assert_eq!(set_name_event.sender, Identity::Address(Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap()));
+        assert_eq!(
+            set_name_event.sender,
+            Identity::Address(Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
+        );
 
         let set_symbol_events = bridge
             .log_decoder()
@@ -661,9 +659,10 @@ mod success {
 
         assert_eq!(set_name_event.asset, asset_id);
         assert_eq!(set_name_event.symbol, Some(symbol.clone()));
-        assert_eq!(set_name_event.sender, Identity::Address(Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap()));
-
-
+        assert_eq!(
+            set_name_event.sender,
+            Identity::Address(Address::from_str(BRIDGED_TOKEN_GATEWAY).unwrap())
+        );
 
         let registered_name = bridge
             .methods()
