@@ -122,7 +122,7 @@ impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = _generate_sub_id_from_metadata(token_address, token_id);
-        let amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
+        let amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(u256::zero());
         require(
             amount != ZERO_U256,
             BridgeFungibleTokenError::NoRefundAvailable,
