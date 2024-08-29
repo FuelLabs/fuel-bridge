@@ -23,7 +23,7 @@ use fuels::{
     types::{coin::Coin, input::Input, message::Message, tx_status::TxStatus, Bits256, U256},
 };
 use sha2::Digest;
-use std::{io::Read, mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
+use std::{mem::size_of, num::ParseIntError, result::Result as StdResult, str::FromStr};
 
 use super::constants::{
     BRIDGED_TOKEN, BRIDGED_TOKEN_ID, BRIDGE_PROXY_BINARY, DEPOSIT_TO_ADDRESS_FLAG,

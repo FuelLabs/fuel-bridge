@@ -9,4 +9,5 @@ pub enum BridgeFungibleTokenError {
     UnderflowError: (),
     AssetNotFound: (),
     InvalidAmount: (),
+    WithdrawalToZeroAddress: (),
 }

@@ -477,7 +477,9 @@ mod success {
 mod revert {
     use std::str::FromStr;
 
-    use fuels::types::U256;
+    use fuels::types::{tx_status::TxStatus, U256};
+
+    use crate::utils::setup::{get_asset_id, get_contract_ids};
 
     use super::*;
 
@@ -578,5 +580,70 @@ mod revert {
             .call()
             .await
             .unwrap();
+    }
+
+    #[tokio::test]
+    #[should_panic(expected = "WithdrawalToZeroAddress")]
+    async fn withdraw_to_zero_address() {
+        // perform successful deposit first, verify it, then withdraw and verify balances
+        let mut wallet = create_wallet();
+        let configurables: Option<BridgeFungibleTokenContractConfigurables> = None;
+
+        let amount = 10u64;
+
+        let (proxy_id, _implementation_contract_id) =
+            get_contract_ids(&wallet, configurables.clone());
+
+        let (message, coin, deposit_contract) = create_deposit_message(
+            BRIDGED_TOKEN,
+            BRIDGED_TOKEN_ID,
+            FROM,
+            *wallet.address().hash(),
+            U256::from(amount),
+            BRIDGED_TOKEN_DECIMALS,
+            proxy_id,
+            false,
+            None,
+        )
+        .await;
+
+        let (implementation_contract_id, bridge, utxo_inputs) = setup_environment(
+            &mut wallet,
+            vec![coin],
+            vec![message],
+            deposit_contract,
+            None,
+            configurables,
+        )
+        .await;
+
+        // Relay the test message to the bridge contract
+        let tx_id = relay_message_to_contract(
+            &wallet,
+            utxo_inputs.message[0].clone(),
+            utxo_inputs.contract,
+        )
+        .await;
+
+        let tx_status = wallet
+            .provider()
+            .unwrap()
+            .tx_status(&tx_id)
+            .await
+            .expect("Could not obtain transaction status");
+
+        assert!(matches!(tx_status, TxStatus::Success { .. }));
+
+        let balance = wallet_balance(&wallet, &get_asset_id(&proxy_id.into(), BRIDGED_TOKEN)).await;
+
+        // Check that wallet now has bridged coins
+        assert_eq!(balance, amount);
+
+        // Now try to withdraw
+        let gas = 200_000;
+        let to = Bits256::zeroed();
+
+        let _call_response =
+            withdraw(&bridge, implementation_contract_id.clone(), to, amount, gas).await;
     }
 }
