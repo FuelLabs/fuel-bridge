@@ -76,7 +76,6 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) internal _deposits;
     mapping(address => uint256) internal _depositLimits;
     mapping(address => uint256) internal _decimalsCache;
-    mapping(bytes32 => bool) internal _isBridge;
 
     /// @notice Amounts already withdrawn this period for each token.
     mapping(address => uint256) public rateLimitDuration;
