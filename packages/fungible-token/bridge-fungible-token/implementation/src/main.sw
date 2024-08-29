@@ -54,12 +54,7 @@ use std::{
     },
     string::String,
 };
-use utils::{
-    adjust_deposit_decimals,
-    adjust_withdrawal_decimals,
-    encode_data,
-    encode_register_calldata,
-};
+use utils::encode_data;
 use standards::{
     src20::{
         SetDecimalsEvent,
@@ -152,8 +147,11 @@ impl Bridge for Contract {
     fn withdraw(to: b256) {
         let amount: u64 = msg_amount();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        require(to != b256::zero(), BridgeFungibleTokenError::WithdrawalToZeroAddress);
-        
+        require(
+            to != b256::zero(),
+            BridgeFungibleTokenError::WithdrawalToZeroAddress,
+        );
+
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
         let token_id = _asset_to_token_id(asset_id);
