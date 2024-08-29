@@ -39,7 +39,6 @@ use std::{
         transfer,
     },
     call_frames::msg_asset_id,
-    constants::ZERO_B256,
     context::msg_amount,
     flags::{
         disable_panic_on_overflow,
@@ -77,7 +76,6 @@ use standards::{
 };
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
-const ZERO_U256 = 0x00u256;
 
 configurable {
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
@@ -124,7 +122,7 @@ impl Bridge for Contract {
         let asset = _generate_sub_id_from_metadata(token_address, token_id);
         let amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(u256::zero());
         require(
-            amount != ZERO_U256,
+            amount != u256::zero(),
             BridgeFungibleTokenError::NoRefundAvailable,
         );
 
@@ -132,7 +130,7 @@ impl Bridge for Contract {
         storage::bridge
             .refund_amounts
             .get(from)
-            .insert(asset, ZERO_U256);
+            .insert(asset, u256::zero());
 
         // send a message to unlock this amount on the base layer gateway contract
         send_message(
@@ -271,7 +269,7 @@ fn register_refund(
 ) {
     let asset = _generate_sub_id_from_metadata(token_address, token_id);
 
-    let previous_amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
+    let previous_amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(u256::zero());
     let new_amount = amount.as_u256() + previous_amount;
 
     storage::bridge
@@ -315,7 +313,7 @@ fn _asset_to_l1_address(asset_id: AssetId) -> b256 {
 fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     require(
         message_data
-            .amount != ZERO_B256,
+            .amount != b256::zero(),
         BridgeFungibleTokenError::NoCoinsSent,
     );
 

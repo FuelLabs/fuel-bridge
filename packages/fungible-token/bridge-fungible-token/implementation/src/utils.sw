@@ -5,7 +5,6 @@ use ::errors::BridgeFungibleTokenError;
 use ::events::DepositEvent;
 use std::{
     bytes::Bytes,
-    constants::ZERO_B256,
     flags::{
         disable_panic_on_overflow,
         enable_panic_on_overflow,
