@@ -47,19 +47,19 @@ export async function getOrDeployCustomWETHContract(env: TestEnvironment) {
 }
 
 export async function mintECR20(
-    env: TestEnvironment,
-    ethTestToken: CustomTokenWETH,
-    ethAcctAddr: string,
-    amount: string
+  env: TestEnvironment,
+  ethTestToken: CustomTokenWETH,
+  ethAcctAddr: string,
+  amount: string
+) {
+  if (
+    (await ethTestToken.balanceOf(ethAcctAddr)) <=
+    ethers_parseToken(amount, 18n) * 2n
   ) {
-    if (
-      (await ethTestToken.balanceOf(ethAcctAddr)) <=
-      ethers_parseToken(amount, 18n) * 2n
-    ) {
-      debug(`Minting ERC-20 tokens to test with...`);
-      const tokenMintTx1 = await ethTestToken
-        .connect(env.eth.deployer)
-        .deposit({ value: ethers_parseToken(amount, 18n)})
-      await tokenMintTx1.wait();
-    }
+    debug(`Minting ERC-20 tokens to test with...`);
+    const tokenMintTx1 = await ethTestToken
+      .connect(env.eth.deployer)
+      .deposit({ value: ethers_parseToken(amount, 18n) });
+    await tokenMintTx1.wait();
   }
+}

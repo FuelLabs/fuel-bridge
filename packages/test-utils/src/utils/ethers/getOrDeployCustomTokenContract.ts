@@ -7,7 +7,10 @@ import type { TestEnvironment } from '../setup';
 
 const { ETH_ERC20_TOKEN_ADDRESS } = process.env;
 
-export async function getOrDeployCustomTokenContract(env: TestEnvironment, decimals: bigint) {
+export async function getOrDeployCustomTokenContract(
+  env: TestEnvironment,
+  decimals: bigint
+) {
   debug('Setting up environment...');
   const ethDeployer = env.eth.signers[0];
   const ethAcct = env.eth.signers[0];
