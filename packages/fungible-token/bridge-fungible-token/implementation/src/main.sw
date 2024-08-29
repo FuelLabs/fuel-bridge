@@ -54,12 +54,7 @@ use std::{
     },
     string::String,
 };
-use utils::{
-    adjust_deposit_decimals,
-    adjust_withdrawal_decimals,
-    encode_data,
-    encode_register_calldata,
-};
+use utils::encode_data;
 use standards::{
     src20::{
         SetDecimalsEvent,
