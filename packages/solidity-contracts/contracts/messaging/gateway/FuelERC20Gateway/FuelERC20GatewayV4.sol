@@ -34,14 +34,19 @@ contract FuelERC20GatewayV4 is
     error GlobalDepositLimit();
     error CannotDepositZero();
     error CannotWithdrawZero();
+    error InvalidAssetIssuerID();
     error InvalidSender();
     error InvalidAmount();
+    error RateLimitExceeded();
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
     event Deposit(bytes32 indexed sender, address indexed tokenAddress, uint256 amount);
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
     event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, uint256 amount);
+
+    /// @dev Emitted when rate limit is reset
+    event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
 
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
@@ -56,6 +61,8 @@ contract FuelERC20GatewayV4 is
 
     /// @dev The admin related contract roles
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
+    /// @dev The rate limit setter role
+    bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
     uint256 public constant FUEL_ASSET_DECIMALS = 9;
     uint256 constant NO_DECIMALS = type(uint256).max;
 
@@ -71,6 +78,18 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) internal _decimalsCache;
     mapping(bytes32 => bool) internal _isBridge;
 
+    /// @notice Amounts already withdrawn this period for each token.
+    mapping(address => uint256) public rateLimitDuration;
+
+    /// @notice Amounts already withdrawn this period for each token.
+    mapping(address => uint256) public currentPeriodAmount;
+
+    /// @notice The time at which the current period ends at for each token.
+    mapping(address => uint256) public currentPeriodEnd;
+
+    /// @notice The eth withdrawal limit amount for each token.
+    mapping(address => uint256) public limitAmount;
+
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
     function initialize(FuelMessagePortal fuelMessagePortal) public initializer {
@@ -82,6 +101,8 @@ contract FuelERC20GatewayV4 is
         //grant initial roles
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
+        // set rate limiter role
+        _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
     }
 
     /////////////////////
@@ -121,6 +142,47 @@ contract FuelERC20GatewayV4 is
         require(success);
     }
 
+    /**
+     * @notice Resets the rate limit amount.
+     * @param _token The token address to set rate limit for.
+     * @param _amount The amount to reset the limit to.
+     * @param _rateLimitDuration The new rate limit duration.
+     */
+    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        uint256 withdrawalLimitAmountToSet;
+        bool amountWithdrawnLoweredToLimit;
+        bool withdrawalAmountResetToZero;
+        
+        // avoid multiple SLOADS
+        uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
+        
+        // set new rate limit duration
+        rateLimitDuration[_token] = _rateLimitDuration;
+        
+        // if period has expired then currentPeriodAmount is zero
+        if (rateLimitDurationEndTimestamp < block.timestamp) {
+            unchecked {
+                currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
+            }
+            withdrawalAmountResetToZero = true;
+        } else {
+            // If the withdrawn amount is higher, it is set to the new limit amount
+            if (_amount < currentPeriodAmount[_token]) {
+                withdrawalLimitAmountToSet = _amount;
+                amountWithdrawnLoweredToLimit = true;
+            }
+        }
+
+        limitAmount[_token] = _amount;
+
+        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
+            currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
+        }
+
+        emit RateLimitUpdated(_token, _amount);
+    }
+
+
     //////////////////////
     // Public Functions //
     //////////////////////
@@ -145,6 +207,8 @@ contract FuelERC20GatewayV4 is
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
     function deposit(bytes32 to, address tokenAddress, uint256 amount) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -173,6 +237,8 @@ contract FuelERC20GatewayV4 is
         uint256 amount,
         bytes calldata data
     ) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 l2MintedAmount = _adjustDepositDecimals(decimals, amount);
 
@@ -191,6 +257,8 @@ contract FuelERC20GatewayV4 is
     }
 
     function sendMetadata(address tokenAddress) external payable virtual whenNotPaused {
+        if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
+
         bytes memory metadataMessage = abi.encodePacked(
             assetIssuerId,
             uint256(MessageType.METADATA),
@@ -225,6 +293,9 @@ contract FuelERC20GatewayV4 is
 
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
+
+        // rate limit check only if rate limit is initialized
+        if (currentPeriodEnd[tokenAddress] != 0) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
@@ -327,6 +398,33 @@ contract FuelERC20GatewayV4 is
     // solhint-disable-next-line no-empty-blocks
     function _authorizeUpgrade(address newImplementation) internal override onlyRole(DEFAULT_ADMIN_ROLE) {
         //should revert if msg.sender is not authorized to upgrade the contract (currently only owner)
+    }
+
+    /**
+     * @notice Increments the amount withdrawn in the period.
+     * @dev Reverts if the withdrawn limit is breached.
+     * @param _token Token address to update withdrawn amount for.
+     * @param _withdrawnAmount The amount withdrawn to be added.
+     */
+    function _addWithdrawnAmount(address _token, uint256 _withdrawnAmount) internal {
+        uint256 currentPeriodAmountTemp;
+
+        if (currentPeriodEnd[_token] < block.timestamp) {
+            unchecked {
+               currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+            }
+            currentPeriodAmountTemp = _withdrawnAmount;
+        } else {
+            unchecked {
+               currentPeriodAmountTemp = currentPeriodAmount[_token] + _withdrawnAmount;
+            }
+        }
+
+        if (currentPeriodAmountTemp > limitAmount[_token]) {
+            revert RateLimitExceeded();
+        }
+
+        currentPeriodAmount[_token] = currentPeriodAmountTemp;
     }
 
     /**
