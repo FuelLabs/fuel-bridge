@@ -154,7 +154,7 @@ impl Bridge for Contract {
     fn withdraw(to: b256) {
         let amount: u64 = msg_amount();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
-        require(to != ZERO_B256, BridgeFungibleTokenError::WithdrawalToZeroAddress);
+        require(to != b256::zero(), BridgeFungibleTokenError::WithdrawalToZeroAddress);
         
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
