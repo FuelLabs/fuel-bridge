@@ -11,9 +11,6 @@ abi Proxy {
     #[storage(read)]
     fn _proxy_owner() -> State;
 
-    #[storage(read)]
-    fn _proxy_target() -> ContractId;
-
     #[storage(read, write)]
     fn _proxy_change_owner(new_owner: Identity);
 
@@ -26,20 +23,26 @@ configurable {
     INITIAL_TARGET: ContractId = ContractId::zero(),
 }
 
-#[namespace(SRC14)]
 storage {
-    // target is at sha256("storage_SRC14_0")
-    target: Option<ContractId> = None,
-    // owner is at sha256("storage_SRC14_1")
-    owner: State = State::Uninitialized,
+    SRC14 {
+        // target is at sha256("storage_SRC14_0")
+        target: Option<ContractId> = None,
+        // owner is at sha256("storage_SRC14_1")
+        owner: State = State::Uninitialized,
+    },
 }
 
 impl SRC14 for Contract {
-    #[storage(write)]
+    #[storage(read, write)]
     fn set_proxy_target(new_target: ContractId) {
         only_owner();
         require(new_target.bits() != b256::zero(), ProxyErrors::IdentityZero);
-        storage.target.write(Some(new_target));
+        storage::SRC14.target.write(Some(new_target));
+    }
+
+    #[storage(read)]
+    fn proxy_target() -> Option<ContractId> {
+        Some(storage::SRC14.target.read().unwrap_or(INITIAL_TARGET))
     }
 }
 
@@ -47,12 +50,12 @@ impl SRC14 for Contract {
 #[storage(read)]
 fn fallback() {
     // pass through any other method call to the target
-    run_external(storage.target.read().unwrap_or(INITIAL_TARGET))
+    run_external(storage::SRC14.target.read().unwrap_or(INITIAL_TARGET))
 }
 
 #[storage(read)]
 fn only_owner() {
-    let owner = match storage.owner.read() {
+    let owner = match storage::SRC14.owner.read() {
         State::Uninitialized => INITIAL_OWNER,
         state => state,
     };
@@ -66,7 +69,7 @@ fn only_owner() {
 impl Proxy for Contract {
     #[storage(read)]
     fn _proxy_owner() -> State {
-        let owner = storage.owner.read();
+        let owner = storage::SRC14.owner.read();
 
         match owner {
             State::Uninitialized => INITIAL_OWNER,
@@ -74,21 +77,16 @@ impl Proxy for Contract {
         }
     }
 
-    #[storage(read)]
-    fn _proxy_target() -> ContractId {
-        storage.target.read().unwrap_or(INITIAL_TARGET)
-    }
-
     #[storage(read, write)]
     fn _proxy_change_owner(new_owner: Identity) {
         only_owner();
         require(new_owner.bits() != b256::zero(), ProxyErrors::IdentityZero);
-        storage.owner.write(State::Initialized(new_owner));
+        storage::SRC14.owner.write(State::Initialized(new_owner));
     }
 
     #[storage(read, write)]
     fn _proxy_revoke_ownership() {
         only_owner();
-        storage.owner.write(State::Revoked);
+        storage::SRC14.owner.write(State::Revoked);
     }
 }

@@ -17,7 +17,7 @@
     "deploy:bridge": "pnpm ts-node src/deploy-scripts/bridge.ts"
   },
   "peerDependencies": {
-    "fuels": "0.94.0",
+    "fuels": "0.94.1",
     "ethers": "6.13.1"
   },
   "devDependencies": {
