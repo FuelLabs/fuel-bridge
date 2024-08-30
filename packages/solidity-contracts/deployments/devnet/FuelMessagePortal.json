@@ -108,6 +108,31 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "sender",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "oldValue",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "newValue",
+          "type": "address"
+        }
+      ],
+      "name": "FuelChainStateUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
           "internalType": "uint8",
           "name": "version",
@@ -853,6 +878,19 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "newFuelChainState",
+          "type": "address"
+        }
+      ],
+      "name": "setFuelChainState",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes4",
           "name": "interfaceId",
           "type": "bytes4"
@@ -941,6 +979,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 3,
-  "implementation": "0xA517017C3d004F1C5fE1CeC4207787627BAd4011"
+  "numDeployments": 4,
+  "implementation": "0x6A541330221BE3df4aD6D696Cd3513c0cBFB4752"
 }
