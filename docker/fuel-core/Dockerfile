@@ -1,6 +1,6 @@
 # IMPORTANT!
 # Make sure to check:
-# https://github.com/FuelLabs/chain-configuration/tree/master/upgradelog/ignition
+# https://github.com/FuelLabs/chain-configuration/tree/master/upgradelog/ignition-testnet
 # and apply the latest state_transition_function and consensus_parameter
 # when upgrading fuel-core
 FROM ghcr.io/fuellabs/fuel-core:v0.33.0
@@ -26,9 +26,9 @@ RUN git clone \
 RUN cp -R /chain-configuration/local/* ./
 
 # Copy the testnet consensus parameters and state transition bytecode
-RUN cp /chain-configuration/upgradelog/ignition/consensus_parameters/5.json \
+RUN cp /chain-configuration/upgradelog/ignition-testnet/consensus_parameters/5.json \
     ./latest_consensus_parameters.json
-RUN cp /chain-configuration/upgradelog/ignition/state_transition_function/6.wasm \
+RUN cp /chain-configuration/upgradelog/ignition-testnet/state_transition_function/6.wasm \
     ./state_transition_bytecode.wasm
 
 # update local state_config with custom genesis coins config
