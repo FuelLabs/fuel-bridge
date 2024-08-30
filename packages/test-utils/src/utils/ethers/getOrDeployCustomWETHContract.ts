@@ -46,7 +46,7 @@ export async function getOrDeployCustomWETHContract(env: TestEnvironment) {
   return ethTestToken;
 }
 
-export async function mintECR20(
+export async function mintWETH(
   env: TestEnvironment,
   ethTestToken: CustomTokenWETH,
   ethAcctAddr: string,

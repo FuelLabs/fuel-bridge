@@ -49,7 +49,7 @@ export async function getOrDeployCustomTokenContract(
   return ethTestToken;
 }
 
-export async function mintECR20(
+export async function mintToken(
   env: TestEnvironment,
   ethTestToken: CustomToken,
   ethAcctAddr: string,
