@@ -10,7 +10,7 @@ use ::data_structures::{
     deposit_message::DepositMessage,
     metadata_message::MetadataMessage,
 };
-use std::{constants::ZERO_B256, inputs::input_message_data};
+use std::inputs::input_message_data;
 
 pub enum MessageData {
     Deposit: DepositMessage,

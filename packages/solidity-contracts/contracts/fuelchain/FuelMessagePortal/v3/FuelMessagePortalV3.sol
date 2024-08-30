@@ -8,7 +8,11 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLib for FuelBlockHeader;
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
 
+    /// @dev Emitted when fuel chain state is emitted
     event FuelChainStateUpdated(address indexed sender, address indexed oldValue, address indexed newValue);
+
+    /// @dev Emitted when rate limit is reset
+    event ResetRateLimit(uint256 amount);
 
     error MessageBlacklisted();
     error MessageRelayFailed();
@@ -99,6 +103,8 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
             currentPeriodAmount = withdrawalLimitAmountToSet;
         }
+
+        emit ResetRateLimit(_amount);
     }
 
     ///////////////////////////////////////
@@ -225,7 +231,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         uint256 currentPeriodAmountTemp;
 
         if (currentPeriodEnd < block.timestamp) {
-            currentPeriodEnd = block.timestamp + rateLimitDuration;
+            unchecked {
+               currentPeriodEnd = block.timestamp + rateLimitDuration;
+            }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
             unchecked {

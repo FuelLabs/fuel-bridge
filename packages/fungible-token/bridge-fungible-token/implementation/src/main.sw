@@ -29,8 +29,8 @@ use data_structures::{
     message_data::MessageData,
     metadata_message::MetadataMessage,
 };
-use events::{ClaimRefundEvent, DepositEvent, MetadataEvent, RefundRegisteredEvent, WithdrawalEvent};
-use interface::{bridge::Bridge, src7::{Metadata, SRC7}};
+use events::{ClaimRefundEvent, DepositEvent, RefundRegisteredEvent, WithdrawalEvent};
+use interface::bridge::Bridge;
 use sway_libs::reentrancy::reentrancy_guard;
 use std::{
     asset::{
@@ -39,7 +39,6 @@ use std::{
         transfer,
     },
     call_frames::msg_asset_id,
-    constants::ZERO_B256,
     context::msg_amount,
     flags::{
         disable_panic_on_overflow,
@@ -55,32 +54,40 @@ use std::{
     },
     string::String,
 };
-use utils::{
-    adjust_deposit_decimals,
-    adjust_withdrawal_decimals,
-    encode_data,
-    encode_register_calldata,
+use utils::encode_data;
+use standards::{
+    src20::{
+        SetDecimalsEvent,
+        SetNameEvent,
+        SetSymbolEvent,
+        SRC20,
+        TotalSupplyEvent,
+    },
+    src7::{
+        Metadata,
+        SetMetadataEvent,
+        SRC7,
+    },
 };
-use standards::src20::SRC20;
 
 const FUEL_ASSET_DECIMALS: u8 = 9u8;
-const ZERO_U256 = 0x00u256;
 
 configurable {
     BRIDGED_TOKEN_GATEWAY: b256 = 0x00000000000000000000000096c53cd98B7297564716a8f2E1de2C83928Af2fe,
 }
 
-#[namespace(bridge)]
 storage {
-    asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
-    asset_to_token_id: StorageMap<AssetId, b256> = StorageMap {},
-    refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
-    tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
-    l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
-    l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
-    l1_names: StorageMap<b256, StorageString> = StorageMap {},
-    decimals: StorageMap<b256, u8> = StorageMap {},
-    total_assets: u64 = 0,
+    bridge {
+        asset_to_sub_id: StorageMap<AssetId, SubId> = StorageMap {},
+        asset_to_token_id: StorageMap<AssetId, b256> = StorageMap {},
+        refund_amounts: StorageMap<b256, StorageMap<b256, u256>> = StorageMap {},
+        tokens_minted: StorageMap<AssetId, u64> = StorageMap {},
+        l1_addresses: StorageMap<AssetId, b256> = StorageMap {},
+        l1_symbols: StorageMap<b256, StorageString> = StorageMap {},
+        l1_names: StorageMap<b256, StorageString> = StorageMap {},
+        decimals: StorageMap<b256, u8> = StorageMap {},
+        total_assets: u64 = 0,
+    },
 }
 
 // Implement the process_message function required to be a message receiver
@@ -108,14 +115,17 @@ impl Bridge for Contract {
     #[storage(read, write)]
     fn claim_refund(from: b256, token_address: b256, token_id: b256) {
         let asset = _generate_sub_id_from_metadata(token_address, token_id);
-        let amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
+        let amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(u256::zero());
         require(
-            amount != ZERO_U256,
+            amount != u256::zero(),
             BridgeFungibleTokenError::NoRefundAvailable,
         );
 
         // reset the refund amount to 0
-        storage.refund_amounts.get(from).insert(asset, ZERO_U256);
+        storage::bridge
+            .refund_amounts
+            .get(from)
+            .insert(asset, u256::zero());
 
         // send a message to unlock this amount on the base layer gateway contract
         send_message(
@@ -137,6 +147,10 @@ impl Bridge for Contract {
     fn withdraw(to: b256) {
         let amount: u64 = msg_amount();
         require(amount != 0, BridgeFungibleTokenError::NoCoinsSent);
+        require(
+            to != b256::zero(),
+            BridgeFungibleTokenError::WithdrawalToZeroAddress,
+        );
 
         let asset_id = msg_asset_id();
         let sub_id = _asset_to_sub_id(asset_id);
@@ -144,19 +158,20 @@ impl Bridge for Contract {
         let l1_address = _asset_to_l1_address(asset_id);
 
         // Hexens Fuel1-4: Might benefit from a custom error message
-        storage
+        let new_total_supply = storage::bridge.tokens_minted.get(asset_id).read() - amount;
+        storage::bridge
             .tokens_minted
-            .insert(
-                asset_id,
-                storage
-                    .tokens_minted
-                    .get(asset_id)
-                    .read() - amount,
-            );
+            .insert(asset_id, new_total_supply);
         burn(sub_id, amount);
 
-        // send a message to unlock this amount on the base layer gateway contract
         let sender = msg_sender().unwrap();
+        log(TotalSupplyEvent {
+            asset: asset_id,
+            supply: new_total_supply,
+            sender,
+        });
+
+        // send a message to unlock this amount on the base layer gateway contract
         send_message(
             BRIDGED_TOKEN_GATEWAY,
             encode_data(to, amount.as_u256().as_b256(), l1_address, token_id),
@@ -187,41 +202,58 @@ impl Bridge for Contract {
 impl SRC20 for Contract {
     #[storage(read)]
     fn total_assets() -> u64 {
-        storage.total_assets.try_read().unwrap_or(0)
+        storage::bridge.total_assets.try_read().unwrap_or(0)
     }
 
     #[storage(read)]
     fn total_supply(asset: AssetId) -> Option<u64> {
-        storage.tokens_minted.get(asset).try_read()
+        storage::bridge.tokens_minted.get(asset).try_read()
     }
 
     #[storage(read)]
     fn name(asset: AssetId) -> Option<String> {
         let l1_address = _asset_to_l1_address(asset);
-        storage.l1_names.get(l1_address).read_slice()
+        storage::bridge.l1_names.get(l1_address).read_slice()
     }
 
     #[storage(read)]
     fn symbol(asset: AssetId) -> Option<String> {
         let l1_address = _asset_to_l1_address(asset);
-        storage.l1_symbols.get(l1_address).read_slice()
+        storage::bridge.l1_symbols.get(l1_address).read_slice()
     }
 
     #[storage(read)]
     fn decimals(asset: AssetId) -> Option<u8> {
-        match storage.l1_addresses.get(asset).try_read() {
-            Some(l1_address) => storage.decimals.get(l1_address).try_read(),
+        match storage::bridge.l1_addresses.get(asset).try_read() {
+            Some(l1_address) => storage::bridge.decimals.get(l1_address).try_read(),
             None => None,
         }
     }
 }
 
 impl SRC7 for Contract {
-    // TODO: implement SRC-8
     #[storage(read)]
-    fn metadata(asset: AssetId, _key: String) -> Option<Metadata> {
-        let _todo = _asset_to_sub_id(asset);
-        None
+    fn metadata(asset: AssetId, key: String) -> Option<Metadata> {
+        let sub_id = storage::bridge.asset_to_sub_id.get(asset).try_read();
+
+        if (sub_id.is_none()) {
+            return None;
+        };
+
+        let result = if key == String::from_ascii_str("bridged:chain") {
+            Some(Metadata::String(String::from_ascii_str("1")))
+        } else if key == String::from_ascii_str("bridged:address") {
+            Some(Metadata::B256(storage::bridge.l1_addresses.get(asset).read()))
+        } else if key == String::from_ascii_str("bridged:decimals") {
+            let l1_address = storage::bridge.l1_addresses.get(asset).read();
+            Some(Metadata::Int(storage::bridge.decimals.get(l1_address).read().into()))
+        } else if key == String::from_ascii_str("bridged:id") {
+            Some(Metadata::B256(storage::bridge.asset_to_token_id.get(asset).read()))
+        } else {
+            None
+        };
+
+        result
     }
 }
 
@@ -235,10 +267,13 @@ fn register_refund(
 ) {
     let asset = _generate_sub_id_from_metadata(token_address, token_id);
 
-    let previous_amount = storage.refund_amounts.get(from).get(asset).try_read().unwrap_or(ZERO_U256);
+    let previous_amount = storage::bridge.refund_amounts.get(from).get(asset).try_read().unwrap_or(u256::zero());
     let new_amount = amount.as_u256() + previous_amount;
 
-    storage.refund_amounts.get(from).insert(asset, new_amount);
+    storage::bridge
+        .refund_amounts
+        .get(from)
+        .insert(asset, new_amount);
     log(RefundRegisteredEvent {
         from,
         token_address,
@@ -249,21 +284,21 @@ fn register_refund(
 
 #[storage(read)]
 fn _asset_to_sub_id(asset_id: AssetId) -> SubId {
-    let sub_id = storage.asset_to_sub_id.get(asset_id).try_read();
+    let sub_id = storage::bridge.asset_to_sub_id.get(asset_id).try_read();
     require(sub_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     sub_id.unwrap()
 }
 
 #[storage(read)]
 fn _asset_to_token_id(asset_id: AssetId) -> b256 {
-    let token_id = storage.asset_to_token_id.get(asset_id).try_read();
+    let token_id = storage::bridge.asset_to_token_id.get(asset_id).try_read();
     require(token_id.is_some(), BridgeFungibleTokenError::AssetNotFound);
     token_id.unwrap()
 }
 
 #[storage(read)]
 fn _asset_to_l1_address(asset_id: AssetId) -> b256 {
-    let l1_address = storage.l1_addresses.get(asset_id).try_read();
+    let l1_address = storage::bridge.l1_addresses.get(asset_id).try_read();
     require(
         l1_address
             .is_some(),
@@ -276,7 +311,7 @@ fn _asset_to_l1_address(asset_id: AssetId) -> b256 {
 fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
     require(
         message_data
-            .amount != ZERO_B256,
+            .amount != b256::zero(),
         BridgeFungibleTokenError::NoCoinsSent,
     );
 
@@ -301,7 +336,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 
     let _ = disable_panic_on_overflow();
 
-    let current_total_supply = storage.tokens_minted.get(asset_id).try_read().unwrap_or(0);
+    let current_total_supply = storage::bridge.tokens_minted.get(asset_id).try_read().unwrap_or(0);
     let new_total_supply = current_total_supply + amount;
 
     if new_total_supply < current_total_supply {
@@ -320,33 +355,85 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
 
     let _ = enable_panic_on_overflow();
 
-    storage.tokens_minted.insert(asset_id, new_total_supply);
+    storage::bridge
+        .tokens_minted
+        .insert(asset_id, new_total_supply);
 
     // Store asset metadata if it is the first time that funds are bridged
-    if storage.asset_to_sub_id.get(asset_id).try_read().is_none()
+    let sender = Identity::Address(Address::from(BRIDGED_TOKEN_GATEWAY));
+    if storage::bridge.asset_to_sub_id.get(asset_id).try_read().is_none()
     {
-        storage.asset_to_sub_id.insert(asset_id, sub_id);
-        storage
+        log(SetMetadataEvent {
+            asset: asset_id,
+            metadata: Some(Metadata::String(String::from_ascii_str("1"))),
+            key: String::from_ascii_str("bridged:chain"),
+            sender,
+        });
+
+        storage::bridge.asset_to_sub_id.insert(asset_id, sub_id);
+        storage::bridge
             .asset_to_token_id
             .insert(asset_id, message_data.token_id);
-        storage
+        log(SetMetadataEvent {
+            asset: asset_id,
+            metadata: Some(Metadata::B256(message_data.token_id)),
+            key: String::from_ascii_str("bridged:id"),
+            sender,
+        });
+
+        storage::bridge
             .total_assets
-            .write(storage.total_assets.try_read().unwrap_or(0) + 1);
-        storage
+            .write(storage::bridge.total_assets.try_read().unwrap_or(0) + 1);
+        storage::bridge
             .l1_addresses
             .insert(asset_id, message_data.token_address);
+        log(SetMetadataEvent {
+            asset: asset_id,
+            metadata: Some(Metadata::B256(message_data.token_address)),
+            key: String::from_ascii_str("bridged:address"),
+            sender,
+        });
+
         if message_data.decimals < FUEL_ASSET_DECIMALS {
-            storage
+            storage::bridge
                 .decimals
                 .insert(message_data.token_address, message_data.decimals);
+            log(SetDecimalsEvent {
+                asset: asset_id,
+                decimals: message_data.decimals,
+                sender,
+            });
+            log(SetMetadataEvent {
+                asset: asset_id,
+                metadata: Some(Metadata::Int(message_data.decimals.into())),
+                key: String::from_ascii_str("bridged:decimals"),
+                sender,
+            });
         } else {
-            storage
+            storage::bridge
                 .decimals
                 .insert(message_data.token_address, FUEL_ASSET_DECIMALS);
+            log(SetDecimalsEvent {
+                asset: asset_id,
+                decimals: FUEL_ASSET_DECIMALS,
+                sender,
+            });
+            log(SetMetadataEvent {
+                asset: asset_id,
+                metadata: Some(Metadata::Int(FUEL_ASSET_DECIMALS.into())),
+                key: String::from_ascii_str("bridged:decimals"),
+                sender,
+            });
         }
     };
     // mint tokens & update storage
     mint(sub_id, amount);
+
+    log(TotalSupplyEvent {
+        asset: asset_id,
+        supply: new_total_supply,
+        sender,
+    });
 
     match message_data.deposit_type {
         DepositType::Address | DepositType::Contract => {
@@ -379,19 +466,31 @@ fn _process_metadata(metadata: MetadataMessage) {
     // it must have been deposited first
     let l1_address = _asset_to_l1_address(asset_id);
 
-    storage.l1_names.get(l1_address).write_slice(metadata.name);
-    storage
+    storage::bridge
+        .l1_names
+        .get(l1_address)
+        .write_slice(metadata.name);
+    storage::bridge
         .l1_symbols
         .get(l1_address)
         .write_slice(metadata.symbol);
 
-    log(MetadataEvent {
-        token_address: metadata.token_address,
-        // symbol: metadata.symbol,
-        // name: metadata.name
+    let sender = Identity::Address(Address::from(BRIDGED_TOKEN_GATEWAY));
+
+    log(SetNameEvent {
+        asset: asset_id,
+        name: Some(metadata.name),
+        sender,
+    });
+
+    log(SetSymbolEvent {
+        asset: asset_id,
+        symbol: Some(metadata.symbol),
+        sender,
     });
 }
 
 fn _generate_sub_id_from_metadata(token_address: b256, token_id: b256) -> b256 {
-    sha256((token_address, token_id))
+    // SRC8: sub_id = sha256(chain_id ++ token_address + token_id)
+    sha256((String::from_ascii_str("1"), token_address, token_id))
 }

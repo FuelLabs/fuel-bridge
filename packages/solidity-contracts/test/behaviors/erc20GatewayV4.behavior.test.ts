@@ -13,7 +13,12 @@ import type { BytesLike } from 'ethers';
 import hre from 'hardhat';
 import { random } from 'lodash';
 
-import { CONTRACT_MESSAGE_PREDICATE } from '../../protocol/constants';
+import {
+  CONTRACT_MESSAGE_PREDICATE,
+  RATE_LIMIT_AMOUNT,
+  RATE_LIMIT_DURATION,
+  STANDARD_TOKEN_DECIMALS,
+} from '../../protocol/constants';
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
@@ -354,6 +359,28 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             await expect(tx).to.be.revertedWithCustomError(
               erc20Gateway,
               'BridgeFull'
+            );
+          });
+
+          it('reverts when asset issuer id is not set', async () => {
+            const {
+              erc20Gateway,
+              token,
+              signers: [deployer, user],
+            } = env;
+
+            const depositTo = randomBytes32();
+            const depositAmount = MaxUint256;
+
+            await erc20Gateway.connect(deployer).setAssetIssuerId(ZeroHash);
+
+            const tx = erc20Gateway
+              .connect(user)
+              .deposit(depositTo, token, depositAmount);
+
+            await expect(tx).to.be.revertedWithCustomError(
+              erc20Gateway,
+              'InvalidAssetIssuerID'
             );
           });
 
@@ -1000,6 +1027,90 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             ).connect(user);
           });
 
+          it('emits event when rate limit is set', async () => {
+            const {
+              erc20Gateway,
+              signers: [deployer, user],
+            } = env;
+
+            const rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            const tx = erc20Gateway
+              .connect(deployer)
+              .resetRateLimitAmount(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
+
+            await expect(tx)
+              .to.emit(erc20Gateway, 'RateLimitUpdated')
+              .withArgs(token.getAddress(), rateLimitAmount.toString());
+          });
+
+          it('does not update rate limit vars when it is not initialized', async () => {
+            const {
+              erc20Gateway,
+              fuelMessagePortal,
+              signers: [deployer, user],
+              assetIssuerId,
+            } = env;
+
+            const amount = parseUnits(
+              random(0.01, 1, true).toFixed(decimals),
+              Number(decimals)
+            );
+            let recipient = randomBytes32();
+
+            await fuelMessagePortal
+              .connect(deployer)
+              .setMessageSender(assetIssuerId);
+
+            const impersonatedPortal = await impersonateAccount(
+              fuelMessagePortal,
+              hre
+            );
+
+            await token.mint(user, amount);
+            await token.approve(erc20Gateway, MaxUint256);
+
+            await erc20Gateway.connect(user).deposit(recipient, token, amount);
+            const withdrawAmount = amount / 4n;
+
+            // Withdrawal
+            recipient = randomAddress();
+            const withdrawalTx = erc20Gateway
+              .connect(impersonatedPortal)
+              .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+            await withdrawalTx;
+
+            const expectedTokenTotals = amount - withdrawAmount;
+            expect(await erc20Gateway.tokensDeposited(token)).to.be.equal(
+              expectedTokenTotals
+            );
+
+            await expect(withdrawalTx).to.changeTokenBalances(
+              token,
+              [erc20Gateway, recipient],
+              [withdrawAmount * -1n, withdrawAmount]
+            );
+            await expect(withdrawalTx)
+              .to.emit(erc20Gateway, 'Withdrawal')
+              .withArgs(
+                zeroPadValue(recipient, 32).toLowerCase(),
+                token,
+                withdrawAmount
+              );
+
+            // check rate limit params
+            const withdrawnAmountAfterRelay =
+              await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+            await expect(withdrawnAmountAfterRelay == 0n).to.be.true;
+          });
+
           it('reduces deposits and transfers out without upscaling', async () => {
             const {
               erc20Gateway,
@@ -1007,6 +1118,17 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               signers: [deployer, user],
               assetIssuerId,
             } = env;
+
+            const rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await erc20Gateway
+              .connect(deployer)
+              .resetRateLimitAmount(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
 
             const amount = parseUnits(
               random(0.01, 1, true).toFixed(decimals),
@@ -1084,6 +1206,13 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                   token,
                   withdrawAmount
                 );
+
+              // check rate limit params
+              const withdrawnAmountAfterRelay =
+                await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+              await expect(withdrawnAmountAfterRelay == withdrawAmount * 2n).to
+                .be.true;
             }
           });
         });
@@ -1124,6 +1253,14 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
           await token.mint(user, amount);
           await token.approve(erc20Gateway, MaxUint256);
+
+          await erc20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              token.getAddress(),
+              amount.toString(),
+              RATE_LIMIT_DURATION
+            );
 
           await erc20Gateway.connect(user).deposit(recipient, token, amount);
           const withdrawAmount = amount / 4n;

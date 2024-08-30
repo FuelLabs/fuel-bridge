@@ -2,15 +2,14 @@ contract;
 
 use contract_message_receiver::MessageReceiver;
 use std::bytes::Bytes;
-use std::constants::ZERO_B256;
 use std::inputs::{input_message_data, input_message_data_length};
 
 storage {
     counter: u64 = 0,
-    data1: ContractId = ContractId::from(ZERO_B256),
+    data1: ContractId = ContractId::from(b256::zero()),
     data2: u64 = 0,
-    data3: b256 = ZERO_B256,
-    data4: Address = Address::from(ZERO_B256),
+    data3: b256 = b256::zero(),
+    data4: Address = Address::from(b256::zero()),
 }
 
 // Define verification abi

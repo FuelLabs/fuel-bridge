@@ -211,7 +211,7 @@ pub(crate) async fn relay_message_to_contract(
 
     let gas_price: u64 = 1; // NodeInfo.min_gas_price is no longer available
 
-    let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(30_000));
+    let tx_policies = TxPolicies::new(Some(gas_price), None, Some(0), None, Some(300_000));
 
     let fetched_gas_coins: Vec<Coin> = provider
         .get_coins(wallet.address(), Default::default())
@@ -418,16 +418,15 @@ pub(crate) async fn wallet_balance(wallet: &WalletUnlocked, asset_id: &AssetId) 
 }
 
 pub(crate) fn get_asset_id(contract_id: &Bech32ContractId, token: &str) -> AssetId {
-    let data: Vec<u8> = Bits256::from_hex_str(token)
-        .unwrap()
-        .0
+    let chain_id = "1".as_bytes();
+    let data: Vec<u8> = chain_id
         .iter()
+        .chain(Bits256::from_hex_str(token).unwrap().0.iter())
         .chain(Bits256::zeroed().0.iter())
         .cloned()
         .collect();
 
     let sub_id = sha2::Sha256::digest(data);
-
     contract_id.asset_id(&Bits256::from_hex_str(&hex::encode(sub_id)).unwrap())
 }
 

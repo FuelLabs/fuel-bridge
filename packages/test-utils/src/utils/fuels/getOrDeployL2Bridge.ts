@@ -30,7 +30,7 @@ export async function getOrDeployL2Bridge(
       proxy = new Proxy(FUEL_FUNGIBLE_TOKEN_ADDRESS, fuelAcct);
 
       const { value: implementationContractId } = await proxy.functions
-        ._proxy_target()
+        .proxy_target()
         .dryRun();
 
       implementation = new BridgeFungibleToken(

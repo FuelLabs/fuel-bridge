@@ -3,7 +3,6 @@ library;
 use std::{
     alloc::alloc_bytes,
     bytes::*,
-    constants::ZERO_B256,
     inputs::input_message_data,
     primitive_conversions::u64::*,
     string::String,

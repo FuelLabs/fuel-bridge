@@ -57,13 +57,13 @@ mod tests {
 
         let target = proxy
             .methods()
-            ._proxy_target()
+            .proxy_target()
             .with_contract_ids(&[proxy_id.into()])
             .simulate(Execution::Realistic)
             .await?
             .value;
 
-        assert_eq!(target, _implementation_contract_id);
+        assert_eq!(target, Some(_implementation_contract_id));
 
         Ok(())
     }
@@ -373,13 +373,13 @@ mod tests {
 
         let target = proxy
             .methods()
-            ._proxy_target()
+            .proxy_target()
             .with_contract_ids(&[proxy_id.into()])
             .simulate(Execution::Realistic)
             .await?
             .value;
 
-        assert_eq!(target, random_contract_id);
+        assert_eq!(target, Some(random_contract_id));
 
         Ok(())
     }
