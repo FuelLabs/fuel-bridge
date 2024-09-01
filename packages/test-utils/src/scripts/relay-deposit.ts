@@ -1,6 +1,6 @@
 /**
  * This is a stand-alone script that deploys the
- * L2 bridge with fuels-ts sdk.
+ * fetches a deposit messages and relays it to the bridge
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
@@ -23,7 +23,10 @@ import {
   waitForMessage,
 } from '../utils';
 
-const { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE } = process.env;
+const TOKEN_RECIPIENT_DATA_OFFSET = 160;
+
+const { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
+  process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
@@ -64,9 +67,13 @@ const main = async () => {
 
     const message = messages.find((message) => {
       const hex = hexlify(message.data).replace('0x', '');
-      const recipient = hex.substring(160 * 2, 160 * 2 + 64);
+      const recipient = hex.substring(
+        TOKEN_RECIPIENT_DATA_OFFSET * 2,
+        TOKEN_RECIPIENT_DATA_OFFSET * 2 + 64 // Recipient is 32 bytes
+      );
+      const expectedRecipient = L2_TOKEN_RECEIVER || wallet.address.toB256();
 
-      return recipient === wallet.address.toB256().replace('0x', '');
+      return recipient === expectedRecipient.replace('0x', '');
     });
 
     if (!message) {
