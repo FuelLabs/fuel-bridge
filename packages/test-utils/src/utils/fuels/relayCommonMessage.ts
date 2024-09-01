@@ -73,7 +73,10 @@ function getCommonRelayableMessages(provider: Provider) {
       ): Promise<ScriptTransactionRequest> => {
         const script = arrayify(details.script);
         const predicateBytecode = arrayify(details.predicate);
+
         // get resources to fund the transaction
+        // these are initial values that enable calling
+        // `provider.estimatePredicates()` later
         const resources = await relayer.getResourcesToSpend([
           {
             amount: new BN(1),
@@ -143,8 +146,6 @@ function getCommonRelayableMessages(provider: Provider) {
         transaction.witnesses.push(ZeroBytes32);
 
         transaction.gasLimit = bn(500_000);
-
-        transaction.maxFee = bn(1);
 
         debug(
           '-------------------------------------------------------------------'
