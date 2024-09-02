@@ -7,8 +7,8 @@ use std::{fs, str::FromStr};
 
 // Matches the README addresses
 const BASE_ASSET_CONTRACT_ID: &str =
-    "0xf746b8dfe2a6545119b421753ab465a9c21094709f0df7926c6d33cb90797d45";
-const BASE_ASSET_ID: &str = "0x2361e96b094f3bb902d53d86f3172333587054de09c7ab6c639bd3c52e252aa7";
+    "0xab724dea11ad246edc359338a6e3cfe6dabdf18740c3b2cf417cc4b1f9453512";
+const BASE_ASSET_ID: &str = "0x157b59fb83fc65a53100dda502e6100fc6b1e28ceee3d038c5ef3084bfeae75e";
 const BASE_ASSET_CONTRACT_BYTECODE_PATH: &str = "out/release/base-asset-contract.bin";
 const BASE_ASSET_CONTRACT_HEX_PATH: &str = "bin/base-asset-contract.hex";
 const BASE_ASSET_CONTRACT_BIN_PATH: &str = "bin/base-asset-contract.bin";
