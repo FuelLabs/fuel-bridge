@@ -75,7 +75,7 @@ export interface SetupOptions {
 // The test environment
 export interface TestEnvironment {
   eth: {
-    provider: EthProvider;
+    provider: JsonRpcProvider;
     jsonRPC: string;
     fuelChainState: FuelChainState;
     fuelMessagePortal: FuelMessagePortal;
