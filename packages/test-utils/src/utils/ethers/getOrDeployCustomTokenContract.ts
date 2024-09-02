@@ -48,22 +48,3 @@ export async function getOrDeployCustomTokenContract(
 
   return ethTestToken;
 }
-
-export async function mintToken(
-  env: TestEnvironment,
-  ethTestToken: CustomToken,
-  ethAcctAddr: string,
-  amount: string,
-  decimals: bigint
-) {
-  if (
-    (await ethTestToken.balanceOf(ethAcctAddr)) <=
-    ethers_parseToken(amount, decimals) * 2n
-  ) {
-    debug(`Minting ERC-20 tokens to test with...`);
-    const tokenMintTx1 = await ethTestToken
-      .connect(env.eth.deployer)
-      .mint(ethAcctAddr, ethers_parseToken('100', decimals));
-    await tokenMintTx1.wait();
-  }
-}
