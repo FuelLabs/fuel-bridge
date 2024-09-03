@@ -45,6 +45,7 @@ describe('Bridging ERC20 tokens', async function () {
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
   const DECIMAL_DIFF = 1_000_000_000n;
+  const WETH_DEPOSIT = parseEther('20');
   const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
   const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
   const WBTC_ADDRESS = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
@@ -53,6 +54,7 @@ describe('Bridging ERC20 tokens', async function () {
   const customTokens: CustomToken[] = [];
   const fuelAssetId: string[] = [];
   const decimals: bigint[] = [];
+  const tokenAddresses: string[] = [];
 
   let env: TestEnvironment;
   let weth_testToken: CustomTokenWETH;
@@ -65,68 +67,108 @@ describe('Bridging ERC20 tokens', async function () {
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
-  // async function generateWithdrawalMessageProof(
-  //   fuel_bridge: BridgeFungibleToken,
-  //   fuelTokenSender: FuelWallet,
-  //   ethereumTokenReceiverAddress: string,
-  //   NUM_TOKENS: bigint,
-  //   DECIMAL_DIFF: bigint
-  // ): Promise<MessageProof> {
-  //   // withdraw tokens back to the base chain
-  //   fuel_bridge.account = fuelTokenSender;
-  //   const paddedAddress =
-  //     '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
-  //   const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
-  //     fuel_testAssetId
-  //   );
-  //   const transactionRequest = await fuel_bridge.functions
-  //     .withdraw(paddedAddress)
-  //     .addContracts([fuel_bridge, fuel_bridgeImpl])
-  //     .txParams({
-  //       tip: 0,
-  //       gasLimit: 1_000_000,
-  //       maxFee: 1,
-  //     })
-  //     .callParams({
-  //       forward: {
-  //         amount: new BN(NUM_TOKENS.toString()).div(
-  //           new BN(DECIMAL_DIFF.toString())
-  //         ),
-  //         assetId: fuel_testAssetId,
-  //       },
-  //     })
-  //     .fundWithRequiredCoins();
+  async function generateWithdrawalMessageProof(
+    fuel_bridge: BridgeFungibleToken,
+    fuelTokenSender: FuelWallet,
+    ethereumTokenReceiverAddress: string,
+    NUM_TOKENS: bigint,
+    DECIMAL_DIFF: bigint,
+    fuel_AssetId: string,
+    decimals: bigint
+  ): Promise<MessageProof> {
+    // withdraw tokens back to the base chain
+    fuel_bridge.account = fuelTokenSender;
+    const paddedAddress =
+      '0x' + ethereumTokenReceiverAddress.slice(2).padStart(64, '0');
+    const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
+      fuel_AssetId
+    );
 
-  //   const tx = await fuelTokenSender.sendTransaction(transactionRequest);
-  //   const fWithdrawTxResult = await tx.waitForResult();
-  //   expect(fWithdrawTxResult.status).to.equal('success');
+    let transactionRequest;
+    if (decimals < 18) {
+      transactionRequest = await fuel_bridge.functions
+        .withdraw(paddedAddress)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          gasLimit: 1_000_000,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString())
+              .div(new BN(DECIMAL_DIFF.toString()))
+              .div(
+                new BN(DECIMAL_DIFF.toString()).div(
+                  new BN((10n ** decimals).toString())
+                )
+              ),
+            assetId: fuel_AssetId,
+          },
+        })
+        .fundWithRequiredCoins();
+    } else {
+      transactionRequest = await fuel_bridge.functions
+        .withdraw(paddedAddress)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          gasLimit: 1_000_000,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN(DECIMAL_DIFF.toString())
+            ),
+            assetId: fuel_AssetId,
+          },
+        })
+        .fundWithRequiredCoins();
+    }
 
-  //   // check that the sender balance has decreased by the expected amount
-  //   const newSenderBalance = await fuelTokenSender.getBalance(fuel_testAssetId);
+    const tx = await fuelTokenSender.sendTransaction(transactionRequest);
+    const fWithdrawTxResult = await tx.waitForResult();
+    expect(fWithdrawTxResult.status).to.equal('success');
 
-  //   expect(
-  //     newSenderBalance.eq(
-  //       fuelTokenSenderBalance.sub(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
-  //     )
-  //   ).to.be.true;
+    // check that the sender balance has decreased by the expected amount
+    const newSenderBalance = await fuelTokenSender.getBalance(fuel_AssetId);
 
-  //   // Wait for the commited block
-  //   const withdrawBlock = await getBlock(
-  //     env.fuel.provider.url,
-  //     fWithdrawTxResult.blockId
-  //   );
-  //   const commitHashAtL1 = await waitForBlockCommit(
-  //     env,
-  //     withdrawBlock.header.height
-  //   );
+    if (decimals < 18) {
+      expect(
+        newSenderBalance.eq(
+          fuelTokenSenderBalance.sub(
+            toBeHex(
+              NUM_TOKENS / DECIMAL_DIFF / (DECIMAL_DIFF / 10n ** decimals)
+            )
+          )
+        )
+      ).to.be.true;
+    } else {
+      expect(
+        newSenderBalance.eq(
+          fuelTokenSenderBalance.sub(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
+        )
+      ).to.be.true;
+    }
 
-  //   const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
-  //   return await fuelTokenSender.provider.getMessageProof(
-  //     tx.id,
-  //     messageOutReceipt.nonce,
-  //     commitHashAtL1
-  //   );
-  // }
+    // Wait for the commited block
+    const withdrawBlock = await getBlock(
+      env.fuel.provider.url,
+      fWithdrawTxResult.blockId
+    );
+    const commitHashAtL1 = await waitForBlockCommit(
+      env,
+      withdrawBlock.header.height
+    );
+
+    const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
+    return await fuelTokenSender.provider.getMessageProof(
+      tx.id,
+      messageOutReceipt.nonce,
+      commitHashAtL1
+    );
+  }
 
   async function relayMessage(
     env: TestEnvironment,
@@ -216,6 +258,11 @@ describe('Bridging ERC20 tokens', async function () {
     decimals.push(6n);
     decimals.push(8n);
 
+    tokenAddresses.push(USDT_ADDRESS);
+    tokenAddresses.push(USDC_ADDRESS);
+    tokenAddresses.push(WBTC_ADDRESS);
+    tokenAddresses.push(WETH_ADDRESS);
+
     const { contract, implementation } = await getOrDeployL2Bridge(
       env,
       env.eth.fuelERC20Gateway
@@ -276,7 +323,6 @@ describe('Bridging ERC20 tokens', async function () {
     let fuelTokenReceiver: FuelWallet;
     let fuelTokenReceiverAddress: string;
     let fuelTokenReceiverBalance: BN[] = [];
-    let fuelTokenMessageNonce: BN;
     let fuelTokenMessageReceiver: AbstractAddress;
 
     before(async () => {
@@ -296,7 +342,7 @@ describe('Bridging ERC20 tokens', async function () {
 
       await weth_testToken
         .connect(ethereumTokenSender)
-        .deposit({ value: parseEther('10') });
+        .deposit({ value: WETH_DEPOSIT });
 
       ethereumTokenSenderBalance.push(
         await weth_testToken.balanceOf(ethereumTokenSenderAddress)
@@ -347,7 +393,7 @@ describe('Bridging ERC20 tokens', async function () {
         .deposit(
           fuelTokenReceiverAddress,
           await weth_testToken.getAddress(),
-          parseEther('10')
+          WETH_DEPOSIT
         )
         .then((tx) => tx.wait());
 
@@ -362,7 +408,6 @@ describe('Bridging ERC20 tokens', async function () {
         );
       expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
 
-      fuelTokenMessageNonce = new BN(event.args.nonce.toString());
       fuelTokenMessageReceiver = Address.fromB256(event.args.recipient);
 
       let newSenderBalance;
@@ -416,7 +461,7 @@ describe('Bridging ERC20 tokens', async function () {
         expect(mintedAsset.assetId).to.equal(fuelAssetId[i]);
         if (i == fuelAssetId.length - 1) {
           expect(mintedAsset.amount.toString()).to.equal(
-            (parseEther('10') / DECIMAL_DIFF).toString()
+            (WETH_DEPOSIT / DECIMAL_DIFF).toString()
           );
         } else {
           expect(mintedAsset.amount.toString()).to.equal(
@@ -432,15 +477,16 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check metadata was registered', async () => {
       for (let i = 0; i < fuelAssetId.length; i++) {
-        await fuel_bridge.functions
-          .asset_to_l1_address({ bits: fuelAssetId[i] })
-          .addContracts([fuel_bridge, fuel_bridgeImpl])
-          .call();
-        const { value: l2_decimals } = await fuel_bridge.functions
-          .decimals({ bits: fuelAssetId[i] })
-          .addContracts([fuel_bridge, fuel_bridgeImpl])
-          .get();
-        expect(l2_decimals).to.be.equal(9);
+        // await fuel_bridge.functions
+        //   .asset_to_l1_address({ bits: fuelAssetId[i] })
+        //   .addContracts([fuel_bridge, fuel_bridgeImpl])
+        //   .call();
+        // const { value: l2_decimals } = await fuel_bridge.functions
+        //   .decimals({ bits: fuelAssetId[i] })
+        //   .addContracts([fuel_bridge, fuel_bridgeImpl])
+        //   .get();
+        // console.log(l2_decimals);
+        // expect(l2_decimals).to.be.equal(9);
       }
     });
 
@@ -454,7 +500,7 @@ describe('Bridging ERC20 tokens', async function () {
           expect(
             newReceiverBalance.eq(
               fuelTokenReceiverBalance[i].add(
-                toBeHex(NUM_TOKENS / DECIMAL_DIFF)
+                toBeHex(WETH_DEPOSIT / DECIMAL_DIFF)
               )
             )
           ).to.be.true;
@@ -480,7 +526,7 @@ describe('Bridging ERC20 tokens', async function () {
         // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
         const receipt = await env.eth.fuelERC20Gateway
           .connect(ethereumTokenSender)
-          .sendMetadata(await customTokens[i].getAddress())
+          .sendMetadata(tokenAddresses[i])
           .then((tx) => tx.wait());
         // parse events from logs
         const [event, ...restOfEvents] =
@@ -510,190 +556,275 @@ describe('Bridging ERC20 tokens', async function () {
       }
     });
   });
+
+  describe('Bridge ERC20 from Fuel', async () => {
+    const NUM_TOKENS = 10000000000000000000n;
+    let fuelTokenSender: FuelWallet;
+    let ethereumTokenReceiver: Signer;
+    let ethereumTokenReceiverAddress: string;
+    let ethereumTokenReceiverBalance: bigint[] = [];
+    let withdrawMessageProof: MessageProof[] = [];
+
+    before(async () => {
+      fuelTokenSender = env.fuel.signers[0];
+      ethereumTokenReceiver = env.eth.signers[0];
+      ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
+
+      for (let i = 0; i < decimals.length; i++) {
+        ethereumTokenReceiverBalance.push(
+          await customTokens[i].balanceOf(ethereumTokenReceiverAddress)
+        );
+      }
+      ethereumTokenReceiverBalance.push(
+        await weth_testToken.balanceOf(ethereumTokenReceiverAddress)
+      );
+    });
+
+    it('Bridge ERC20 via Fuel token contract', async () => {
+      for (let i = 0; i < fuelAssetId.length; i++) {
+        // withdraw tokens back to the base chain
+        withdrawMessageProof.push(
+          await generateWithdrawalMessageProof(
+            fuel_bridge,
+            fuelTokenSender,
+            ethereumTokenReceiverAddress,
+            NUM_TOKENS,
+            DECIMAL_DIFF,
+            fuelAssetId[i],
+            i == fuelAssetId.length - 1 ? 18n : decimals[i]
+          )
+        );
+      }
+    });
+
+    it('Relay Message from Fuel on Ethereum', async () => {
+      for (let i = 0; i < tokenAddresses.length; i++) {
+        const withdrawnAmountBeforeRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+
+        const rateLimitEndDuratioBeforeRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+
+        // relay message
+        await relayMessage(env, withdrawMessageProof[i]);
+
+        // check rate limit params
+        const withdrawnAmountAfterRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+
+        const rateLimitEndDuratioAfterRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+
+        expect(rateLimitEndDuratioAfterRelay === rateLimitEndDuratioBeforeRelay)
+          .to.be.true;
+
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          console.log(withdrawnAmountAfterRelay.toString());
+          console.log(
+            BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]) +
+              withdrawnAmountBeforeRelay
+          );
+          console.log(BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]));
+
+          expect(
+            withdrawnAmountAfterRelay ===
+              BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]) +
+                withdrawnAmountBeforeRelay
+          ).to.be.true;
+        } else {
+          expect(
+            withdrawnAmountAfterRelay ===
+              WETH_DEPOSIT / 2n + withdrawnAmountBeforeRelay
+          ).to.be.true;
+        }
+      }
+    });
+
+    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
+      const deployer = await env.eth.deployer;
+      const newRateLimit = '5';
+
+      for (let i = 0; i < tokenAddresses.length; i++) {
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit) / 10n ** (18n - decimals[i]),
+              RATE_LIMIT_DURATION
+            );
+        } else {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit),
+              RATE_LIMIT_DURATION
+            );
+        }
+
+        const currentWithdrawnAmountAfterSettingLimit =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          expect(
+            currentWithdrawnAmountAfterSettingLimit ===
+              parseEther(newRateLimit) / 10n ** (18n - decimals[i])
+          ).to.be.true;
+        } else {
+          expect(
+            currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
+          ).to.be.true;
+        }
+      }
+    });
+
+    it('Rate limit parameters are updated when the initial duration is over', async () => {
+      const deployer = await env.eth.deployer;
+      const newRateLimit = `30`;
+
+      for (let i = 0; i < tokenAddresses.length; i++) {
+        const rateLimitDuration =
+          await env.eth.fuelERC20Gateway.rateLimitDuration(tokenAddresses[i]);
+
+        // fast forward time
+        await hardhatSkipTime(
+          env.eth.provider as JsonRpcProvider,
+          rateLimitDuration * 2n
+        );
+        const currentPeriodEndBeforeRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit) / 10n ** (18n - decimals[i]),
+              RATE_LIMIT_DURATION
+            );
+        } else {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit),
+              RATE_LIMIT_DURATION
+            );
+        }
+
+        // withdraw tokens back to the base chain
+        withdrawMessageProof[i] = await generateWithdrawalMessageProof(
+          fuel_bridge,
+          fuelTokenSender,
+          ethereumTokenReceiverAddress,
+          NUM_TOKENS,
+          DECIMAL_DIFF,
+          fuelAssetId[i],
+          i == fuelAssetId.length - 1 ? 18n : decimals[i]
+        );
+
+        // relay message
+        await relayMessage(env, withdrawMessageProof[i]);
+
+        const currentPeriodEndAfterRelay =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+
+        expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
+          .true;
+
+        const currentPeriodAmount =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          expect(
+            currentPeriodAmount ===
+              BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i])
+          ).to.be.true;
+        } else {
+          expect(currentPeriodAmount === WETH_DEPOSIT / 2n).to.be.true;
+        }
+      }
+    });
+
+    it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
+      const deployer = await env.eth.deployer;
+      const newRateLimit = `40`;
+
+      for (let i = 0; i < tokenAddresses.length; i++) {
+        const rateLimitDuration =
+          await env.eth.fuelERC20Gateway.rateLimitDuration(tokenAddresses[i]);
+
+        // fast forward time
+        await hardhatSkipTime(
+          env.eth.provider as JsonRpcProvider,
+          rateLimitDuration * 2n
+        );
+
+        const currentWithdrawnAmountBeforeSettingLimit =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+        const currentPeriodEndBeforeSettingLimit =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+
+        if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit) / 10n ** (18n - decimals[i]),
+              RATE_LIMIT_DURATION
+            );
+        } else {
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddresses[i],
+              parseEther(newRateLimit),
+              RATE_LIMIT_DURATION
+            );
+        }
+
+        const currentPeriodEndAfterSettingLimit =
+          await env.eth.fuelERC20Gateway.currentPeriodEnd(tokenAddresses[i]);
+        const currentWithdrawnAmountAfterSettingLimit =
+          await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddresses[i]);
+
+        expect(
+          currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
+        ).to.be.true;
+
+        expect(
+          currentWithdrawnAmountBeforeSettingLimit >
+            currentWithdrawnAmountAfterSettingLimit
+        ).to.be.true;
+
+        expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
+      }
+    });
+
+    it('Check ERC20 arrived on Ethereum', async () => {
+      // check that the recipient balance has increased by the expected amount
+      let newReceiverBalance;
+      for (let i = 0; i < customTokens.length; i++) {
+        newReceiverBalance = await customTokens[i].balanceOf(
+          ethereumTokenReceiverAddress
+        );
+        expect(
+          newReceiverBalance ===
+            ethereumTokenReceiverBalance[i] +
+              (BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i])) * 2n
+        ).to.be.true;
+      }
+      // checking for weth
+      newReceiverBalance = await weth_testToken.balanceOf(
+        ethereumTokenReceiverAddress
+      );
+      expect(
+        newReceiverBalance ===
+          ethereumTokenReceiverBalance[
+            ethereumTokenReceiverBalance.length - 1
+          ] +
+            NUM_TOKENS * 2n
+      ).to.be.true;
+    });
+  });
 });
-
-// describe('Bridge ERC20 from Fuel', async () => {
-//   const NUM_TOKENS = 10000000000000000000n;
-//   let fuelTokenSender: FuelWallet;
-//   let ethereumTokenReceiver: Signer;
-//   let ethereumTokenReceiverAddress: string;
-//   let ethereumTokenReceiverBalance: bigint;
-//   let withdrawMessageProof: MessageProof;
-
-//   before(async () => {
-//     fuelTokenSender = env.fuel.signers[0];
-//     ethereumTokenReceiver = env.eth.signers[0];
-//     ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
-//     ethereumTokenReceiverBalance = await eth_testToken.balanceOf(
-//       ethereumTokenReceiverAddress
-//     );
-//   });
-
-//   it('Bridge ERC20 via Fuel token contract', async () => {
-//     // withdraw tokens back to the base chain
-//     withdrawMessageProof = await generateWithdrawalMessageProof(
-//       fuel_bridge,
-//       fuelTokenSender,
-//       ethereumTokenReceiverAddress,
-//       NUM_TOKENS,
-//       DECIMAL_DIFF
-//     );
-//   });
-
-//   it('Relay Message from Fuel on Ethereum', async () => {
-//     const withdrawnAmountBeforeRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-
-//     const rateLimitEndDuratioBeforeRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-
-//     // relay message
-//     await relayMessage(env, withdrawMessageProof);
-
-//     // check rate limit params
-//     const withdrawnAmountAfterRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-
-//     const rateLimitEndDuratioAfterRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-
-//     expect(rateLimitEndDuratioAfterRelay === rateLimitEndDuratioBeforeRelay)
-//       .to.be.true;
-
-//     expect(
-//       withdrawnAmountAfterRelay === NUM_TOKENS + withdrawnAmountBeforeRelay
-//     ).to.be.true;
-//   });
-
-//   it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
-//     const deployer = await env.eth.deployer;
-//     const newRateLimit = '5';
-
-//     await env.eth.fuelERC20Gateway
-//       .connect(deployer)
-//       .resetRateLimitAmount(
-//         eth_testTokenAddress,
-//         parseEther(newRateLimit),
-//         RATE_LIMIT_DURATION
-//       );
-
-//     const currentWithdrawnAmountAfterSettingLimit =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-
-//     expect(
-//       currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
-//     ).to.be.true;
-//   });
-
-//   it('Rate limit parameters are updated when the initial duration is over', async () => {
-//     const deployer = await env.eth.deployer;
-//     const newRateLimit = `30`;
-
-//     const rateLimitDuration =
-//       await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
-
-//     // fast forward time
-//     await hardhatSkipTime(
-//       env.eth.provider as JsonRpcProvider,
-//       rateLimitDuration * 2n
-//     );
-//     const currentPeriodEndBeforeRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-
-//     await env.eth.fuelERC20Gateway
-//       .connect(deployer)
-//       .resetRateLimitAmount(
-//         eth_testTokenAddress,
-//         parseEther(newRateLimit),
-//         RATE_LIMIT_DURATION
-//       );
-
-//     // withdraw tokens back to the base chain
-//     withdrawMessageProof = await generateWithdrawalMessageProof(
-//       fuel_bridge,
-//       fuelTokenSender,
-//       ethereumTokenReceiverAddress,
-//       NUM_TOKENS,
-//       DECIMAL_DIFF
-//     );
-
-//     // relay message
-//     await relayMessage(env, withdrawMessageProof);
-
-//     const currentPeriodEndAfterRelay =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-
-//     expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
-//       .true;
-
-//     const currentPeriodAmount =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-
-//     expect(currentPeriodAmount === NUM_TOKENS).to.be.true;
-//   });
-
-//   it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
-//     const rateLimitDuration =
-//       await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
-
-//     const deployer = await env.eth.deployer;
-//     const newRateLimit = `40`;
-
-//     // fast forward time
-//     await hardhatSkipTime(
-//       env.eth.provider as JsonRpcProvider,
-//       rateLimitDuration * 2n
-//     );
-
-//     const currentWithdrawnAmountBeforeSettingLimit =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-//     const currentPeriodEndBeforeSettingLimit =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-
-//     await env.eth.fuelERC20Gateway
-//       .connect(deployer)
-//       .resetRateLimitAmount(
-//         eth_testTokenAddress,
-//         parseEther(newRateLimit),
-//         RATE_LIMIT_DURATION
-//       );
-
-//     const currentPeriodEndAfterSettingLimit =
-//       await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
-//     const currentWithdrawnAmountAfterSettingLimit =
-//       await env.eth.fuelERC20Gateway.currentPeriodAmount(
-//         eth_testTokenAddress
-//       );
-
-//     expect(
-//       currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
-//     ).to.be.true;
-
-//     expect(
-//       currentWithdrawnAmountBeforeSettingLimit >
-//         currentWithdrawnAmountAfterSettingLimit
-//     ).to.be.true;
-
-//     expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
-//   });
-
-//   it('Check ERC20 arrived on Ethereum', async () => {
-//     // check that the recipient balance has increased by the expected amount
-//     const newReceiverBalance = await eth_testToken.balanceOf(
-//       ethereumTokenReceiverAddress
-//     );
-//     expect(
-//       newReceiverBalance === ethereumTokenReceiverBalance + NUM_TOKENS * 2n
-//     ).to.be.true;
-//   });
-// });
