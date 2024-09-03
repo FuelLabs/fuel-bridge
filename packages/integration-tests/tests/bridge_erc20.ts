@@ -196,9 +196,9 @@ describe('Bridging ERC20 tokens', async function () {
       await env.eth.fuelERC20Gateway.getAddress()
     ).toLowerCase();
 
-    let usdt_testToken = await getOrDeployCustomTokenContract(env, 6n);
-    let usdc_testToken = await getOrDeployCustomTokenContract(env, 6n);
-    let wbtc_testToken = await getOrDeployCustomTokenContract(env, 8n);
+    let usdt_testToken = await getOrDeployCustomTokenContract(env);
+    let usdc_testToken = await getOrDeployCustomTokenContract(env);
+    let wbtc_testToken = await getOrDeployCustomTokenContract(env);
     weth_testToken = await getOrDeployCustomWETHContract(env);
 
     // Get the runtime bytecode.
@@ -249,6 +249,10 @@ describe('Bridging ERC20 tokens', async function () {
       WETH_ADDRESS,
       env.eth.deployer
     );
+
+    await usdt_testToken.setDecimals(6n);
+    await usdc_testToken.setDecimals(6n);
+    await wbtc_testToken.setDecimals(8n);
 
     customTokens.push(usdt_testToken);
     customTokens.push(usdc_testToken);
@@ -477,16 +481,20 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Check metadata was registered', async () => {
       for (let i = 0; i < fuelAssetId.length; i++) {
-        // await fuel_bridge.functions
-        //   .asset_to_l1_address({ bits: fuelAssetId[i] })
-        //   .addContracts([fuel_bridge, fuel_bridgeImpl])
-        //   .call();
-        // const { value: l2_decimals } = await fuel_bridge.functions
-        //   .decimals({ bits: fuelAssetId[i] })
-        //   .addContracts([fuel_bridge, fuel_bridgeImpl])
-        //   .get();
-        // console.log(l2_decimals);
-        // expect(l2_decimals).to.be.equal(9);
+        await fuel_bridge.functions
+          .asset_to_l1_address({ bits: fuelAssetId[i] })
+          .addContracts([fuel_bridge, fuel_bridgeImpl])
+          .dryRun();
+        const { value: l2_decimals } = await fuel_bridge.functions
+          .decimals({ bits: fuelAssetId[i] })
+          .addContracts([fuel_bridge, fuel_bridgeImpl])
+          .get();
+
+        if (i == fuelAssetId.length - 1) {
+          expect(l2_decimals).to.be.equal(9);
+        } else {
+          expect(l2_decimals.toString()).to.be.equal(decimals[i].toString());
+        }
       }
     });
 
@@ -619,13 +627,6 @@ describe('Bridging ERC20 tokens', async function () {
           .to.be.true;
 
         if (decimals[i] < 18 && i < tokenAddresses.length - 1) {
-          console.log(withdrawnAmountAfterRelay.toString());
-          console.log(
-            BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]) +
-              withdrawnAmountBeforeRelay
-          );
-          console.log(BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]));
-
           expect(
             withdrawnAmountAfterRelay ===
               BigInt(NUM_TOKENS) / 10n ** (18n - decimals[i]) +
