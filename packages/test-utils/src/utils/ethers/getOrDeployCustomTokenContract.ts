@@ -7,10 +7,7 @@ import type { TestEnvironment } from '../setup';
 
 const { ETH_ERC20_TOKEN_ADDRESS } = process.env;
 
-export async function getOrDeployCustomTokenContract(
-  env: TestEnvironment,
-  decimals: bigint
-) {
+export async function getOrDeployCustomTokenContract(env: TestEnvironment) {
   debug('Setting up environment...');
   const ethDeployer = env.eth.signers[0];
   const ethAcct = env.eth.signers[0];
@@ -34,7 +31,7 @@ export async function getOrDeployCustomTokenContract(
     debug(`Creating ERC-20 token contract to test with...`);
     const eth_tokenFactory = new CustomToken__factory(ethDeployer);
     ethTestToken = await eth_tokenFactory
-      .deploy(decimals)
+      .deploy()
       .then((tx) => tx.waitForDeployment());
     debug(
       `Ethereum ERC-20 token contract created at address ${await ethTestToken.getAddress()}.`
