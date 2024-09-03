@@ -1,6 +1,6 @@
 /**
- * This is a stand-alone script that deploys the
- * fetches a deposit messages and relays it to the bridge
+ * This is a stand-alone script that
+ * fetches a deposit message and relays it to the bridge
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
@@ -105,6 +105,10 @@ const main = async () => {
 
   if (txResult.status === TransactionStatus.success) {
     console.log('\t> Transaction succeeded');
+    console.log(
+      '\t > Minted asset IDs: ',
+      txResult.mintedAssets.map((asset) => asset.assetId)
+    );
   } else {
     console.log('\t> Transaction errored');
   }
