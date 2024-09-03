@@ -14,8 +14,9 @@
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "deploy:bridge": "pnpm ts-node src/scripts/deploy-bridge.ts",
-    "upgrade:bridge": "pnpm ts-node src/scripts/upgrade-bridge.ts",
+    "bridge:deploy": "pnpm ts-node src/scripts/deploy-bridge.ts",
+    "bridge:upgrade": "pnpm ts-node src/scripts/upgrade-bridge.ts",
+    "bridge:transfer-ownership": "pnpm ts-node src/scripts/transfer-bridge-ownership.ts",
     "bridge:relay": "pnpm ts-node src/scripts/relay-deposit.ts"
   },
   "peerDependencies": {
