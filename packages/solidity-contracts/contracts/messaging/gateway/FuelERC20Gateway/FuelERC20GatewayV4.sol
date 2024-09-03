@@ -89,6 +89,12 @@ contract FuelERC20GatewayV4 is
     /// @notice The eth withdrawal limit amount for each token.
     mapping(address => uint256) public limitAmount;
 
+	/// @notice disabling initialization
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     /// @notice Contract initializer to setup starting values
     /// @param fuelMessagePortal The FuelMessagePortal contract
     function initialize(FuelMessagePortal fuelMessagePortal) public initializer {
