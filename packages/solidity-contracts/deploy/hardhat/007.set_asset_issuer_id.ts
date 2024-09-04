@@ -19,7 +19,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const [deployer] = await ethers.getSigners();
 
   await deployments.execute(
-    'FuelERC20Gateway',
+    'FuelERC20GatewayV4',
     { log: true, from: deployer.address },
     'setAssetIssuerId',
     ASSET_ISSUER_ID

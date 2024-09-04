@@ -253,10 +253,10 @@ export async function setupEnvironment(
       eth_fuelMessagePortalAddress = deployerAddresses.FuelMessagePortal;
     }
     if (!eth_fuelERC20GatewayAddress) {
-      if (!deployerAddresses.FuelERC20Gateway) {
+      if (!deployerAddresses.FuelERC20GatewayV4) {
         throw new Error('Failed to get FuelERC20Gateway address from deployer');
       }
-      eth_fuelERC20GatewayAddress = deployerAddresses.FuelERC20Gateway;
+      eth_fuelERC20GatewayAddress = deployerAddresses.FuelERC20GatewayV4;
     }
 
     if (!eth_fuelERC721GatewayAddress) {
