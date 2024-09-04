@@ -55,7 +55,7 @@ task('depositToken', 'deposits a token to Fuel')
     const contract = await hre.ethers.getContractAt(
       'FuelERC20GatewayV4',
       (
-        await hre.deployments.get('FuelERC20Gateway')
+        await hre.deployments.get('FuelERC20GatewayV4')
       ).address,
       signer
     );
