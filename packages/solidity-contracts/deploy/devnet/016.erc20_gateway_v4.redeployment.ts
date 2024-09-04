@@ -2,7 +2,6 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
-// import { FuelERC20Gateway__factory as FuelERC20Gateway } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -32,8 +31,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelERC20Gateway.abi],
     implementation,
   });
+
+  return true;
 };
 
-func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV4'];
-func.id = 'fuel_erc20_gateway_v4';
+func.tags = ['gateway_redeploy'];
+func.id = 'gateway_redeploy';
 export default func;

@@ -14,10 +14,11 @@
   "scripts": {
     "build": "tsup",
     "build:watch": "tsup --watch",
-    "deploy:bridge": "pnpm ts-node src/deploy-scripts/bridge.ts"
+    "deploy:bridge": "pnpm ts-node src/scripts/bridge.ts",
+    "deploy:relay": "pnpm ts-node src/scripts/relay-deposit.ts"
   },
   "peerDependencies": {
-    "fuels": "0.94.1",
+    "fuels": "0.94.3",
     "ethers": "6.13.1"
   },
   "devDependencies": {

@@ -440,7 +440,8 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
             transfer(message_data.to, asset_id, amount)
         },
         DepositType::ContractWithData => {
-            let dest_contract = abi(MessageReceiver, message_data.to.as_contract_id().unwrap().into());
+            let contract_id: b256 = message_data.to.as_contract_id().unwrap().into();
+            let dest_contract = abi(MessageReceiver, contract_id);
             // TODO: Hexens Fuel1-2, if this call fails, funds may get stuck
             dest_contract
                 .process_message {

@@ -21,6 +21,7 @@ import {
   OutputType,
   Predicate,
   bn,
+  BN,
 } from 'fuels';
 
 import { debug } from '../logs';
@@ -72,13 +73,21 @@ function getCommonRelayableMessages(provider: Provider) {
       ): Promise<ScriptTransactionRequest> => {
         const script = arrayify(details.script);
         const predicateBytecode = arrayify(details.predicate);
+
         // get resources to fund the transaction
+        // these are initial values that enable calling
+        // `provider.estimatePredicates()` later
         const resources = await relayer.getResourcesToSpend([
           {
-            amount: bn.parseUnits('5'),
+            amount: new BN(1),
             assetId,
           },
         ]);
+
+        if (resources.length === 0) {
+          throw new Error('Could not find resources to fund the transaction');
+        }
+
         // convert resources to inputs
         const spendableInputs = resourcesToInputs(resources);
 
@@ -141,9 +150,7 @@ function getCommonRelayableMessages(provider: Provider) {
         });
         transaction.witnesses.push(ZeroBytes32);
 
-        transaction.gasLimit = bn(1_000_000);
-
-        transaction.maxFee = bn(1);
+        transaction.gasLimit = bn(500_000);
 
         debug(
           '-------------------------------------------------------------------'
@@ -193,6 +200,44 @@ export async function relayCommonMessage(
   );
 
   const estimated_tx = await relayer.provider.estimatePredicates(transaction);
+
+  const fees = await relayer.provider.estimateTxGasAndFee({
+    transactionRequest: estimated_tx,
+  });
+  const [feeInput] = await relayer
+    .getResourcesToSpend([
+      {
+        amount: fees.maxFee,
+        assetId: relayer.provider.getBaseAssetId(),
+      },
+    ])
+    .then(resourcesToInputs);
+
+  if (!feeInput) {
+    throw new Error('Could not find resources to fund the transaction');
+  }
+
+  // Find the coins that are being used to pay for the tx
+  const feeInputIndex = estimated_tx.inputs.findIndex(
+    (input) => input.type === InputType.Coin
+  );
+
+  if (feeInputIndex === -1) {
+    estimated_tx.inputs.push(feeInput);
+  } else {
+    estimated_tx.inputs[feeInputIndex] = feeInput;
+  }
+
+  estimated_tx.maxFee = fees.maxFee;
+  estimated_tx.gasLimit = fees.gasLimit.mul(4).div(3);
+
+  const simulation = await relayer.simulateTransaction(estimated_tx);
+  debug(simulation);
+  if (simulation.dryRunStatus?.type === 'DryRunFailureStatus') {
+    throw new Error(
+      `Transaction simulation failure: ${JSON.stringify(simulation)}`
+    );
+  }
 
   return relayer.sendTransaction(estimated_tx);
 }
