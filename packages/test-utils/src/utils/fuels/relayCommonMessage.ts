@@ -83,6 +83,11 @@ function getCommonRelayableMessages(provider: Provider) {
             assetId,
           },
         ]);
+
+        if (resources.length === 0) {
+          throw new Error('Could not find resources to fund the transaction');
+        }
+
         // convert resources to inputs
         const spendableInputs = resourcesToInputs(resources);
 
@@ -208,16 +213,23 @@ export async function relayCommonMessage(
     ])
     .then(resourcesToInputs);
 
+  if (!feeInput) {
+    throw new Error('Could not find resources to fund the transaction');
+  }
+
+  // Find the coins that are being used to pay for the tx
   const feeInputIndex = estimated_tx.inputs.findIndex(
     (input) => input.type === InputType.Coin
   );
 
   if (feeInputIndex === -1) {
-    throw new Error('Did not find coins to pay for transaction');
+    estimated_tx.inputs.push(feeInput);
+  } else {
+    estimated_tx.inputs[feeInputIndex] = feeInput;
   }
 
-  estimated_tx.inputs[feeInputIndex] = feeInput;
   estimated_tx.maxFee = fees.maxFee;
+  estimated_tx.gasLimit = fees.gasLimit.mul(4).div(3);
 
   const simulation = await relayer.simulateTransaction(estimated_tx);
   debug(simulation);
