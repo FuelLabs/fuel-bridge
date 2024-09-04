@@ -5,5 +5,9 @@
   "register_watchtower": 1724767898,
   "register_watchtower_portal": 1724768943,
   "set_deposit_limit_eth": 1724774569,
-  "gateway": 1725464667
+  "gateway": 1725464667,
+  "gateway_enable_whitelist": 1725476103,
+  "gateway_whitelist_usdc": 1725476113,
+  "gateway_rate_limit_usdc": 1725476128,
+  "set_asset_issuer": 1725476138
 }
