@@ -9,14 +9,19 @@ import {
   CustomToken__factory,
   CustomTokenWETH__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
+import {
+  USDT_ADDRESS,
+  USDC_ADDRESS,
+  WBTC_ADDRESS,
+  WETH_ADDRESS,
+} from '@fuel-bridge/solidity-contracts/protocol/constants';
+// import set_canonical_token_bytecode from '@fuel-bridge/solidity-contracts/deploy/hardhat/helpers/set_canonical_token_bytecode';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
   relayCommonMessage,
   waitForMessage,
   createRelayMessageParams,
-  getOrDeployCustomTokenContract,
-  getOrDeployCustomWETHContract,
   getOrDeployL2Bridge,
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
@@ -39,11 +44,6 @@ import type {
 } from 'fuels';
 
 const { expect } = chai;
-
-const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
-const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
-const WBTC_ADDRESS = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
-const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
 
 const tokenAddresses: string[] = [
   USDT_ADDRESS,
@@ -207,19 +207,7 @@ for (const [index, value] of tokenAddresses.entries()) {
         await env.eth.fuelERC20Gateway.getAddress()
       ).toLowerCase();
 
-      let token, runtimeBytecode;
-      if (index == tokenAddresses.length - 1) {
-        token = await getOrDeployCustomWETHContract(env);
-      } else {
-        token = await getOrDeployCustomTokenContract(env);
-      }
-
-      runtimeBytecode = await env.eth.provider.getCode(
-        await token.getAddress()
-      );
-
-      // set code for mainnet addresses
-      await env.eth.provider.send('hardhat_setCode', [value, runtimeBytecode]);
+      let token;
 
       if (index == tokenAddresses.length - 1) {
         weth_testToken = CustomTokenWETH__factory.connect(
@@ -231,7 +219,6 @@ for (const [index, value] of tokenAddresses.entries()) {
       }
 
       if (index < tokenAddresses.length - 1) {
-        await token.setDecimals(decimals[index]);
         customToken = token;
       }
 
