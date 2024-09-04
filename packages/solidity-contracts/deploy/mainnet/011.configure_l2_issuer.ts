@@ -1,9 +1,10 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-import { ZeroHash } from 'ethers';
 
-const ASSET_ISSUER_PROXY_ID = ZeroHash;
-const ASSET_ISSUER_IMPL_ID = ZeroHash;
+const ASSET_ISSUER_PROXY_ID =
+  '0x4ea6ccef1215d9479f1024dff70fc055ca538215d2c8c348beddffd54583d0e8';
+const ASSET_ISSUER_IMPL_ID =
+  '0xa8ccd6fee8a8a7160a76aefdf37f235c9f9aaf38f1fd5f3299c48e4ee57802d2';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
@@ -27,5 +28,4 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 func.tags = ['set_asset_issuer'];
 func.id = 'set_asset_issuer';
-func.skip = async () => true; // This function is not enabled yet
 export default func;
