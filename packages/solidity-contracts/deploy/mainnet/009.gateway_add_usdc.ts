@@ -15,7 +15,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     USDC_ADDRESS,
     // param `limit` must be down/up scaled according to _adjustDepositDecimals
     // USDC => 6 decimals => it will not have any scaling
-    parseUnits('100000', 6)
+    parseUnits('250000', 6) // 250k USDC
   );
 
   return true;
