@@ -232,7 +232,6 @@ export async function relayCommonMessage(
   }
 
   estimated_tx.maxFee = fees.maxFee;
-  estimated_tx.gasLimit = fees.gasLimit.mul(4).div(3);
 
   const simulation = await relayer.simulateTransaction(estimated_tx);
   debug(simulation);
