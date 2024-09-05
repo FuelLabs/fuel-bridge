@@ -2,42 +2,21 @@
  * This is a stand-alone script that upgrades the bridge
  */
 
-import {
-  Proxy,
-  BridgeFungibleTokenFactory,
-  BridgeFungibleToken,
-} from '@fuel-bridge/fungible-token';
+import { Proxy } from '@fuel-bridge/fungible-token';
 
-import {
-  DeployContractResult,
-  Provider,
-  Wallet,
-  WalletUnlocked,
-  ZeroBytes32,
-} from 'fuels';
+import { Provider, Wallet } from 'fuels';
+import { password } from '@inquirer/prompts';
 import { debug } from '../utils';
 
-const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_NEW_OWNER } =
-  process.env;
-
-// This helper avoids an exception in the case that the contract
-// was already deployed, and returns the contract instead
-function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
-  return async (tx: DeployContractResult) => {
-    const contract = await provider.getContract(tx.contractId);
-
-    if (!contract) return tx.waitForResult();
-    else {
-      await tx.waitForResult().catch(() => {});
-      return {
-        contract: new BridgeFungibleToken(contract.id, wallet),
-      };
-    }
-  };
-}
+let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_NEW_OWNER } = process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
+
+  if (!L2_SIGNER) {
+    L2_SIGNER = await password({ message: 'Enter private key' });
+  }
+
   const wallet = Wallet.fromPrivateKey(L2_SIGNER, provider);
 
   const proxy = new Proxy(L2_BRIDGE_ID, wallet);

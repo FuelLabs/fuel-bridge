@@ -48,6 +48,9 @@ type CommonMessageDetails = {
   ) => Promise<ScriptTransactionRequest>;
 };
 
+// Update for mainnet gas costs
+const PREDICATE_GAS_LIMIT = 10000000;
+
 // Details for relaying common messages with certain predicate roots
 function getCommonRelayableMessages(provider: Provider) {
   // Create a predicate for common messages
@@ -150,7 +153,7 @@ function getCommonRelayableMessages(provider: Provider) {
         });
         transaction.witnesses.push(ZeroBytes32);
 
-        transaction.gasLimit = bn(500_000);
+        transaction.gasLimit = bn(PREDICATE_GAS_LIMIT);
 
         debug(
           '-------------------------------------------------------------------'
@@ -229,7 +232,6 @@ export async function relayCommonMessage(
   }
 
   estimated_tx.maxFee = fees.maxFee;
-  estimated_tx.gasLimit = fees.gasLimit.mul(4).div(3);
 
   const simulation = await relayer.simulateTransaction(estimated_tx);
   debug(simulation);
