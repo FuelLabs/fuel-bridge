@@ -15,7 +15,6 @@ import {
   WBTC_ADDRESS,
   WETH_ADDRESS,
 } from '@fuel-bridge/solidity-contracts/protocol/constants';
-// import set_canonical_token_bytecode from '@fuel-bridge/solidity-contracts/deploy/hardhat/helpers/set_canonical_token_bytecode';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
@@ -52,7 +51,7 @@ const tokenAddresses: string[] = [
   WETH_ADDRESS,
 ];
 
-const decimals: bigint[] = [6n, 6n, 8n];
+const decimals: bigint[] = [6n, 6n, 8n, 18n];
 
 for (const [index, value] of tokenAddresses.entries()) {
   describe(`Bridging ${value} token`, function () {
@@ -81,7 +80,6 @@ for (const [index, value] of tokenAddresses.entries()) {
       fuelTokenSender: FuelWallet,
       ethereumTokenReceiverAddress: string,
       NUM_TOKENS: bigint,
-      DECIMAL_DIFF: bigint,
       fuel_AssetId: string,
       decimals: bigint
     ): Promise<MessageProof> {
@@ -94,47 +92,23 @@ for (const [index, value] of tokenAddresses.entries()) {
       );
 
       let transactionRequest;
-      if (decimals < 18) {
-        transactionRequest = await fuel_bridge.functions
-          .withdraw(paddedAddress)
-          .addContracts([fuel_bridge, fuel_bridgeImpl])
-          .txParams({
-            tip: 0,
-            gasLimit: 1_000_000,
-            maxFee: 1,
-          })
-          .callParams({
-            forward: {
-              amount: new BN(NUM_TOKENS.toString())
-                .div(new BN(DECIMAL_DIFF.toString()))
-                .div(
-                  new BN(DECIMAL_DIFF.toString()).div(
-                    new BN((10n ** decimals).toString())
-                  )
-                ),
-              assetId: fuel_AssetId,
-            },
-          })
-          .fundWithRequiredCoins();
-      } else {
-        transactionRequest = await fuel_bridge.functions
-          .withdraw(paddedAddress)
-          .addContracts([fuel_bridge, fuel_bridgeImpl])
-          .txParams({
-            tip: 0,
-            gasLimit: 1_000_000,
-            maxFee: 1,
-          })
-          .callParams({
-            forward: {
-              amount: new BN(NUM_TOKENS.toString()).div(
-                new BN(DECIMAL_DIFF.toString())
-              ),
-              assetId: fuel_AssetId,
-            },
-          })
-          .fundWithRequiredCoins();
-      }
+      transactionRequest = await fuel_bridge.functions
+        .withdraw(paddedAddress)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          gasLimit: 1_000_000,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN((10n ** (18n - decimals)).toString())
+            ),
+            assetId: fuel_AssetId,
+          },
+        })
+        .fundWithRequiredCoins();
 
       const tx = await fuelTokenSender.sendTransaction(transactionRequest);
       const fWithdrawTxResult = await tx.waitForResult();
@@ -143,23 +117,13 @@ for (const [index, value] of tokenAddresses.entries()) {
       // check that the sender balance has decreased by the expected amount
       const newSenderBalance = await fuelTokenSender.getBalance(fuel_AssetId);
 
-      if (decimals < 18) {
-        expect(
-          newSenderBalance.eq(
-            fuelTokenSenderBalance.sub(
-              toBeHex(
-                NUM_TOKENS / DECIMAL_DIFF / (DECIMAL_DIFF / 10n ** decimals)
-              )
-            )
+      expect(
+        newSenderBalance.eq(
+          fuelTokenSenderBalance.sub(
+            toBeHex(NUM_TOKENS / 10n ** (18n - decimals))
           )
-        ).to.be.true;
-      } else {
-        expect(
-          newSenderBalance.eq(
-            fuelTokenSenderBalance.sub(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
-          )
-        ).to.be.true;
-      }
+        )
+      ).to.be.true;
 
       // Wait for the commited block
       const withdrawBlock = await getBlock(
@@ -237,25 +201,15 @@ for (const [index, value] of tokenAddresses.entries()) {
       fuelAssetId = getTokenId(fuel_bridge, value);
 
       // initializing rate limit params for the token
-      if (index == tokenAddresses.length - 1) {
-        await env.eth.fuelERC20Gateway
-          .connect(env.eth.deployer)
-          .resetRateLimitAmount(
-            value,
-            RATE_LIMIT_AMOUNT.toString(),
-            RATE_LIMIT_DURATION
-          );
-      } else {
-        const rateLimitAmount =
-          BigInt(RATE_LIMIT_AMOUNT) / 10n ** (18n - decimals[index]);
-        await env.eth.fuelERC20Gateway
-          .connect(env.eth.deployer)
-          .resetRateLimitAmount(
-            await customToken.getAddress(),
-            rateLimitAmount.toString(),
-            RATE_LIMIT_DURATION
-          );
-      }
+      const rateLimitAmount =
+        BigInt(RATE_LIMIT_AMOUNT) / 10n ** (18n - decimals[index]);
+      await env.eth.fuelERC20Gateway
+        .connect(env.eth.deployer)
+        .resetRateLimitAmount(
+          value,
+          rateLimitAmount.toString(),
+          RATE_LIMIT_DURATION
+        );
 
       const { value: expectedGatewayContractId } = await fuel_bridge.functions
         .bridged_token_gateway()
@@ -316,45 +270,26 @@ for (const [index, value] of tokenAddresses.entries()) {
       it('Bridge ERC20 via FuelERC20Gateway', async () => {
         // approve FuelERC20Gateway to spend the tokens
 
-        if (index == tokenAddresses.length - 1) {
-          await weth_testToken
-            .connect(ethereumTokenSender)
-            .approve(eth_erc20GatewayAddress, NUM_TOKENS)
-            .then((tx) => tx.wait());
-        } else {
-          const approveAmount =
-            BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]);
+        const token =
+          index < tokenAddresses.length - 1 ? customToken : weth_testToken;
 
-          await customToken
-            .connect(ethereumTokenSender)
-            .approve(eth_erc20GatewayAddress, approveAmount)
-            .then((tx) => tx.wait());
-        }
+        const approveAmount =
+          BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]);
+        await token
+          .connect(ethereumTokenSender)
+          .approve(eth_erc20GatewayAddress, approveAmount)
+          .then((tx) => tx.wait());
 
-        // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
-        let receipt;
-        if (index == tokenAddresses.length - 1) {
-          receipt = await env.eth.fuelERC20Gateway
-            .connect(ethereumTokenSender)
-            .deposit(
-              fuelTokenReceiverAddress,
-              await weth_testToken.getAddress(),
-              WETH_DEPOSIT
-            )
-            .then((tx) => tx.wait());
-        } else {
-          const depositAmount =
-            BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]);
-
-          receipt = await env.eth.fuelERC20Gateway
-            .connect(ethereumTokenSender)
-            .deposit(
-              fuelTokenReceiverAddress,
-              await customToken.getAddress(),
-              depositAmount
-            )
-            .then((tx) => tx.wait());
-        }
+        const depositAmount =
+          BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]);
+        const receipt = await env.eth.fuelERC20Gateway
+          .connect(ethereumTokenSender)
+          .deposit(
+            fuelTokenReceiverAddress,
+            value,
+            index == tokenAddresses.length - 1 ? WETH_DEPOSIT : depositAmount
+          )
+          .then((tx) => tx.wait());
 
         expect(receipt.status).to.equal(1);
 
@@ -425,11 +360,7 @@ for (const [index, value] of tokenAddresses.entries()) {
           );
         } else {
           expect(mintedAsset.amount.toString()).to.equal(
-            (
-              NUM_TOKENS /
-              DECIMAL_DIFF /
-              (DECIMAL_DIFF / 10n ** decimals[index])
-            ).toString()
+            (NUM_TOKENS / 10n ** (18n - decimals[index])).toString()
           );
         }
       });
@@ -444,13 +375,9 @@ for (const [index, value] of tokenAddresses.entries()) {
           .addContracts([fuel_bridge, fuel_bridgeImpl])
           .get();
 
-        if (index == tokenAddresses.length - 1) {
-          expect(l2_decimals).to.be.equal(9);
-        } else {
-          expect(l2_decimals.toString()).to.be.equal(
-            decimals[index].toString()
-          );
-        }
+        expect(l2_decimals.toString()).to.be.equal(
+          decimals[index] >= 9 ? '9' : decimals[index].toString()
+        );
       });
 
       it('Check ERC20 arrived on Fuel', async () => {
@@ -468,11 +395,7 @@ for (const [index, value] of tokenAddresses.entries()) {
           expect(
             newReceiverBalance.eq(
               fuelTokenReceiverBalance.add(
-                toBeHex(
-                  NUM_TOKENS /
-                    DECIMAL_DIFF /
-                    (DECIMAL_DIFF / 10n ** decimals[index])
-                )
+                toBeHex(NUM_TOKENS / 10n ** (18n - decimals[index]))
               )
             )
           ).to.be.true;
@@ -526,15 +449,12 @@ for (const [index, value] of tokenAddresses.entries()) {
         ethereumTokenReceiver = env.eth.signers[0];
         ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
 
-        if (index == tokenAddresses.length - 1) {
-          ethereumTokenReceiverBalance = await weth_testToken.balanceOf(
-            ethereumTokenReceiverAddress
-          );
-        } else {
-          ethereumTokenReceiverBalance = await customToken.balanceOf(
-            ethereumTokenReceiverAddress
-          );
-        }
+        const token =
+          index < tokenAddresses.length - 1 ? customToken : weth_testToken;
+
+        ethereumTokenReceiverBalance = await token.balanceOf(
+          ethereumTokenReceiverAddress
+        );
       });
 
       it('Bridge ERC20 via Fuel token contract', async () => {
@@ -544,9 +464,8 @@ for (const [index, value] of tokenAddresses.entries()) {
           fuelTokenSender,
           ethereumTokenReceiverAddress,
           NUM_TOKENS,
-          DECIMAL_DIFF,
           fuelAssetId,
-          index == tokenAddresses.length - 1 ? 18n : decimals[index]
+          decimals[index] == 18n ? 9n : decimals[index]
         );
       });
 
@@ -588,36 +507,20 @@ for (const [index, value] of tokenAddresses.entries()) {
         const deployer = await env.eth.deployer;
         const newRateLimit = '5';
 
-        if (index < tokenAddresses.length - 1) {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
-              RATE_LIMIT_DURATION
-            );
-        } else {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit),
-              RATE_LIMIT_DURATION
-            );
-        }
+        await env.eth.fuelERC20Gateway
+          .connect(deployer)
+          .resetRateLimitAmount(
+            value,
+            parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
+            RATE_LIMIT_DURATION
+          );
 
         const currentWithdrawnAmountAfterSettingLimit =
           await env.eth.fuelERC20Gateway.currentPeriodAmount(value);
-        if (index < tokenAddresses.length - 1) {
-          expect(
-            currentWithdrawnAmountAfterSettingLimit ===
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index])
-          ).to.be.true;
-        } else {
-          expect(
-            currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
-          ).to.be.true;
-        }
+        expect(
+          currentWithdrawnAmountAfterSettingLimit ===
+            parseEther(newRateLimit) / 10n ** (18n - decimals[index])
+        ).to.be.true;
       });
 
       it('Rate limit parameters are updated when the initial duration is over', async () => {
@@ -635,23 +538,13 @@ for (const [index, value] of tokenAddresses.entries()) {
         const currentPeriodEndBeforeRelay =
           await env.eth.fuelERC20Gateway.currentPeriodEnd(value);
 
-        if (index < tokenAddresses.length - 1) {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
-              RATE_LIMIT_DURATION
-            );
-        } else {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit),
-              RATE_LIMIT_DURATION
-            );
-        }
+        await env.eth.fuelERC20Gateway
+          .connect(deployer)
+          .resetRateLimitAmount(
+            value,
+            parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
+            RATE_LIMIT_DURATION
+          );
 
         // withdraw tokens back to the base chain
         withdrawMessageProof = await generateWithdrawalMessageProof(
@@ -659,9 +552,8 @@ for (const [index, value] of tokenAddresses.entries()) {
           fuelTokenSender,
           ethereumTokenReceiverAddress,
           NUM_TOKENS,
-          DECIMAL_DIFF,
           fuelAssetId,
-          index == fuelAssetId.length - 1 ? 18n : decimals[index]
+          decimals[index] == 18n ? 9n : decimals[index]
         );
 
         // relay message
@@ -704,23 +596,13 @@ for (const [index, value] of tokenAddresses.entries()) {
         const currentPeriodEndBeforeSettingLimit =
           await env.eth.fuelERC20Gateway.currentPeriodEnd(value);
 
-        if (index < tokenAddresses.length - 1) {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
-              RATE_LIMIT_DURATION
-            );
-        } else {
-          await env.eth.fuelERC20Gateway
-            .connect(deployer)
-            .resetRateLimitAmount(
-              value,
-              parseEther(newRateLimit),
-              RATE_LIMIT_DURATION
-            );
-        }
+        await env.eth.fuelERC20Gateway
+          .connect(deployer)
+          .resetRateLimitAmount(
+            value,
+            parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
+            RATE_LIMIT_DURATION
+          );
 
         const currentPeriodEndAfterSettingLimit =
           await env.eth.fuelERC20Gateway.currentPeriodEnd(value);
@@ -741,27 +623,17 @@ for (const [index, value] of tokenAddresses.entries()) {
 
       it('Check ERC20 arrived on Ethereum', async () => {
         // check that the recipient balance has increased by the expected amount
-        let newReceiverBalance;
 
-        if (index < tokenAddresses.length - 1) {
-          newReceiverBalance = await customToken.balanceOf(
-            ethereumTokenReceiverAddress
-          );
-          expect(
-            newReceiverBalance ===
-              ethereumTokenReceiverBalance +
-                (BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index])) * 2n
-          ).to.be.true;
-        } else {
-          // checking for weth
-          newReceiverBalance = await weth_testToken.balanceOf(
-            ethereumTokenReceiverAddress
-          );
-          expect(
-            newReceiverBalance ===
-              ethereumTokenReceiverBalance + NUM_TOKENS * 2n
-          ).to.be.true;
-        }
+        const token =
+          index < tokenAddresses.length - 1 ? customToken : weth_testToken;
+        const newReceiverBalance = await token.balanceOf(
+          ethereumTokenReceiverAddress
+        );
+        expect(
+          newReceiverBalance ===
+            ethereumTokenReceiverBalance +
+              (BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index])) * 2n
+        ).to.be.true;
       });
     });
   });
