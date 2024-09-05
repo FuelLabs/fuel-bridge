@@ -20,7 +20,7 @@
     "bridge:relay": "pnpm ts-node src/scripts/relay-deposit.ts"
   },
   "peerDependencies": {
-    "fuels": "0.94.3",
+    "fuels": "0.94.4",
     "ethers": "6.13.1"
   },
   "devDependencies": {
