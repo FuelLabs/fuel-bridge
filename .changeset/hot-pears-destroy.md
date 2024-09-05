@@ -1,5 +1,5 @@
 ---
-'@fuel-bridge/solidity-contracts': major
+'@fuel-bridge/solidity-contracts': minor
 '@fuel-bridge/fungible-token': minor
 ---
 
