@@ -98,6 +98,12 @@ const config: HardhatUserConfig = {
       deploy: ['deploy/testnet'],
       chainId: 11155111,
     },
+    wargames: {
+      url: RPC_URL,
+      accounts: CONTRACTS_DEPLOYER_KEY ? [CONTRACTS_DEPLOYER_KEY] : [],
+      deploy: ['deploy/wargames'], // deployments/wargames
+      chainId: 11155111, // sepolia chainid
+    },
   },
   typechain: {
     outDir: 'typechain',
