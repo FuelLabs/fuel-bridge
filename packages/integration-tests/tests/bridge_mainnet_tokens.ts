@@ -336,7 +336,7 @@ describe.only('Bridge mainnet tokens', function () {
             (
               NUM_TOKENS /
               (index == tokenAddresses.length - 1
-                ? 10n ** 9n
+                ? DECIMAL_DIFF
                 : 10n ** (18n - decimals[index]))
             ).toString()
           );
@@ -369,7 +369,7 @@ describe.only('Bridge mainnet tokens', function () {
                 toBeHex(
                   NUM_TOKENS /
                     (index == tokenAddresses.length - 1
-                      ? 10n ** 9n
+                      ? DECIMAL_DIFF
                       : 10n ** (18n - decimals[index]))
                 )
               )
