@@ -5,14 +5,12 @@ import {
   type Message,
   BN,
   AbstractAddress,
-  Address,
   hexlify,
 } from 'fuels';
 
 import { FUEL_MESSAGE_POLL_MS } from '../constants';
 import { delay } from '../delay';
 import { debug } from '../logs';
-import { zeroPadValue } from 'ethers';
 
 // Wait until a message is present in the fuel client
 export async function waitForMessage(
@@ -28,21 +26,18 @@ export async function waitForMessage(
     );
 
     if (gqlMessage) {
-      if (
-        gqlMessage.recipient.replace('0x', '') !==
-        recipient.toB256().replace('0x', '')
-      ) {
+      if (gqlMessage.recipient.toB256() !== recipient.toB256()) {
         return null;
       }
 
       const message: Message = {
-        messageId: '0x', // Message ID left uncalculated, unused in test suite
-        sender: Address.fromB256(zeroPadValue(gqlMessage.sender, 32)),
-        recipient: Address.fromB256(gqlMessage.recipient),
+        messageId: gqlMessage.messageId,
+        sender: gqlMessage.sender,
+        recipient: gqlMessage.recipient,
         nonce: hexlify(nonce.toBytes(32)),
-        amount: new BN(gqlMessage.amount),
+        amount: gqlMessage.amount,
         data: gqlMessage.data,
-        daHeight: new BN(gqlMessage.daHeight),
+        daHeight: gqlMessage.daHeight,
       };
 
       return message;
