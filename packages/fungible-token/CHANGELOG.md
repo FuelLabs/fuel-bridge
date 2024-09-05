@@ -1,5 +1,33 @@
 # @fuel-bridge/fungible-token
 
+## 0.6.0
+
+### Minor Changes
+
+- Upgrade all dependencies to fuel-core 0.27, by [@SwayStar123](https://github.com/SwayStar123) (See [#201](https://github.com/FuelLabs/fuel-bridge/pull/201))
+- Bump ts-sdk to 0.94.4, by [@DefiCake](https://github.com/DefiCake) (See [#277](https://github.com/FuelLabs/fuel-bridge/pull/277))
+- remove unused mapping, by [@viraj124](https://github.com/viraj124) (See [#258](https://github.com/FuelLabs/fuel-bridge/pull/258))
+- Architecture revamp featuring single asset issuer on L2, by [@DefiCake](https://github.com/DefiCake) (See [#150](https://github.com/FuelLabs/fuel-bridge/pull/150))
+- Bump all packages to adhere to fuel-core 0.26, forc 0.56, fuel-rs 0.60, fuel-ts 0.85, by [@DefiCake](https://github.com/DefiCake) (See [#180](https://github.com/FuelLabs/fuel-bridge/pull/180))
+- Update forc to 0.63.3, by [@DefiCake](https://github.com/DefiCake) (See [#265](https://github.com/FuelLabs/fuel-bridge/pull/265))
+- Upgraded fuel dependencies to fuel-core 0.33, by [@DefiCake](https://github.com/DefiCake) (See [#237](https://github.com/FuelLabs/fuel-bridge/pull/237))
+- Implement SRC-7 and SRC-20, by [@DefiCake](https://github.com/DefiCake) (See [#240](https://github.com/FuelLabs/fuel-bridge/pull/240))
+- Added upgradability to bridge contracts, by [@DefiCake](https://github.com/DefiCake) (See [#164](https://github.com/FuelLabs/fuel-bridge/pull/164))
+- Add typegen for fuel ts sdk and a deploy script for the bridge. Bump fuel-core to v0.31.0, by [@DefiCake](https://github.com/DefiCake) (See [#222](https://github.com/FuelLabs/fuel-bridge/pull/222))
+- Upgraded ts-sdk to 0.94.3, by [@DefiCake](https://github.com/DefiCake) (See [#271](https://github.com/FuelLabs/fuel-bridge/pull/271))
+- Use custom error for relay unknown error reverts, by [@DefiCake](https://github.com/DefiCake) (See [#178](https://github.com/FuelLabs/fuel-bridge/pull/178))
+- Update fuel-core to v0.26.0 and all sdk dependencies needed to track it, by [@DefiCake](https://github.com/DefiCake) (See [#161](https://github.com/FuelLabs/fuel-bridge/pull/161))
+
+### Patch Changes
+
+- Update documentation, by [@DefiCake](https://github.com/DefiCake) (See [#197](https://github.com/FuelLabs/fuel-bridge/pull/197))
+- Use L1 token decimals to determine L2 token decimals, by [@DefiCake](https://github.com/DefiCake) (See [#166](https://github.com/FuelLabs/fuel-bridge/pull/166))
+- Add reentrancy unit test for l2 proxy-bridge, by [@DefiCake](https://github.com/DefiCake) (See [#221](https://github.com/FuelLabs/fuel-bridge/pull/221))
+- Add comments to Hexens audit. Fix some other in-code commentary, by [@DefiCake](https://github.com/DefiCake) (See [#177](https://github.com/FuelLabs/fuel-bridge/pull/177))
+- Remove unused code in L2 bridge, by [@DefiCake](https://github.com/DefiCake) (See [#259](https://github.com/FuelLabs/fuel-bridge/pull/259))
+- Removed unused and vulnerable npm dependencies, by [@DefiCake](https://github.com/DefiCake) (See [#212](https://github.com/FuelLabs/fuel-bridge/pull/212))
+- Bump forc and ts version, by [@DefiCake](https://github.com/DefiCake) (See [#162](https://github.com/FuelLabs/fuel-bridge/pull/162))
+
 ## 0.5.0
 
 ### Minor Changes
