@@ -272,9 +272,15 @@ importers:
       '@fuel-bridge/solidity-contracts':
         specifier: workspace:*
         version: link:../solidity-contracts
+      '@inquirer/prompts':
+        specifier: ^5.3.8
+        version: 5.3.8
       dotenv:
         specifier: ^16.0.3
         version: 16.4.5
+      inquirer:
+        specifier: ^10.1.8
+        version: 10.1.8
       ts-node:
         specifier: ^10.9.1
         version: 10.9.2(@types/node@22.5.0)(typescript@5.4.5)
