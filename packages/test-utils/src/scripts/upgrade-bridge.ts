@@ -27,7 +27,25 @@ const main = async () => {
   console.log('\t> Loaded wallet', wallet.address.toB256());
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
-  debug('Detecting if the bridge is a proxy...');
+  debug('Detecting if the bridge is a proxy: implementation');
+  let current_implementation: string = await proxy.functions
+    .proxy_target()
+    .dryRun()
+    .then((result) => {
+      debug('bridge.proxy_target() returned, assuming proxy');
+      if (!result.value.bits) {
+        return null;
+      }
+      return result.value.bits;
+    })
+    .catch((e) => {
+      debug(`bridge.proxy_target() failed with error: `);
+      debug(`${JSON.stringify(e, undefined, 2)}`);
+      return null;
+    });
+  debug(`Current implementation at ${current_implementation}`);
+
+  debug('Detecting if the bridge is a proxy: owner');
   let owner: string | null = await proxy.functions
     ._proxy_owner()
     .dryRun()
@@ -57,10 +75,6 @@ const main = async () => {
     return;
   }
 
-  debug('Detecting current implementation');
-  let current_implementation = await proxy.functions.proxy_target().dryRun();
-  debug(`Current implementation at ${current_implementation?.value?.bits}`);
-
   const implConfigurables: any = {
     BRIDGED_TOKEN_GATEWAY:
       '0x000000000000000000000000' +
@@ -76,6 +90,11 @@ const main = async () => {
   const factory = new BridgeFungibleTokenFactory(wallet);
   factory.setConfigurableConstants(implConfigurables);
   const { contractId } = factory.createTransactionRequest(deployOpts);
+
+  if (contractId === current_implementation) {
+    console.log(`Implementation ${contractId} is already live in the proxy`);
+    return;
+  }
 
   const contractExists = (await provider.getContract(contractId)) !== null;
 
@@ -101,11 +120,7 @@ const main = async () => {
     }
 
     debug('Contract deployment completed');
-  }
-
-  if (contractId === current_implementation?.value?.bits) {
-    console.log(`Implementation ${contractId} is already live in the proxy`);
-    return;
+    debug('Deploy opts', deployOpts);
   }
 
   console.log('New implementation at ', contractId);
