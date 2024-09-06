@@ -53,7 +53,7 @@ const tokenAddresses: string[] = [
 
 const decimals: bigint[] = [6n, 6n, 8n, 18n];
 
-describe.only('Bridge mainnet tokens', function () {
+describe('Bridge mainnet tokens', function () {
   // Timeout 6 minutes
   const DEFAULT_TIMEOUT_MS: number = 400_000;
   const FUEL_MESSAGE_TIMEOUT_MS: number = 30_000;
@@ -195,7 +195,7 @@ describe.only('Bridge mainnet tokens', function () {
 
   for (const [index, tokenAddress] of tokenAddresses.entries()) {
     describe(`Bridging ${tokenAddress} token`, function () {
-      before('do things', async () => {
+      before('Sets initial rate limit params & sets token instances', async () => {
         if (index == tokenAddresses.length - 1) {
           weth_testToken = CustomTokenWETH__factory.connect(
             tokenAddress,
