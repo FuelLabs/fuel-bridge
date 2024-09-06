@@ -27,8 +27,10 @@
     "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/solidity-contracts": "workspace:*",
+    "@inquirer/prompts": "^5.3.8",
     "dotenv": "^16.0.3",
-    "typescript": "^5.1.6",
-    "ts-node": "^10.9.1"
+    "inquirer": "^10.1.8",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
   }
 }

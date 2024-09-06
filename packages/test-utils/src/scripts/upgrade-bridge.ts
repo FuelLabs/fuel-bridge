@@ -11,6 +11,7 @@ import {
 import {
   DeployContractResult,
   Provider,
+  TransactionStatus,
   Wallet,
   WalletUnlocked,
   ZeroBytes32,
@@ -24,11 +25,16 @@ let { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC, L2_BRIDGE_ID } = process.env;
 // was already deployed, and returns the contract instead
 function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
   return async (tx: DeployContractResult) => {
+    debug('Fetching contract');
     const contract = await provider.getContract(tx.contractId);
 
     if (!contract) return tx.waitForResult();
     else {
-      await tx.waitForResult().catch(() => {});
+      debug('Contract already exists');
+      await tx
+        .waitForResult() // Avoid a nodejs uncaught promise throw
+        .then(() => {})
+        .catch(() => {});
       return {
         contract: new BridgeFungibleToken(contract.id, wallet),
       };
@@ -76,22 +82,52 @@ const main = async () => {
     return;
   }
 
+  debug('Detecting current implementation');
+  let current_implementation = await proxy.functions.proxy_target().dryRun();
+  debug(`Current implementation at ${current_implementation.value.bits}`);
   const implConfigurables: any = {
     BRIDGED_TOKEN_GATEWAY:
       '0x000000000000000000000000' +
       L1_TOKEN_GATEWAY.replace('0x', '').toLowerCase(),
   };
 
-  const implementation = await BridgeFungibleTokenFactory.deploy(wallet, {
+  let { contractId, transactionRequest } = new BridgeFungibleTokenFactory(
+    wallet
+  ).createTransactionRequest({
     configurableConstants: implConfigurables,
     salt: ZeroBytes32,
-  })
-    .then(fetchIfDeployed(provider, wallet))
-    .then(({ contract }) => contract);
+  });
 
-  console.log('Implementation at ', implementation.id.toB256());
+  const contractExists = !!(await provider.getContract(contractId));
 
-  const contractIdentityInput = { bits: implementation.id.toB256() };
+  debug('contractExists', contractExists);
+
+  if (contractExists) {
+    const createTx = await BridgeFungibleTokenFactory.deploy(wallet, {
+      configurableConstants: implConfigurables,
+      salt: ZeroBytes32,
+    });
+    const createTxResult = await createTx.waitForResult();
+    if (createTxResult.transactionResult.status !== TransactionStatus.success) {
+      console.log('Could not deploy contract');
+      debug(JSON.stringify(createTxResult, undefined, 2));
+      return;
+    }
+
+    if (createTx.contractId !== contractId) {
+      console.log('Contract ID mismatch, aborting upgrade');
+      return;
+    }
+  }
+
+  if (contractId === current_implementation?.value?.bits) {
+    console.log(`Implementation ${contractId} is already live in the proxy`);
+    return;
+  }
+
+  console.log('New implementation at ', contractId);
+
+  const contractIdentityInput = { bits: contractId };
   const tx = await proxy.functions
     .set_proxy_target(contractIdentityInput)
     .call();
