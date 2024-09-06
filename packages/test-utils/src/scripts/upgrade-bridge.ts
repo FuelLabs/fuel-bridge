@@ -61,7 +61,6 @@ const main = async () => {
   let current_implementation = await proxy.functions.proxy_target().dryRun();
   debug(`Current implementation at ${current_implementation?.value?.bits}`);
 
-  console.log('L1_TOKEN_GATEWAY', L1_TOKEN_GATEWAY);
   const implConfigurables: any = {
     BRIDGED_TOKEN_GATEWAY:
       '0x000000000000000000000000' +
