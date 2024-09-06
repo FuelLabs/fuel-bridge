@@ -195,32 +195,35 @@ describe('Bridge mainnet tokens', function () {
 
   for (const [index, tokenAddress] of tokenAddresses.entries()) {
     describe(`Bridging ${tokenAddress} token`, function () {
-      before('Sets initial rate limit params & sets token instances', async () => {
-        if (index == tokenAddresses.length - 1) {
-          weth_testToken = CustomTokenWETH__factory.connect(
-            tokenAddress,
-            env.eth.deployer
-          );
-        } else {
-          customToken = CustomToken__factory.connect(
-            tokenAddress,
-            env.eth.deployer
-          );
+      before(
+        'Sets initial rate limit params & sets token instances',
+        async () => {
+          if (index == tokenAddresses.length - 1) {
+            weth_testToken = CustomTokenWETH__factory.connect(
+              tokenAddress,
+              env.eth.deployer
+            );
+          } else {
+            customToken = CustomToken__factory.connect(
+              tokenAddress,
+              env.eth.deployer
+            );
+          }
+
+          fuelAssetId = getTokenId(fuel_bridge, tokenAddress);
+
+          // initializing rate limit params for the token
+          const rateLimitAmount =
+            BigInt(RATE_LIMIT_AMOUNT) / 10n ** (18n - decimals[index]);
+          await env.eth.fuelERC20Gateway
+            .connect(env.eth.deployer)
+            .resetRateLimitAmount(
+              tokenAddress,
+              rateLimitAmount.toString(),
+              RATE_LIMIT_DURATION
+            );
         }
-
-        fuelAssetId = getTokenId(fuel_bridge, tokenAddress);
-
-        // initializing rate limit params for the token
-        const rateLimitAmount =
-          BigInt(RATE_LIMIT_AMOUNT) / 10n ** (18n - decimals[index]);
-        await env.eth.fuelERC20Gateway
-          .connect(env.eth.deployer)
-          .resetRateLimitAmount(
-            tokenAddress,
-            rateLimitAmount.toString(),
-            RATE_LIMIT_DURATION
-          );
-      });
+      );
 
       describe('Bridge ERC20 to Fuel', () => {
         const NUM_TOKENS = 100000000000000000000n;
