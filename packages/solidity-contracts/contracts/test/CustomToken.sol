@@ -9,9 +9,8 @@ contract CustomToken is ERC20 {
     uint8 customDecimals;
 
     /// @notice Constructor.
-    constructor(uint8 _decimals) ERC20("Token", "TKN") {
+    constructor() ERC20("Token", "TKN") {
         _owner = msg.sender;
-        customDecimals = _decimals;
     }
 
     /// @notice This is a simple mint function.
@@ -24,5 +23,10 @@ contract CustomToken is ERC20 {
 
     function decimals() public view virtual override returns (uint8) {
         return customDecimals;
+    }
+    
+    // to handle hardhat_setcode as state is reset after that operation
+    function setDecimals(uint8 _decimals) external {
+        customDecimals = _decimals;
     }
 }
