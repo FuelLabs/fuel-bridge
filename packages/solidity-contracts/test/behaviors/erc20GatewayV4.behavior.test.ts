@@ -320,7 +320,8 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
           beforeEach('setup the tests', async () => {
             const { deployer } = env;
-            token = await new CustomToken__factory(deployer).deploy(decimals);
+            token = await new CustomToken__factory(deployer).deploy();
+            await token.setDecimals(decimals);
           });
 
           it('reverts when the deposited amount exceeds u64::MAX', async () => {
@@ -1022,9 +1023,11 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               deployer,
               signers: [, user],
             } = env;
-            token = (
-              await new CustomToken__factory(deployer).deploy(decimals)
-            ).connect(user);
+            token = (await new CustomToken__factory(deployer).deploy()).connect(
+              user
+            );
+
+            await token.setDecimals(decimals);
           });
 
           it('emits event when rate limit is set', async () => {
@@ -1226,9 +1229,11 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             deployer,
             signers: [, user],
           } = env;
-          token = (
-            await new CustomToken__factory(deployer).deploy(decimals)
-          ).connect(user);
+          token = (await new CustomToken__factory(deployer).deploy()).connect(
+            user
+          );
+
+          await token.setDecimals(decimals);
         });
 
         it('reduces deposits and transfers out without upscaling', async () => {
