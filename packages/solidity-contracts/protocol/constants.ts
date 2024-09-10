@@ -13,3 +13,7 @@ export const STATE_TRANSITION_BYTECODE_VERSION = 0n;
 export const STANDARD_TOKEN_DECIMALS = 18;
 export const RATE_LIMIT_AMOUNT = 10e18; // 10 ether
 export const RATE_LIMIT_DURATION = 604800; // 1 week
+export const USDT_ADDRESS = '0xdac17f958d2ee523a2206206994597c13d831ec7';
+export const USDC_ADDRESS = '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48';
+export const WBTC_ADDRESS = '0x2260fac5e5542a773aa44fbcfedf7c193bc2c599';
+export const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
