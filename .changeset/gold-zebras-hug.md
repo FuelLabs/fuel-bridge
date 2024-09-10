@@ -2,4 +2,4 @@
 '@fuel-bridge/test-utils': minor
 ---
 
-Improve message relay utils
+integrate fork tokens in e2e test
