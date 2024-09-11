@@ -2,6 +2,7 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory as FuelChainState } from '../../typechain';
+import fs from 'fs';
 
 const BLOCKS_PER_COMMIT_INTERVAL = 30;
 const TIME_TO_FINALIZE = 5;
@@ -33,6 +34,25 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelChainState.abi],
     implementation,
   });
+
+  // storing the contract info in a common file so the verification script can read and process all deployments/upgrades together during ci workflow
+  const deployment = {
+    address: address,
+    contractName: 'FuelChainState',
+    network: hre.network.name,
+    isProxy: true,
+    isImplementation: false,
+  };
+
+  let deployments = [];
+  const deploymentsFile = `deployments/${hre.network.name}/${hre.network.name}.json`;
+  if (fs.existsSync(deploymentsFile)) {
+    deployments = JSON.parse(fs.readFileSync(deploymentsFile, 'utf8'));
+  }
+
+  deployments.push(deployment);
+
+  fs.writeFileSync(deploymentsFile, JSON.stringify(deployments, null, 2));
 };
 
 func.tags = ['state', 'chain-state', 'chain_state', 'FuelChainState'];
