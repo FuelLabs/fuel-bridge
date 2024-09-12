@@ -43,7 +43,6 @@ task(
       deployments = JSON.parse(fs.readFileSync(deploymentsFile, 'utf8'));
     }
 
-    console.log('ddddds');
     const implementationAddress = await hre.upgrades.prepareUpgrade(
       taskArgs.proxyAddress,
       contract,
