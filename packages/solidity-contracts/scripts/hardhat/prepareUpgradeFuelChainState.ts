@@ -1,11 +1,14 @@
 import { Wallet } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
-import { ethers, upgrades } from 'hardhat';
 
 import { enterPrivateKey } from './utils';
 
 import fs from 'fs';
+
+const BLOCKS_PER_COMMIT_INTERVAL = 30;
+const TIME_TO_FINALIZE = 5;
+const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
 task(
   'prepareUpgradeFuelChainState',
@@ -27,7 +30,7 @@ task(
       signer = signers[0];
     }
 
-    const contract = await ethers.getContractFactory('FuelChainState');
+    const contract = await hre.ethers.getContractFactory('FuelChainState');
     if (!contract) {
       return;
     }
@@ -40,10 +43,18 @@ task(
       deployments = JSON.parse(fs.readFileSync(deploymentsFile, 'utf8'));
     }
 
-    const implementationAddress = await upgrades.prepareUpgrade(
+    console.log('ddddds');
+    const implementationAddress = await hre.upgrades.prepareUpgrade(
       taskArgs.proxyAddress,
       contract,
-      { kind: 'uups' }
+      {
+        kind: 'uups',
+        constructorArgs: [
+          TIME_TO_FINALIZE,
+          BLOCKS_PER_COMMIT_INTERVAL,
+          COMMIT_COOLDOWN,
+        ],
+      }
     );
     console.log('Implementation deployed to:', implementationAddress);
 

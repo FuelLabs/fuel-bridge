@@ -1,0 +1,10 @@
+[
+  {
+    "address": "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690",
+    "contractName": "FuelChainState",
+    "network": "upgradeTest",
+    "isProxy": false,
+    "isImplementation": true,
+    "proxyAddress": "0xAc79E9Ef69021F9bf7Ccb175611F3115Ff65A44D"
+  }
+]

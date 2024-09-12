@@ -12,6 +12,10 @@ interface Deployment {
   proxyAddress?: string;
 }
 
+const BLOCKS_PER_COMMIT_INTERVAL = 30;
+const TIME_TO_FINALIZE = 5;
+const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
+
 task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
     const network = hre.network.name;
@@ -37,7 +41,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
       try {
         console.log('  Reading contract artifact...');
         const artifactPath = path.join(
-          `artifacts/contracts/${deployment.contractName}.sol/${deployment.contractName}.json`
+          `artifacts/contracts/fuelchain/${deployment.contractName}.sol/${deployment.contractName}.json`
         );
 
         if (!fs.existsSync(artifactPath)) {
@@ -81,16 +85,31 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           const localContract = await localHardhat.upgrades.deployProxy(
             ContractFactory,
             [],
-            { kind: 'uups' }
+            {
+              kind: 'uups',
+              initializer: 'initialize',
+              constructorArgs: [
+                TIME_TO_FINALIZE,
+                BLOCKS_PER_COMMIT_INTERVAL,
+                COMMIT_COOLDOWN,
+              ],
+            }
           );
-          await localContract.deployed();
+          await localContract.waitForDeployment();
           localAddress = await localContract.getAddress();
         } else if (deployment.isImplementation) {
           console.log('--- Validating Upgrade...');
           await localHardhat.upgrades.validateUpgrade(
             deployment.proxyAddress as string,
             ContractFactory,
-            { kind: 'uups' }
+            {
+              kind: 'uups',
+              constructorArgs: [
+                TIME_TO_FINALIZE,
+                BLOCKS_PER_COMMIT_INTERVAL,
+                COMMIT_COOLDOWN,
+              ],
+            }
           );
 
           console.log('--- Upgrade success');
