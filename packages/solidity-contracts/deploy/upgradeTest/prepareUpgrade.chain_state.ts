@@ -28,8 +28,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     implementation: contractDeployment.implementation,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
-      isProxy: true,
-      isImplementation: false,
+      isProxy: false,
+      isImplementation: true,
       proxyAddress: contractDeployment.address,
     },
   });

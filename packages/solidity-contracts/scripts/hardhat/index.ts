@@ -1,7 +1,6 @@
 export * from './pause';
 export * from './unpause';
 export * from './grantRole';
-export * from './prepareUpgradeFuelChainState';
 export * from './verifyDeployment';
 export * from './depositETH';
 export * from './depositToken';

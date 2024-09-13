@@ -1,20 +1,5 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import fs from 'fs';
-import path from 'path';
-
-interface Deployment {
-  contractName: string;
-  address: string;
-  args: any[];
-  isProxy?: boolean;
-  isImplementation?: boolean;
-  proxyAddress?: string;
-}
-
-const BLOCKS_PER_COMMIT_INTERVAL = 30;
-const TIME_TO_FINALIZE = 5;
-const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
 task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -23,41 +8,15 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
       `Verifying contract bytecode on ${network}:${hre.network.config.chainId}...`
     );
 
-    const deploymentsFile = path.join(`deployments/${network}/${network}.json`);
-    if (!fs.existsSync(deploymentsFile)) {
-      console.error(`Deployments file not found: ${deploymentsFile}`);
-      return;
-    }
+    const deployments = await hre.deployments.all();
 
-    const deployments: Deployment[] = JSON.parse(
-      fs.readFileSync(deploymentsFile, 'utf8')
-    );
-
-    for (const deployment of deployments) {
-      console.log(
-        `\nVerifying ${deployment.contractName} (${deployment.address}):`
-      );
+    for (const [contractName, deployment] of Object.entries(deployments)) {
+      console.log(`\nVerifying ${contractName} (${deployment.address}):`);
 
       try {
-        console.log('  Reading contract artifact...');
-        const artifactPath = path.join(
-          `artifacts/contracts/fuelchain/${deployment.contractName}.sol/${deployment.contractName}.json`
-        );
-
-        if (!fs.existsSync(artifactPath)) {
-          console.log('  Artifact not found. Compiling contracts...');
-          await hre.run('compile');
-
-          if (!fs.existsSync(artifactPath)) {
-            throw new Error(
-              `Artifact not found even after compilation: ${artifactPath}`
-            );
-          }
-        }
-
         console.log('--- Fetching deployed bytecode...');
         let deployedBytecode: string;
-        if (deployment.isProxy) {
+        if (deployment.linkedData.isProxy) {
           const implementationAddress =
             await hre.upgrades.erc1967.getImplementationAddress(
               deployment.address
@@ -78,37 +37,29 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
 
         console.log('--- Deploying contract locally...');
         const ContractFactory = await localHardhat.ethers.getContractFactory(
-          deployment.contractName
+          contractName
         );
         let localAddress: string;
-        if (deployment.isProxy) {
+        if (deployment.linkedData.isProxy) {
           const localContract = await localHardhat.upgrades.deployProxy(
             ContractFactory,
             [],
             {
               kind: 'uups',
               initializer: 'initialize',
-              constructorArgs: [
-                TIME_TO_FINALIZE,
-                BLOCKS_PER_COMMIT_INTERVAL,
-                COMMIT_COOLDOWN,
-              ],
+              constructorArgs: deployment.linkedData.constructorArgs,
             }
           );
           await localContract.waitForDeployment();
           localAddress = await localContract.getAddress();
-        } else if (deployment.isImplementation) {
+        } else if (deployment.linkedData.isImplementation) {
           console.log('--- Validating Upgrade...');
           await localHardhat.upgrades.validateUpgrade(
-            deployment.proxyAddress as string,
+            deployment.linkedData.proxyAddress as string,
             ContractFactory,
             {
               kind: 'uups',
-              constructorArgs: [
-                TIME_TO_FINALIZE,
-                BLOCKS_PER_COMMIT_INTERVAL,
-                COMMIT_COOLDOWN,
-              ],
+              constructorArgs: deployment.linkedData.constructorArgs,
             }
           );
 
@@ -116,7 +67,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           localAddress = deployment.address;
         } else {
           const localContract = await ContractFactory.deploy(
-            ...deployment.args
+            ...deployment.linkedData.constructorArgs
           );
           await localContract.deployed();
           localAddress = await localContract.getAddress();
@@ -124,7 +75,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
 
         console.log('--- Fetching local deployment bytecode...');
         let localBytecode: string;
-        if (deployment.isProxy) {
+        if (deployment.linkedData.isProxy) {
           const localImplementationAddress =
             await localHardhat.upgrades.erc1967.getImplementationAddress(
               localAddress
@@ -153,17 +104,17 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           hre.ethers.keccak256(localBytecode)
         ) {
           console.log(
-            `✅ ${deployment.contractName} (${deployment.address}): Bytecode verified successfully`
+            `✅ ${contractName} (${deployment.address}): Bytecode verified successfully`
           );
         } else {
           console.log(
-            `❌ ${deployment.contractName} (${deployment.address}): Bytecode mismatch`
+            `❌ ${contractName} (${deployment.address}): Bytecode mismatch`
           );
           throw new Error('Bytecode mismatch');
         }
       } catch (error) {
         console.log(
-          `❌ ${deployment.contractName} (${deployment.address}): Verification failed`
+          `❌ ${contractName} (${deployment.address}): Verification failed`
         );
         console.error(`   Error: ${error.message}`);
       }
