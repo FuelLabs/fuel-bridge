@@ -1,0 +1,29 @@
+name: Verify Deployment
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - main
+    paths:
+      - 'packages/solidity-contracts/deployments/**'
+
+jobs:
+  verify:
+    if: startsWith(github.head_ref, 'deploy/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - name: Verify deployment bytecode
+        run: |
+          # Extract branch name from `GITHUB_REF`
+          BRANCH_NAME=${{ github.ref }}
+
+          # Remove the refs/heads/ prefix
+          BRANCH_NAME=${BRANCH_NAME#refs/heads/deploy/}
+
+          npx hardhat verify-deployment --network ${{ BRANCH_NAME }}
