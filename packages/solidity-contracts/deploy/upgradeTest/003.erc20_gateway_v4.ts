@@ -3,8 +3,6 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
 
-import fs from 'fs';
-
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
@@ -32,26 +30,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     address,
     abi: [...FuelERC20Gateway.abi],
     implementation,
+    linkedData: { factory: 'FuelERC20GatewayV4', constructorArgs: [] },
   });
-
-  // storing the contract info in a common file so the verification script can read and process all deployments/upgrades together during ci workflow
-  const deployment = {
-    address: address,
-    contractName: 'FuelERC20GatewayV4',
-    network: hre.network.name,
-    isProxy: true,
-    isImplementation: false,
-  };
-
-  let deployments = [];
-  const deploymentsFile = `deployments/${hre.network.name}/${hre.network.name}.json`;
-  if (fs.existsSync(deploymentsFile)) {
-    deployments = JSON.parse(fs.readFileSync(deploymentsFile, 'utf8'));
-  }
-
-  deployments.push(deployment);
-
-  fs.writeFileSync(deploymentsFile, JSON.stringify(deployments, null, 2));
 };
 
 func.tags = ['erc20', 'erc20_gateway', 'FuelERC20GatewayV4'];

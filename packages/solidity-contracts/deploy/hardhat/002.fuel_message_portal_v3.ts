@@ -34,7 +34,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('Deployed FuelMessagePortal at', address);
   await save('FuelMessagePortal', {
     address,
-    abi: [],
+    abi: [...FuelMessagePortal.abi],
     implementation,
   });
 };
