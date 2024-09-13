@@ -34,7 +34,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     address,
     abi: [...FuelChainState.abi],
     implementation,
-    linkedData: { factory: 'FuelChainState', constructorArgs },
+    linkedData: {
+      constructorArgs,
+      isProxy: false,
+      isImplementation: true,
+    },
   });
 };
 

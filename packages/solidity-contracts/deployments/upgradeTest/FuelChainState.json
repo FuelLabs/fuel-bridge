@@ -1,5 +1,5 @@
 {
-  "address": "0xAc79E9Ef69021F9bf7Ccb175611F3115Ff65A44D",
+  "address": "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690",
   "abi": [
     {
       "inputs": [
@@ -572,6 +572,16 @@
       "type": "function"
     }
   ],
-  "numDeployments": 1,
+  "numDeployments": 6,
+  "linkedData": {
+    "constructorArgs": [
+      5,
+      30,
+      5
+    ],
+    "isProxy": true,
+    "isImplementation": false,
+    "proxyAddress": "0x13Df4fD5e07Fc9E4336aF443F9E70b9f2Ebf2Dc9"
+  },
   "implementation": "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690"
 }
