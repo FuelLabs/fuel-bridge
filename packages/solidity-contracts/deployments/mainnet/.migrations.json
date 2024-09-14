@@ -9,5 +9,8 @@
   "gateway_enable_whitelist": 1725476103,
   "gateway_whitelist_usdc": 1725476113,
   "gateway_rate_limit_usdc": 1725476128,
-  "set_asset_issuer": 1725476138
+  "set_asset_issuer": 1725476138,
+  "portal_ownership": 1726352727,
+  "state_ownership": 1726352751,
+  "gateway_ownership": 1726352788
 }
