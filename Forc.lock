@@ -32,7 +32,7 @@ dependencies = [
 
 [[package]]
 name = "core"
-source = "path+from-root-EF1196EF955CE54B"
+source = "path+from-root-76B3B001EAD7B9C9"
 
 [[package]]
 name = "interface"
@@ -70,7 +70,7 @@ dependencies = ["std"]
 
 [[package]]
 name = "std"
-source = "git+https://github.com/fuellabs/sway?tag=v0.63.3#f55c81cce61aac31913ac0e87306cbaed7da679a"
+source = "git+https://github.com/fuellabs/sway?tag=v0.63.4#2538442a67f893f2e878214ba37a11b51f4ed41e"
 dependencies = ["core"]
 
 [[package]]
