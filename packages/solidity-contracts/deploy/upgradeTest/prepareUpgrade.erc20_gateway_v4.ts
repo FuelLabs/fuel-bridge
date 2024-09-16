@@ -1,7 +1,7 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelChainState__factory as FuelChainState } from '../../typechain';
+import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -9,9 +9,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deployments: { save },
   } = hre;
 
-  const contractDeployment = await hre.deployments.get('FuelChainState');
+  const contractDeployment = await hre.deployments.get('FuelERC20GatewayV4');
 
-  const contract = await hre.ethers.getContractFactory('FuelChainState');
+  const contract = await hre.ethers.getContractFactory('FuelERC20GatewayV4');
 
   const implementationAddress = await prepareUpgrade(
     contractDeployment.address,
@@ -22,9 +22,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     }
   );
 
-  await save('FuelChainState', {
+  await save('FuelERC20GatewayV4', {
     address: implementationAddress.toString(),
-    abi: [...FuelChainState.abi],
+    abi: [...FuelERC20Gateway.abi],
     implementation: contractDeployment.implementation,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
@@ -36,6 +36,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 };
 
-func.tags = ['prepareUpgrade_chain_state'];
-func.id = 'prepareUpgrade_chain_state';
+func.tags = ['prepareUpgrade_erc20_gateway_v4'];
+func.id = 'prepareUpgrade_erc20_gateway_v4';
 export default func;
