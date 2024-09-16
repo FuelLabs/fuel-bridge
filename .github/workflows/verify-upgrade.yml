@@ -24,7 +24,6 @@ jobs:
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
-      - working-directory: ./packages/solidity-contracts
       - name: Verify deployment bytecode
         run: |
           # Extract branch name from `GITHUB_REF`
@@ -34,3 +33,4 @@ jobs:
           BRANCH_NAME=${BRANCH_NAME#refs/heads/deploy/}
 
           npx hardhat verify-deployment --network upgradeTest
+        working-directory: ./packages/solidity-contracts
