@@ -5,6 +5,8 @@ on:
     branches:
       - main
   pull_request:
+    branches:
+      - main # Target branch for the PR
   release:
     types: [published]
 
@@ -15,7 +17,7 @@ concurrency:
 jobs:
   verify-upgrade:
     runs-on: ubuntu-latest
-    if: startsWith(github.head_ref, 'deploy/')
+    if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'deploy/')
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
@@ -24,11 +26,11 @@ jobs:
           pnpm-version: 9.0.6
       - name: Verify deployment bytecode
         run: |
-          # Extract branch name from `GITHUB_REF`
-          BRANCH_NAME=${{ github.ref }}
+          # Extract branch name from `GITHUB_HEAD_REF` (PR source branch)
+          BRANCH_NAME=${{ github.head_ref }}
 
-          # Remove the refs/heads/ prefix
-          BRANCH_NAME=${BRANCH_NAME#refs/heads/deploy/}
+          # Remove the deploy/ prefix
+          BRANCH_NAME=${BRANCH_NAME#deploy/}
 
-          npx hardhat verify-deployment --network ${{ BRANCH_NAME }}
+          npx hardhat verify-deployment --network $BRANCH_NAME
         working-directory: ./packages/solidity-contracts
