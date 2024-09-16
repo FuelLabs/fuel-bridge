@@ -43,10 +43,13 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         if (deployment.linkedData.isProxy) {
           const localContract = await localHardhat.upgrades.deployProxy(
             ContractFactory,
-            [],
+            deployment.linkedData.initArgs,
             {
               kind: 'uups',
-              initializer: 'initialize',
+              initializer:
+                contractName == 'FuelMessagePortalV3'
+                  ? 'initializerV3'
+                  : 'initialize',
               constructorArgs: deployment.linkedData.constructorArgs,
             }
           );
