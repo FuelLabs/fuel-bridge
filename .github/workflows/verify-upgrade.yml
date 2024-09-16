@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  verify:
-    #   if: startsWith(github.head_ref, 'deploy/')
+  verify-upgrade:
     runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'deploy/')
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
@@ -30,5 +30,5 @@ jobs:
           # Remove the refs/heads/ prefix
           BRANCH_NAME=${BRANCH_NAME#refs/heads/deploy/}
 
-          npx hardhat verify-deployment --network upgradeTest
+          npx hardhat verify-deployment --network ${{ BRANCH_NAME }}
         working-directory: ./packages/solidity-contracts
