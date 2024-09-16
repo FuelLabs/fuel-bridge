@@ -7,8 +7,6 @@ on:
   pull_request:
   release:
     types: [published]
-  # paths:
-  #     - 'packages/solidity-contracts/deployments/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -16,7 +14,7 @@ concurrency:
 
 jobs:
   verify:
-  #   if: startsWith(github.head_ref, 'deploy/')
+    #   if: startsWith(github.head_ref, 'deploy/')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
