@@ -1,12 +1,18 @@
 name: Verify Deployment
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
     branches:
       - main
-    paths:
+  pull_request:
+  release:
+    types: [published]
+  paths:
       - 'packages/solidity-contracts/deployments/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
