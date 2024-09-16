@@ -33,8 +33,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     linkedData: {
       factory: 'FuelERC20GatewayV4',
       constructorArgs: [],
-      isProxy: false,
-      isImplementation: true,
+      isProxy: true,
+      isImplementation: false,
     },
   });
 };

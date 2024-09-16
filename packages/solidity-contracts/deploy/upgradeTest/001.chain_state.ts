@@ -36,8 +36,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     implementation,
     linkedData: {
       constructorArgs,
-      isProxy: false,
-      isImplementation: true,
+      isProxy: true,
+      isImplementation: false,
     },
   });
 };
