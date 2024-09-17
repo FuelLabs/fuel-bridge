@@ -17,6 +17,8 @@ concurrency:
 jobs:
   verify-upgrade:
     runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ secrets.RPC_URL || 'https://sepolia.gateway.tenderly.co' }}
     if: github.event_name == 'pull_request' && startsWith(github.head_ref, 'deploy/')
     steps:
       - uses: actions/checkout@v3

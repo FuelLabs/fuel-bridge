@@ -88,7 +88,7 @@ const config: HardhatUserConfig = {
       chainId: 11155111,
     },
     upgradeTest: {
-      url: 'https://sepolia.gateway.tenderly.co',
+      url: RPC_URL,
       accounts: CONTRACTS_DEPLOYER_KEY
         ? [CONTRACTS_DEPLOYER_KEY]
         : {
