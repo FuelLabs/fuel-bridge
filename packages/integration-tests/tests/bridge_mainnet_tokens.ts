@@ -544,6 +544,11 @@ describe('Bridge mainnet tokens', function () {
               RATE_LIMIT_DURATION
             );
 
+          const currentWitdrawnAmountAfterReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          expect(currentWitdrawnAmountAfterReset == 0n).to.be.true;
+
           // withdraw tokens back to the base chain
           withdrawMessageProof = await generateWithdrawalMessageProof(
             fuel_bridge,
