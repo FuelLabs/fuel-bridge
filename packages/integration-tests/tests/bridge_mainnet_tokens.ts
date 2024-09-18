@@ -416,6 +416,7 @@ describe('Bridge mainnet tokens', function () {
 
       describe('Bridge ERC20 from Fuel', function () {
         const NUM_TOKENS = 10000000000000000000n;
+        const largeRateLimit = `30`;
         let fuelTokenSender: FuelWallet;
         let ethereumTokenReceiver: Signer;
         let ethereumTokenReceiverAddress: string;
@@ -480,6 +481,9 @@ describe('Bridge mainnet tokens', function () {
           const deployer = await env.eth.deployer;
           const newRateLimit = '5';
 
+          let withdrawnAmountBeforeReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
           await env.eth.fuelERC20Gateway
             .connect(deployer)
             .resetRateLimitAmount(
@@ -488,17 +492,38 @@ describe('Bridge mainnet tokens', function () {
               RATE_LIMIT_DURATION
             );
 
-          const currentWithdrawnAmountAfterSettingLimit =
+          let currentWithdrawnAmountAfterSettingLimit =
             await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          // current withdrawn amount doesn't change when rate limit is updated
+
           expect(
             currentWithdrawnAmountAfterSettingLimit ===
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index])
+              withdrawnAmountBeforeReset
+          ).to.be.true;
+
+          withdrawnAmountBeforeReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddress,
+              parseEther(largeRateLimit),
+              RATE_LIMIT_DURATION
+            );
+
+          currentWithdrawnAmountAfterSettingLimit =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          expect(
+            currentWithdrawnAmountAfterSettingLimit ===
+              withdrawnAmountBeforeReset
           ).to.be.true;
         });
 
         it('Rate limit parameters are updated when the initial duration is over', async () => {
           const deployer = await env.eth.deployer;
-          const newRateLimit = `30`;
 
           const rateLimitDuration =
             await env.eth.fuelERC20Gateway.rateLimitDuration(tokenAddress);
@@ -515,7 +540,7 @@ describe('Bridge mainnet tokens', function () {
             .connect(deployer)
             .resetRateLimitAmount(
               tokenAddress,
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
+              parseEther(largeRateLimit) / 10n ** (18n - decimals[index]),
               RATE_LIMIT_DURATION
             );
 
