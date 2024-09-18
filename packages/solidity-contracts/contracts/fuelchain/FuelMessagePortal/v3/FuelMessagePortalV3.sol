@@ -80,7 +80,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
      * @param _amount The amount to reset the limit to.
      */
     function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {   
-        // currentPeriodAmount is not updated to avoid a edge case scenario where extra amount can be withdrawn from the bridge when it sshoulddn't be
+        // currentPeriodAmount is not updated when duration hasn't passed to avoid a edge case scenario where extra amount can be withdrawn from the bridge when it sshoulddn't be
         // fo instance if rate limit is reduced & made less than the current withddrawn amount & increased to orginal before the duration ends then extra amount can be withdrawn
         // if rate limit is reduced is reduced & made less then the current withdrawn amount then the withdraw operation from the bridge would revert until the limit is increasedd or the duration has passed
         // if period has expired then currentPeriodAmount is zero
@@ -88,6 +88,8 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             unchecked {
                 currentPeriodEnd = block.timestamp + rateLimitDuration;
             }
+
+            currentPeriodAmount = 0;
         }
 
         limitAmount = _amount;

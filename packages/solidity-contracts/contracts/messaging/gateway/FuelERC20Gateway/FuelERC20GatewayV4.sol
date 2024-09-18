@@ -154,7 +154,7 @@ contract FuelERC20GatewayV4 is
      * @param _rateLimitDuration The new rate limit duration.
      */
     function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {   
-        // currentPeriodAmount is not updated to avoid a edge case scenario where extra amount can be withdrawn from the bridge when it sshoulddn't be
+        // currentPeriodAmount is not updated when duration hasn't passed to avoid a edge case scenario where extra amount can be withdrawn from the bridge when it sshoulddn't be
         // fo instance if rate limit is reduced & made less than the current withddrawn amount & increased to orginal before the duration ends then extra amount can be withdrawn
         // if rate limit is reduced is reduced & made less then the current withdrawn amount then the withdraw operation from the bridge would revert until the limit is increasedd or the duration has passed     
         // avoid multiple SLOADS
@@ -168,6 +168,8 @@ contract FuelERC20GatewayV4 is
             unchecked {
                 currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
             }
+
+            currentPeriodAmount[_token] = 0;
         }
 
         limitAmount[_token] = _amount;

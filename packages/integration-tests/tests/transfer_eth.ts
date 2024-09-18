@@ -448,10 +448,6 @@ describe('Transferring ETH', async function () {
     it('Rate limit parameters are updated when the initial duration is over', async () => {
       const deployer = await env.eth.deployer;
 
-      await env.eth.fuelMessagePortal
-        .connect(deployer)
-        .resetRateLimitAmount(parseEther(largeRateLimit));
-
       rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
 
       // fast forward time
@@ -460,14 +456,18 @@ describe('Transferring ETH', async function () {
         rateLimitDuration * 2n
       );
 
+      const currentPeriodEndBeforeRelay =
+        await env.eth.fuelMessagePortal.currentPeriodEnd();
+
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(largeRateLimit));
+
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
         NUM_ETH
       );
-
-      const currentPeriodEndBeforeRelay =
-        await env.eth.fuelMessagePortal.currentPeriodEnd();
 
       await relayMessage(env, withdrawMessageProof);
 
@@ -514,9 +514,11 @@ describe('Transferring ETH', async function () {
       ).to.be.true;
 
       expect(
-        currentWithdrawnAmountBeforeSettingLimit ==
+        currentWithdrawnAmountBeforeSettingLimit >
           currentWithdrawnAmountAfterSettingLimit
       ).to.be.true;
+
+      expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
     });
   });
 });
