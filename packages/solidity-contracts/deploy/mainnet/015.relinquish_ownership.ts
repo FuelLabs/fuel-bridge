@@ -94,4 +94,5 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
 func.tags = ['relinquish_ownership'];
 func.id = 'relinquish_ownership';
+func.skip = async () => true;
 export default func;
