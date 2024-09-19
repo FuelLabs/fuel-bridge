@@ -343,6 +343,94 @@ You can follow the implementation of this flow via:
 - [Message Portal](../packages/solidity-contracts/contracts/fuelchain/FuelMessagePortal/v3/FuelMessagePortalV3.sol) 's `relayMessage` function
 - [FuelERC20Gateway.sol](../packages/solidity-contracts/contracts/messaging/gateway/FuelERC20Gateway/FuelERC20GatewayV4.sol) 's `finalizeWithdrawal`
 
+## Rate Limit Mechanism
+
+The Fuel Bridge uses a rate limiting mechanism as a protection for withdrawals which ensures that until a sepcific time period passes by only a certain maximum amount of eth/erc20 tokens can be withdrawn & the withdrawn limit is reset after each time interval. Fuel's implementation is inspired by the [Linea Bridge](https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+
+There is a small difference b/w the implementation done by Fuel from Linea's discussed with examples below
+
+```
+solidity
+
+   /**
+   Linea Implementation
+   * @notice Resets the rate limit amount.
+   * @dev If the used amount is higher, it is set to the limit to avoid confusion/issues.
+   * @dev Only the RATE_LIMIT_SETTER_ROLE is allowed to execute this function.
+   * @dev Emits the LimitAmountChanged event.
+   * @dev usedLimitAmountToSet will use the default value of zero if period has expired
+   * @param _amount The amount to reset the limit to.
+   */
+  function resetRateLimitAmount(uint256 _amount) external onlyRole(RATE_LIMIT_SETTER_ROLE) {
+    uint256 usedLimitAmountToSet;
+    bool amountUsedLoweredToLimit;
+    bool usedAmountResetToZero;
+
+    if (currentPeriodEnd < block.timestamp) {
+      currentPeriodEnd = block.timestamp + periodInSeconds;
+      usedAmountResetToZero = true;
+    } else {
+
+      if (_amount < currentPeriodAmountInWei) {
+        usedLimitAmountToSet = _amount;
+        amountUsedLoweredToLimit = true;
+      }
+    }
+
+    limitInWei = _amount;
+
+    if (usedAmountResetToZero || amountUsedLoweredToLimit) {
+      currentPeriodAmountInWei = usedLimitAmountToSet;
+    }
+
+    emit LimitAmountChanged(_msgSender(), _amount, amountUsedLoweredToLimit, usedAmountResetToZero);
+  }
+
+
+   /**
+     * Fuel Implementation
+     * @notice Resets the rate limit amount.
+     * @param _amount The amount to reset the limit to.
+     * The difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
+    */
+    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        // if period has expired then currentPeriodAmount is zero
+        if (currentPeriodEnd < block.timestamp) {
+            unchecked {
+                currentPeriodEnd = block.timestamp + rateLimitDuration;
+            }
+
+            currentPeriodAmount = 0;
+        }
+
+        limitAmount = _amount;
+
+        emit ResetRateLimit(_amount);
+    }
+```
+
+### Example showcasing the difference in implementation
+
+- Linea Implementation
+
+| Rate Limit Action | Current Withdrawal Amount | Current Rate Limit  |
+| -------------     |:-------------------------:| -------------------:|
+| No Update         | 9 ether                   | 10 ether            |
+| Reduced           | 5 ether                   |  5 ether            |
+| Increased         | 5 ether                   | 10 ether            |
+
+
+- Fuel Implementation
+
+| Rate Limit Action | Current Withdrawal Amount | Current Rate Limit  |
+| -------------     |:-------------------------:| -------------------:|
+| No Update         | 9 ether                   | 10 ether            |
+| Reduced           | 9 ether                   |  5 ether            |
+| Increased         | 9 ether                   | 10 ether            |
+
+
+
+
 ## Decimals adjustment
 
 One of Fuel 's key design principles is to minimize execution costs and minimize state growth. One of the design decisions furthering that goal is the use of 64 bits (`u64`) to code the balances that are bridged from L1 to L2. The most popular token standard, `ERC20`, codes the amounts with `256 bits`. If the amount transferred from L1 to L2 surpasses the capacity of Fuel to mint the L2 counterpart, a `refund` message will be generated, that will allow the user to retrieve the originally deposited amount in L1. We foresee this to be an extreme case, as there are currently no widely used tokens that surpass `2^64` units of supply.
@@ -407,3 +495,4 @@ As it can be derived from the diagrams above, there are entities performing miss
 - Security council and smart contract ownership: the smart contracts will be managed by a security council (by means of a multisig) that enables key administration functions, such as upgrades, granting of roles and permissions for privileged smart contract functions, pausing of the system, etc. It is of the essence that the security council operates correctly, honestly and timely in the management of the smart contracts.
 - Fuel Blockchain Sequencer / Validator: The Fuel blockchain's operation is currently a Proof of Authority scheme under which a single private key is able to build new blocks. A compromise on this key could mean the generation of rogue blocks. While it is needed to compromise more than just the private key of the PoA node in order to cause permanent damage, it would halt the network for an unknown amount of time.
 - Block committer: The block committer links the activity in the Fuel blockchain by pushing state updates back to Ethereum, where users can use these updates to prove certain aspects of the Fuel blockchain activity (such as withdrawals). If a block committer uploads rogue data to Ethereum, it can enable fraudulent behaviour (for example, uploading withdrawals that never happened). New states uploaded by the committer are timelocked (i.e. they cannot be used to prove L2 activity). If rogue states remain undetected for a time longer than the "finalization window", then a malicious actor can finally propagate the nefarious activity to Ethereum and ultimately extract funds out of our contracts. At that point, the loss is considered final and other avenues must be pursued for the recovery.
+```
