@@ -152,11 +152,11 @@ contract FuelERC20GatewayV4 is
      * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
      * @param _rateLimitDuration The new rate limit duration.
+     * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+     * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
+     */
      */
     function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {   
-        // currentPeriodAmount is not updated when duration hasn't passed to avoid a edge case scenario where extra amount can be withdrawn from the bridge when it shouldn't be
-        // for instance if rate limit is reduced & made less than the current withdrawn amount & increased to orginal before the duration ends then extra amount can be withdrawn
-        // if rate limit is reduced & made less then the current withdrawn amount then the withdraw operation from the bridge would revert until the limit is increased or the duration has passed  
         // avoid multiple SLOADS
         uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
         
