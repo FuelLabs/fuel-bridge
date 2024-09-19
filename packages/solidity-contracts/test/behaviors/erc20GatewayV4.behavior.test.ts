@@ -1256,7 +1256,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             await erc20Gateway.connect(user).deposit(recipient, token, amount);
             const withdrawAmount = amount / 2n;
 
-            // Withdrawal 1
+            // Withdrawal
             {
               const recipient = randomAddress();
               const withdrawalTx = erc20Gateway
@@ -1319,6 +1319,80 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               await erc20Gateway.currentPeriodAmount(token.getAddress());
 
             expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(0n);
+          });
+
+          it('reverts when a withdrawal is made when the new rate limit is less than current withdrawal amount', async () => {
+            const {
+              erc20Gateway,
+              fuelMessagePortal,
+              signers: [deployer, user],
+              assetIssuerId,
+            } = env;
+
+            let rateLimitAmount =
+              RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await erc20Gateway
+              .connect(deployer)
+              .resetRateLimitAmount(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
+
+            const amount = parseUnits('10', Number(decimals));
+            const recipient = randomBytes32();
+
+            await fuelMessagePortal
+              .connect(deployer)
+              .setMessageSender(assetIssuerId);
+
+            const impersonatedPortal = await impersonateAccount(
+              fuelMessagePortal,
+              hre
+            );
+
+            await token.mint(user, amount);
+            await token.approve(erc20Gateway, MaxUint256);
+
+            await erc20Gateway.connect(user).deposit(recipient, token, amount);
+            const withdrawAmount = amount / 2n;
+
+            // Withdrawal 1
+            {
+              const recipient = randomAddress();
+              const withdrawalTx = erc20Gateway
+                .connect(impersonatedPortal)
+                .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+              await withdrawalTx;
+            }
+
+            rateLimitAmount =
+              RATE_LIMIT_AMOUNT /
+              5 /
+              10 ** (STANDARD_TOKEN_DECIMALS - decimals);
+
+            await erc20Gateway
+              .connect(deployer)
+              .resetRateLimitAmount(
+                token.getAddress(),
+                rateLimitAmount.toString(),
+                RATE_LIMIT_DURATION
+              );
+
+            // Withdrawal 2
+            {
+              const recipient = randomAddress();
+              const withdrawalTx = erc20Gateway
+                .connect(impersonatedPortal)
+                .finalizeWithdrawal(recipient, token, withdrawAmount, 0);
+
+              await expect(withdrawalTx).to.be.revertedWithCustomError(
+                erc20Gateway,
+                'RateLimitExceeded'
+              );
+            }
           });
         });
       }
