@@ -347,7 +347,7 @@ You can follow the implementation of this flow via:
 
 The Fuel Bridge uses a rate limiting mechanism as a protection for withdrawals which ensures that until a sepcific time period passes by only a certain maximum amount of eth/erc20 tokens can be withdrawn & the withdrawn limit is reset after each time interval. Fuel's implementation is inspired by the [Linea Bridge](https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
 
-There is a small difference b/w the implementation done by Fuel from Linea's discussed with examples below
+There is a small difference between the implementation done by Fuel from Linea's discussed with examples below
 
 ```
 solidity
@@ -491,7 +491,3 @@ As it can be derived from the diagrams above, there are entities performing miss
 - Security council and smart contract ownership: the smart contracts will be managed by a security council (by means of a multisig) that enables key administration functions, such as upgrades, granting of roles and permissions for privileged smart contract functions, pausing of the system, etc. It is of the essence that the security council operates correctly, honestly and timely in the management of the smart contracts.
 - Fuel Blockchain Sequencer / Validator: The Fuel blockchain's operation is currently a Proof of Authority scheme under which a single private key is able to build new blocks. A compromise on this key could mean the generation of rogue blocks. While it is needed to compromise more than just the private key of the PoA node in order to cause permanent damage, it would halt the network for an unknown amount of time.
 - Block committer: The block committer links the activity in the Fuel blockchain by pushing state updates back to Ethereum, where users can use these updates to prove certain aspects of the Fuel blockchain activity (such as withdrawals). If a block committer uploads rogue data to Ethereum, it can enable fraudulent behaviour (for example, uploading withdrawals that never happened). New states uploaded by the committer are timelocked (i.e. they cannot be used to prove L2 activity). If rogue states remain undetected for a time longer than the "finalization window", then a malicious actor can finally propagate the nefarious activity to Ethereum and ultimately extract funds out of our contracts. At that point, the loss is considered final and other avenues must be pursued for the recovery.
-
-```
-
-```
