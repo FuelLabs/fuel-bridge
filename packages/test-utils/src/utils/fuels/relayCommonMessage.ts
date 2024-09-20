@@ -150,7 +150,7 @@ function getCommonRelayableMessages(provider: Provider) {
         });
         transaction.witnesses.push(ZeroBytes32);
 
-        transaction.gasLimit = bn(500_000);
+        transaction.gasLimit = bn(100000000);
 
         debug(
           '-------------------------------------------------------------------'

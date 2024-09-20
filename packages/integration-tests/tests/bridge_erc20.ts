@@ -273,7 +273,6 @@ describe('Bridging ERC20 tokens', async function () {
       expect(message).to.not.be.null;
 
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
-        gasLimit: 30000000,
         maturity: undefined,
         contractIds: [fuel_bridgeImpl.id.toHexString()],
       });
