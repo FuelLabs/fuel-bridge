@@ -71,7 +71,6 @@ describe('Bridging ERC20 tokens', async function () {
       .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams({
         tip: 0,
-        gasLimit: 1_000_000,
         maxFee: 1,
       })
       .callParams({
