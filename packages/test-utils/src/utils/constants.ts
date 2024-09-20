@@ -13,7 +13,7 @@ export const FUEL_TX_PARAMS: TxParams = {
   maxFee: process.env.FUEL_MAX_FEE || FUEL_MAX_FEE,
 };
 export const FUEL_CALL_TX_PARAMS = {
-  gasLimit: bn(100000000),
+  gasLimit: bn(100_000_000),
   maxFee: FUEL_TX_PARAMS.maxFee,
 };
 export const FUEL_MESSAGE_TIMEOUT_MS = 1_000_000;
