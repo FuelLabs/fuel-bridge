@@ -71,7 +71,6 @@ describe('Bridging ERC20 tokens', async function () {
       .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams({
         tip: 0,
-        gasLimit: 1_000_000,
         maxFee: 1,
       })
       .callParams({
@@ -273,7 +272,6 @@ describe('Bridging ERC20 tokens', async function () {
       expect(message).to.not.be.null;
 
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
-        gasLimit: 30000000,
         maturity: undefined,
         contractIds: [fuel_bridgeImpl.id.toHexString()],
       });
