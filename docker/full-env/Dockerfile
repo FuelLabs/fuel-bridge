@@ -1,6 +1,6 @@
 # This image is built for external projects that want to have
 # an e2e test environment
-FROM ghcr.io/fuellabs/fuel-core:v0.33.0 as fuel-core
+FROM ghcr.io/fuellabs/fuel-core:v0.36.0 as fuel-core
 FROM ghcr.io/fuellabs/fuel-block-committer:v0.4.0 as fuel-committer
 
 FROM node:20-slim as base
