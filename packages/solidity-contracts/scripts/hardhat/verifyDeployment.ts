@@ -18,8 +18,13 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         let deployedBytecode: string;
 
         if (!deployment.linkedData.isProxy) {
+          const deployedImplementation =
+            await hre.upgrades.erc1967.getImplementationAddress(
+              deployment.address
+            );
+
           deployedBytecode = await hre.ethers.provider.getCode(
-            deployment.linkedData.newImplementation
+            deployedImplementation
           );
         } else continue;
 
