@@ -23,15 +23,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   await save('FuelChainState', {
-    address: implementationAddress.toString(),
+    address: contractDeployment.address,
     abi: [...FuelChainState.abi],
     implementation: contractDeployment.implementation,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
-      isImplementation: true,
-      proxyAddress: contractDeployment.address,
+      newImplementation: implementationAddress.toString(),
     },
   });
 };

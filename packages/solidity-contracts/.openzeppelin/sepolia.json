@@ -210,6 +210,31 @@
       "address": "0x5a3f832b47b948dA27aE788E96A0CD7BB0dCd1c1",
       "txHash": "0xa2afdd4b08bec00a8cebde7d269edb32ff9e38705193a5dad441cd3d22e8a923",
       "kind": "uups"
+    },
+    {
+      "address": "0xAc46170F97FC86d2FF5Bf935c651c8A0eB169151",
+      "txHash": "0x9cdab32c955e920a6122f2227b4d5751d8832e267963bb6b4cf00252d71cc701",
+      "kind": "uups"
+    },
+    {
+      "address": "0xB5259CbaE5032E14ddA06f2DeBbA9f489B550FF0",
+      "txHash": "0x0670cc35562c151e4fec51ec455f16a1ff1e9b2d4caa79c4293a0f862de0d596",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC3CA7A773AE5B3FA974c6333e65AC468088A4B73",
+      "txHash": "0x7cff6b8c9024620b6645af5eeb693c13399387b70b8a3d68dd58b32d5a548a27",
+      "kind": "uups"
+    },
+    {
+      "address": "0xF363903815A848Bf2950db82246D50a32990781B",
+      "txHash": "0xcbd14a76d2c5b1b21559d166519c76543fa3c689473ca2388b66196d59428b1f",
+      "kind": "uups"
+    },
+    {
+      "address": "0xcCEe78A4008490D770817414D16C2FEc37dE8D86",
+      "txHash": "0x45c87e54274df8e3c91b8209cbea9a7ead4fb53ce894c36fa23b90a63f7647d4",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -4339,7 +4364,7 @@
             "label": "_fuelMessagePortal",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(FuelMessagePortal)8014",
+            "type": "t_contract(FuelMessagePortal)4524",
             "contract": "FuelMessagesEnabled",
             "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
           },
@@ -4517,7 +4542,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(FuelMessagePortal)8014": {
+          "t_contract(FuelMessagePortal)4524": {
             "label": "contract FuelMessagePortal",
             "numberOfBytes": "20"
           },

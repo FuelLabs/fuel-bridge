@@ -45,7 +45,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       constructorArgs,
       initArgs,
       isProxy: true,
-      isImplementation: false,
     },
   });
 };
