@@ -234,6 +234,8 @@
     {
       "address": "0xcCEe78A4008490D770817414D16C2FEc37dE8D86",
       "txHash": "0x45c87e54274df8e3c91b8209cbea9a7ead4fb53ce894c36fa23b90a63f7647d4",
+      "address": "0xd1d5a4379dccC46D5c8D1c6c2656ce705698e359",
+      "txHash": "0x73697b5e8b777713294ab4085e0b1a1d1d283b6e32ab5195ad3b2e79354ab31a",
       "kind": "uups"
     }
   ],

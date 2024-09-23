@@ -152,12 +152,10 @@ contract FuelERC20GatewayV4 is
      * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
      * @param _rateLimitDuration The new rate limit duration.
+     * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+     * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
      */
-    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
-        uint256 withdrawalLimitAmountToSet;
-        bool amountWithdrawnLoweredToLimit;
-        bool withdrawalAmountResetToZero;
-        
+    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {   
         // avoid multiple SLOADS
         uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
         
@@ -169,24 +167,14 @@ contract FuelERC20GatewayV4 is
             unchecked {
                 currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
             }
-            withdrawalAmountResetToZero = true;
-        } else {
-            // If the withdrawn amount is higher, it is set to the new limit amount
-            if (_amount < currentPeriodAmount[_token]) {
-                withdrawalLimitAmountToSet = _amount;
-                amountWithdrawnLoweredToLimit = true;
-            }
+
+            currentPeriodAmount[_token] = 0;
         }
 
         limitAmount[_token] = _amount;
 
-        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
-            currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
-        }
-
         emit RateLimitUpdated(_token, _amount);
     }
-
 
     //////////////////////
     // Public Functions //
