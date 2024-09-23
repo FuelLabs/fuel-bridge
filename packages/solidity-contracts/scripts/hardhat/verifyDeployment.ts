@@ -16,49 +16,26 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
       try {
         console.log('--- Fetching deployed bytecode...');
         let deployedBytecode: string;
-        if (deployment.linkedData.isProxy) {
-          const implementationAddress =
-            await hre.upgrades.erc1967.getImplementationAddress(
-              deployment.address
-            );
-          console.log('implementationAddress:', implementationAddress);
+
+        if (!deployment.linkedData.isProxy) {
           deployedBytecode = await hre.ethers.provider.getCode(
-            implementationAddress
+            deployment.linkedData.newImplementation
           );
-        } else {
-          deployedBytecode = await hre.ethers.provider.getCode(
-            deployment.address
-          );
-        }
+        } else continue;
 
         console.log('--- Creating local Hardhat network...');
         const localHardhat = require('hardhat');
         await localHardhat.run('compile');
 
-        console.log('--- Deploying contract locally...');
         const ContractFactory = await localHardhat.ethers.getContractFactory(
           contractName
         );
         let localAddress: string;
-        if (deployment.linkedData.isProxy) {
-          const localContract = await localHardhat.upgrades.deployProxy(
-            ContractFactory,
-            deployment.linkedData.initArgs,
-            {
-              kind: 'uups',
-              initializer:
-                contractName == 'FuelMessagePortalV3'
-                  ? 'initializerV3'
-                  : 'initialize',
-              constructorArgs: deployment.linkedData.constructorArgs,
-            }
-          );
-          await localContract.waitForDeployment();
-          localAddress = await localContract.getAddress();
-        } else if (deployment.linkedData.isImplementation) {
+
+        if (!deployment.linkedData.isProxy) {
           console.log('--- Validating Upgrade...');
           await localHardhat.upgrades.validateUpgrade(
-            deployment.linkedData.proxyAddress as string,
+            deployment.address as string,
             ContractFactory,
             {
               kind: 'uups',
@@ -67,30 +44,16 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           );
 
           console.log('--- Upgrade success');
-          localAddress = deployment.address;
-        } else {
-          const localContract = await ContractFactory.deploy(
-            ...deployment.linkedData.constructorArgs
-          );
-          await localContract.deployed();
-          localAddress = await localContract.getAddress();
-        }
+          localAddress = deployment.linkedData.newImplementation;
+        } else continue;
 
         console.log('--- Fetching local deployment bytecode...');
         let localBytecode: string;
-        if (deployment.linkedData.isProxy) {
-          const localImplementationAddress =
-            await localHardhat.upgrades.erc1967.getImplementationAddress(
-              localAddress
-            );
-          localBytecode = await localHardhat.ethers.provider.getCode(
-            localImplementationAddress
-          );
-        } else {
+        if (!deployment.linkedData.isProxy) {
           localBytecode = await localHardhat.ethers.provider.getCode(
             localAddress
           );
-        }
+        } else continue;
 
         console.log('--- Comparing bytecodes...');
         console.log(
