@@ -27,6 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelERC20Gateway.abi],
     implementation: contractDeployment.implementation,
     linkedData: {
+      factory: 'FuelERC20GatewayV4',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,

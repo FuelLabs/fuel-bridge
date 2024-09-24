@@ -29,13 +29,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
+  const bytecode = await contract.getDeployedCode();
+
   console.log('Deployed FuelChainState at', address);
   await save('FuelChainState', {
     address,
     abi: [...FuelChainState.abi],
+    // deployedBytecode: bytecode,
     implementation,
     linkedData: {
       constructorArgs,
+      factory: 'FuelChainState',
       initArgs: [],
       isProxy: true,
     },

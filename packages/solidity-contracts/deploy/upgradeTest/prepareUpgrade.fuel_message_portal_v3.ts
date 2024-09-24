@@ -27,6 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     abi: [...FuelMessagePortal.abi],
     implementation: contractDeployment.implementation,
     linkedData: {
+      factory: 'FuelMessagePortalV3',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
