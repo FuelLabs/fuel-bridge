@@ -50,7 +50,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         if (!deployment.linkedData.isProxy) {
           localBytecode = await (
             await hre.artifacts.readArtifact(deployment.linkedData.factory)
-          ).bytecode;
+          ).deployedBytecode;
         } else continue;
 
         console.log('--- Comparing bytecodes...');
