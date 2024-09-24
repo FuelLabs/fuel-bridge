@@ -10,8 +10,11 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
 
     const deployments = await hre.deployments.all();
 
+
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
+
+
 
       try {
         console.log('--- Fetching deployed bytecode...');
@@ -49,6 +52,17 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
             '--- Performing mock upgrade to fetch the local bytecode...'
           );
 
+          const proxyfactory = await localHardhat.ethers.getContractFactory(
+            contractName
+          );
+          const proxy = await localHardhat.upgrades.deployProxy(proxyfactory, [], {
+            initializer: 'initialize',
+            constructorArgs: deployment.linkedData.constructorArgs,
+          });
+
+          await proxy.waitForDeployment();
+
+
           const contract = await localHardhat.upgrades.upgradeProxy(
             deployment.address,
             ContractFactory,
@@ -66,7 +80,13 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         console.log('--- Fetching local deployment bytecode...');
         let localBytecode: string;
         if (!deployment.linkedData.isProxy) {
-          localBytecode = await hre.ethers.provider.getCode(localAddress);
+
+          localBytecode = await hre.ethers.provider.getCode(
+            localAddress
+          );
+          // await (await hre.artifacts.readArtifact(deployment.linkedData.factory)).deployedBytecode
+
+          // localBytecode =  await (await hre.artifacts.readArtifact(deployment.linkedData.factory)).deployedBytecode
         } else continue;
 
         console.log('--- Comparing bytecodes...');
