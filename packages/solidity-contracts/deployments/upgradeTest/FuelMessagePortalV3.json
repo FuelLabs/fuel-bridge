@@ -1,5 +1,5 @@
 {
-  "address": "0x7B782539ea36dc01ca6Bdd8280b115C3230197fd",
+  "address": "0x2b88606d334d075d33131E6eaC1B7E18E3089228",
   "abi": [
     {
       "inputs": [
@@ -1118,12 +1118,13 @@
   ],
   "numDeployments": 2,
   "linkedData": {
+    "factory": "FuelMessagePortalV3",
     "constructorArgs": [
       "115792089237316195423570985008687907853269984665640564039457584007913129639935",
       604800
     ],
     "initArgs": [
-      "0xa145b3b3B0BB8D0620e73Cb9a496F505b191b173",
+      "0xdDfCb9DF12CE6381507F2561B8a708fCd1CF8180",
       "10000000000000000000"
     ],
     "isProxy": false,

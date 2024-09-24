@@ -1,5 +1,5 @@
 {
-  "address": "0x0Bb3a3B43Ac6D190e0ade3aC4aD363eb9B05a80A",
+  "address": "0x8EB0E8C3bA99c04F05ab01A5BED34F00c6c3BE4D",
   "abi": [
     {
       "inputs": [],
@@ -858,9 +858,10 @@
   ],
   "numDeployments": 2,
   "linkedData": {
+    "factory": "FuelERC20GatewayV4",
     "constructorArgs": [],
     "initArgs": [
-      "0x7B782539ea36dc01ca6Bdd8280b115C3230197fd"
+      "0x2b88606d334d075d33131E6eaC1B7E18E3089228"
     ],
     "isProxy": false,
     "newImplementation": "0x90cB311F9871490C160d50380f68801ed9146310"

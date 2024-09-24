@@ -1,5 +1,5 @@
 {
-  "address": "0xa145b3b3B0BB8D0620e73Cb9a496F505b191b173",
+  "address": "0x2947eE8a352158fda08F2cf5c0AE8e5b1DFCfDc9",
   "abi": [
     {
       "inputs": [
@@ -572,13 +572,14 @@
       "type": "function"
     }
   ],
-  "numDeployments": 2,
+  "numDeployments": 10,
   "linkedData": {
     "constructorArgs": [
       5,
       30,
       5
     ],
+    "factory": "FuelChainState",
     "initArgs": [],
     "isProxy": false,
     "newImplementation": "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690"
