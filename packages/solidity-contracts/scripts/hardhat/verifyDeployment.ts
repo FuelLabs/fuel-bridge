@@ -18,13 +18,8 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         let deployedBytecode: string;
 
         if (!deployment.linkedData.isProxy) {
-          const deployedImplementation =
-            await hre.upgrades.erc1967.getImplementationAddress(
-              deployment.address
-            );
-
           deployedBytecode = await hre.ethers.provider.getCode(
-            deployedImplementation
+            deployment.address
           );
         } else continue;
 
@@ -33,7 +28,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
         await localHardhat.run('compile');
 
         const ContractFactory = await localHardhat.ethers.getContractFactory(
-          contractName
+          deployment.linkedData.factory
         );
         let localAddress: string;
 
@@ -48,16 +43,30 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
             }
           );
 
-          console.log('--- Upgrade success');
-          localAddress = deployment.linkedData.newImplementation;
+          console.log('--- Upgrade Validated...');
+
+          console.log(
+            '--- Performing mock upgrade to fetch the local bytecode...'
+          );
+
+          const contract = await localHardhat.upgrades.upgradeProxy(
+            deployment.address,
+            ContractFactory,
+            {
+              kind: 'uups',
+              constructorArgs: deployment.linkedData.constructorArgs,
+            }
+          );
+
+          console.log('--- Upgrade successful');
+          await contract.waitForDeployment();
+          localAddress = await contract.getAddress();
         } else continue;
 
         console.log('--- Fetching local deployment bytecode...');
         let localBytecode: string;
         if (!deployment.linkedData.isProxy) {
-          localBytecode = await localHardhat.ethers.provider.getCode(
-            localAddress
-          );
+          localBytecode = await hre.ethers.provider.getCode(localAddress);
         } else continue;
 
         console.log('--- Comparing bytecodes...');
