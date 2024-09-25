@@ -6,67 +6,69 @@ import { TransactionResponse, getCreateAddress } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
-    ethers,
     upgrades: { prepareUpgrade },
     deployments: { save },
   } = hre;
 
-  const [deployer] = await ethers.getSigners();
   const contractDeployment = await hre.deployments.get('FuelChainState');
 
   const factory = await hre.ethers.getContractFactory('FuelChainState');
 
-  const [arg1, arg2, arg3] = contractDeployment.linkedData.constructorArgs!;
+  const deployment = await factory.deploy(
+    ...contractDeployment.linkedData.constructorArgs as [number, number, number]
+  );
 
-  const deployment = await factory.deploy(arg1, arg2, arg3);
   const { data: expectedInitCode } = await factory.getDeployTransaction(
-    arg1,
-    arg2,
-    arg3
+    ...contractDeployment.linkedData.constructorArgs as [number, number, number]
   );
 
   const deploymentTx = deployment.deploymentTransaction();
 
-  const fetchedDeploymentTx = await ethers.provider.getTransaction(
-    deploymentTx?.hash!
-  )!;
+  // const fetchedDeploymentTx = await ethers.provider.getTransaction(
+  //   deploymentTx?.hash!
+  // )!;
 
-  const data = fetchedDeploymentTx?.data;
+  // const data = fetchedDeploymentTx?.data;
 
-  console.log('Init code === tx.data', expectedInitCode === data);
+  // console.log(expectedInitCode)
 
-  const nextAddr = getCreateAddress({
-    from: deployer.address,
-    nonce: await ethers.provider.getTransactionCount(deployer),
-  });
+  // console.log('Init code === tx.data', expectedInitCode === data);
 
-  const emptyCode = await ethers.provider.getCode(nextAddr);
-  console.log('Address is not deployed: ', emptyCode === '0x');
+  // const nextAddr = getCreateAddress({
+  //   from: deployer.address,
+  //   nonce: await ethers.provider.getTransactionCount(deployer),
+  // });
 
-  const response = (await prepareUpgrade(contractDeployment.address, factory, {
-    kind: 'uups',
-    constructorArgs: contractDeployment.linkedData.constructorArgs,
-    getTxResponse: true,
-    redeployImplementation: 'always',
-  })) as TransactionResponse;
+  // const emptyCode = await ethers.provider.getCode(nextAddr);
+  // console.log('Address is not deployed: ', emptyCode === '0x');
 
-  console.log('Init code === Upgrade data', response.data === expectedInitCode);
+  const implementationAddress = await prepareUpgrade(
+    contractDeployment.address,
+    factory,
+    {
+      kind: 'uups',
+      constructorArgs: contractDeployment.linkedData.constructorArgs,
+    }
+  );
 
-  const deployedCode = await ethers.provider.getCode(nextAddr);
-  console.log('Address was correctly predicted', deployedCode.length > 2);
-  console.log('New implementation address', nextAddr);
+  // console.log('Init code === Upgrade data', response.data === expectedInitCode);
+
+  // const deployedCode = await ethers.provider.getCode(nextAddr);
+  // console.log('Address was correctly predicted', deployedCode.length > 2);
+  // console.log('New implementation address', nextAddr);
 
   await save('FuelChainState', {
     address: contractDeployment.address,
     abi: [...FuelChainState.abi],
     implementation: contractDeployment.implementation,
-
+    transactionHash: deploymentTx?.hash,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
+      expectedInitCode: expectedInitCode,
       factory: 'FuelChainState',
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
-      newImplementation: nextAddr,
+      newImplementation: implementationAddress.toString(),
     },
   });
 };
