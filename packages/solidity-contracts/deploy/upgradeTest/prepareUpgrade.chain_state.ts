@@ -18,10 +18,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ...contractDeployment.linkedData.constructorArgs as [number, number, number]
   );
 
-  const { data: expectedInitCode } = await factory.getDeployTransaction(
-    ...contractDeployment.linkedData.constructorArgs as [number, number, number]
-  );
-
   const deploymentTx = deployment.deploymentTransaction();
 
   // const fetchedDeploymentTx = await ethers.provider.getTransaction(
@@ -64,7 +60,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     transactionHash: deploymentTx?.hash,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
-      expectedInitCode: expectedInitCode,
       factory: 'FuelChainState',
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,

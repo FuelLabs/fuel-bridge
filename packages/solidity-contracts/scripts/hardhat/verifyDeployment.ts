@@ -41,13 +41,17 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
             '--- Comparing expected init code with actual init code on-chain...'
           );
 
+          const { data: expectedInitCode } = await ContractFactory.getDeployTransaction(
+            ...deployment.linkedData.constructorArgs
+          );
+
           const fetchedDeploymentTx =
             await localHardhat.ethers.provider.getTransaction(
               deployment.transactionHash
             )!;
 
           const actualInitCode = fetchedDeploymentTx?.data;
-          if (deployment.linkedData.expectedInitCode === actualInitCode) {
+          if (expectedInitCode === actualInitCode) {
             console.log(
               `✅ ${contractName} (${deployment.address}): Init Code verified sucessfully`
             );
