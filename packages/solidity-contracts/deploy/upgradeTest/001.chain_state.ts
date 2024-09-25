@@ -21,9 +21,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     COMMIT_COOLDOWN,
   ];
 
-  const contract = await deployProxy(new FuelChainState(deployer), [], {
+  const factory = await ethers.getContractFactory('FuelChainState');
+
+  const contract = await deployProxy(factory, [], {
     initializer: 'initialize',
     constructorArgs,
+    redeployImplementation: 'always',
   });
   await contract.waitForDeployment();
   const address = await contract.getAddress();
