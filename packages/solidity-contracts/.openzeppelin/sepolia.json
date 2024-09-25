@@ -300,6 +300,26 @@
       "address": "0xCbFF9726eD7ecc7e6F45Ca288f2Fb22505bA952f",
       "txHash": "0x282327e3eec89f92f5fb3d1f75ed63edf5cc58c39adcd6cf358e939557ede21d",
       "kind": "uups"
+    },
+    {
+      "address": "0x40368666eff4Add443cEf30BBAd2eAcAe5F2cbE8",
+      "txHash": "0x1666522878d94cfb88223e8fefc49a0dbfe10dbfa1df955f39fbcc52525a192a",
+      "kind": "uups"
+    },
+    {
+      "address": "0xB53F5723Dd4E46da32e1769Bd36A5aD880e707A5",
+      "txHash": "0xfde49abec5891d1583ed00cfa999bbb12fff448c61e2e955ca42edec98083c78",
+      "kind": "uups"
+    },
+    {
+      "address": "0x625DFD69b61dF567be60516e2136b26Cf5a75Ed1",
+      "txHash": "0xac30754eac2cf75466ec1cabe4890a4287ae973c457afadd210f277410d77362",
+      "kind": "uups"
+    },
+    {
+      "address": "0x1A85C09c6849ad683F4599Fc9010068d0Fb982FC",
+      "txHash": "0x6f2745ebd7121db800c3941c1a6265d4894e1217571aea30e4a27dbb498f6cc0",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -4848,7 +4868,15 @@
           }
         },
         "namespaces": {}
-      }
+      },
+      "allAddresses": [
+        "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690",
+        "0x9Baa4095f3635D9763Fee4ca98bd3f8072aC5962",
+        "0xE070FA230679FEeF6bB337F256f16335F81d80B4",
+        "0x97b0A18B2888e904940fFd19E480a28aeec3F055",
+        "0x9F2Ce4098aBA913aE571F569CC2AFD5D106A4BB9",
+        "0xbCe30702443dbF69E52E1a9b8EE7d3D303FAfA14"
+      ]
     },
     "548cca2a26c5cc0709b6faeff4014a53e98cc62eceebb963cbce89348317c4db": {
       "address": "0x958a6Af30dfF9Bc0a883171A763067EB16564833",
