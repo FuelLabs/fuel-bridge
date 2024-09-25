@@ -38,9 +38,6 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       accounts: {
-        accountsBalance: "10000000000000000000000",
-        mnemonic:
-        'test test test test test test test test test test test junk',
         count: 128,
       },
       deploy: ['deploy/hardhat'],
