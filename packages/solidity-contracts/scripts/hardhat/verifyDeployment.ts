@@ -15,23 +15,16 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
 
       try {
         console.log('--- Fetching deployed bytecode...');
-        let deployedBytecode: string;
 
         if (!deployment.linkedData.isProxy) {
-          deployedBytecode = await hre.ethers.provider.getCode(
-            deployment.address
+          console.log('--- Creating local Hardhat network...');
+          const localHardhat = require('hardhat');
+          await localHardhat.run('compile');
+
+          const ContractFactory = await localHardhat.ethers.getContractFactory(
+            deployment.linkedData.factory
           );
-        } else continue;
 
-        console.log('--- Creating local Hardhat network...');
-        const localHardhat = require('hardhat');
-        await localHardhat.run('compile');
-
-        const ContractFactory = await localHardhat.ethers.getContractFactory(
-          deployment.linkedData.factory
-        );
-
-        if (!deployment.linkedData.isProxy) {
           console.log('--- Validating Upgrade...');
           await localHardhat.upgrades.validateUpgrade(
             deployment.address as string,
@@ -43,39 +36,28 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           );
 
           console.log('--- Upgrade Validated...');
-        } else continue;
 
-        console.log('--- Fetching local deployment bytecode...');
-        let localBytecode: string;
-        if (!deployment.linkedData.isProxy) {
-          localBytecode = await (
-            await hre.artifacts.readArtifact(deployment.linkedData.factory)
-          ).deployedBytecode;
-        } else continue;
-
-        console.log('--- Comparing bytecodes...');
-        console.log(
-          '--- Deployed bytecode: ',
-          hre.ethers.keccak256(deployedBytecode)
-        );
-        console.log(
-          '--- Local bytecode: ',
-          hre.ethers.keccak256(localBytecode)
-        );
-
-        if (
-          hre.ethers.keccak256(deployedBytecode) ===
-          hre.ethers.keccak256(localBytecode)
-        ) {
           console.log(
-            `✅ ${contractName} (${deployment.address}): Bytecode verified successfully`
+            '--- Comparing expected init code with actual init code on-chain...'
           );
-        } else {
-          console.log(
-            `❌ ${contractName} (${deployment.address}): Bytecode mismatch`
-          );
-          throw new Error('Bytecode mismatch');
-        }
+
+          const fetchedDeploymentTx =
+            await localHardhat.ethers.provider.getTransaction(
+              deployment.transactionHash
+            )!;
+
+          const actualInitCode = fetchedDeploymentTx?.data;
+          if (deployment.linkedData.expectedInitCode === actualInitCode) {
+            console.log(
+              `✅ ${contractName} (${deployment.address}): Init Code verified sucessfully`
+            );
+          } else {
+            console.log(
+              `❌ ${contractName} (${deployment.address}): Init Code mismatch`
+            );
+            throw new Error('Init Code mismatch');
+          }
+        } else continue;
       } catch (error) {
         console.log(
           `❌ ${contractName} (${deployment.address}): Verification failed`
