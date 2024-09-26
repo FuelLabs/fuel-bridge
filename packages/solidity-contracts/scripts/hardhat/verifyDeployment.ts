@@ -56,7 +56,11 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
               fetchedDeploymentTx?.hash
             );
 
-          if (expectedInitCode === deployment.linkedData.actualInitCode) {
+          const tx = await hre.ethers.provider.getTransaction(
+            deployment.transactionHash!
+          );
+
+          if (expectedInitCode === tx?.data) {
             console.log(
               `✅ ${contractName} (${deployment.address}): Init Code verified sucessfully`
             );
