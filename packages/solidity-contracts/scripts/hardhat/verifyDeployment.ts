@@ -41,23 +41,45 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
             '--- Comparing expected init code with actual init code on-chain...'
           );
 
-          const { data: expectedInitCode } = await ContractFactory.getDeployTransaction(
-            ...deployment.linkedData.constructorArgs
-          );
+          const { data: expectedInitCode } =
+            await ContractFactory.getDeployTransaction(
+              ...deployment.linkedData.constructorArgs
+            );
 
           const fetchedDeploymentTx =
             await localHardhat.ethers.provider.getTransaction(
               deployment.transactionHash
             )!;
 
-          const actualInitCode = fetchedDeploymentTx?.data;
-          if (expectedInitCode === actualInitCode) {
+          const reciept =
+            await localHardhat.ethers.provider.getTransactionReceipt(
+              fetchedDeploymentTx?.hash
+            );
+
+          if (expectedInitCode === deployment.linkedData.actualInitCode) {
             console.log(
               `✅ ${contractName} (${deployment.address}): Init Code verified sucessfully`
             );
           } else {
             console.log(
               `❌ ${contractName} (${deployment.address}): Init Code mismatch`
+            );
+            throw new Error('Init Code mismatch');
+          }
+
+          console.log(
+            '--- Check the new implementation deployment resulted in deploying that implementation addresss...'
+          );
+
+          if (
+            reciept?.contractAddress === deployment.linkedData.newImplementation
+          ) {
+            console.log(
+              `✅ ${contractName} (${deployment.address}): new implementation deployment verified`
+            );
+          } else {
+            console.log(
+              `❌ ${contractName} (${deployment.address}):  new implementation deployment verification failed`
             );
             throw new Error('Init Code mismatch');
           }
