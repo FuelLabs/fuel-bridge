@@ -1,5 +1,8 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import { config as dotEnvConfig } from 'dotenv';
+
+dotEnvConfig();
 
 task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
