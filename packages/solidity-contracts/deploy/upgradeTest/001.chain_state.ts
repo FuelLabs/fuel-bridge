@@ -13,7 +13,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     upgrades: { deployProxy, erc1967 },
     deployments: { save },
   } = hre;
-  const [deployer] = await ethers.getSigners();
 
   const constructorArgs = [
     TIME_TO_FINALIZE,
@@ -21,7 +20,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     COMMIT_COOLDOWN,
   ];
 
-  const contract = await deployProxy(new FuelChainState(deployer), [], {
+  const factory = await ethers.getContractFactory('FuelChainState');
+
+  const contract = await deployProxy(factory, [], {
     initializer: 'initialize',
     constructorArgs,
   });
@@ -29,13 +30,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
-  const bytecode = await contract.getDeployedCode();
-
   console.log('Deployed FuelChainState at', address);
   await save('FuelChainState', {
     address,
     abi: [...FuelChainState.abi],
-    // deployedBytecode: bytecode,
     implementation,
     linkedData: {
       constructorArgs,
