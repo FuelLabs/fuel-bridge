@@ -573,14 +573,14 @@
     }
   ],
   "transactionHash": "0x044e479fac9042a852714b1f22ef44215740e4ee5274a00193c576c682e71469",
-  "numDeployments": 13,
+  "numDeployments": 14,
   "linkedData": {
     "constructorArgs": [
       5,
       30,
       5
     ],
-    "factory": "FuelERC20GatewayV4",
+    "factory": "FuelChainState",
     "initArgs": [],
     "isProxy": false,
     "newImplementation": "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690"

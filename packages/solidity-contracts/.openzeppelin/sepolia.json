@@ -5190,7 +5190,7 @@
             "label": "_fuelMessagePortal",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(FuelMessagePortal)8355",
+            "type": "t_contract(FuelMessagePortal)8014",
             "contract": "FuelMessagesEnabled",
             "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
           },
@@ -5368,7 +5368,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(FuelMessagePortal)8355": {
+          "t_contract(FuelMessagePortal)8014": {
             "label": "contract FuelMessagePortal",
             "numberOfBytes": "20"
           },

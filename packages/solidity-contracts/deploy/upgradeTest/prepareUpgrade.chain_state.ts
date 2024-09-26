@@ -31,7 +31,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     transactionHash: response.hash,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
-      factory: 'FuelERC20GatewayV4',
+      factory: 'FuelChainState',
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
       newImplementation: receipt?.contractAddress,
