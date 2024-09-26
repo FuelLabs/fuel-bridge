@@ -20,7 +20,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getTxResponse: true,
   })) as TransactionResponse;
 
-  const reciept = await hre.ethers.provider.getTransactionReceipt(
+  const receipt = await hre.ethers.provider.getTransactionReceipt(
     response.hash
   );
 
@@ -31,11 +31,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     transactionHash: response.hash,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
-      actualInitCode: response.data,
       factory: 'FuelChainState',
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
-      newImplementation: reciept?.contractAddress,
+      newImplementation: receipt?.contractAddress,
     },
   });
 };
