@@ -7,7 +7,7 @@ import { FuelMessagePortalV4__factory as FuelMessagePortal } from '../../typecha
 const ETH_DEPOSIT_LIMIT = MaxUint256;
 const FTI_GAS_LIMIT = 2n ** 64n - 1n;
 const FTI_MIN_GAS_PRICE = parseUnits('1', 'gwei');
-const FTI_MIN_GAS_PER_TX = 1;
+const FTI_MIN_GAS_PER_TX = 10_000;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
