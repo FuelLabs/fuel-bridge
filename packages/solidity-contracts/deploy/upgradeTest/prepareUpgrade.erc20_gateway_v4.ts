@@ -2,6 +2,7 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
+import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -11,27 +12,29 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const contractDeployment = await hre.deployments.get('FuelERC20GatewayV4');
 
-  const contract = await hre.ethers.getContractFactory('FuelERC20GatewayV4');
+  const factory = await hre.ethers.getContractFactory('FuelERC20GatewayV4');
 
-  const implementationAddress = await prepareUpgrade(
-    contractDeployment.address,
-    contract,
-    {
-      kind: 'uups',
-      constructorArgs: contractDeployment.linkedData.constructorArgs,
-    }
+  const response = (await prepareUpgrade(contractDeployment.address, factory, {
+    kind: 'uups',
+    constructorArgs: contractDeployment.linkedData.constructorArgs,
+    getTxResponse: true,
+  })) as TransactionResponse;
+
+  const receipt = await hre.ethers.provider.getTransactionReceipt(
+    response.hash
   );
 
   await save('FuelERC20GatewayV4', {
     address: contractDeployment.address,
     abi: [...FuelERC20Gateway.abi],
     implementation: contractDeployment.implementation,
+    transactionHash: response.hash,
     linkedData: {
       factory: 'FuelERC20GatewayV4',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
       isProxy: false,
-      newImplementation: implementationAddress.toString(),
+      newImplementation: receipt?.contractAddress,
     },
   });
 };

@@ -2,7 +2,7 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory as FuelChainState } from '../../typechain';
-import { TransactionResponse, getCreateAddress } from 'ethers';
+import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
