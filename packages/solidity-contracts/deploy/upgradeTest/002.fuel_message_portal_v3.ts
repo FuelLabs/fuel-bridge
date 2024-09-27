@@ -43,7 +43,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     linkedData: {
       factory: 'FuelMessagePortalV3',
       constructorArgs,
-      initArgs,
     },
   });
 };

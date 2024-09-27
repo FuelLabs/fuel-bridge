@@ -38,7 +38,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     linkedData: {
       constructorArgs,
       factory: 'FuelChainState',
-      initArgs: [],
     },
   });
 };
