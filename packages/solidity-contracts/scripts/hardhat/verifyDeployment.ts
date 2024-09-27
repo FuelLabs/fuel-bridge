@@ -7,6 +7,9 @@ dotEnvConfig();
 task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
     const network = hre.network.name;
+
+    const { ethers, upgrades } = hre;
+
     console.log(
       `Verifying contract bytecode on ${network}:${hre.network.config.chainId}...`
     );
@@ -18,17 +21,21 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
 
       console.log('--- Fetching deployed bytecode...');
 
-      if (!deployment.linkedData.isProxy) {
-        console.log('--- Creating local Hardhat network...');
-        const localHardhat = require('hardhat');
-        await localHardhat.run('compile');
+      const implementation = await upgrades.erc1967.getImplementationAddress(
+        deployment.address
+      );
 
-        const ContractFactory = await localHardhat.ethers.getContractFactory(
+      // makes sure that the deployment data is consistent & the verification checks are only ran when prepare upgrade script has been executed
+      if (
+        implementation == deployment.implementation &&
+        deployment.transactionHash
+      ) {
+        const ContractFactory = await ethers.getContractFactory(
           deployment.linkedData.factory
         );
 
-        console.log('--- Validating Upgrade...');
-        await localHardhat.upgrades.validateUpgrade(
+        console.log(`--- Validating the upgrade to ${implementation}...`);
+        await upgrades.validateUpgrade(
           deployment.address as string,
           ContractFactory,
           {
@@ -48,15 +55,13 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
             ...deployment.linkedData.constructorArgs
           );
 
-        const fetchedDeploymentTx =
-          await localHardhat.ethers.provider.getTransaction(
-            deployment.transactionHash
-          )!;
+        const fetchedDeploymentTx = await ethers.provider.getTransaction(
+          deployment.transactionHash
+        )!;
 
-        const reciept =
-          await localHardhat.ethers.provider.getTransactionReceipt(
-            fetchedDeploymentTx?.hash
-          );
+        const reciept = await ethers.provider.getTransactionReceipt(
+          fetchedDeploymentTx?.hash
+        );
 
         const tx = await hre.ethers.provider.getTransaction(
           deployment.transactionHash!
@@ -77,9 +82,7 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
           '--- Check the new implementation deployment resulted in deploying that implementation addresss...'
         );
 
-        if (
-          reciept?.contractAddress === deployment.linkedData.newImplementation
-        ) {
+        if (reciept?.contractAddress === implementation) {
           console.log(
             `✅ ${contractName} (${deployment.address}): new implementation deployment verified`
           );
