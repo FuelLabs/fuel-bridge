@@ -19,8 +19,6 @@ task('verify-deployment', 'Verifies the deployed contract bytecode').setAction(
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
 
-      console.log('--- Fetching deployed bytecode...');
-
       const implementation = await upgrades.erc1967.getImplementationAddress(
         deployment.address
       );
