@@ -1,10 +1,7 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import {
-  FuelChainState__factory as FuelChainState,
-  UpgradeableTester__factory,
-} from '../../typechain';
+import { FuelChainState__factory as FuelChainState } from '../../typechain';
 import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -21,6 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     kind: 'uups',
     constructorArgs: contractDeployment.linkedData.constructorArgs,
     getTxResponse: true,
+    redeployImplementation: 'always', // added this so we can mock legit upgrades by default
   })) as TransactionResponse;
 
   const receipt = await hre.ethers.provider.getTransactionReceipt(
@@ -35,7 +33,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       factory: 'FuelChainState',
-      initArgs: contractDeployment.linkedData.initArgs,
     },
   });
 };

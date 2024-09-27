@@ -18,6 +18,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     kind: 'uups',
     constructorArgs: contractDeployment.linkedData.constructorArgs,
     getTxResponse: true,
+    redeployImplementation: 'always', // added this so we can mock legit upgrades by default
   })) as TransactionResponse;
 
   const receipt = await hre.ethers.provider.getTransactionReceipt(
@@ -32,7 +33,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     linkedData: {
       factory: 'FuelMessagePortalV3',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
-      initArgs: contractDeployment.linkedData.initArgs,
     },
   });
 };
