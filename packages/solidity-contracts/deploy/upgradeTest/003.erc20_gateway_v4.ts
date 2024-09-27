@@ -32,7 +32,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       factory: 'FuelERC20GatewayV4',
       constructorArgs: [],
       initArgs,
-      isProxy: true,
     },
   });
 };

@@ -39,7 +39,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       constructorArgs,
       factory: 'FuelChainState',
       initArgs: [],
-      isProxy: true,
     },
   });
 };

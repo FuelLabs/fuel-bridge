@@ -44,7 +44,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       factory: 'FuelMessagePortalV3',
       constructorArgs,
       initArgs,
-      isProxy: true,
     },
   });
 };
