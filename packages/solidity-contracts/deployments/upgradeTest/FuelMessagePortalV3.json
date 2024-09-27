@@ -1,5 +1,5 @@
 {
-  "address": "0x68447dEe5c730A05636feC2a859CF4aad343492C",
+  "address": "0x4b120AA46550e2ed8960A1056984b9611c127e46",
   "abi": [
     {
       "inputs": [
@@ -1125,11 +1125,9 @@
       604800
     ],
     "initArgs": [
-      "0x1A85C09c6849ad683F4599Fc9010068d0Fb982FC",
+      "0xEAC528d035A76D97b260A92b7e235f44827E3505",
       "10000000000000000000"
-    ],
-    "isProxy": false,
-    "newImplementation": "0x93fF4BAbC52270364A7371089dc8085a3c03DaE1"
+    ]
   },
   "implementation": "0x93fF4BAbC52270364A7371089dc8085a3c03DaE1"
 }

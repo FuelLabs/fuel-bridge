@@ -1,5 +1,5 @@
 {
-  "address": "0xaaeb5e81d4d2a0C211bB502B6a557BC552b8ceaE",
+  "address": "0x6ec3E0078442eB1a634E850B084dD9b04a242BFd",
   "abi": [
     {
       "inputs": [],
@@ -862,10 +862,8 @@
     "factory": "FuelERC20GatewayV4",
     "constructorArgs": [],
     "initArgs": [
-      "0x68447dEe5c730A05636feC2a859CF4aad343492C"
-    ],
-    "isProxy": false,
-    "newImplementation": "0x90cB311F9871490C160d50380f68801ed9146310"
+      "0x4b120AA46550e2ed8960A1056984b9611c127e46"
+    ]
   },
   "implementation": "0x90cB311F9871490C160d50380f68801ed9146310"
 }
