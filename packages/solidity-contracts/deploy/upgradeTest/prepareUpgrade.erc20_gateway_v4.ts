@@ -27,14 +27,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await save('FuelERC20GatewayV4', {
     address: contractDeployment.address,
     abi: [...FuelERC20Gateway.abi],
-    implementation: contractDeployment.implementation,
+    implementation: receipt?.contractAddress!,
     transactionHash: response.hash,
     linkedData: {
       factory: 'FuelERC20GatewayV4',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
-      isProxy: false,
-      newImplementation: receipt?.contractAddress,
     },
   });
 };

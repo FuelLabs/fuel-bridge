@@ -1,7 +1,10 @@
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelChainState__factory as FuelChainState } from '../../typechain';
+import {
+  FuelChainState__factory as FuelChainState,
+  UpgradeableTester__factory,
+} from '../../typechain';
 import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -27,14 +30,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await save('FuelChainState', {
     address: contractDeployment.address,
     abi: [...FuelChainState.abi],
-    implementation: contractDeployment.implementation,
+    implementation: receipt?.contractAddress!,
     transactionHash: response.hash,
     linkedData: {
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       factory: 'FuelChainState',
       initArgs: contractDeployment.linkedData.initArgs,
-      isProxy: false,
-      newImplementation: receipt?.contractAddress,
     },
   });
 };

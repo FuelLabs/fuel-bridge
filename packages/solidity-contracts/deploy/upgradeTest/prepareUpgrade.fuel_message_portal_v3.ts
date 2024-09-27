@@ -27,14 +27,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   await save('FuelMessagePortalV3', {
     address: contractDeployment.address,
     abi: [...FuelMessagePortal.abi],
-    implementation: contractDeployment.implementation,
+    implementation: receipt?.contractAddress!,
     transactionHash: response.hash,
     linkedData: {
       factory: 'FuelMessagePortalV3',
       constructorArgs: contractDeployment.linkedData.constructorArgs,
       initArgs: contractDeployment.linkedData.initArgs,
-      isProxy: false,
-      newImplementation: receipt?.contractAddress,
     },
   });
 };
