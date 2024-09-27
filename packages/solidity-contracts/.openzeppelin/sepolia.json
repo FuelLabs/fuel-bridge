@@ -350,6 +350,16 @@
       "address": "0x98475860CA72D27317323F5bde6faFB2142C597A",
       "txHash": "0x924f1848ca10f49ce524eb8f92f0c2c50a396c4193b075d5dc6ae8d49b18ecb8",
       "kind": "uups"
+    },
+    {
+      "address": "0x0355189c97Bd1f76925006f3C9166Ae72596450E",
+      "txHash": "0xd7e61f72f73f5ccde729760e88eba938ec791ee318b511bdfba4527d8da9c394",
+      "kind": "uups"
+    },
+    {
+      "address": "0xde82f4eBaaC22CE3Af62E45b7e518C1ba6bFCB87",
+      "txHash": "0xf60db98dc971ca137583fab4a72e91536c39d10c95e1f84bae302bba5579dde4",
+      "kind": "uups"
     }
   ],
   "impls": {
