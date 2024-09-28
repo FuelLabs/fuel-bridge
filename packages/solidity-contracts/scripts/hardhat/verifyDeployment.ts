@@ -22,12 +22,12 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
 
-      const implementation = await erc1967.getImplementationAddress(
+      const currentImplementation = await erc1967.getImplementationAddress(
         deployment.address
       );
 
       // Only perform verification checks for a legitimate upgrade
-      if (implementation != deployment.implementation) {
+      if (currentImplementation != deployment.implementation) {
         const factory = (await ethers.getContractFactory(
           deployment.linkedData.factory
         )) as ContractFactory;
@@ -59,11 +59,11 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
           fetchedDeploymentTx?.hash!
         );
 
-        const tx = await hre.ethers.provider.getTransaction(
+        const txPayload = await hre.ethers.provider.getTransaction(
           deployment.transactionHash!
         );
 
-        if (expectedInitCode === tx?.data) {
+        if (expectedInitCode === txPayload?.data) {
           console.log(
             `✅ ${contractName} (${deployment.address}): Init Code verified successfully`
           );
