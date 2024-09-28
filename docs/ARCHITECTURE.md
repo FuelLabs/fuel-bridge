@@ -435,6 +435,14 @@ Additionally, it is a de-facto practice in the space to use 18 decimals to repre
 
 DApps that enable bridge operations should observe this limitation and truncate the amounts accordingly to avoid reverted transactions.
 
+This essentially means that if a token with `L1 token decimals > 9` is bridged to Fuel, then the L2 token minted will have 9 decimals. However, if `L1 token decimals <= 9` is bridged to Fuel, then the L2 token minted will have the same number of decimals as the L1 token.
+
+| Token | L1 Token Decimals | L2 Token Decimals |
+| ----------------- | :-----------------------: | -----------------: |
+| USDC        |          6          |           6 |
+| ETH         |          18         |           9 |
+| FBTC        |          8          |           8 |
+
 ## Incompatibilities, risks and SPoF
 
 > SPoF stands for Single Points of Failure
