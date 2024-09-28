@@ -1,7 +1,7 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { config as dotEnvConfig } from 'dotenv';
-
+import { ContractFactory } from 'ethers';
 dotEnvConfig();
 
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
@@ -10,7 +10,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
 
     const {
       ethers,
-      upgrades: { validateUpgrade },
+      upgrades: { validateUpgrade, erc1967 },
     } = hre;
 
     console.log(
@@ -22,7 +22,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
 
-      const implementation = await upgrades.erc1967.getImplementationAddress(
+      const implementation = await erc1967.getImplementationAddress(
         deployment.address
       );
 
@@ -30,7 +30,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       if (implementation != deployment.implementation) {
         const factory = (await ethers.getContractFactory(
           deployment.linkedData.factory
-        )) as ethers.ContractFactory;
+        )) as ContractFactory;
 
         console.log(
           `--- Validating the upgrade to ${deployment.implementation} implementation...`
@@ -78,12 +78,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
           '--- Check if the new implementation deployment resulted in deploying that implementation address...'
         );
 
-        const expectedNewImplementationAddress = ethers.getCreateAddress({
-          from: receipt?.from!,
-          nonce: fetchedDeploymentTx?.nonce!,
-        });
-
-        if (receipt?.contractAddress === expectedNewImplementationAddress) {
+        if (receipt?.contractAddress === deployment.implementation) {
           console.log(
             `✅ ${contractName} (${deployment.address}): New implementation deployment verified`
           );
