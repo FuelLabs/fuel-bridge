@@ -1,5 +1,5 @@
 {
-  "address": "0x0174678C136621fa0599aa2CfD4155A3355818aD",
+  "address": "0x04E94c92F811E55EB6C19208b0fbC5e121B852DC",
   "abi": [
     {
       "inputs": [
@@ -1116,7 +1116,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xfeef1cca2e13237103cd33ca7b749310965a559f0474031fb0c568b8fcdcba7f",
+  "transactionHash": "0x34cbb4d8d07b4bda9aa07e099ec0c71545986df7c0562bb8a228c56449efdf1d",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
@@ -1125,5 +1125,5 @@
       604800
     ]
   },
-  "implementation": "0x059976c7C07b7b4F0D3975d22F11ec00Bc6B1868"
+  "implementation": "0x2a4a6e5C0747e2a78582B69f852d229026c1B272"
 }

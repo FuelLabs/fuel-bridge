@@ -1,5 +1,5 @@
 {
-  "address": "0xcE8766f44AFE520787e7ed7003d1A107f4C24188",
+  "address": "0xda64a4017c731966aBec784FE7eAd09C2DD2fE5d",
   "abi": [
     {
       "inputs": [
@@ -572,7 +572,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xa15ff880a31aa1bc492ad0ee7d66a592ec871123cb3e8b7f1549946abaa4c3f8",
+  "transactionHash": "0x9e1e0d65f7c029f67eac20d23b6b546aea3ce2c8cdfa0c09b2ef6fc3c7623798",
   "numDeployments": 2,
   "linkedData": {
     "constructorArgs": [
@@ -582,5 +582,5 @@
     ],
     "factory": "FuelChainState"
   },
-  "implementation": "0xc69BAa987757d054455fC0f2d9797684E9FB8b9C"
+  "implementation": "0x83ad7e32937Fc78CeD9b69f7A1bFd9F1240d93D9"
 }
