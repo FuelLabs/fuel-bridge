@@ -42,6 +42,7 @@ describe('Fuel Chain State', async () => {
   const TIME_TO_FINALIZE = 10800;
   const BLOCKS_PER_COMMIT_INTERVAL = 10800;
   const COMMIT_COOLDOWN = 10800;
+  const NUM_COMMIT_SLOTS = 240;
 
   // Committed block headers
   let blockHeader: BlockHeader;
@@ -96,7 +97,7 @@ describe('Fuel Chain State', async () => {
         upgrades.deployProxy(FuelChainState, [], {
           initializer: 'initialize',
           constructorArgs: [
-            TIME_TO_FINALIZE * 240 + 1,
+            TIME_TO_FINALIZE * NUM_COMMIT_SLOTS + 1,
             BLOCKS_PER_COMMIT_INTERVAL,
             COMMIT_COOLDOWN,
           ],
@@ -110,8 +111,8 @@ describe('Fuel Chain State', async () => {
           initializer: 'initialize',
           constructorArgs: [
             TIME_TO_FINALIZE,
-            BLOCKS_PER_COMMIT_INTERVAL * 240,
-            COMMIT_COOLDOWN * 240 + 1,
+            BLOCKS_PER_COMMIT_INTERVAL * NUM_COMMIT_SLOTS,
+            COMMIT_COOLDOWN * NUM_COMMIT_SLOTS + 1,
           ],
         })
       ).to.be.revertedWithCustomError(FuelChainState, 'CommitCooldownTooLarge');
