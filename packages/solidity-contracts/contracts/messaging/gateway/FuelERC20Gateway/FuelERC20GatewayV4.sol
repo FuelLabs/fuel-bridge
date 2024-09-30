@@ -89,6 +89,9 @@ contract FuelERC20GatewayV4 is
     /// @notice The eth withdrawal limit amount for each token.
     mapping(address => uint256) public limitAmount;
 
+    /// @notice Flag to indicate whether rate is disabled for a particular token.
+    mapping(address => bool) public rateLimitDisabled;
+
 	/// @notice disabling initialization
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
@@ -153,12 +156,9 @@ contract FuelERC20GatewayV4 is
      * @param _amount The amount to reset the limit to.
      * @param _rateLimitDuration The new rate limit duration.
      * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
-     * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
+     * Only point of difference from the linea implementation is that rate limit params are updated unconditionally
      */
-    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {   
-        // avoid multiple SLOADS
-        uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
-        
+    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {           
         // set new rate limit duration
         rateLimitDuration[_token] = _rateLimitDuration;
         
@@ -171,6 +171,15 @@ contract FuelERC20GatewayV4 is
         limitAmount[_token] = _amount;
 
         emit RateLimitUpdated(_token, _amount);
+    }
+
+    /**
+     * @notice Disables/Re-Enables rate limit.
+     * @param _token The token address to disable rate limit for.
+     * @param _disableRateLimit flag to disable rate limit or re-enable rate limit.
+     */
+    function disableRateLimit(address _token, bool _disableRateLimit) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitDisabled[_token] = _disableRateLimit;
     }
 
     //////////////////////
@@ -284,8 +293,9 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
-        // rate limit check only if rate limit is initialized
-        if (currentPeriodEnd[tokenAddress] != 0) _addWithdrawnAmount(tokenAddress, amount);
+        // rate limit check is skipped when it is disabled
+        // if the rate limit has not been initialised then the tx will revert with `RateLimitExceeded()`
+        if (!rateLimitDisabled[tokenAddress]) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
