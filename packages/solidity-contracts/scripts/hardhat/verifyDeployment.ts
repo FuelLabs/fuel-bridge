@@ -63,7 +63,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       const receipt = await ethers.provider.getTransactionReceipt(
         fetchedDeploymentTx?.hash!
       );
-      
+
       // checking for null/undefined value too
       if (
         fetchedDeploymentTx?.data &&
