@@ -476,7 +476,7 @@ describe('Bridge mainnet tokens', function () {
           ).to.be.true;
         });
 
-        it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
+        it('Rate limit parameters are updated unconditionally whenever reset is triggered', async () => {
           const deployer = await env.eth.deployer;
           const newRateLimit = '5';
 
@@ -497,9 +497,11 @@ describe('Bridge mainnet tokens', function () {
           // current withdrawn amount doesn't change when rate limit is updated
 
           expect(
-            currentWithdrawnAmountAfterSettingLimit ===
+            currentWithdrawnAmountAfterSettingLimit <=
               withdrawnAmountBeforeReset
           ).to.be.true;
+
+          expect(currentWithdrawnAmountAfterSettingLimit <= 0n).to.be.true;
 
           withdrawnAmountBeforeReset =
             await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
@@ -515,13 +517,10 @@ describe('Bridge mainnet tokens', function () {
           currentWithdrawnAmountAfterSettingLimit =
             await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
 
-          expect(
-            currentWithdrawnAmountAfterSettingLimit ===
-              withdrawnAmountBeforeReset
-          ).to.be.true;
+          expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
         });
 
-        it('Rate limit parameters are updated when the initial duration is over', async () => {
+        it('Rate limit parameters are updated when a withdrawal happens and the initial duration is over', async () => {
           const deployer = await env.eth.deployer;
 
           const rateLimitDuration =
