@@ -97,14 +97,11 @@ const main = async () => {
   console.log('\tTransaction ID: ', tx.id);
   const txResult = await provider
     .getTransactionResponse(tx.id)
-    .then((response) => response.getTransactionSummary());
+    .then((response) => response.waitForResult());
 
   if (txResult.status === TransactionStatus.success) {
     console.log('\t> Transaction succeeded');
-    console.log(
-      '\t > Minted asset IDs: ',
-      txResult.mintedAssets.map((asset) => asset.assetId)
-    );
+    console.log('\t> Burned asset IDs: ', txResult.burnedAssets.join(','));
   } else {
     console.log('\t> Transaction errored');
   }
