@@ -27,68 +27,76 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       );
 
       // Only perform verification checks for a legitimate upgrade
-      if (currentImplementation != deployment.implementation) {
-        const factory = (await ethers.getContractFactory(
-          deployment.linkedData.factory
-        )) as ContractFactory;
+      if (
+        currentImplementation.toLowerCase() ===
+        deployment.implementation!.toLowerCase()
+      )
+        continue;
 
+      const factory = (await ethers.getContractFactory(
+        deployment.linkedData.factory
+      )) as ContractFactory;
+
+      console.log(
+        `--- Validating the upgrade to ${deployment.implementation} implementation...`
+      );
+
+      await validateUpgrade(deployment.address as string, factory, {
+        kind: 'uups',
+        constructorArgs: deployment.linkedData.constructorArgs,
+      });
+
+      console.log('--- Upgrade Validated...');
+
+      console.log(
+        '--- Comparing expected init code with actual init code on-chain...'
+      );
+
+      const { data: expectedInitCode } = await factory.getDeployTransaction(
+        ...deployment.linkedData.constructorArgs
+      );
+
+      const fetchedDeploymentTx = await ethers.provider.getTransaction(
+        deployment.transactionHash!
+      )!;
+
+      const receipt = await ethers.provider.getTransactionReceipt(
+        fetchedDeploymentTx?.hash!
+      );
+      
+      // checking for null/undefined value too
+      if (
+        fetchedDeploymentTx?.data &&
+        expectedInitCode === fetchedDeploymentTx.data
+      ) {
         console.log(
-          `--- Validating the upgrade to ${deployment.implementation} implementation...`
+          `✅ ${contractName} (${deployment.address}): Init Code verified successfully`
         );
-
-        await validateUpgrade(deployment.address as string, factory, {
-          kind: 'uups',
-          constructorArgs: deployment.linkedData.constructorArgs,
-        });
-
-        console.log('--- Upgrade Validated...');
-
+      } else {
         console.log(
-          '--- Comparing expected init code with actual init code on-chain...'
+          `❌ ${contractName} (${deployment.address}): Init Code mismatch`
         );
+        throw new Error('Init Code mismatch');
+      }
 
-        const { data: expectedInitCode } = await factory.getDeployTransaction(
-          ...deployment.linkedData.constructorArgs
-        );
+      console.log(
+        '--- Check if the new implementation deployment resulted in deploying that implementation address...'
+      );
 
-        const fetchedDeploymentTx = await ethers.provider.getTransaction(
-          deployment.transactionHash!
-        )!;
-
-        const receipt = await ethers.provider.getTransactionReceipt(
-          fetchedDeploymentTx?.hash!
-        );
-
-        const txPayload = await hre.ethers.provider.getTransaction(
-          deployment.transactionHash!
-        );
-
-        if (expectedInitCode === txPayload?.data) {
-          console.log(
-            `✅ ${contractName} (${deployment.address}): Init Code verified successfully`
-          );
-        } else {
-          console.log(
-            `❌ ${contractName} (${deployment.address}): Init Code mismatch`
-          );
-          throw new Error('Init Code mismatch');
-        }
-
+      // checking for null/undefined value too
+      if (
+        receipt?.contractAddress &&
+        receipt.contractAddress === deployment.implementation
+      ) {
         console.log(
-          '--- Check if the new implementation deployment resulted in deploying that implementation address...'
+          `✅ ${contractName} (${deployment.address}): New implementation deployment verified`
         );
-
-        if (receipt?.contractAddress === deployment.implementation) {
-          console.log(
-            `✅ ${contractName} (${deployment.address}): New implementation deployment verified`
-          );
-        } else {
-          console.log(
-            `❌ ${contractName} (${deployment.address}):  New implementation deployment verification failed`
-          );
-          throw new Error('New implementation deployment verification failed');
-        }
-      } else continue;
+      } else {
+        console.log(
+          `❌ ${contractName} (${deployment.address}):  New implementation deployment verification failed`
+        );
+        throw new Error('New implementation deployment verification failed');
+      }
     }
   }
 );
