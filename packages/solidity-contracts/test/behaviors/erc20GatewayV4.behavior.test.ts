@@ -1052,13 +1052,17 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               .withArgs(token.getAddress(), rateLimitAmount.toString());
           });
 
-          it('does not update rate limit vars when it is not initialized', async () => {
+          it('does not update rate limit vars when it is disabled', async () => {
             const {
               erc20Gateway,
               fuelMessagePortal,
               signers: [deployer, user],
               assetIssuerId,
             } = env;
+
+            await erc20Gateway
+              .connect(deployer)
+              .disableRateLimit(token.getAddress(), true);
 
             const amount = parseUnits(
               random(0.01, 1, true).toFixed(decimals),
@@ -1520,6 +1524,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           const token = _token.connect(user);
           const amount = parseUnits(random(0.01, 1, true).toFixed(2));
           const recipient = randomBytes32();
+
+          await erc20Gateway
+            .connect(deployer)
+            .disableRateLimit(token.getAddress(), true);
 
           await fuelMessagePortal
             .connect(deployer)
