@@ -1219,7 +1219,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             }
           });
 
-          it('current withdrawal amount does not change if the new rate limit is less than current withdrawal amount', async () => {
+          it('current withdrawal amount resets when rate limit is reset', async () => {
             const {
               erc20Gateway,
               fuelMessagePortal,
@@ -1273,6 +1273,11 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
             const currentWithdrawnAmountBeforeSettingLimit =
               await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+            expect(currentWithdrawnAmountBeforeSettingLimit).to.be.equal(
+              withdrawAmount
+            );
+
             rateLimitAmount =
               RATE_LIMIT_AMOUNT /
               5 /
@@ -1289,9 +1294,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             const currentWithdrawnAmountAfterSettingLimit =
               await erc20Gateway.currentPeriodAmount(token.getAddress());
 
-            expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(
-              currentWithdrawnAmountBeforeSettingLimit
-            );
+            expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(0);
           });
 
           it('current withdrawal amount is set to default when rate limit is reset after the duration', async () => {

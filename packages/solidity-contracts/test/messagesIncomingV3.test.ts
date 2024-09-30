@@ -985,7 +985,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       expect(await messageTester.data2()).to.be.equal(messageTestData3);
     });
 
-    it('current withdrawal amount does not change if the new rate limit is less than current withdrawal amount', async () => {
+    it('current withdrawal amount resets when rate limit is reset', async () => {
       const expectedWithdrawnAmount =
         messageWithLargeAmount.amount * BASE_ASSET_CONVERSION;
 
@@ -1015,6 +1015,11 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       const currentWithdrawnAmountBeforeSettingLimit =
         await fuelMessagePortal.currentPeriodAmount();
 
+      expect(currentWithdrawnAmountBeforeSettingLimit).to.be.equal(
+        expectedWithdrawnAmount +
+          messageWithAmount.amount * BASE_ASSET_CONVERSION
+      );
+
       const rateLimitAmount = RATE_LIMIT_AMOUNT / 2;
 
       await fuelMessagePortal.resetRateLimitAmount(rateLimitAmount.toString());
@@ -1022,14 +1027,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       const currentWithdrawnAmountAfterSettingLimit =
         await fuelMessagePortal.currentPeriodAmount();
 
-      expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(
-        expectedWithdrawnAmount +
-          messageWithAmount.amount * BASE_ASSET_CONVERSION
-      );
-
-      expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(
-        currentWithdrawnAmountBeforeSettingLimit
-      );
+      expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(0);
     });
 
     it('current withdrawal amount is set to default when rate limit is reset after the duration', async () => {
