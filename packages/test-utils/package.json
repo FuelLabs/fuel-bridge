@@ -17,7 +17,8 @@
     "bridge:deploy": "pnpm ts-node src/scripts/deploy-bridge.ts",
     "bridge:upgrade": "pnpm ts-node src/scripts/upgrade-bridge.ts",
     "bridge:transfer-ownership": "pnpm ts-node src/scripts/transfer-bridge-ownership.ts",
-    "bridge:relay": "pnpm ts-node src/scripts/relay-deposit.ts"
+    "bridge:relay": "pnpm ts-node src/scripts/relay-deposit.ts",
+    "bridge:withdraw": "pnpm ts-node src/scripts/withdraw-init.ts"
   },
   "peerDependencies": {
     "fuels": "0.94.4",
