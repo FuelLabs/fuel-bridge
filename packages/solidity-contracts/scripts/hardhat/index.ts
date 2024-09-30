@@ -3,6 +3,7 @@ export * from './unpause';
 export * from './grantRole';
 export * from './depositETH';
 export * from './depositToken';
+export * from './depositMetadata';
 export * from './resetETHRateLimit';
 export * from './resetERC20RateLimit';
 export * from './withdrawalPause';
