@@ -363,6 +363,7 @@ describe('Bridging ERC20 tokens', async function () {
     let ethereumTokenReceiverAddress: string;
     let ethereumTokenReceiverBalance: bigint;
     let withdrawMessageProof: MessageProof;
+    let tokenBalanceBeforeWithdrawingOnFuel: BN;
 
     before(async () => {
       fuelTokenSender = env.fuel.signers[0];
@@ -370,6 +371,10 @@ describe('Bridging ERC20 tokens', async function () {
       ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
       ethereumTokenReceiverBalance = await eth_testToken.balanceOf(
         ethereumTokenReceiverAddress
+      );
+
+      tokenBalanceBeforeWithdrawingOnFuel = await fuelTokenSender.getBalance(
+        fuel_testAssetId
       );
     });
 
@@ -564,6 +569,22 @@ describe('Bridging ERC20 tokens', async function () {
       ).to.be.true;
 
       expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
+    });
+
+    it('Check the remaining token balance on Fuel', async () => {
+      // fetch the remaining token balance
+      const currentTokenBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
+
+      // currentTokenBalance has BN type by default hence the use of BN for conversion here
+      const expectedRemainingTokenBalanceOnFuel =
+        tokenBalanceBeforeWithdrawingOnFuel.sub(
+          new BN(((NUM_TOKENS * 2n) / DECIMAL_DIFF).toString())
+        );
+
+      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
+        .true;
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {
