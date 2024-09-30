@@ -1,7 +1,7 @@
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import chai from 'chai';
 import { keccak256, toBeHex, toUtf8Bytes } from 'ethers';
-import { ethers } from 'hardhat';
+import { ethers, upgrades } from 'hardhat';
 
 import type BlockHeader from '../protocol/blockHeader';
 import { computeBlockId } from '../protocol/blockHeader';
@@ -41,6 +41,7 @@ describe('Fuel Chain State', async () => {
   // Contract constants
   const TIME_TO_FINALIZE = 10800;
   const BLOCKS_PER_COMMIT_INTERVAL = 10800;
+  const COMMIT_COOLDOWN = 10800;
 
   // Committed block headers
   let blockHeader: BlockHeader;
@@ -61,6 +62,73 @@ describe('Fuel Chain State', async () => {
     blockHeaderUnfinalized = createBlock(BLOCKS_PER_COMMIT_INTERVAL);
     blockIdUnfinalized = computeBlockId(blockHeaderUnfinalized);
     await env.fuelChainState.commit(blockIdUnfinalized, 1);
+  });
+
+  describe('Checks deployment params', async () => {
+    const FuelChainState = await ethers.getContractFactory('FuelChainState');
+    it('reverts if time to finalise is 0', async () => {
+      await expect(
+        upgrades.deployProxy(FuelChainState, [], {
+          initializer: 'initialize',
+          constructorArgs: [0, BLOCKS_PER_COMMIT_INTERVAL, COMMIT_COOLDOWN],
+        })
+      ).to.be.revertedWithCustomError(FuelChainState, 'InvalidTimeToFinalize');
+    });
+
+    it('reverts if time to finalise is more than commitCooldown', async () => {
+      await expect(
+        upgrades.deployProxy(FuelChainState, [], {
+          initializer: 'initialize',
+          constructorArgs: [
+            TIME_TO_FINALIZE + 1,
+            BLOCKS_PER_COMMIT_INTERVAL,
+            COMMIT_COOLDOWN,
+          ],
+        })
+      ).to.be.revertedWithCustomError(
+        FuelChainState,
+        'FinalizationIsGtCooldown'
+      );
+    });
+
+    it('reverts if time to finalise is more than commitCooldown', async () => {
+      await expect(
+        upgrades.deployProxy(FuelChainState, [], {
+          initializer: 'initialize',
+          constructorArgs: [
+            TIME_TO_FINALIZE * 240 + 1,
+            BLOCKS_PER_COMMIT_INTERVAL,
+            COMMIT_COOLDOWN,
+          ],
+        })
+      ).to.be.revertedWithCustomError(FuelChainState, 'TimeToFinalizeTooLarge');
+    });
+
+    it('reverts if time to finalise is more than circularBufferSizeInSeconds', async () => {
+      await expect(
+        upgrades.deployProxy(FuelChainState, [], {
+          initializer: 'initialize',
+          constructorArgs: [
+            TIME_TO_FINALIZE,
+            BLOCKS_PER_COMMIT_INTERVAL * 240,
+            COMMIT_COOLDOWN * 240 + 1,
+          ],
+        })
+      ).to.be.revertedWithCustomError(FuelChainState, 'CommitCooldownTooLarge');
+    });
+
+    it('Deployments happens Successfully with correct deploy params', async () => {
+      await upgrades
+        .deployProxy(FuelChainState, [], {
+          initializer: 'initialize',
+          constructorArgs: [
+            TIME_TO_FINALIZE,
+            BLOCKS_PER_COMMIT_INTERVAL,
+            COMMIT_COOLDOWN,
+          ],
+        })
+        .then((tx) => tx.waitForDeployment());
+    });
   });
 
   describe('Verify access control', async () => {
