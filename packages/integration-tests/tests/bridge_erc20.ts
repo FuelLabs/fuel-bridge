@@ -418,6 +418,22 @@ describe('Bridging ERC20 tokens', async function () {
       ).to.be.true;
     });
 
+    it('Check the remaining token balance on Fuel after the first withdrawal', async () => {
+      // fetch the remaining token balance
+      const currentTokenBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
+
+      // currentTokenBalance has BN type by default hence the use of BN for conversion here
+      const expectedRemainingTokenBalanceOnFuel =
+        tokenBalanceBeforeWithdrawingOnFuel.sub(
+          new BN((NUM_TOKENS / DECIMAL_DIFF).toString())
+        );
+
+      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
+        .true;
+    });
+
     it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
       const deployer = await env.eth.deployer;
       let newRateLimit = '5';
@@ -524,6 +540,22 @@ describe('Bridging ERC20 tokens', async function () {
       expect(currentPeriodAmount === NUM_TOKENS).to.be.true;
     });
 
+    it('Check the remaining token balance on Fuel after the second withdrawal', async () => {
+      // fetch the remaining token balance
+      const currentTokenBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
+
+      // currentTokenBalance has BN type by default hence the use of BN for conversion here
+      const expectedRemainingTokenBalanceOnFuel =
+        tokenBalanceBeforeWithdrawingOnFuel.sub(
+          new BN(((NUM_TOKENS * 2n) / DECIMAL_DIFF).toString())
+        );
+
+      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
+        .true;
+    });
+
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
       const rateLimitDuration =
         await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
@@ -569,22 +601,6 @@ describe('Bridging ERC20 tokens', async function () {
       ).to.be.true;
 
       expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
-    });
-
-    it('Check the remaining token balance on Fuel', async () => {
-      // fetch the remaining token balance
-      const currentTokenBalance = await fuelTokenSender.getBalance(
-        fuel_testAssetId
-      );
-
-      // currentTokenBalance has BN type by default hence the use of BN for conversion here
-      const expectedRemainingTokenBalanceOnFuel =
-        tokenBalanceBeforeWithdrawingOnFuel.sub(
-          new BN(((NUM_TOKENS * 2n) / DECIMAL_DIFF).toString())
-        );
-
-      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
-        .true;
     });
 
     it('Check ERC20 arrived on Ethereum', async () => {
