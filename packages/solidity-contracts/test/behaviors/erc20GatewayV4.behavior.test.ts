@@ -1075,6 +1075,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               hre
             );
 
+            await erc20Gateway
+              .connect(deployer)
+              .updateRateLimitStatus(token, 1);
+
             await token.mint(user, amount);
             await token.approve(erc20Gateway, MaxUint256);
 
@@ -1526,6 +1530,8 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             fuelMessagePortal,
             hre
           );
+
+          await erc20Gateway.connect(deployer).updateRateLimitStatus(token, 1);
 
           await token.mint(user, amount);
           await token.approve(erc20Gateway, MaxUint256);
