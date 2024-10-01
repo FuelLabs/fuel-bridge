@@ -628,8 +628,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
         const [event] = await fuelMessagePortal.queryFilter(
           fuelMessagePortal.filters.FuelChainStateUpdated,
-          receipt.blockNumber,
-          receipt.blockNumber
+          receipt?.blockNumber,
+          receipt?.blockNumber
         );
 
         expect(event.args.sender).to.equal(deployer.address);
@@ -767,6 +767,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
         ...upgradeProxyOptions,
       });
+
+      await fuelMessagePortal.enableRateLimit();
 
       await setupMessages(
         await fuelMessagePortal.getAddress(),
@@ -1166,6 +1168,34 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
       await fuelMessagePortal.relayMessage(
         messageAfterRateLimitDurationCompletes,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
+    });
+
+    it('Should stop applying rate limit if it is disabled', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageExceedingRateLimit,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      await fuelMessagePortal.disableRateLimit();
+
+      await fuelMessagePortal.relayMessage(
+        messageExceedingRateLimit,
         endOfCommitIntervalHeaderLite,
         msgBlockHeader,
         blockInRoot,

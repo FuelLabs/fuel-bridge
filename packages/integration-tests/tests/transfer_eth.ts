@@ -361,6 +361,7 @@ describe('Transferring ETH', async function () {
       fuelETHSender = env.fuel.signers[1];
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
+      await env.eth.fuelMessagePortal.enableRateLimit();
     });
 
     it('Checks rate limit params after relaying', async () => {
