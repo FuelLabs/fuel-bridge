@@ -105,7 +105,7 @@ describe('Fuel Chain State', async () => {
       ).to.be.revertedWithCustomError(FuelChainState, 'TimeToFinalizeTooLarge');
     });
 
-    it('reverts if time to finalise is more than circularBufferSizeInSeconds', async () => {
+    it('reverts if commit cooldown period is more than circularBufferSizeInSeconds', async () => {
       await expect(
         upgrades.deployProxy(FuelChainState, [], {
           initializer: 'initialize',

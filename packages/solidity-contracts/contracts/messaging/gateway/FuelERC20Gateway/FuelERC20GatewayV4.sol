@@ -48,6 +48,9 @@ contract FuelERC20GatewayV4 is
     /// @dev Emitted when rate limit is reset
     event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
 
+    /// @dev Emitted when rate limit is enabled/disabled
+    event RateLimitStatusUpdated(address indexed tokenAddress, bool status);
+
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
         DEPOSIT_TO_CONTRACT,
@@ -88,6 +91,11 @@ contract FuelERC20GatewayV4 is
 
     /// @notice The eth withdrawal limit amount for each token.
     mapping(address => uint256) public limitAmount;
+
+    /// @notice Flag to indicate rate limit status for each token, whether disabled or enabled.
+    // if `true` it is enabled
+    // if `false` it is disabled
+    mapping(address => bool) public rateLimitStatus;
 
 	/// @notice disabling initialization
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -174,6 +182,17 @@ contract FuelERC20GatewayV4 is
         limitAmount[_token] = _amount;
 
         emit RateLimitUpdated(_token, _amount);
+    }
+    
+    /**
+     * @notice updates rate limit status by disabling/re-enabling rate limit.
+     * @param _token The token address to update rate limit status for.
+     * @param _rateLimitStatus bool flag to disable or re-enable rate limit.
+     */
+    function updateRateLimitStatus(address _token, bool _rateLimitStatus) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitStatus[_token] = _rateLimitStatus;
+
+        emit RateLimitStatusUpdated(_token, _rateLimitStatus);
     }
 
     //////////////////////
@@ -287,8 +306,9 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
-        // rate limit check only if rate limit is initialized
-        if (currentPeriodEnd[tokenAddress] != 0) _addWithdrawnAmount(tokenAddress, amount);
+        // rate limit check is only performed when it is enabled
+        // if the rate limit has not been initialised then the tx will revert with `RateLimitExceeded()`
+        if (rateLimitStatus[tokenAddress]) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
