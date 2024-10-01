@@ -1145,7 +1145,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               .connect(deployer)
               .updateRateLimitStatus(token, true);
 
-            const status = await erc20Gateway.isRateLimitEnabled(token);
+            const status = await erc20Gateway.rateLimitStatus(token);
             expect(status).to.be.true;
 
             const amount = parseUnits(

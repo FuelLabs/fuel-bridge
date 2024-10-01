@@ -308,7 +308,7 @@ contract FuelERC20GatewayV4 is
 
         // rate limit check is only performed when it is enabled
         // if the rate limit has not been initialised then the tx will revert with `RateLimitExceeded()`
-        if (isRateLimitEnabled(tokenAddress)) _addWithdrawnAmount(tokenAddress, amount);
+        if (rateLimitStatus[tokenAddress]) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
@@ -316,12 +316,6 @@ contract FuelERC20GatewayV4 is
 
         //emit event for successful token withdraw
         emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, amount);
-    }
-
-    /// @notice Checks if the rate limit is enabled or not
-    /// @param tokenAddress Address of the token to check rate limit status for
-    function isRateLimitEnabled(address tokenAddress) public view returns (bool) {
-        return rateLimitStatus[tokenAddress];  
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
