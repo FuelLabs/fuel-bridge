@@ -48,6 +48,8 @@ type CommonMessageDetails = {
   ) => Promise<ScriptTransactionRequest>;
 };
 
+const PREDICATE_GAS_LIMIT = 10_000_000;
+
 // Details for relaying common messages with certain predicate roots
 function getCommonRelayableMessages(provider: Provider) {
   // Create a predicate for common messages
@@ -150,7 +152,7 @@ function getCommonRelayableMessages(provider: Provider) {
         });
         transaction.witnesses.push(ZeroBytes32);
 
-        transaction.gasLimit = bn(500_000);
+        transaction.gasLimit = bn(PREDICATE_GAS_LIMIT);
 
         debug(
           '-------------------------------------------------------------------'

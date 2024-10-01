@@ -1,6 +1,6 @@
 {
   "address": "0x12f300d6d2b286dd5d290b709e0d3d73acc23c87ec10d349d4386b9524d740a1",
   "abi": [],
-  "numDeployments": 2,
-  "implementation": "0x191f58253e324d85e66bdd20bf3d2d0ff55f0189e71387498783b07997c9a854"
+  "numDeployments": 4,
+  "implementation": "0x03f3d61ead7f115483f957cea02d679a8b1aa3ce7bd9802ae6a64ee82c595eb2"
 }

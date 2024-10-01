@@ -71,7 +71,6 @@ describe('Bridging ERC20 tokens', async function () {
       .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams({
         tip: 0,
-        gasLimit: 1_000_000,
         maxFee: 1,
       })
       .callParams({
@@ -165,6 +164,10 @@ describe('Bridging ERC20 tokens', async function () {
         RATE_LIMIT_AMOUNT.toString(),
         RATE_LIMIT_DURATION
       );
+
+    await env.eth.fuelERC20Gateway
+      .connect(env.eth.deployer)
+      .updateRateLimitStatus(eth_testTokenAddress, true);
 
     const { value: expectedGatewayContractId } = await fuel_bridge.functions
       .bridged_token_gateway()
@@ -273,7 +276,6 @@ describe('Bridging ERC20 tokens', async function () {
       expect(message).to.not.be.null;
 
       const tx = await relayCommonMessage(env.fuel.deployer, message, {
-        gasLimit: 30000000,
         maturity: undefined,
         contractIds: [fuel_bridgeImpl.id.toHexString()],
       });
@@ -354,11 +356,25 @@ describe('Bridging ERC20 tokens', async function () {
 
       const txResult = await tx.waitForResult();
       expect(txResult.status).to.equal('success');
+
+      const fuel_name = (
+        await fuel_bridge.functions.name({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+      const fuel_symbol = (
+        await fuel_bridge.functions.symbol({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+
+      const eth_name = await eth_testToken.name();
+      const eth_symbol = await eth_testToken.symbol();
+
+      expect(fuel_name).to.equal(eth_name);
+      expect(fuel_symbol).to.equal(eth_symbol);
     });
   });
 
   describe('Bridge ERC20 from Fuel', async () => {
     const NUM_TOKENS = 10000000000000000000n;
+    const largeRateLimit = `30`;
     let fuelTokenSender: FuelWallet;
     let ethereumTokenReceiver: Signer;
     let ethereumTokenReceiverAddress: string;
@@ -414,9 +430,14 @@ describe('Bridging ERC20 tokens', async function () {
       ).to.be.true;
     });
 
-    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
+    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
       const deployer = await env.eth.deployer;
-      const newRateLimit = '5';
+      let newRateLimit = '5';
+
+      let withdrawnAmountBeforeReset =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
 
       await env.eth.fuelERC20Gateway
         .connect(deployer)
@@ -426,19 +447,42 @@ describe('Bridging ERC20 tokens', async function () {
           RATE_LIMIT_DURATION
         );
 
-      const currentWithdrawnAmountAfterSettingLimit =
+      let currentWithdrawnAmountAfterSettingLimit =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
+
+      // current withdrawn amount doesn't change when rate limit is updated
+
+      expect(
+        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
+      ).to.be.true;
+
+      withdrawnAmountBeforeReset =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
+
+      await env.eth.fuelERC20Gateway
+        .connect(deployer)
+        .resetRateLimitAmount(
+          eth_testTokenAddress,
+          parseEther(largeRateLimit),
+          RATE_LIMIT_DURATION
+        );
+
+      currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelERC20Gateway.currentPeriodAmount(
           eth_testTokenAddress
         );
 
       expect(
-        currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
+        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
       ).to.be.true;
     });
 
     it('Rate limit parameters are updated when the initial duration is over', async () => {
       const deployer = await env.eth.deployer;
-      const newRateLimit = `30`;
 
       const rateLimitDuration =
         await env.eth.fuelERC20Gateway.rateLimitDuration(eth_testTokenAddress);
@@ -455,9 +499,16 @@ describe('Bridging ERC20 tokens', async function () {
         .connect(deployer)
         .resetRateLimitAmount(
           eth_testTokenAddress,
-          parseEther(newRateLimit),
+          parseEther(largeRateLimit),
           RATE_LIMIT_DURATION
         );
+
+      const currentWitdrawnAmountAfterReset =
+        await env.eth.fuelERC20Gateway.currentPeriodAmount(
+          eth_testTokenAddress
+        );
+
+      expect(currentWitdrawnAmountAfterReset == 0n).to.be.true;
 
       // withdraw tokens back to the base chain
       withdrawMessageProof = await generateWithdrawalMessageProof(

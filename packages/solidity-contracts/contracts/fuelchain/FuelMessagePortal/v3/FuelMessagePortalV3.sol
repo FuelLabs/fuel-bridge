@@ -24,7 +24,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
 
     /// @notice Duration after which rate limit resets.
-    uint256 public immutable rateLimitDuration;
+    uint256 public immutable RATE_LIMIT_DURATION;
 
     /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
@@ -41,7 +41,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     uint256 public limitAmount;
 
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
-        rateLimitDuration = _rateLimitDuration;
+        RATE_LIMIT_DURATION = _rateLimitDuration;
         _disableInitializers();
     }
 
@@ -78,31 +78,20 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /**
      * @notice Resets the rate limit amount.
      * @param _amount The amount to reset the limit to.
+     * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+     * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
      */
-    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
-        uint256 withdrawalLimitAmountToSet;
-        bool amountWithdrawnLoweredToLimit;
-        bool withdrawalAmountResetToZero;
-        
+    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {   
         // if period has expired then currentPeriodAmount is zero
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-                currentPeriodEnd = block.timestamp + rateLimitDuration;
+                currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
-            withdrawalAmountResetToZero = true;
-        } else {
-            // If the withdrawn amount is higher, it is set to the new limit amount
-            if (_amount < currentPeriodAmount) {
-                withdrawalLimitAmountToSet = _amount;
-                amountWithdrawnLoweredToLimit = true;
-            }
+
+            currentPeriodAmount = 0;
         }
 
         limitAmount = _amount;
-
-        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
-            currentPeriodAmount = withdrawalLimitAmountToSet;
-        }
 
         emit ResetRateLimit(_amount);
     }
@@ -232,7 +221,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-               currentPeriodEnd = block.timestamp + rateLimitDuration;
+               currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
@@ -257,7 +246,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
         
         // initializing rate limit var
-        currentPeriodEnd = block.timestamp + rateLimitDuration;
+        currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
         limitAmount = _limitAmount;
     }
 
