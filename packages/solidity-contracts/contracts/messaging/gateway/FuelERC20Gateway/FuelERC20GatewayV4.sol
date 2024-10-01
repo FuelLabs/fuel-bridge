@@ -48,6 +48,9 @@ contract FuelERC20GatewayV4 is
     /// @dev Emitted when rate limit is reset
     event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
 
+    /// @dev Emitted when rate limit is enabled/disabled
+    event RateLimitStatusUpdated(address indexed tokenAddress, bool status);
+
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
         DEPOSIT_TO_CONTRACT,
@@ -90,8 +93,8 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) public limitAmount;
 
     /// @notice Flag to indicate rate limit status for each token, whether disabled or enabled.
-    // if `true` it is disabled
-    // if `false` it is enabled
+    // if `true` it is enabled
+    // if `false` it is disabled
     mapping(address => bool) public rateLimitStatus;
 
 	/// @notice disabling initialization
@@ -188,6 +191,8 @@ contract FuelERC20GatewayV4 is
      */
     function updateRateLimitStatus(address _token, bool _rateLimitStatus) external onlyRole(SET_RATE_LIMITER_ROLE) {
         rateLimitStatus[_token] = _rateLimitStatus;
+
+        emit RateLimitStatusUpdated(_token, _rateLimitStatus);
     }
 
     //////////////////////
