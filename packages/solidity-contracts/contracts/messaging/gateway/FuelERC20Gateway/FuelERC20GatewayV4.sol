@@ -55,11 +55,6 @@ contract FuelERC20GatewayV4 is
         METADATA
     }
 
-    enum RateLimitStatus {
-        ENABLED,
-        DISABLED
-    }
-
     ///////////////
     // Constants //
     ///////////////
@@ -95,7 +90,9 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) public limitAmount;
 
     /// @notice Flag to indicate rate limit status for each token, whether disabled or enabled.
-    mapping(address => RateLimitStatus) public rateLimitStatus;
+    // if `true` it is disabled
+    // if `false` it is enabled
+    mapping(address => bool) public rateLimitStatus;
 
 	/// @notice disabling initialization
     /// @custom:oz-upgrades-unsafe-allow constructor
@@ -187,9 +184,9 @@ contract FuelERC20GatewayV4 is
     /**
      * @notice updates rate limit status by disabling/re-enabling rate limit.
      * @param _token The token address to update rate limit status for.
-     * @param _rateLimitStatus status flag to disable or re-enable rate limit.
+     * @param _rateLimitStatus bool flag to disable or re-enable rate limit.
      */
-    function updateRateLimitStatus(address _token, RateLimitStatus _rateLimitStatus) external onlyRole(SET_RATE_LIMITER_ROLE) {
+    function updateRateLimitStatus(address _token, bool _rateLimitStatus) external onlyRole(SET_RATE_LIMITER_ROLE) {
         rateLimitStatus[_token] = _rateLimitStatus;
     }
 
@@ -304,9 +301,9 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
-        // rate limit check is skipped when the rate limit is disabled
+        // rate limit check is only performed when it is enabled
         // if the rate limit has not been initialised then the tx will revert with `RateLimitExceeded()`
-        if (!isRateLimitDisabled(tokenAddress)) _addWithdrawnAmount(tokenAddress, amount);
+        if (isRateLimitEnabled(tokenAddress)) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
@@ -316,10 +313,10 @@ contract FuelERC20GatewayV4 is
         emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, amount);
     }
 
-    /// @notice Checks if the rate limit is disabled or not
+    /// @notice Checks if the rate limit is enabled or not
     /// @param tokenAddress Address of the token to check rate limit status for
-    function isRateLimitDisabled(address tokenAddress) public view returns (bool) {
-        return rateLimitStatus[tokenAddress] == RateLimitStatus.DISABLED ? true : false;  
+    function isRateLimitEnabled(address tokenAddress) public view returns (bool) {
+        return !rateLimitStatus[tokenAddress];  
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
