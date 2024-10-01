@@ -162,14 +162,11 @@ contract FuelERC20GatewayV4 is
         // set new rate limit duration
         rateLimitDuration[_token] = _rateLimitDuration;
         
-        // if period has expired then currentPeriodAmount is zero
-        if (rateLimitDurationEndTimestamp < block.timestamp) {
-            unchecked {
-                currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
-            }
-
-            currentPeriodAmount[_token] = 0;
+        unchecked {
+            currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
         }
+
+        currentPeriodAmount[_token] = 0;
 
         limitAmount[_token] = _amount;
 

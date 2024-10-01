@@ -83,13 +83,11 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
      */
     function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {   
         // if period has expired then currentPeriodAmount is zero
-        if (currentPeriodEnd < block.timestamp) {
-            unchecked {
-                currentPeriodEnd = block.timestamp + rateLimitDuration;
-            }
-
-            currentPeriodAmount = 0;
+        unchecked {
+            currentPeriodEnd = block.timestamp + rateLimitDuration;
         }
+
+        currentPeriodAmount = 0;
 
         limitAmount = _amount;
 

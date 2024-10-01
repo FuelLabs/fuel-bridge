@@ -410,7 +410,7 @@ describe('Transferring ETH', async function () {
       ).to.be.true;
     });
 
-    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
+    it('Rate limit parameters are updated unconditionally whenever reset is triggered', async () => {
       const deployer = await env.eth.deployer;
       const newRateLimit = `10`;
 
@@ -424,14 +424,12 @@ describe('Transferring ETH', async function () {
       let currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      // current withdrawn amount doesn't change when rate limit is updated
-
+      // current withdrawn amount is set to 0 on reset
       expect(
-        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
+        currentWithdrawnAmountAfterSettingLimit <= withdrawnAmountBeforeReset
       ).to.be.true;
 
-      withdrawnAmountBeforeReset =
-        await env.eth.fuelMessagePortal.currentPeriodAmount();
+      expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
 
       await env.eth.fuelMessagePortal
         .connect(deployer)
@@ -440,12 +438,10 @@ describe('Transferring ETH', async function () {
       currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      expect(
-        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
-      ).to.be.true;
+      expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
     });
 
-    it('Rate limit parameters are updated when the initial duration is over', async () => {
+    it('Rate limit parameters are updated when a withdrawal happens and the initial duration is over', async () => {
       const deployer = await env.eth.deployer;
 
       rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();

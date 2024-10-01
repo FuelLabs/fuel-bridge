@@ -52,12 +52,12 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     ////////////
     // Errors //
     ////////////
-
-    error TimeToFinalizeTooLarge();
+    error CannotRecommit();
     error CommitCooldownTooLarge();
     error FinalizationIsGtCooldown();
+    error InvalidTimeToFinalize();
+    error TimeToFinalizeTooLarge();
     error UnknownBlock();
-    error CannotRecommit();
 
     /////////////
     // Storage //
@@ -74,6 +74,10 @@ contract FuelChainState is Initializable, PausableUpgradeable, AccessControlUpgr
     /// @dev assumes 1 block per second in the L2 chain
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor(uint256 timeToFinalize, uint256 blocksPerCommitInterval, uint32 commitCooldown) {
+        if (timeToFinalize == 0) {
+            revert InvalidTimeToFinalize();
+        }
+
         if (timeToFinalize > commitCooldown) {
             revert FinalizationIsGtCooldown();
         }
