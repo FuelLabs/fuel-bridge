@@ -77,7 +77,7 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) internal _depositLimits;
     mapping(address => uint256) internal _decimalsCache;
 
-    /// @notice Amounts already withdrawn this period for each token.
+    /// @notice Tracks rate limit duration for each token.
     mapping(address => uint256) public rateLimitDuration;
 
     /// @notice Amounts already withdrawn this period for each token.
