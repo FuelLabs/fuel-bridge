@@ -448,7 +448,7 @@ describe('Transferring ETH', async function () {
     it('Rate limit parameters are updated when the initial duration is over', async () => {
       const deployer = await env.eth.deployer;
 
-      rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
+      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
 
       // fast forward time
       await hardhatSkipTime(
@@ -484,7 +484,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
-      rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
+      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
 
       const deployer = await env.eth.deployer;
       const newRateLimit = `40`;

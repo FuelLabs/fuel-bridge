@@ -24,7 +24,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
 
     /// @notice Duration after which rate limit resets.
-    uint256 public immutable rateLimitDuration;
+    uint256 public immutable RATE_LIMIT_DURATION;
 
     /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
@@ -41,7 +41,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     uint256 public limitAmount;
 
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
-        rateLimitDuration = _rateLimitDuration;
+        RATE_LIMIT_DURATION = _rateLimitDuration;
         _disableInitializers();
     }
 
@@ -85,7 +85,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         // if period has expired then currentPeriodAmount is zero
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-                currentPeriodEnd = block.timestamp + rateLimitDuration;
+                currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
 
             currentPeriodAmount = 0;
@@ -221,7 +221,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-               currentPeriodEnd = block.timestamp + rateLimitDuration;
+               currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
@@ -246,7 +246,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
         
         // initializing rate limit var
-        currentPeriodEnd = block.timestamp + rateLimitDuration;
+        currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
         limitAmount = _limitAmount;
     }
 
