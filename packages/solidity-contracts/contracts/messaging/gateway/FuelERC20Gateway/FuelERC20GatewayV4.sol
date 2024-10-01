@@ -316,7 +316,7 @@ contract FuelERC20GatewayV4 is
     /// @notice Checks if the rate limit is enabled or not
     /// @param tokenAddress Address of the token to check rate limit status for
     function isRateLimitEnabled(address tokenAddress) public view returns (bool) {
-        return !rateLimitStatus[tokenAddress];  
+        return rateLimitStatus[tokenAddress];  
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
