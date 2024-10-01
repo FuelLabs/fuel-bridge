@@ -1,6 +1,6 @@
 /**
  * This is a stand-alone script that
- * fetches a deposit message and relays it to the bridge
+ * fetches a metadata message and relays it to the bridge
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
@@ -22,8 +22,6 @@ import {
   relayCommonMessage,
   waitForMessage,
 } from '../utils';
-
-const TOKEN_RECIPIENT_DATA_OFFSET = 160;
 
 let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE } = process.env;
 
