@@ -17,22 +17,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address } = await get('FuelERC20GatewayV4');
 
-  const previousImplementation = await erc1967.getImplementationAddress(
-    address
-  );
-
   const factory = new FuelERC20GatewayV4__factory(deployer);
   const tx = (await prepareUpgrade(address, factory, {
     getTxResponse: true,
   })) as TransactionResponse;
-  await tx.wait();
-  await upgradeProxy(address, factory);
+  const receipt = await tx.wait();
+  const implementation = receipt?.contractAddress!;
 
-  const implementation = await erc1967.getImplementationAddress(address);
-
-  console.log(
-    `Upgraded FuelERC20GatewayV4 from ${previousImplementation} to implementation ${implementation}`
-  );
+  console.log(`Proposed FuelERC20GatewayV4 upgrade to ${implementation}`);
   await save('FuelERC20GatewayV4', {
     address,
     abi: [...FuelERC20GatewayV4__factory.abi],
