@@ -628,8 +628,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
 
         const [event] = await fuelMessagePortal.queryFilter(
           fuelMessagePortal.filters.FuelChainStateUpdated,
-          receipt.blockNumber,
-          receipt.blockNumber
+          receipt?.blockNumber,
+          receipt?.blockNumber
         );
 
         expect(event.args.sender).to.equal(deployer.address);
@@ -639,6 +639,66 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         expect(await fuelMessagePortal.fuelChainStateContract()).to.equal(
           newFuelChainStateAddress
         );
+      });
+    });
+
+    describe('updateRateLimitStatus()', () => {
+      it('can only be called by SET_RATE_LIMITER_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        await deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const setRateLimiterRole =
+          await fuelMessagePortal.SET_RATE_LIMITER_ROLE();
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .updateRateLimitStatus(false);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${setRateLimiterRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(setRateLimiterRole, mallory);
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .updateRateLimitStatus(false);
+
+        await expect(tx).not.to.be.reverted;
+      });
+    });
+
+    describe('resetRateLimitAmoint()', () => {
+      it('can only be called by SET_RATE_LIMITER_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        await deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const setRateLimiterRole =
+          await fuelMessagePortal.SET_RATE_LIMITER_ROLE();
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .resetRateLimitAmount(0);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${setRateLimiterRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(setRateLimiterRole, mallory);
+
+        const tx = fuelMessagePortal.connect(mallory).resetRateLimitAmount(0);
+
+        await expect(tx).not.to.be.reverted;
       });
     });
   });
@@ -767,6 +827,8 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
         ...upgradeProxyOptions,
       });
+
+      await fuelMessagePortal.updateRateLimitStatus(true);
 
       await setupMessages(
         await fuelMessagePortal.getAddress(),
@@ -1120,6 +1182,35 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       ).to.be.equal(false);
     });
 
+    it('Should be able to relay message after rate limit duration is over', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value:
+          messageAfterRateLimitDurationCompletes.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageAfterRateLimitDurationCompletes,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
+
+      await fuelMessagePortal.relayMessage(
+        messageAfterRateLimitDurationCompletes,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
+    });
+
     it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
       await fuelMessagePortal.depositETH(messageEOA.sender, {
         value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
@@ -1146,26 +1237,11 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
-    });
 
-    it('Should be able to relay message after rate limit duration is over', async () => {
-      await fuelMessagePortal.depositETH(messageEOA.sender, {
-        value:
-          messageAfterRateLimitDurationCompletes.amount * BASE_ASSET_CONVERSION,
-      });
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageAfterRateLimitDurationCompletes,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
+      await fuelMessagePortal.updateRateLimitStatus(false);
 
       await fuelMessagePortal.relayMessage(
-        messageAfterRateLimitDurationCompletes,
+        messageExceedingRateLimit,
         endOfCommitIntervalHeaderLite,
         msgBlockHeader,
         blockInRoot,
