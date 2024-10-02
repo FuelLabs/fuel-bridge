@@ -3,7 +3,9 @@ import type {
   HttpNetworkConfig,
 } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-import Safe from '@safe-global/protocol-kit';
+import SafeProtocolKit from '@safe-global/protocol-kit';
+import SafeApiKit from '@safe-global/api-kit';
+
 import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 
 import { password } from '@inquirer/prompts';
@@ -41,15 +43,19 @@ const MAINNET_TOKENS = [
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const privateKey = await password({ message: 'Enter private key' });
+  const senderAddress = new hre.ethers.Wallet(privateKey).address;
   const provider = (hre.config.networks['mainnet'] as HttpNetworkConfig).url;
 
-  const { address: gatewayAddress, implementation: newGatewayImplementation } =
-    await hre.deployments.get('FuelERC20GatewayV4');
+  const { address: gatewayAddress } = await hre.deployments.get(
+    'FuelERC20GatewayV4'
+  );
 
-  const protocolKit = await Safe.init({
+  const safeAddress = MAINNET_MULTISIG_ADDRESS;
+  const apiKit = new SafeApiKit({ chainId: 1n });
+  const protocolKit = await SafeProtocolKit.init({
     signer: privateKey,
     provider,
-    safeAddress: MAINNET_MULTISIG_ADDRESS,
+    safeAddress,
   });
 
   const gateway = FuelERC20GatewayV4__factory.connect(
@@ -75,8 +81,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     transactions,
   });
 
-  const hash = await protocolKit.getTransactionHash(safeTransaction);
-  console.log('Created safe transaction', hash);
+  const safeTxHash = await protocolKit.getTransactionHash(safeTransaction);
+
+  const signature = await protocolKit.signHash(safeTxHash);
+
+  await apiKit.proposeTransaction({
+    safeAddress,
+    safeTransactionData: safeTransaction.data,
+    safeTxHash,
+    senderAddress,
+    senderSignature: signature.data,
+  });
 
   return true;
 };
