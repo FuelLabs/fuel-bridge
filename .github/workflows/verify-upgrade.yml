@@ -33,5 +33,5 @@ jobs:
 
           # Remove the deploy/ prefix
           BRANCH_NAME=${BRANCH_NAME#deploy/}
-          npx hardhat compile && npx hardhat verify-deployment --network $BRANCH_NAME
+          npx hardhat verify-deployment --network $BRANCH_NAME
         working-directory: ./packages/solidity-contracts
