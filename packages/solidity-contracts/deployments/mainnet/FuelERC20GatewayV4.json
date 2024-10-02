@@ -914,7 +914,9 @@
   ],
   "numDeployments": 2,
   "linkedData": {
-    "factory": "FuelERC20GatewayV4"
+    "factory": "FuelERC20GatewayV4",
+    "constructorArgs": []
   },
+  "transactionHash": "0x44c0654c83eff10b0126cc97f9d519ba8f1b4a41958886cb58eee3e939760c8e",
   "implementation": "0xdE2D792ca3C4d02DE3CE1cD1456d8D0990cC3fab"
 }
