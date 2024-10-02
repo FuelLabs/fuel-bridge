@@ -1,5 +1,5 @@
 {
-  "address": "0xF811826EC40C9134601360B91C3071cAB234fCDa",
+  "address": "0x7E325E714097Bc17a428d8cd0325Fd9af362bE38",
   "abi": [
     {
       "inputs": [],
@@ -137,6 +137,25 @@
         }
       ],
       "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RateLimitStatusUpdated",
       "type": "event"
     },
     {
@@ -646,6 +665,25 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rateLimitStatus",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -815,6 +853,24 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "_rateLimitStatus",
+          "type": "bool"
+        }
+      ],
+      "name": "updateRateLimitStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "newImplementation",
           "type": "address"
         }
@@ -856,11 +912,11 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xb1467381392d2fa1d4e00c95398d9ca49f6161a9eb1c07c4b047f52491c93d9d",
+  "transactionHash": "0x3431e954bcf713030b4a2c7ef2f53f3a10430a7f0795d0ae3514d9ba511f4600",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelERC20GatewayV4",
     "constructorArgs": []
   },
-  "implementation": "0x0fe27454F985FB772C653234B20EC3D401F3C110"
+  "implementation": "0x2daDc6D0Ad8F2Ae00Ab89D47Ce39aC2682bd9253"
 }

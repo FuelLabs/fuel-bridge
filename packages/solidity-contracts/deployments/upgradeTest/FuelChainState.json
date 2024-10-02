@@ -1,5 +1,5 @@
 {
-  "address": "0xe07e8371670ebe2363D3E9172Fe26BCf68425eEc",
+  "address": "0xe2491478Cf2256c85090f545ebFeE8cDF26D4be5",
   "abi": [
     {
       "inputs": [
@@ -35,6 +35,11 @@
     {
       "inputs": [],
       "name": "FinalizationIsGtCooldown",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidTimeToFinalize",
       "type": "error"
     },
     {
@@ -572,7 +577,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xdb7bd142cdbcff3f86bece851e744557d8a4385f4cb41f24ad565c14eadfc75c",
+  "transactionHash": "0x07f6780f4961f6f1712789ba934bdb2590552f55054b44103708a7fb23149012",
   "numDeployments": 2,
   "linkedData": {
     "constructorArgs": [
@@ -582,5 +587,5 @@
     ],
     "factory": "FuelChainState"
   },
-  "implementation": "0x711F29EB603A46F0Fd11957CF31C3c4a26DAb330"
+  "implementation": "0x45bEd8Ae1A13f136cd35196f906b7EB335F39BB3"
 }

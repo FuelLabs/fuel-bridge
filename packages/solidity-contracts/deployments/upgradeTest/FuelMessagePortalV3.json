@@ -1,5 +1,5 @@
 {
-  "address": "0xD35dD8b42747B906773a566DD44297e8FF0Cc8C9",
+  "address": "0x9aD93fAAB9548222a7f2358f686157603D6a7Bed",
   "abi": [
     {
       "inputs": [
@@ -432,6 +432,19 @@
     },
     {
       "inputs": [],
+      "name": "RATE_LIMIT_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "SET_RATE_LIMITER_ROLE",
       "outputs": [
         {
@@ -738,19 +751,6 @@
           "internalType": "bytes32",
           "name": "",
           "type": "bytes32"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "rateLimitDuration",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -1116,7 +1116,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0x7d62ee7dcb4e37eec768d218a3d16d22df72d743c5ae8091a47cdeb8a3aef1ee",
+  "transactionHash": "0xe06050120b76f845e22dfdb6e4850e9b15638729c5430e2e71e6b2950ea843db",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
@@ -1125,5 +1125,5 @@
       604800
     ]
   },
-  "implementation": "0x543F6656AA7D3A9763cbf42eE25D76D7607F5233"
+  "implementation": "0xEf7211919eb16BF7c5A7B699ad6B31e50DcF6A56"
 }
