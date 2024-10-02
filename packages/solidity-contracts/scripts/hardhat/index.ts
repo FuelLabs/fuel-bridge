@@ -10,3 +10,4 @@ export * from './withdrawalPause';
 export * from './withdrawalResume';
 export * from './withdrawalBlacklist';
 export * from './withdrawalWhitelist';
+export * from './verifyMainnetDeployment';
