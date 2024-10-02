@@ -1122,6 +1122,35 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
       ).to.be.equal(false);
     });
 
+    it('Should be able to relay message after rate limit duration is over', async () => {
+      await fuelMessagePortal.depositETH(messageEOA.sender, {
+        value:
+          messageAfterRateLimitDurationCompletes.amount * BASE_ASSET_CONVERSION,
+      });
+
+      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
+        messageAfterRateLimitDurationCompletes,
+        blockHeaders,
+        prevBlockNodes,
+        blockIds,
+        messageNodes
+      );
+
+      ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
+
+      await fuelMessagePortal.relayMessage(
+        messageAfterRateLimitDurationCompletes,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
+    });
+
     it('Should not be able to relay message with withdrawal amount exceeding rate limit', async () => {
       await fuelMessagePortal.depositETH(messageEOA.sender, {
         value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
@@ -1153,35 +1182,6 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
 
       await fuelMessagePortal.relayMessage(
         messageExceedingRateLimit,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-    });
-
-    it('Should be able to relay message after rate limit duration is over', async () => {
-      await fuelMessagePortal.depositETH(messageEOA.sender, {
-        value:
-          messageAfterRateLimitDurationCompletes.amount * BASE_ASSET_CONVERSION,
-      });
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageAfterRateLimitDurationCompletes,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      ethers.provider.send('evm_increaseTime', [RATE_LIMIT_DURATION * 2]);
-
-      await fuelMessagePortal.relayMessage(
-        messageAfterRateLimitDurationCompletes,
         endOfCommitIntervalHeaderLite,
         msgBlockHeader,
         blockInRoot,
