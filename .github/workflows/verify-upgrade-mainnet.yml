@@ -28,5 +28,5 @@ jobs:
           pnpm-version: 9.0.6
       - name: Verify deployment bytecode
         run: |
-          npx hardhat compile && npx hardhat verify-deployment --network mainnet
+          npx hardhat compile && npx hardhat verify-mainnet-deployments --network mainnet
         working-directory: ./packages/solidity-contracts
