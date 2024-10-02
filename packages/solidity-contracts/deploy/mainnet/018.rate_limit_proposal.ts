@@ -78,6 +78,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['multisig_proposal'];
-func.id = 'multisig_proposal';
+func.tags = ['rate_limit_proposal'];
+func.id = 'rate_limit_proposal';
 export default func;
