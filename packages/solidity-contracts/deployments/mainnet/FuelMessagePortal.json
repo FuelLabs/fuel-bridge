@@ -242,6 +242,32 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RateLimitStatusUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "ResetRateLimit",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": true,
           "internalType": "bytes32",
           "name": "role",
@@ -407,6 +433,19 @@
     {
       "inputs": [],
       "name": "PRECISION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATE_LIMIT_DURATION",
       "outputs": [
         {
           "internalType": "uint256",
@@ -732,12 +771,12 @@
     },
     {
       "inputs": [],
-      "name": "rateLimitDuration",
+      "name": "rateLimitEnabled",
       "outputs": [
         {
-          "internalType": "uint256",
+          "internalType": "bool",
           "name": "",
-          "type": "uint256"
+          "type": "bool"
         }
       ],
       "stateMutability": "view",
@@ -1061,6 +1100,19 @@
     {
       "inputs": [
         {
+          "internalType": "bool",
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "name": "updateRateLimitStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "newImplementation",
           "type": "address"
@@ -1103,13 +1155,13 @@
       "type": "function"
     }
   ],
-  "numDeployments": 2,
+  "numDeployments": 3,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
     "constructorArgs": [
-      "100000000000000000000",
+      "19572000000000000000000",
       604800
     ]
   },
-  "implementation": "0x6d67857224F66d7A677f063B861B6BACafB10639"
+  "implementation": "0x05f886DDeE0FE07496f6e38b0e140F8eF4655B16"
 }
