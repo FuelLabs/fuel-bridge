@@ -5,7 +5,7 @@
 
 import { BridgeFungibleToken, Proxy } from '@fuel-bridge/fungible-token';
 
-import { Contract, Provider, isB256 } from 'fuels';
+import { Contract, FuelError, Provider, isB256 } from 'fuels';
 import { debug, getTokenId } from '../utils';
 import { JsonRpcProvider, isAddress } from 'ethers';
 import { IERC20Metadata__factory } from '@fuel-bridge/solidity-contracts/typechain';
@@ -45,12 +45,26 @@ const main = async () => {
   const bridge = new BridgeFungibleToken(L2_BRIDGE_ID, fuel_provider);
 
   const asset = { bits: L2_ASSET_ID };
-  let l1_token_address =
-    '0x' +
-    (await bridge.functions.asset_to_l1_address(asset).dryRun()).value.slice(
-      -40
-    );
-  console.log('l1_token_address', `0x${l1_token_address}`);
+
+  const call_result = await bridge.functions
+    .asset_to_l1_address(asset)
+    .dryRun()
+    .catch((e: FuelError) => {
+      if (e.metadata['logs'] && e.metadata['logs'][0] === 'AssetNotFound') {
+        console.log(`Asset ${L2_ASSET_ID} not found, was it ever bridged?`);
+      } else {
+        console.log(JSON.stringify(e, undefined, 2));
+      }
+
+      return null;
+    });
+
+  if (!call_result) {
+    return;
+  }
+
+  let l1_token_address = '0x' + (call_result.value as string).slice(-40);
+  console.log('l1_token_address', `${l1_token_address}`);
 
   const fuel_symbol = (await bridge.functions.symbol(asset).dryRun()).value;
   const fuel_name = (await bridge.functions.name(asset).dryRun()).value;
