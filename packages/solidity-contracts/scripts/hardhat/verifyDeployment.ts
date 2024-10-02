@@ -35,20 +35,16 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
 
       const factory = (await ethers.getContractFactory(
         deployment.linkedData.factory
-      )) as ContractFactory; // Typing bug in `getContractFactory`
+      )) as ContractFactory;
 
       console.log(
         `--- Validating the upgrade to ${deployment.implementation} implementation...`
       );
 
-      await validateUpgrade(
-        deployment.address as string,
-        factory,
-        {
-          kind: 'uups',
-          constructorArgs: deployment.linkedData.constructorArgs,
-        } as any // Typing bug in `validateUpgrade`
-      );
+      await validateUpgrade(deployment.address as string, factory, {
+        kind: 'uups',
+        constructorArgs: deployment.linkedData.constructorArgs,
+      });
 
       console.log('--- Upgrade Validated...');
 
