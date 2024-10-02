@@ -43,7 +43,7 @@ const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
 const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
-describe.only('FuelMessagePortalV3 - Incoming messages', () => {
+describe('FuelMessagePortalV3 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
   let signers: HardhatEthersSigner[];
@@ -639,6 +639,66 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
         expect(await fuelMessagePortal.fuelChainStateContract()).to.equal(
           newFuelChainStateAddress
         );
+      });
+    });
+
+    describe('updateRateLimitStatus()', () => {
+      it('can only be called by SET_RATE_LIMITER_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        await deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const setRateLimiterRole =
+          await fuelMessagePortal.SET_RATE_LIMITER_ROLE();
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .updateRateLimitStatus(false);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${setRateLimiterRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(setRateLimiterRole, mallory);
+
+        const tx = fuelMessagePortal
+          .connect(mallory)
+          .updateRateLimitStatus(false);
+
+        await expect(tx).not.to.be.reverted;
+      });
+    });
+
+    describe('resetRateLimitAmoint()', () => {
+      it('can only be called by SET_RATE_LIMITER_ROLE', async () => {
+        const [deployer] = await ethers.getSigners();
+
+        const mallory = Wallet.createRandom(provider);
+        await deployer.sendTransaction({ to: mallory, value: parseEther('1') });
+
+        const setRateLimiterRole =
+          await fuelMessagePortal.SET_RATE_LIMITER_ROLE();
+        const rogueTx = fuelMessagePortal
+          .connect(mallory)
+          .resetRateLimitAmount(0);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()}` + ` is missing role ${setRateLimiterRole}`;
+
+        await expect(rogueTx).to.be.revertedWith(expectedErrorMsg);
+
+        await fuelMessagePortal
+          .connect(deployer)
+          .grantRole(setRateLimiterRole, mallory);
+
+        const tx = fuelMessagePortal.connect(mallory).resetRateLimitAmount(0);
+
+        await expect(tx).not.to.be.reverted;
       });
     });
   });
