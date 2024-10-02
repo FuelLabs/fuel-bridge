@@ -5,15 +5,20 @@
 
 import { BridgeFungibleToken, Proxy } from '@fuel-bridge/fungible-token';
 
-import { Provider, isB256 } from 'fuels';
-import { debug } from '../utils';
-import { JsonRpcProvider } from 'ethers';
+import { Contract, Provider, isB256 } from 'fuels';
+import { debug, getTokenId } from '../utils';
+import { JsonRpcProvider, isAddress } from 'ethers';
 import { IERC20Metadata__factory } from '@fuel-bridge/solidity-contracts/typechain';
 
-let { L1_RPC, L2_RPC, L2_BRIDGE_ID, L2_ASSET_ID } = process.env;
+let { L1_RPC, L2_RPC, L2_BRIDGE_ID, L2_ASSET_ID, L1_TOKEN_ADDRESS } =
+  process.env;
 const L1_LLAMA_RPC = 'https://eth.llamarpc.com';
 const main = async () => {
   const fuel_provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
+
+  if (isAddress(L1_TOKEN_ADDRESS)) {
+    L2_ASSET_ID = getTokenId(L2_BRIDGE_ID, L1_TOKEN_ADDRESS);
+  }
 
   if (!isB256(L2_ASSET_ID)) {
     console.log('Bad L2_ASSET_ID', L2_ASSET_ID);
