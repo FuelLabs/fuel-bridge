@@ -5,7 +5,6 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
 import { password } from '@inquirer/prompts';
 
-// Rate limit: 10 ETH / week
 const RATE_LIMIT_DURATION = 3600 * 24 * 7;
 
 // Global deposit cap: 19572 ETH
@@ -44,6 +43,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['set_deposit_limit_eth_2'];
-func.id = 'set_deposit_limit_eth_2';
+func.tags = ['upgrade_portal'];
+func.id = 'upgrade_portal';
 export default func;
