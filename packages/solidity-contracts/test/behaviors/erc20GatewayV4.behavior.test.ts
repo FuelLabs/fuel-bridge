@@ -1039,7 +1039,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             const rateLimitAmount =
               RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
 
-            const tx = erc20Gateway
+            let tx = erc20Gateway
               .connect(deployer)
               .resetRateLimitAmount(
                 token.getAddress(),
@@ -1050,6 +1050,14 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
             await expect(tx)
               .to.emit(erc20Gateway, 'RateLimitUpdated')
               .withArgs(token.getAddress(), rateLimitAmount.toString());
+
+            tx = erc20Gateway
+              .connect(deployer)
+              .updateRateLimitStatus(token, true);
+
+            await expect(tx)
+              .to.emit(erc20Gateway, 'RateLimitStatusUpdated')
+              .withArgs(token.getAddress(), true);
           });
 
           it('does not update rate limit vars when it is not initialized', async () => {
@@ -1132,6 +1140,13 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                 rateLimitAmount.toString(),
                 RATE_LIMIT_DURATION
               );
+
+            await erc20Gateway
+              .connect(deployer)
+              .updateRateLimitStatus(token, true);
+
+            const status = await erc20Gateway.rateLimitStatus(token);
+            expect(status).to.be.true;
 
             const amount = parseUnits(
               random(0.01, 1, true).toFixed(decimals),
@@ -1238,6 +1253,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                 RATE_LIMIT_DURATION
               );
 
+            await erc20Gateway
+              .connect(deployer)
+              .updateRateLimitStatus(token, true);
+
             const amount = parseUnits('10', Number(decimals));
             const recipient = randomBytes32();
 
@@ -1273,6 +1292,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
             const currentWithdrawnAmountBeforeSettingLimit =
               await erc20Gateway.currentPeriodAmount(token.getAddress());
+
             rateLimitAmount =
               RATE_LIMIT_AMOUNT /
               5 /
@@ -1288,6 +1308,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
             const currentWithdrawnAmountAfterSettingLimit =
               await erc20Gateway.currentPeriodAmount(token.getAddress());
+
+            expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(
+              withdrawAmount
+            );
 
             expect(currentWithdrawnAmountAfterSettingLimit).to.be.equal(
               currentWithdrawnAmountBeforeSettingLimit
@@ -1339,6 +1363,10 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
                 rateLimitAmount.toString(),
                 RATE_LIMIT_DURATION
               );
+
+            await erc20Gateway
+              .connect(deployer)
+              .updateRateLimitStatus(token, true);
 
             const amount = parseUnits('10', Number(decimals));
             const recipient = randomBytes32();

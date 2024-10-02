@@ -221,6 +221,10 @@ describe('Bridge mainnet tokens', function () {
               rateLimitAmount.toString(),
               RATE_LIMIT_DURATION
             );
+
+          await env.eth.fuelERC20Gateway
+            .connect(env.eth.deployer)
+            .updateRateLimitStatus(tokenAddress, true);
         }
       );
 

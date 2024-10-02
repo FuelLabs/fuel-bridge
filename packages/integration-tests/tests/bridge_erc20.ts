@@ -165,6 +165,10 @@ describe('Bridging ERC20 tokens', async function () {
         RATE_LIMIT_DURATION
       );
 
+    await env.eth.fuelERC20Gateway
+      .connect(env.eth.deployer)
+      .updateRateLimitStatus(eth_testTokenAddress, true);
+
     const { value: expectedGatewayContractId } = await fuel_bridge.functions
       .bridged_token_gateway()
       .addContracts([fuel_bridge, fuel_bridgeImpl])
@@ -352,6 +356,19 @@ describe('Bridging ERC20 tokens', async function () {
 
       const txResult = await tx.waitForResult();
       expect(txResult.status).to.equal('success');
+
+      const fuel_name = (
+        await fuel_bridge.functions.name({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+      const fuel_symbol = (
+        await fuel_bridge.functions.symbol({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+
+      const eth_name = await eth_testToken.name();
+      const eth_symbol = await eth_testToken.symbol();
+
+      expect(fuel_name).to.equal(eth_name);
+      expect(fuel_symbol).to.equal(eth_symbol);
     });
   });
 
