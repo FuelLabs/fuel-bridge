@@ -8,7 +8,7 @@ import { password } from '@inquirer/prompts';
 // Rate limit: 10 ETH / week
 const RATE_LIMIT_DURATION = 3600 * 24 * 7;
 
-// Global deposit cap: 100 ETH
+// Global deposit cap: 19572 ETH
 const ETH_DEPOSIT_CAP = parseEther('19572');
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
