@@ -1,0 +1,32 @@
+name: Verify Mainnet Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main # Target branch for the PR
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-upgrade:
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ secrets.RPC_URL || 'https://eth.llamarpc.com' }}
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - name: Verify deployment bytecode
+        run: |
+          npx hardhat compile && npx hardhat verify-deployment --network mainnet
+        working-directory: ./packages/solidity-contracts
