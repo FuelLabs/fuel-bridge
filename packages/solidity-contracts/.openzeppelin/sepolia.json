@@ -425,6 +425,21 @@
       "address": "0x58096a912672704E85B221ec0Fabf653e85a9224",
       "txHash": "0xed4c8b3bc297d4e09a802ef8bee0cd42d715045a616527de8b30b95cb5225fec",
       "kind": "uups"
+    },
+    {
+      "address": "0xe07e8371670ebe2363D3E9172Fe26BCf68425eEc",
+      "txHash": "0x847992c675750afe3c6a17bc0b90c8c9eefe2bc4807c793ff23183a08ad1b475",
+      "kind": "uups"
+    },
+    {
+      "address": "0xD35dD8b42747B906773a566DD44297e8FF0Cc8C9",
+      "txHash": "0xad0e0cb8041e8c2748a27e93539e4a55c5fb0031053aaa74c6f0c277efefba61",
+      "kind": "uups"
+    },
+    {
+      "address": "0xF811826EC40C9134601360B91C3071cAB234fCDa",
+      "txHash": "0xc9414f763bb5bc9590e0e72e487299401f759618c9ad4d6ed2d3580f9d413372",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -4976,6 +4991,7 @@
       },
       "allAddresses": [
         "0x3bd5C81a8Adf3355078Dc5F73c41d3194B316690",
+        "0x711F29EB603A46F0Fd11957CF31C3c4a26DAb330",
         "0x83ad7e32937Fc78CeD9b69f7A1bFd9F1240d93D9",
         "0xB5D5A58B0b9CCBf7Cb2ce960f90fbea83311f3dB",
         "0xc69BAa987757d054455fC0f2d9797684E9FB8b9C",
@@ -5298,7 +5314,7 @@
             "label": "_fuelMessagePortal",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(FuelMessagePortal)8014",
+            "type": "t_contract(FuelMessagePortal)4640",
             "contract": "FuelMessagesEnabled",
             "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
           },
@@ -5476,7 +5492,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(FuelMessagePortal)8014": {
+          "t_contract(FuelMessagePortal)4640": {
             "label": "contract FuelMessagePortal",
             "numberOfBytes": "20"
           },
@@ -5523,6 +5539,7 @@
       },
       "allAddresses": [
         "0x90cB311F9871490C160d50380f68801ed9146310",
+        "0x0fe27454F985FB772C653234B20EC3D401F3C110",
         "0xe79B6BA4F58F0601C400C85834aA51A091562368",
         "0xB22fec34F72b57BFb6E370e01cB67DdbfC954aB6",
         "0x3F1aCcDa35efCe7ECd9118F5013b4a68D4967F47",
@@ -5807,6 +5824,7 @@
       },
       "allAddresses": [
         "0x93fF4BAbC52270364A7371089dc8085a3c03DaE1",
+        "0x543F6656AA7D3A9763cbf42eE25D76D7607F5233",
         "0x2a4a6e5C0747e2a78582B69f852d229026c1B272",
         "0x059976c7C07b7b4F0D3975d22F11ec00Bc6B1868"
       ]

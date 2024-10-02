@@ -1,5 +1,5 @@
 {
-  "address": "0x58096a912672704E85B221ec0Fabf653e85a9224",
+  "address": "0xF811826EC40C9134601360B91C3071cAB234fCDa",
   "abi": [
     {
       "inputs": [],
@@ -856,11 +856,11 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0x66a07370cb5513429d2cc860333efc8daa221580696df094ba646dc23842212d",
+  "transactionHash": "0xb1467381392d2fa1d4e00c95398d9ca49f6161a9eb1c07c4b047f52491c93d9d",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelERC20GatewayV4",
     "constructorArgs": []
   },
-  "implementation": "0xe79B6BA4F58F0601C400C85834aA51A091562368"
+  "implementation": "0x0fe27454F985FB772C653234B20EC3D401F3C110"
 }
