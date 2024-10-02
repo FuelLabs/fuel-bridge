@@ -12,5 +12,6 @@
   "set_asset_issuer": 1725476138,
   "portal_ownership": 1726352727,
   "state_ownership": 1726352751,
-  "gateway_ownership": 1726352788
+  "gateway_ownership": 1726352788,
+  "upgrade_gateway": 1727864679
 }
