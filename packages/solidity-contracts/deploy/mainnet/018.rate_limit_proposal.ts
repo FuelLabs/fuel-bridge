@@ -60,7 +60,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const transactions: MetaTransactionData[] = [];
 
   for (const token of MAINNET_TOKENS) {
-    const { data } = await gateway.updateRateLimitStatus(token, true);
+    const { data } = await gateway.updateRateLimitStatus.populateTransaction(
+      token,
+      true
+    );
     transactions.push({
       to: gatewayAddress,
       data,
