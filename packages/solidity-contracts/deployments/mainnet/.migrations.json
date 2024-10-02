@@ -14,5 +14,6 @@
   "state_ownership": 1726352751,
   "gateway_ownership": 1726352788,
   "upgrade_gateway": 1727864679,
-  "upgrade_portal": 1727864801
+  "upgrade_portal": 1727864801,
+  "rate_limit_proposal": 1727884066
 }
