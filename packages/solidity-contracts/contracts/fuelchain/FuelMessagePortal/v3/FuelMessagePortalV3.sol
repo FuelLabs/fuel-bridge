@@ -14,16 +14,12 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @dev Emitted when rate limit is reset
     event ResetRateLimit(uint256 amount);
 
-    /// @dev Emitted when the rate limit is enabled
-    event RateLimitEnabled();
-    /// @dev Emitted when the rate limit is disabled
-    event RateLimitDisabled();
-
     error MessageBlacklisted();
     error MessageRelayFailed();
     error NotSupported();
     error RateLimitExceeded();
     error WithdrawalsPaused();
+    event RateLimitStatusUpdated(bool status);
 
     /// @dev The rate limit setter role
     bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
@@ -82,14 +78,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         messageIsBlacklisted[messageId] = false;
     }
 
-    function enableRateLimit() external onlyRole(SET_RATE_LIMITER_ROLE) {
-        rateLimitEnabled = true;
-        emit RateLimitEnabled();
-    }
-
-    function disableRateLimit() external onlyRole(SET_RATE_LIMITER_ROLE) {
-        rateLimitEnabled = false;
-        emit RateLimitDisabled();
+    function updateRateLimitStatus(bool value) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitEnabled = value;
+        emit RateLimitStatusUpdated(value);
     }
 
     /**

@@ -43,7 +43,7 @@ const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
 const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
-describe('FuelMessagePortalV3 - Incoming messages', () => {
+describe.only('FuelMessagePortalV3 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
   let signers: HardhatEthersSigner[];
@@ -768,7 +768,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         ...upgradeProxyOptions,
       });
 
-      await fuelMessagePortal.enableRateLimit();
+      await fuelMessagePortal.updateRateLimitStatus(true);
 
       await setupMessages(
         await fuelMessagePortal.getAddress(),
@@ -1192,7 +1192,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         messageNodes
       );
 
-      await fuelMessagePortal.disableRateLimit();
+      await fuelMessagePortal.updateRateLimitStatus(false);
 
       await fuelMessagePortal.relayMessage(
         messageExceedingRateLimit,
