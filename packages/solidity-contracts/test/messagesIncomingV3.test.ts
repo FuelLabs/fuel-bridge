@@ -1148,6 +1148,20 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
       expect(
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(false);
+
+      await fuelMessagePortal.updateRateLimitStatus(false);
+
+      await fuelMessagePortal.relayMessage(
+        messageExceedingRateLimit,
+        endOfCommitIntervalHeaderLite,
+        msgBlockHeader,
+        blockInRoot,
+        msgInBlock
+      );
+
+      expect(
+        await fuelMessagePortal.incomingMessageSuccessful(msgID)
+      ).to.be.equal(true);
     });
 
     it('Should be able to relay message after rate limit duration is over', async () => {
@@ -1168,34 +1182,6 @@ describe.only('FuelMessagePortalV3 - Incoming messages', () => {
 
       await fuelMessagePortal.relayMessage(
         messageAfterRateLimitDurationCompletes,
-        endOfCommitIntervalHeaderLite,
-        msgBlockHeader,
-        blockInRoot,
-        msgInBlock
-      );
-
-      expect(
-        await fuelMessagePortal.incomingMessageSuccessful(msgID)
-      ).to.be.equal(true);
-    });
-
-    it('Should stop applying rate limit if it is disabled', async () => {
-      await fuelMessagePortal.depositETH(messageEOA.sender, {
-        value: messageExceedingRateLimit.amount * BASE_ASSET_CONVERSION,
-      });
-
-      const [msgID, msgBlockHeader, blockInRoot, msgInBlock] = generateProof(
-        messageExceedingRateLimit,
-        blockHeaders,
-        prevBlockNodes,
-        blockIds,
-        messageNodes
-      );
-
-      await fuelMessagePortal.updateRateLimitStatus(false);
-
-      await fuelMessagePortal.relayMessage(
-        messageExceedingRateLimit,
         endOfCommitIntervalHeaderLite,
         msgBlockHeader,
         blockInRoot,
