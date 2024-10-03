@@ -3,6 +3,7 @@ import { setBalance } from '@nomicfoundation/hardhat-network-helpers';
 import { expect } from 'chai';
 import {
   MaxUint256,
+  ZeroAddress,
   ZeroHash,
   parseEther,
   parseUnits,
@@ -100,6 +101,60 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           .setGlobalDepositLimit(token, MaxUint256);
 
         expect(await erc20Gateway.depositLimits(token)).to.be.eq(MaxUint256);
+      });
+    });
+
+    describe('updateRateLimitStatus()', () => {
+      it('can only be called with set rate limiter role', async () => {
+        const {
+          erc20Gateway,
+          signers: [deployer, mallory],
+        } = env;
+
+        const rateLimiterRole = await erc20Gateway.SET_RATE_LIMITER_ROLE();
+
+        const tx = erc20Gateway
+          .connect(mallory)
+          .updateRateLimitStatus(ZeroAddress, false);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()} ` + `is missing role ${rateLimiterRole}`;
+        await expect(tx).to.be.revertedWith(expectedErrorMsg);
+
+        await erc20Gateway
+          .connect(deployer)
+          .grantRole(rateLimiterRole, mallory);
+        await erc20Gateway
+          .connect(mallory)
+          .updateRateLimitStatus(ZeroAddress, false);
+      });
+    });
+
+    describe('resetRateLimitAmount()', () => {
+      it('can only be called with set rate limiter role', async () => {
+        const {
+          erc20Gateway,
+          signers: [deployer, mallory],
+        } = env;
+
+        const rateLimiterRole = await erc20Gateway.SET_RATE_LIMITER_ROLE();
+
+        const tx = erc20Gateway
+          .connect(mallory)
+          .resetRateLimitAmount(ZeroAddress, 0, 0);
+        const expectedErrorMsg =
+          `AccessControl: account ${(
+            await mallory.getAddress()
+          ).toLowerCase()} ` + `is missing role ${rateLimiterRole}`;
+        await expect(tx).to.be.revertedWith(expectedErrorMsg);
+
+        await erc20Gateway
+          .connect(deployer)
+          .grantRole(rateLimiterRole, mallory);
+        await erc20Gateway
+          .connect(mallory)
+          .resetRateLimitAmount(ZeroAddress, 0, 0);
       });
     });
 
