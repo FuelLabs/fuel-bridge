@@ -4,6 +4,7 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 
 /**
  * @dev Variant of {ReentrancyGuard} that uses transient storage.
+ * Modified from https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/utils/ReentrancyGuardTransient.sol
  * For detailed context on reentrancy guard check https://github.com/OpenZeppelin/openzeppelin-contracts-upgradeable/blob/master/contracts/utils/ReentrancyGuardUpgradeable.sol
  * For detailed context on EIP1153(Transient Storage) check https://github.com/ethereum/EIPs/blob/master/EIPS/eip-1153.md
  *
@@ -19,7 +20,7 @@ abstract contract ReentrancyGuardTransientUpgradable is Initializable {
 
     // @notice acts as the storage slot in transient storage
     // avoiding the use of a namespace storage slot, to avoid storage collisions with upgrades
-    uint256 __transientSlotPlaceholder;
+    uint256 _status;
 
     function __ReentrancyGuardTransient_init() internal onlyInitializing {
         __ReentrancyGuardTransient_init_unchained();
@@ -57,7 +58,7 @@ abstract contract ReentrancyGuardTransientUpgradable is Initializable {
      */
     function _set(uint256 value) internal {
         assembly ("memory-safe") {
-            let slot := __transientSlotPlaceholder.slot
+            let slot := _status.slot
             tstore(slot, value)
         }
     }
@@ -67,7 +68,7 @@ abstract contract ReentrancyGuardTransientUpgradable is Initializable {
      */
     function _get() internal view returns (uint256 value) {
         assembly ("memory-safe") {
-            let slot := __transientSlotPlaceholder.slot
+            let slot := _status.slot
             value := tload(slot)
         }
     }
