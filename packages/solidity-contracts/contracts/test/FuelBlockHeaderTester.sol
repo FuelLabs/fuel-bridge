@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 import {FuelBlockHeader, FuelBlockHeaderLib} from "../fuelchain/types/FuelBlockHeader.sol";
 import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "../fuelchain/types/FuelBlockHeaderLite.sol";
