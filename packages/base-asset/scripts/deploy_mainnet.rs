@@ -18,39 +18,53 @@ struct Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
 
+    let provider = Provider::connect(&args.provider_url).await?;
+
+    let storage_configuration = StorageConfiguration::default()
+        .add_slot_overrides_from_file("./out/release/base-asset-contract-storage_slots.json")?;
+    let configuration =
+        LoadConfiguration::default().with_storage_configuration(storage_configuration);
+    let base_asset_contract_id = Contract::load_from(
+        "./out/release/base-asset-contract.bin",
+        configuration.clone(),
+    )?
+    .contract_id();
+
+    println!(
+        "--- Contract ID predicted to be on {:?}",
+        &base_asset_contract_id
+    );
+
     print!("Enter your signing key: ");
     io::stdout().flush()?;
 
     // Read the password, masking the input
     let signing_key = read_password()?;
+    let signing_wallet = setup_signing_wallet(provider.clone(), &signing_key).await?;
 
-    let signing_wallet = setup_signing_wallet(&args.provider_url, &signing_key).await?;
+    println!("--- Loaded wallet {}", signing_wallet.address().hash());
+    println!(
+        "--- Balance {}",
+        signing_wallet
+            .get_asset_balance(provider.base_asset_id())
+            .await?
+    );
 
-    println!("Loaded wallet {}", signing_wallet.address().hash());
-
-    // Deploy proxy with args as configurables
-    let storage_configuration = StorageConfiguration::default()
-        .add_slot_overrides_from_file("./out/release/base-asset-contract-storage_slots.json")?;
-
-    let configuration =
-        LoadConfiguration::default().with_storage_configuration(storage_configuration);
-
-    println!("\n|||||||||||||||||||||||||||||||||||||||||||||||||\n-|- Deploying base asset -|-\n|||||||||||||||||||||||||||||||||||||||||||||||||");
+    println!("\n--- Deploying base asset contract");
     let base_asset_contract_id =
         Contract::load_from("./out/release/base-asset-contract.bin", configuration)?
             .deploy(&signing_wallet, TxPolicies::default())
             .await?;
 
     println!(
-        " - Proxy Contract Deployed with ContractId: {}",
+        "--- Proxy Contract Deployed with ContractId: {}",
         ContractId::from(base_asset_contract_id)
     );
 
     Ok(())
 }
 
-async fn setup_signing_wallet(provider_url: &str, signing_key: &str) -> Result<WalletUnlocked> {
-    let provider = Provider::connect(provider_url).await?;
+async fn setup_signing_wallet(provider: Provider, signing_key: &str) -> Result<WalletUnlocked> {
     let secret = SecretKey::from_str(signing_key)?;
     Ok(WalletUnlocked::new_from_private_key(secret, Some(provider)))
 }
