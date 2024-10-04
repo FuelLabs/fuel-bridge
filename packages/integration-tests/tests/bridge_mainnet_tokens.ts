@@ -95,7 +95,6 @@ describe('Bridge mainnet tokens', function () {
       .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams({
         tip: 0,
-        gasLimit: 1_000_000,
         maxFee: 1,
       })
       .callParams({
@@ -222,6 +221,10 @@ describe('Bridge mainnet tokens', function () {
               rateLimitAmount.toString(),
               RATE_LIMIT_DURATION
             );
+
+          await env.eth.fuelERC20Gateway
+            .connect(env.eth.deployer)
+            .updateRateLimitStatus(tokenAddress, true);
         }
       );
 
@@ -416,11 +419,13 @@ describe('Bridge mainnet tokens', function () {
 
       describe('Bridge ERC20 from Fuel', function () {
         const NUM_TOKENS = 10000000000000000000n;
+        const largeRateLimit = `30`;
         let fuelTokenSender: FuelWallet;
         let ethereumTokenReceiver: Signer;
         let ethereumTokenReceiverAddress: string;
         let ethereumTokenReceiverBalance: bigint;
         let withdrawMessageProof: MessageProof;
+        let tokenBalanceBeforeWithdrawingOnFuel: BN;
 
         before(async () => {
           fuelTokenSender = env.fuel.signers[0];
@@ -434,6 +439,9 @@ describe('Bridge mainnet tokens', function () {
           ethereumTokenReceiverBalance = await token.balanceOf(
             ethereumTokenReceiverAddress
           );
+
+          tokenBalanceBeforeWithdrawingOnFuel =
+            await fuelTokenSender.getBalance(fuelAssetId);
         });
 
         it('Bridge ERC20 via Fuel token contract', async () => {
@@ -476,9 +484,35 @@ describe('Bridge mainnet tokens', function () {
           ).to.be.true;
         });
 
+        it('Check the remaining token balance on Fuel after the first withdrawal', async () => {
+          // fetch the remaining token balance
+          const currentTokenBalance = await fuelTokenSender.getBalance(
+            fuelAssetId
+          );
+
+          // currentTokenBalance has BN type by default hence the use of BN for conversion here
+          const expectedRemainingTokenBalanceOnFuel =
+            tokenBalanceBeforeWithdrawingOnFuel.sub(
+              new BN(
+                (
+                  NUM_TOKENS /
+                  (index == tokenAddresses.length - 1
+                    ? DECIMAL_DIFF
+                    : 10n ** (18n - decimals[index]))
+                ).toString()
+              )
+            );
+
+          expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to
+            .be.true;
+        });
+
         it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
           const deployer = await env.eth.deployer;
           const newRateLimit = '5';
+
+          let withdrawnAmountBeforeReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
 
           await env.eth.fuelERC20Gateway
             .connect(deployer)
@@ -488,17 +522,38 @@ describe('Bridge mainnet tokens', function () {
               RATE_LIMIT_DURATION
             );
 
-          const currentWithdrawnAmountAfterSettingLimit =
+          let currentWithdrawnAmountAfterSettingLimit =
             await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          // current withdrawn amount doesn't change when rate limit is updated
+
           expect(
             currentWithdrawnAmountAfterSettingLimit ===
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index])
+              withdrawnAmountBeforeReset
+          ).to.be.true;
+
+          withdrawnAmountBeforeReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          await env.eth.fuelERC20Gateway
+            .connect(deployer)
+            .resetRateLimitAmount(
+              tokenAddress,
+              parseEther(largeRateLimit),
+              RATE_LIMIT_DURATION
+            );
+
+          currentWithdrawnAmountAfterSettingLimit =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          expect(
+            currentWithdrawnAmountAfterSettingLimit ===
+              withdrawnAmountBeforeReset
           ).to.be.true;
         });
 
         it('Rate limit parameters are updated when the initial duration is over', async () => {
           const deployer = await env.eth.deployer;
-          const newRateLimit = `30`;
 
           const rateLimitDuration =
             await env.eth.fuelERC20Gateway.rateLimitDuration(tokenAddress);
@@ -515,9 +570,14 @@ describe('Bridge mainnet tokens', function () {
             .connect(deployer)
             .resetRateLimitAmount(
               tokenAddress,
-              parseEther(newRateLimit) / 10n ** (18n - decimals[index]),
+              parseEther(largeRateLimit) / 10n ** (18n - decimals[index]),
               RATE_LIMIT_DURATION
             );
+
+          const currentWitdrawnAmountAfterReset =
+            await env.eth.fuelERC20Gateway.currentPeriodAmount(tokenAddress);
+
+          expect(currentWitdrawnAmountAfterReset == 0n).to.be.true;
 
           // withdraw tokens back to the base chain
           withdrawMessageProof = await generateWithdrawalMessageProof(
@@ -545,6 +605,29 @@ describe('Bridge mainnet tokens', function () {
             currentPeriodAmount ===
               BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index])
           ).to.be.true;
+        });
+
+        it('Check the remaining token balance on Fuel after the second withdrawal', async () => {
+          // fetch the remaining token balance
+          const currentTokenBalance = await fuelTokenSender.getBalance(
+            fuelAssetId
+          );
+
+          // currentTokenBalance has BN type by default hence the use of BN for conversion here
+          const expectedRemainingTokenBalanceOnFuel =
+            tokenBalanceBeforeWithdrawingOnFuel.sub(
+              new BN(
+                (
+                  (NUM_TOKENS * 2n) /
+                  (index == tokenAddresses.length - 1
+                    ? DECIMAL_DIFF
+                    : 10n ** (18n - decimals[index]))
+                ).toString()
+              )
+            );
+
+          expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to
+            .be.true;
         });
 
         it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {

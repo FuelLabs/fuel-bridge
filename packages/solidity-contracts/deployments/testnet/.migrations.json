@@ -12,5 +12,7 @@
   "chain_state_redeploy": 1723732933,
   "redeploy_register_committer": 1723733653,
   "portal_upgrade_2": 1724078330,
-  "portal_set_chain_state": 1724078476
+  "portal_set_chain_state": 1724078476,
+    "gateway_redeploy": 1725380413,
+  "set_asset_issuer_redeploy": 1725380833
 }

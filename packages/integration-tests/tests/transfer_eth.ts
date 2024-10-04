@@ -350,6 +350,7 @@ describe('Transferring ETH', async function () {
 
   describe('ETH Withdrawls based on rate limit updates', async () => {
     let NUM_ETH = '9';
+    const largeRateLimit = `30`;
     let fuelETHSender: FuelWallet;
     let ethereumETHReceiver: Signer;
     let ethereumETHReceiverAddress: string;
@@ -360,6 +361,7 @@ describe('Transferring ETH', async function () {
       fuelETHSender = env.fuel.signers[1];
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
+      await env.eth.fuelMessagePortal.updateRateLimitStatus(true);
     });
 
     it('Checks rate limit params after relaying', async () => {
@@ -409,31 +411,45 @@ describe('Transferring ETH', async function () {
       ).to.be.true;
     });
 
-    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
+    it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
       const deployer = await env.eth.deployer;
       const newRateLimit = `10`;
+
+      let withdrawnAmountBeforeReset =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
 
       await env.eth.fuelMessagePortal
         .connect(deployer)
         .resetRateLimitAmount(parseEther(newRateLimit));
 
-      const currentWithdrawnAmountAfterSettingLimit =
+      let currentWithdrawnAmountAfterSettingLimit =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
+      // current withdrawn amount doesn't change when rate limit is updated
+
+      expect(
+        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
+      ).to.be.true;
+
+      withdrawnAmountBeforeReset =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
+
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(largeRateLimit));
+
+      currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
       expect(
-        currentWithdrawnAmountAfterSettingLimit === parseEther(newRateLimit)
+        currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
       ).to.be.true;
     });
 
     it('Rate limit parameters are updated when the initial duration is over', async () => {
       const deployer = await env.eth.deployer;
-      const newRateLimit = `30`;
 
-      await env.eth.fuelMessagePortal
-        .connect(deployer)
-        .resetRateLimitAmount(parseEther(newRateLimit));
-
-      rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
+      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
 
       // fast forward time
       await hardhatSkipTime(
@@ -441,14 +457,18 @@ describe('Transferring ETH', async function () {
         rateLimitDuration * 2n
       );
 
+      const currentPeriodEndBeforeRelay =
+        await env.eth.fuelMessagePortal.currentPeriodEnd();
+
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(largeRateLimit));
+
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
         NUM_ETH
       );
-
-      const currentPeriodEndBeforeRelay =
-        await env.eth.fuelMessagePortal.currentPeriodEnd();
 
       await relayMessage(env, withdrawMessageProof);
 
@@ -465,7 +485,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
-      rateLimitDuration = await env.eth.fuelMessagePortal.rateLimitDuration();
+      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
 
       const deployer = await env.eth.deployer;
       const newRateLimit = `40`;
@@ -499,7 +519,7 @@ describe('Transferring ETH', async function () {
           currentWithdrawnAmountAfterSettingLimit
       ).to.be.true;
 
-      expect(currentWithdrawnAmountAfterSettingLimit === 0n).to.be.true;
+      expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
     });
   });
 });

@@ -48,6 +48,9 @@ contract FuelERC20GatewayV4 is
     /// @dev Emitted when rate limit is reset
     event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
 
+    /// @dev Emitted when rate limit is enabled/disabled
+    event RateLimitStatusUpdated(address indexed tokenAddress, bool status);
+
     enum MessageType {
         DEPOSIT_TO_ADDRESS,
         DEPOSIT_TO_CONTRACT,
@@ -77,7 +80,7 @@ contract FuelERC20GatewayV4 is
     mapping(address => uint256) internal _depositLimits;
     mapping(address => uint256) internal _decimalsCache;
 
-    /// @notice Amounts already withdrawn this period for each token.
+    /// @notice Tracks rate limit duration for each token.
     mapping(address => uint256) public rateLimitDuration;
 
     /// @notice Amounts already withdrawn this period for each token.
@@ -89,7 +92,12 @@ contract FuelERC20GatewayV4 is
     /// @notice The eth withdrawal limit amount for each token.
     mapping(address => uint256) public limitAmount;
 
-	/// @notice disabling initialization
+    /// @notice Flag to indicate rate limit status for each token, whether disabled or enabled.
+    // if `true` it is enabled
+    // if `false` it is disabled
+    mapping(address => bool) public rateLimitStatus;
+
+    /// @notice disabling initialization
     /// @custom:oz-upgrades-unsafe-allow constructor
     constructor() {
         _disableInitializers();
@@ -152,41 +160,44 @@ contract FuelERC20GatewayV4 is
      * @param _token The token address to set rate limit for.
      * @param _amount The amount to reset the limit to.
      * @param _rateLimitDuration The new rate limit duration.
+     * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+     * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
      */
-    function resetRateLimitAmount(address _token, uint256 _amount, uint256 _rateLimitDuration) external onlyRole(SET_RATE_LIMITER_ROLE) {
-        uint256 withdrawalLimitAmountToSet;
-        bool amountWithdrawnLoweredToLimit;
-        bool withdrawalAmountResetToZero;
-        
+    function resetRateLimitAmount(
+        address _token,
+        uint256 _amount,
+        uint256 _rateLimitDuration
+    ) external onlyRole(SET_RATE_LIMITER_ROLE) {
         // avoid multiple SLOADS
         uint256 rateLimitDurationEndTimestamp = currentPeriodEnd[_token];
-        
+
         // set new rate limit duration
         rateLimitDuration[_token] = _rateLimitDuration;
-        
+
         // if period has expired then currentPeriodAmount is zero
         if (rateLimitDurationEndTimestamp < block.timestamp) {
             unchecked {
                 currentPeriodEnd[_token] = block.timestamp + _rateLimitDuration;
             }
-            withdrawalAmountResetToZero = true;
-        } else {
-            // If the withdrawn amount is higher, it is set to the new limit amount
-            if (_amount < currentPeriodAmount[_token]) {
-                withdrawalLimitAmountToSet = _amount;
-                amountWithdrawnLoweredToLimit = true;
-            }
+
+            currentPeriodAmount[_token] = 0;
         }
 
         limitAmount[_token] = _amount;
 
-        if (withdrawalAmountResetToZero || amountWithdrawnLoweredToLimit) {
-            currentPeriodAmount[_token] = withdrawalLimitAmountToSet;
-        }
-
         emit RateLimitUpdated(_token, _amount);
     }
 
+    /**
+     * @notice updates rate limit status by disabling/re-enabling rate limit.
+     * @param _token The token address to update rate limit status for.
+     * @param _rateLimitStatus bool flag to disable or re-enable rate limit.
+     */
+    function updateRateLimitStatus(address _token, bool _rateLimitStatus) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitStatus[_token] = _rateLimitStatus;
+
+        emit RateLimitStatusUpdated(_token, _rateLimitStatus);
+    }
 
     //////////////////////
     // Public Functions //
@@ -270,8 +281,8 @@ contract FuelERC20GatewayV4 is
             abi.encode(
                 tokenAddress,
                 uint256(0), // token_id = 0 for all erc20 deposits
-                IERC20MetadataUpgradeable(tokenAddress).symbol(),
-                IERC20MetadataUpgradeable(tokenAddress).name()
+                IERC20MetadataUpgradeable(tokenAddress).name(),
+                IERC20MetadataUpgradeable(tokenAddress).symbol()
             )
         );
         sendMessage(CommonPredicates.CONTRACT_MESSAGE_PREDICATE, metadataMessage);
@@ -299,8 +310,9 @@ contract FuelERC20GatewayV4 is
         uint8 decimals = _getTokenDecimals(tokenAddress);
         uint256 amount = _adjustWithdrawalDecimals(decimals, l2BurntAmount);
 
-        // rate limit check only if rate limit is initialized
-        if (currentPeriodEnd[tokenAddress] != 0) _addWithdrawnAmount(tokenAddress, amount);
+        // rate limit check is only performed when it is enabled
+        // if the rate limit has not been initialised then the tx will revert with `RateLimitExceeded()`
+        if (rateLimitStatus[tokenAddress]) _addWithdrawnAmount(tokenAddress, amount);
 
         //reduce deposit balance and transfer tokens (math will underflow if amount is larger than allowed)
         _deposits[tokenAddress] = _deposits[tokenAddress] - l2BurntAmount;
@@ -416,12 +428,12 @@ contract FuelERC20GatewayV4 is
 
         if (currentPeriodEnd[_token] < block.timestamp) {
             unchecked {
-               currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
+                currentPeriodEnd[_token] = block.timestamp + rateLimitDuration[_token];
             }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
             unchecked {
-               currentPeriodAmountTemp = currentPeriodAmount[_token] + _withdrawnAmount;
+                currentPeriodAmountTemp = currentPeriodAmount[_token] + _withdrawnAmount;
             }
         }
 
@@ -437,5 +449,5 @@ contract FuelERC20GatewayV4 is
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }
