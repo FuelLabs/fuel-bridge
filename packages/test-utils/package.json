@@ -22,13 +22,14 @@
     "script:check-balances": "pnpm ts-node src/scripts/check-balances.ts"
   },
   "peerDependencies": {
-    "fuels": "0.94.4",
-    "ethers": "6.13.1"
+    "ethers": "6.13.1",
+    "fuels": "0.94.4"
   },
   "devDependencies": {
     "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-bridge/message-predicates": "workspace:*",
     "@fuel-bridge/solidity-contracts": "workspace:*",
+    "@fuels/kms-account": "0.24.0-preview-63de5d8",
     "@inquirer/prompts": "^5.3.8",
     "dotenv": "^16.0.3",
     "inquirer": "^10.1.8",
