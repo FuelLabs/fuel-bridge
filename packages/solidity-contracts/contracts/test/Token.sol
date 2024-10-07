@@ -2,13 +2,14 @@
 pragma solidity 0.8.9;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 
 /// @notice This token is for testing purposes.
-contract Token is ERC20 {
+contract Token is ERC20, ERC20Permit {
     address public _owner;
 
     /// @notice Constructor.
-    constructor() ERC20("Token", "TKN") {
+    constructor() ERC20("Token", "TKN") ERC20Permit("ERC20") {
         _owner = msg.sender;
     }
 
