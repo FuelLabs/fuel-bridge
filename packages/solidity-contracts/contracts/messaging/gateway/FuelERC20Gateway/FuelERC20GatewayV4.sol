@@ -5,12 +5,14 @@ import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Ini
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import {IERC20PermitUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20PermitUpgradeable.sol";
 import {IERC20MetadataUpgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/IERC20MetadataUpgradeable.sol";
 import {SafeERC20Upgradeable} from "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
 import {CommonPredicates} from "../../../lib/CommonPredicates.sol";
 import {FuelMessagePortal} from "../../../fuelchain/FuelMessagePortal.sol";
 import {FuelBridgeBase} from "../FuelBridgeBase/FuelBridgeBase.sol";
 import {FuelMessagesEnabledUpgradeable} from "../../FuelMessagesEnabledUpgradeable.sol";
+import {PermitSignature} from "../../../utils/Permit.sol";
 
 /// @title FuelERC20GatewayV4
 /// @notice The L1 side of the general ERC20 gateway with Fuel.
@@ -37,6 +39,7 @@ contract FuelERC20GatewayV4 is
     error InvalidAssetIssuerID();
     error InvalidSender();
     error InvalidAmount();
+    error PermitNotAllowed();
     error RateLimitExceeded();
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
@@ -222,7 +225,7 @@ contract FuelERC20GatewayV4 is
     /// @param tokenAddress Address of the token being transferred to Fuel
     /// @param amount Amount of tokens to deposit
     /// @dev Made payable to reduce gas costs
-    function deposit(bytes32 to, address tokenAddress, uint256 amount) external payable virtual whenNotPaused {
+    function deposit(bytes32 to, address tokenAddress, uint256 amount) public payable virtual whenNotPaused {
         if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
 
         uint8 decimals = _getTokenDecimals(tokenAddress);
@@ -252,7 +255,7 @@ contract FuelERC20GatewayV4 is
         address tokenAddress,
         uint256 amount,
         bytes calldata data
-    ) external payable virtual whenNotPaused {
+    ) public payable virtual whenNotPaused {
         if (assetIssuerId == bytes32(0)) revert InvalidAssetIssuerID();
 
         uint8 decimals = _getTokenDecimals(tokenAddress);
@@ -320,6 +323,68 @@ contract FuelERC20GatewayV4 is
 
         //emit event for successful token withdraw
         emit Withdrawal(bytes32(uint256(uint160(to))), tokenAddress, amount);
+    }
+
+    /// @notice Deposits the given tokens to an account on Fuel using permit signature for approval
+    /// @param to Fuel address to deposit tokens to
+    /// @param tokenAddress Address of the token being transferred to Fuel
+    /// @param amount Amount of tokens to deposit
+    /// @param permitSignature struct containing the permit signature
+    /// @dev Made payable to reduce gas costs
+    function depositWithPermit(
+        bytes32 to,
+        address tokenAddress,
+        uint256 amount,
+        PermitSignature memory permitSignature
+    ) public payable virtual whenNotPaused {
+        // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `deposit` can be called directly.
+        if (permitSignature.deadline == 0) revert PermitNotAllowed();
+
+        // sets token allowance with permit signature
+        IERC20PermitUpgradeable(tokenAddress).permit(
+            msg.sender,
+            address(this),
+            amount,
+            permitSignature.deadline,
+            permitSignature.v,
+            permitSignature.r,
+            permitSignature.s
+        );
+
+        // for backward compatability with frontend, we call the existing `deposit` method
+        deposit(to, tokenAddress, amount);
+    }
+
+    /// @notice Deposits the given tokens to an account on Fuel using permit signature for approval
+    /// @param to Fuel address to deposit tokens to
+    /// @param tokenAddress Address of the token being transferred to Fuel
+    /// @param amount Amount of tokens to deposit
+    /// @param data Optional data to send with the deposit
+    /// @param permitSignature struct containing the permit signature
+    /// @dev Made payable to reduce gas costs
+    function depositWithDataAndPermit(
+        bytes32 to,
+        address tokenAddress,
+        uint256 amount,
+        bytes calldata data,
+        PermitSignature memory permitSignature
+    ) public payable virtual whenNotPaused {
+        // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `deposit` can be called directly.
+        if (permitSignature.deadline == 0) revert PermitNotAllowed();
+
+        // sets token allowance with permit signature
+        IERC20PermitUpgradeable(tokenAddress).permit(
+            msg.sender,
+            address(this),
+            amount,
+            permitSignature.deadline,
+            permitSignature.v,
+            permitSignature.r,
+            permitSignature.s
+        );
+
+        // for backward compatability with frontend, we call the existing `deposit` method
+        depositWithData(to, tokenAddress, amount, data);
     }
 
     /// @notice Deposits the given tokens to an account or contract on Fuel
