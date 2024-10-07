@@ -24,6 +24,7 @@ import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
   NoDecimalsToken__factory,
+  PermitToken,
 } from '../../typechain';
 import type {
   MockFuelMessagePortal,
@@ -60,6 +61,62 @@ const MessagePayloadSolidityTypes = [
   'uint256', // l2 amount to be minted
   'uint256', // decimals
 ];
+
+async function buildPermitParams(
+  name: string,
+  tokenAddress: string,
+  gatewayAddress: string,
+  amount: bigint,
+  nonce: bigint,
+  deadline: number,
+  deployer: HardhatEthersSigner
+) {
+  const domain: any = {
+    name: name,
+    version: '1',
+    chainId: hre.network.config.chainId,
+    verifyingContract: tokenAddress,
+  };
+
+  const types: any = {
+    Permit: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+      { name: 'value', type: 'uint256' },
+      { name: 'nonce', type: 'uint256' },
+      { name: 'deadline', type: 'uint256' },
+    ],
+  };
+
+  const values: any = {
+    owner: await deployer.getAddress(),
+    spender: gatewayAddress,
+    value: amount.toString(),
+    nonce: nonce.toString(),
+    deadline: deadline.toString(),
+  };
+
+  return { domain, types, values };
+}
+
+function parseSignature(signature: string) {
+  signature = signature.startsWith('0x') ? signature.slice(2) : signature;
+
+  // Ensure the signature length is correct
+  if (signature.length !== 130) {
+    throw new Error('Invalid signature length!');
+  }
+  // Extract R, S, V
+  const r = '0x' + signature.slice(0, 64);
+  const s = '0x' + signature.slice(64, 128);
+  const v = parseInt(signature.slice(128, 130), 16);
+  // Return formatted values
+  return {
+    r,
+    s,
+    v,
+  };
+}
 
 export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
   describe('Behaves like FuelERC20GatewayV4', () => {
@@ -179,7 +236,6 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           erc20Gateway,
           signers: [deployer, mallory],
         } = env;
-
         const pauserRole = await erc20Gateway.PAUSER_ROLE();
 
         const tx = erc20Gateway.connect(mallory).pause();
@@ -962,6 +1018,100 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
 
       describe('with no decimals token', () => {
         it('todo');
+      });
+    });
+
+    describe('deposit with permit token', () => {
+      let permitToken: PermitToken;
+      const deadline = Math.floor(Date.now() / 1000) + 600; // 10 mins from current timestamp
+
+      beforeEach('deploy permit token', async () => {
+        const PermitTokenFactory = await hre.ethers.getContractFactory(
+          'PermitToken'
+        );
+
+        permitToken = await PermitTokenFactory.deploy();
+      });
+
+      it('reverts when a user tries to deposit with a token without permit feature', async () => {
+        const {
+          erc20Gateway,
+          token,
+          signers: [deployer, user],
+        } = env;
+
+        const depositAmount = parseUnits('10', 18);
+        const depositTo = randomBytes32();
+
+        await token.connect(deployer).mint(user, depositAmount);
+        await token.connect(user).approve(erc20Gateway, MaxUint256);
+
+        const tx = erc20Gateway
+          .connect(user)
+          .depositWithPermit(depositTo, token, depositAmount, {
+            deadline: 0,
+            v: 0,
+            r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            s: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          });
+        await expect(tx).to.be.revertedWithCustomError(
+          erc20Gateway,
+          'PermitNotAllowed()'
+        );
+      });
+      it('user is able to deposit without calling approve()', async () => {
+        const {
+          erc20Gateway,
+          signers: [deployer, user],
+        } = env;
+
+        const depositAmount = parseUnits('10', 18);
+        const depositTo = randomBytes32();
+
+        const tokenOwnerAddress = await deployer.getAddress();
+
+        await permitToken.connect(deployer).mint(user, depositAmount);
+
+        const tokenName = await permitToken.name();
+        const tokenAddress = await permitToken.getAddress();
+        const gatewayAddress = await erc20Gateway.getAddress();
+        const deployerNonce = await permitToken.nonces(tokenOwnerAddress);
+
+        const signatureParams = await buildPermitParams(
+          tokenName,
+          tokenAddress,
+          gatewayAddress,
+          depositAmount,
+          deployerNonce,
+          deadline,
+          user
+        );
+
+        const signature = await user.signTypedData(
+          signatureParams.domain,
+          signatureParams.types,
+          signatureParams.values
+        );
+
+        const { r, s, v } = parseSignature(signature);
+        const permitData = {
+          deadline,
+          v,
+          r,
+          s,
+        };
+
+        const tx = erc20Gateway
+          .connect(user)
+          .depositWithPermit(depositTo, permitToken, depositAmount, permitData);
+
+        await expect(tx)
+          .to.emit(erc20Gateway, 'Deposit')
+          .withArgs(
+            zeroPadValue(await user.getAddress(), 32),
+            permitToken,
+            depositAmount
+          );
       });
     });
 
