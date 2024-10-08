@@ -2,16 +2,16 @@ name: Manual Verify Upgrade
 
 on:
   workflow_dispatch:
-  inputs:
-    network:
-      description: 'Enter the network you want to verify the upgrade on'
-      required: true
-      default: 'mainnet'
-      type: string
-    rpc:
-      description: 'Enter network rpc'
-      required: true
-      type: string
+    inputs:
+      network:
+        description: 'Enter the network you want to verify the upgrade on'
+        required: true
+        default: 'mainnet'
+        type: string
+      rpc:
+        description: 'Enter network rpc'
+        required: true
+        type: string
 
 jobs:
   verify-upgrade:
