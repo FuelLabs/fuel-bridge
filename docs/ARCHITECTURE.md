@@ -420,6 +420,7 @@ solidity
 ```
 
 ### Reset Rate Limit Mechanism
+
 Even though `resetRateLimitAmount` is permissioned, it is still critical in the context of enabling rate limits in the bridge, so it is important to understand how it works.
 
 The account having the `SET_RATE_LIMITER_ROLE` role can reset the rate limit any time when it is enabled.
@@ -431,13 +432,14 @@ If the rate limit is reset after the `rateLimitDuration` ends, then the rate lim
 Here are some Do's and Don'ts to keep in mind when calling resetRateLimitAmount.
 
 Do's
+
 - Simulate the `resetRateLimitAmount` function call and a withdrawal after that to ensure the rate limit behavior is as desired.
 - Ensure that the rate limit is enabled, if it's not, then the rate limit will have no effect.
 - Communicate with the affected stakeholders in the project, before resetting
 
 Don'ts
-- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the rateLimitDuration as it will affect the user experience and can create confusion among users who want to withdraw.
 
+- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the rateLimitDuration as it will affect the user experience and can create confusion among users who want to withdraw.
 
 ### Example showcasing the difference in implementation
 
