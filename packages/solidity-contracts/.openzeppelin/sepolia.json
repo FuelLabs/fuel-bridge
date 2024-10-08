@@ -455,6 +455,21 @@
       "address": "0x7E325E714097Bc17a428d8cd0325Fd9af362bE38",
       "txHash": "0xa50deaa5e09422d8aeabcb4144f4f892a9d1c481144886ae54b3310bd634d5ff",
       "kind": "uups"
+    },
+    {
+      "address": "0xC909a6b87f9ac1bA5b5f6928BD5E9aBF59031F3A",
+      "txHash": "0xd98c28b8552f3369b72dd9b6be496f0429d6be114fe1c94c9079d794a1037509",
+      "kind": "uups"
+    },
+    {
+      "address": "0xC660DebcfaC0f664C061DDDC3A0E5a16608cDe63",
+      "txHash": "0x9296223677cbb146c08bda40144129f44442304b7cb237042a79cf947534cff1",
+      "kind": "uups"
+    },
+    {
+      "address": "0x21Da06444EA4E48358834398C9575bf92851Ae27",
+      "txHash": "0xf4f110d2e0664c61b5502dbbfdf8b7d5b93b82317edb01b59f18a4e3f7e24db5",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -6837,6 +6852,7 @@
       },
       "allAddresses": [
         "0x6F8e6304f892abA27E70474E51be15060E8352E1",
+        "0xcbE4869d80347CF1069EC407b2800290CC6D48B6",
         "0x45bEd8Ae1A13f136cd35196f906b7EB335F39BB3"
       ]
     },
@@ -7116,6 +7132,7 @@
       },
       "allAddresses": [
         "0xce0f6Aa8c967965878123F47047bCf6c63c5E1BF",
+        "0x04F425CcC331521479BC8cE41Bcd9cf7621F6D8e",
         "0xEf7211919eb16BF7c5A7B699ad6B31e50DcF6A56"
       ]
     },
@@ -7146,7 +7163,7 @@
             "label": "_fuelMessagePortal",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(FuelMessagePortal)4650",
+            "type": "t_contract(FuelMessagePortal)8024",
             "contract": "FuelMessagesEnabled",
             "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
           },
@@ -7332,7 +7349,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(FuelMessagePortal)4650": {
+          "t_contract(FuelMessagePortal)8024": {
             "label": "contract FuelMessagePortal",
             "numberOfBytes": "20"
           },
@@ -7379,6 +7396,7 @@
       },
       "allAddresses": [
         "0x9f1b80D1D5421a4f67B9a56ab15Ce64BBba8b08b",
+        "0x98B0b68dacCb91255BCed7Ab550Bb643495e879B",
         "0x2daDc6D0Ad8F2Ae00Ab89D47Ce39aC2682bd9253"
       ]
     }

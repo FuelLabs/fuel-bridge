@@ -18,7 +18,7 @@
     "build:exports": "tsup",
     "clean": "pnpm hardhat clean",
     "compile": "pnpm hardhat compile --show-stack-traces",
-    "coverage": "pnpm run build && pnpm hardhat coverage --temp artifacts",
+    "coverage": "pnpm run build && pnpm hardhat coverage --temp artifacts --network hardhat",
     "check": "pnpm solhint \"contracts/**/*.sol\"",
     "node": "pnpm hardhat node --network hardhat",
     "start-mining": "pnpm hardhat run --no-compile --network localhost scripts/startAutoMining.ts",
