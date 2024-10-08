@@ -1,5 +1,5 @@
 {
-  "address": "0xC660DebcfaC0f664C061DDDC3A0E5a16608cDe63",
+  "address": "0xb477aC0A0d6c6524D8cAE2Ae9A8Cd7Ce79A0ecBb",
   "abi": [
     {
       "inputs": [
@@ -236,6 +236,19 @@
         }
       ],
       "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RateLimitStatusUpdated",
       "type": "event"
     },
     {
@@ -757,6 +770,19 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "rateLimitEnabled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "uint256",
@@ -1074,6 +1100,19 @@
     {
       "inputs": [
         {
+          "internalType": "bool",
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "name": "updateRateLimitStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "newImplementation",
           "type": "address"
@@ -1116,7 +1155,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0xc1e13e3855a86b14a8863b2592b9ac2f734ec079a1ae7447e56ba8baf6f07d02",
+  "transactionHash": "0x7ee82b223e98bfb53104695459c1133f0a4d4243baa10688eb02ff3031f375fe",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
@@ -1125,5 +1164,5 @@
       604800
     ]
   },
-  "implementation": "0x04F425CcC331521479BC8cE41Bcd9cf7621F6D8e"
+  "implementation": "0x117f1333be787768deb0ADb46d4b54bdBf463995"
 }
