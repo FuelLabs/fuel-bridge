@@ -54,7 +54,6 @@
     "dotenv": "^16.0.3",
     "ethers": "6.13.1",
     "express": "^4.18.2",
-    "fs-extra": "^11.2.0",
     "fuels": "0.94.0",
     "hardhat": "^2.20.1",
     "hardhat-deploy": "^0.12.4",
