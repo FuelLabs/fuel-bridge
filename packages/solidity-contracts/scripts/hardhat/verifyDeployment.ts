@@ -2,6 +2,7 @@ import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { config as dotEnvConfig } from 'dotenv';
 import { ContractFactory } from 'ethers';
+import { writeJsonSync } from 'fs-extra';
 dotEnvConfig();
 
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
@@ -18,6 +19,8 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
     );
 
     const deployments = await hre.deployments.all();
+
+    const verficationPayload = [];
 
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
@@ -101,6 +104,15 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
         );
         throw new Error('New implementation deployment verification failed');
       }
+
+      // update payload for each upgrade
+      verficationPayload.push({
+        bytecode: expectedInitCode,
+        address: deployment.implementation,
+        txHash: fetchedDeploymentTx.hash,
+      });
     }
+
+    writeJsonSync('verification.json', verficationPayload, { spaces: 2 });
   }
 );
