@@ -369,7 +369,7 @@ contract FuelERC20GatewayV4 is
         bytes calldata data,
         PermitSignature memory permitSignature
     ) public payable virtual whenNotPaused {
-        // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `deposit` can be called directly.
+        // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `depositWithData` can be called directly.
         if (permitSignature.deadline == 0) revert PermitNotAllowed();
 
         // sets token allowance with permit signature
