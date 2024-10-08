@@ -439,7 +439,8 @@ Do's
 
 Don'ts
 
-- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the rateLimitDuration as it will affect the user experience and can create confusion among users who want to withdraw.
+- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the `rateLimitDuration` as it will affect the user experience and can create confusion among users who want to withdraw.
+- Avoid calling the `resetRateLimitAmount` function near the end of the current `rateLimitDuration`, as increasing the limit at that time would allow a higher withdrawal limit for a short period.
 
 ### Example showcasing the difference in implementation
 
