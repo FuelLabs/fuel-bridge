@@ -2,7 +2,8 @@ import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { config as dotEnvConfig } from 'dotenv';
 import { ContractFactory } from 'ethers';
-import { writeJsonSync } from 'fs-extra';
+import { writeFileSync } from 'fs';
+
 dotEnvConfig();
 
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
@@ -113,6 +114,6 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       });
     }
 
-    writeJsonSync('verification.json', verficationPayload, { spaces: 2 });
+    writeFileSync('verification.json', JSON.stringify(verficationPayload));
   }
 );
