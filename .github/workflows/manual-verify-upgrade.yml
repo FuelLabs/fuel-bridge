@@ -35,4 +35,3 @@ jobs:
           name: deployment-bytecode
           path: verification.json
           retention-days: 90
-        working-directory: ./packages/solidity-contracts
