@@ -1,0 +1,38 @@
+name: Manual Verify Upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      network:
+        description: 'Enter the network you want to verify the upgrade on'
+        required: true
+        default: 'mainnet'
+        type: string
+      rpc:
+        description: 'Enter network rpc'
+        required: true
+        default: 'https://eth.llamarpc.com'
+        type: string
+
+jobs:
+  verify-upgrade:
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ github.event.inputs.rpc }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - name: Verify deployment bytecode
+        run: |
+          npx hardhat compile && npx hardhat verify-deployment --network ${{ github.event.inputs.network }}
+        working-directory: ./packages/solidity-contracts
+      - name: Upload bytecode as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: deployment-bytecode
+          path: verification.json
+          retention-days: 90
+        working-directory: ./packages/solidity-contracts
