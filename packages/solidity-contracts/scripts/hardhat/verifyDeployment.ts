@@ -4,8 +4,6 @@ import { config as dotEnvConfig } from 'dotenv';
 import { ContractFactory } from 'ethers';
 import { writeFileSync } from 'fs';
 
-dotEnvConfig();
-
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
     const network = hre.network.name;

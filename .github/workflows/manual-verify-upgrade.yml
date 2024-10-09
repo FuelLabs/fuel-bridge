@@ -11,6 +11,7 @@ on:
       rpc:
         description: 'Enter network rpc'
         required: true
+        default: 'https://eth.llamarpc.com'
         type: string
 
 jobs:
