@@ -107,7 +107,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       }
 
       console.log(
-        `✅ ${contractName} (${deployment.address}): Confirmed viability to upgrade to ${deployment.implementation}`,
+        `✅ ${contractName} (${deployment.address}): Confirmed viability to upgrade to ${deployment.implementation}`
       );
 
       // update payload for each upgrade
