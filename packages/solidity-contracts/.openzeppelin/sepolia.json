@@ -15,6 +15,11 @@
       "address": "0x0176B13E0fE397D82E8dec9ce6AabcDE2248AA00",
       "txHash": "0xc5562e402762f89353f1bd8fe758fb3766ccfbc0051622a9793021ece842d077",
       "kind": "uups"
+    },
+    {
+      "address": "0x840e5a0dF831aCB8e90fD5f92E09b9a7731758d6",
+      "txHash": "0x5a57f6fe558573dba4c3e79659366326eee92ee56bda9e722011aa29bfe2b16b",
+      "kind": "uups"
     }
   ],
   "impls": {
@@ -537,7 +542,7 @@
             "label": "_fuelMessagePortal",
             "offset": 2,
             "slot": "0",
-            "type": "t_contract(FuelMessagePortal)8024",
+            "type": "t_contract(FuelMessagePortal)5254",
             "contract": "FuelMessagesEnabled",
             "src": "contracts/messaging/FuelMessagesEnabled.sol:21"
           },
@@ -727,7 +732,7 @@
             "label": "bytes32",
             "numberOfBytes": "32"
           },
-          "t_contract(FuelMessagePortal)8024": {
+          "t_contract(FuelMessagePortal)5254": {
             "label": "contract FuelMessagePortal",
             "numberOfBytes": "20"
           },
@@ -774,6 +779,7 @@
       },
       "allAddresses": [
         "0xf96DD2dA09A67c37CE79671923af1999b3553414",
+        "0x757F667dd94626677a01829b86675FD53988eFA3",
         "0x1D81f89e994fed1b00cE765771535B31B67e3AB9"
       ]
     }
