@@ -11,15 +11,13 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } = hre;
   const [deployer] = await ethers.getSigners();
 
-  const fuelMessagePortal = await get('FuelMessagePortal');
+  const fuelMessagePortal = await get('FuelMessagePortalV3');
 
-  const contract = await deployProxy(
-    new FuelERC20Gateway(deployer),
-    [fuelMessagePortal.address],
-    {
-      initializer: 'initialize',
-    }
-  );
+  const initArgs = [fuelMessagePortal.address];
+
+  const contract = await deployProxy(new FuelERC20Gateway(deployer), initArgs, {
+    initializer: 'initialize',
+  });
   await contract.waitForDeployment();
 
   const address = await contract.getAddress();
@@ -30,6 +28,10 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     address,
     abi: [...FuelERC20Gateway.abi],
     implementation,
+    linkedData: {
+      factory: 'FuelERC20GatewayV4',
+      constructorArgs: [],
+    },
   });
 };
 
