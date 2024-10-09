@@ -5,7 +5,7 @@ import {
 } from '@fuel-bridge/solidity-contracts/protocol/constants';
 import type {
   Token,
-  PermitToken,
+  MockPermitToken,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
@@ -46,7 +46,7 @@ describe('Bridging ERC20 tokens', async function () {
 
   let env: TestEnvironment;
   let eth_testToken: Token;
-  let eth_permitTestToken: PermitToken;
+  let eth_permitTestToken: MockPermitToken;
   let eth_testTokenAddress: string;
   let eth_permitTestTokenAddress: string;
   let eth_erc20GatewayAddress: string;

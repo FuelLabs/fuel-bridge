@@ -1,5 +1,5 @@
-import type { PermitToken } from '@fuel-bridge/solidity-contracts/typechain';
-import { PermitToken__factory } from '@fuel-bridge/solidity-contracts/typechain';
+import type { MockPermitToken } from '@fuel-bridge/solidity-contracts/typechain';
+import { MockPermitToken__factory } from '@fuel-bridge/solidity-contracts/typechain';
 
 import { debug } from '../logs';
 import { ethers_parseToken } from '../parsers';
@@ -14,10 +14,10 @@ export async function getOrDeployERC20PermitContract(env: TestEnvironment) {
   const ethAcct = env.eth.signers[0];
 
   // load ERC20 contract
-  let ethTestToken: PermitToken = null;
+  let ethTestToken: MockPermitToken = null;
   if (ETH_ERC20_TOKEN_ADDRESS) {
     try {
-      ethTestToken = PermitToken__factory.connect(
+      ethTestToken = MockPermitToken__factory.connect(
         ETH_ERC20_TOKEN_ADDRESS,
         ethDeployer
       );
@@ -37,7 +37,7 @@ export async function getOrDeployERC20PermitContract(env: TestEnvironment) {
   }
   if (!ethTestToken) {
     debug(`Creating ERC-20 token contract to test with...`);
-    const eth_tokenFactory = new PermitToken__factory(ethDeployer);
+    const eth_tokenFactory = new MockPermitToken__factory(ethDeployer);
     ethTestToken = await eth_tokenFactory
       .deploy()
       .then((tx) => tx.waitForDeployment());
@@ -56,7 +56,7 @@ export async function getOrDeployERC20PermitContract(env: TestEnvironment) {
 
 export async function mintECR20PermitToken(
   env: TestEnvironment,
-  ethTestToken: PermitToken,
+  ethTestToken: MockPermitToken,
   ethAcctAddr: string,
   amount: string
 ) {

@@ -24,7 +24,7 @@ import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
   NoDecimalsToken__factory,
-  PermitToken,
+  MockPermitToken,
 } from '../../typechain';
 import type {
   MockFuelMessagePortal,
@@ -1022,12 +1022,12 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
     });
 
     describe('deposit with permit token', () => {
-      let permitToken: PermitToken;
+      let permitToken: MockPermitToken;
       const deadline = Math.floor(Date.now() / 1000) + 600; // 10 mins from current timestamp
 
       beforeEach('deploy permit token', async () => {
         const PermitTokenFactory = await hre.ethers.getContractFactory(
-          'PermitToken'
+          'MockPermitToken'
         );
 
         permitToken = await PermitTokenFactory.deploy();
