@@ -21,7 +21,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
 
     const deployments = await hre.deployments.all();
 
-    const verficationPayload = [];
+    const verificationPayload = [];
 
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
@@ -107,7 +107,7 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       }
 
       // update payload for each upgrade
-      verficationPayload.push({
+      verificationPayload.push({
         bytecode: expectedInitCode,
         address: deployment.implementation,
         txHash: fetchedDeploymentTx.hash,
