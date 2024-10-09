@@ -106,6 +106,10 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
         throw new Error('New implementation deployment verification failed');
       }
 
+      console.log(
+        `✅ ${contractName} (${deployment.address}): Confirmed viability to upgrade to ${deployment.implementation}`,
+      );
+
       // update payload for each upgrade
       verificationPayload.push({
         bytecode: expectedInitCode,
@@ -114,6 +118,6 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
       });
     }
 
-    writeFileSync('verification.json', JSON.stringify(verficationPayload));
+    writeFileSync('verification.json', JSON.stringify(verificationPayload));
   }
 );
