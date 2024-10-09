@@ -340,16 +340,21 @@ contract FuelERC20GatewayV4 is
         // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `deposit` can be called directly.
         if (permitSignature.deadline == 0) revert PermitNotAllowed();
 
+        // Adding a try-catch clause allows to skip ddos transactions here
+        // We are not interested in either catching the error or implementing
+        // a success flow, we just continue and let the transfer revert in `deposit`
         // sets token allowance with permit signature
-        IERC20PermitUpgradeable(tokenAddress).permit(
-            msg.sender,
-            address(this),
-            amount,
-            permitSignature.deadline,
-            permitSignature.v,
-            permitSignature.r,
-            permitSignature.s
-        );
+        try
+            IERC20PermitUpgradeable(tokenAddress).permit(
+                msg.sender,
+                address(this),
+                amount,
+                permitSignature.deadline,
+                permitSignature.v,
+                permitSignature.r,
+                permitSignature.s
+            )
+        {} catch {}
 
         // for backward compatability with frontend, we call the existing `deposit` method
         deposit(to, tokenAddress, amount);
@@ -372,16 +377,21 @@ contract FuelERC20GatewayV4 is
         // If the deadline is zero, we revert as we assume the token does not have permit functionality so then `depositWithData` can be called directly.
         if (permitSignature.deadline == 0) revert PermitNotAllowed();
 
+        // Adding a try-catch clause allows to skip ddos transactions here
+        // We are not interested in either catching the error or implementing
+        // a success flow, we just continue and let the transfer revert in `depositWithData`
         // sets token allowance with permit signature
-        IERC20PermitUpgradeable(tokenAddress).permit(
-            msg.sender,
-            address(this),
-            amount,
-            permitSignature.deadline,
-            permitSignature.v,
-            permitSignature.r,
-            permitSignature.s
-        );
+        try
+            IERC20PermitUpgradeable(tokenAddress).permit(
+                msg.sender,
+                address(this),
+                amount,
+                permitSignature.deadline,
+                permitSignature.v,
+                permitSignature.r,
+                permitSignature.s
+            )
+        {} catch {}
 
         // for backward compatability with frontend, we call the existing `deposit` method
         depositWithData(to, tokenAddress, amount, data);
