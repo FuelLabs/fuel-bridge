@@ -1059,6 +1059,30 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           'PermitNotAllowed()'
         );
       });
+
+      it('reverts when permit fails when their is no approval', async () => {
+        const {
+          erc20Gateway,
+          token,
+          signers: [deployer, user],
+        } = env;
+
+        const depositAmount = parseUnits('10', 18);
+        const depositTo = randomBytes32();
+
+        await token.connect(deployer).mint(user, depositAmount);
+
+        const tx = erc20Gateway
+          .connect(user)
+          .depositWithPermit(depositTo, token, depositAmount, {
+            deadline,
+            v: 0,
+            r: '0x0000000000000000000000000000000000000000000000000000000000000000',
+            s: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          });
+        await expect(tx).to.be.revertedWith('ERC20: insufficient allowance');
+      });
+
       it('user is able to deposit without calling approve()', async () => {
         const {
           erc20Gateway,
