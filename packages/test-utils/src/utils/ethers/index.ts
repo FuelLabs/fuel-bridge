@@ -1,6 +1,7 @@
 export * from './callEtherRPC';
 export * from './createRelayParams';
 export * from './getOrDeployECR20Contract';
+export * from './getOrDeployERC20PermitContract';
 export * from './getOrDeployERC721Contract';
 export * from './waitForBlockCommit';
 export * from './waitForBlockFinalization';
