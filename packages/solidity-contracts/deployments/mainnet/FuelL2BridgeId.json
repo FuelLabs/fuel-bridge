@@ -1,0 +1,20 @@
+{
+  "address": "0x4ea6ccef1215d9479f1024dff70fc055ca538215d2c8c348beddffd54583d0e8",
+  "abi": [],
+  "numDeployments": 1,
+  "implementation": "0x0ceafc5ef55c66912e855917782a3804dc489fb9e27edfd3621ea47d2a281156",
+  "linkedData": {
+    "deployOpts": {
+      "storageSlots": [
+        {
+          "key": "98437ca47af18022b9c1ac8bb7a1f9250530840d04707415ba2a4209cd03e82e",
+          "value": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ],
+      "configurableConstants": {
+        "BRIDGED_TOKEN_GATEWAY": "0x000000000000000000000000a4ca04d02bfdc3a2df56b9b6994520e69df43f67"
+      },
+      "salt": "0x0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  }
+}

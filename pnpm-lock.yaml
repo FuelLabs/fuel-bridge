@@ -154,6 +154,15 @@ importers:
       '@openzeppelin/hardhat-upgrades':
         specifier: ^3.0.4
         version: 3.0.5(@nomicfoundation/hardhat-ethers@3.0.5(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(@nomicfoundation/hardhat-verify@1.1.1(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(bufferutil@4.0.5)(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7))(utf-8-validate@5.0.7)
+      '@safe-global/api-kit':
+        specifier: ^2.4.6
+        version: 2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/protocol-kit':
+        specifier: ^4.1.1
+        version: 4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/safe-core-sdk-types':
+        specifier: ^5.1.0
+        version: 5.1.0(typescript@4.9.5)
       '@typechain/ethers-v6':
         specifier: ^0.5.1
         version: 0.5.1(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(typechain@8.3.2(typescript@4.9.5))(typescript@4.9.5)
@@ -1261,6 +1270,7 @@ packages:
   '@humanwhocodes/config-array@0.11.14':
     resolution: {integrity: sha512-3T8LkOmg45BV5FICb15QQMsyUSWrQ8AygVfC7ZG32zOalnqrilm018ZVCw0eapXux8FtA33q8PSRSstjee3jSg==}
     engines: {node: '>=10.10.0'}
+    deprecated: Use @eslint/config-array instead
 
   '@humanwhocodes/module-importer@1.0.1':
     resolution: {integrity: sha512-bxveV4V8v5Yb4ncFTT3rPSgZBOpCkjfK0y4oVVVJwIuDVBRMDXrPyXRL988i5ap9m9bnyEEjWfm5WkBmtffLfA==}
@@ -1268,6 +1278,7 @@ packages:
 
   '@humanwhocodes/object-schema@2.0.3':
     resolution: {integrity: sha512-93zYdMES/c1D69yZiKDBj0V24vqNzB/koF26KPaagAfd3P/4gUlh3Dys5ogAK+Exi9QyzlD8x/08Zt7wIKcDcA==}
+    deprecated: Use @eslint/object-schema instead
 
   '@inquirer/checkbox@2.4.7':
     resolution: {integrity: sha512-5YwCySyV1UEgqzz34gNsC38eKxRBtlRDpJLlKcRtTjlYA/yDKuc1rfw+hjw+2WJxbAZtaDPsRl5Zk7J14SBoBw==}
@@ -1570,9 +1581,11 @@ packages:
 
   '@openzeppelin/defender-admin-client@1.54.1':
     resolution: {integrity: sha512-kRpSUdTsnSqntp4FOXIm95t+6VKHc8CUY2Si71VDuxs0q7HSPZkdpRPSntcolwEzWy9L4a8NS/QMwDF5NJ4X1g==}
+    deprecated: This package has been deprecated and will no longer be maintained, please use @openzeppelin/defender-sdk package instead.
 
   '@openzeppelin/defender-base-client@1.54.1':
     resolution: {integrity: sha512-DRGz/7KN3ZQwu28YWMOaojrC7jjPkz/uCwkC8/C8B11qwZhA5qIVvyhYHhhFOCl0J84+E3TNdvkPD2q3p2WaJw==}
+    deprecated: This package has been deprecated and will no longer be maintained, please use @openzeppelin/defender-sdk package instead.
 
   '@openzeppelin/defender-sdk-base-client@1.12.0':
     resolution: {integrity: sha512-6n5SwJWCjFciC+T7QhfXnkEmkNZGKK0efkCZDAfu/Kd8L1AICnIkWwVte71dnzCBln7wglMiZupSHL3fZqePmQ==}
@@ -1766,6 +1779,21 @@ packages:
     resolution: {integrity: sha512-j8pPKp53/lq9lMXN57S8cFz0MynJk8OWNuUnXct/9KCpKU7DgU3bYMJhwWmcqC0UU29p8Lr0/7KEVcaM6bf47Q==}
     cpu: [x64]
     os: [win32]
+
+  '@safe-global/api-kit@2.4.6':
+    resolution: {integrity: sha512-57lXrqXnmdUdQ12ssWSVDZhpIY2HcJzDvR4w6edT8xebEaduKx2UpwRJ8U2WVEBrx5K9PYuLAPsPHs+/r0yuGg==}
+
+  '@safe-global/protocol-kit@4.1.1':
+    resolution: {integrity: sha512-11Jui1gIpCOV1sUn5HlT+hVn/+gJnKjik0V0aUPDKIL2zajwc+jReZK43CH5GyOHKOF7gCs2yprMHOrQuKkkqw==}
+
+  '@safe-global/safe-core-sdk-types@5.1.0':
+    resolution: {integrity: sha512-UzXR4zWmVzux25FcIm4H049QhZZpVpIBL5HE+V0p5gHpArZROL+t24fZmsKUf403CtBxIJM5zZSVQL0nFJi+IQ==}
+
+  '@safe-global/safe-deployments@1.37.10':
+    resolution: {integrity: sha512-lcxX9CV+xdcLs4dF6Cx18zDww5JyqaX6RdcvU0o/34IgJ4Wjo3J/RNzJAoMhurCAfTGr+0vyJ9V13Qo50AR6JA==}
+
+  '@safe-global/safe-modules-deployments@2.2.2':
+    resolution: {integrity: sha512-OUP/XF5W01BiVpHuojG/pLjzhiDNp7rxmJbRmhX0XqFc4ie7P9e9xYn/kjl6NbBpUc5XzHm9yD8HmpInAZBWig==}
 
   '@scure/base@1.1.6':
     resolution: {integrity: sha512-ok9AWwhcgYuGG3Zfhyqg+zwl+Wn5uE+dwC0NV/2qQkx4dABbb/bx96vWu8NSj+BNjjSjno+JRYRjle1jV08k3g==}
@@ -2086,6 +2114,17 @@ packages:
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
 
+  abitype@1.0.6:
+    resolution: {integrity: sha512-MMSqYh4+C/aVqI2RQaWqbvI4Kxo5cQV40WQ4QFtDnNzCkqChm8MuENhElmynZlO0qUy/ObkEUaXtKqYnx1Kp3A==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3 >=3.22.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
+
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
     engines: {node: '>= 0.6'}
@@ -2305,9 +2344,6 @@ packages:
   axe-core@4.7.0:
     resolution: {integrity: sha512-M0JtH+hlOL5pLQwHOLNYZaXuhqmvS8oExsqB1SBYgA4Dk7u/xx+YdGHXaK5pyUfed5mYXdlYiphWq3G8cRi5JQ==}
     engines: {node: '>=4'}
-
-  axios@1.6.8:
-    resolution: {integrity: sha512-v/ZHtJDU39mDpyBoFVkETcd/uNdxrWRrg3bKpOKzXFA6Bvqopts6ALSMU3y6ijYxbw2B+wPrIv46egTzJXCLGQ==}
 
   axios@1.7.5:
     resolution: {integrity: sha512-fZu86yCo+svH3uqJ/yTdQ0QHpQu5oL+/QE+QPSv6BZSkDAoky9vytxp7u5qk83OJFS3kEBcesWni9WTZAv3tSw==}
@@ -3102,6 +3138,7 @@ packages:
 
   ethereum-bloom-filters@1.1.0:
     resolution: {integrity: sha512-J1gDRkLpuGNvWYzWslBQR9cDV4nd4kfvVTE/Wy4Kkm4yb3EYRSlyi0eB/inTsSTTVyA0+HyzHgbr95Fn/Z1fSw==}
+    deprecated: do not use this package use package versions above as this can miss some topics
 
   ethereum-cryptography@0.1.3:
     resolution: {integrity: sha512-w8/4x1SGGzc+tO97TASLja6SLd3fRIK2tLVcV2Gx4IB21hE19atll5Cq9o3d0ZmAYC/8aw0ipieTSiekAea4SQ==}
@@ -3386,23 +3423,29 @@ packages:
 
   glob@5.0.15:
     resolution: {integrity: sha512-c9IPMazfRITpmAAKi22dK1VKxGDX9ehhqfABDriL/lzO92xcUKEJPQHrVA/2YHSNFB4iFlykVmWvwo48nr3OxA==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@7.1.7:
     resolution: {integrity: sha512-OvD9ENzPLbegENnYP5UUfJIirTg4+XwMWGaQfQTY0JenxNvvIKP3U3/tAQSPIu/lHxXYSZmpXlUHeqAIdKzBLQ==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@7.2.0:
     resolution: {integrity: sha512-lmLf6gtyrPq8tTjSmrO94wBeQbFR3HbLHbuyD69wuyQkImp2hWqMGB47OX65FBkPffO641IP9jWa1z4ivqG26Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@7.2.3:
     resolution: {integrity: sha512-nFR0zLpU2YCaRxwoCJvL6UvCH2JFyFVIvwTLsIf21AuHlMskA1hhTdk+LlYJtOlYt9v6dvszD2BGRqBL+iQK9Q==}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@8.0.3:
     resolution: {integrity: sha512-ull455NHSHI/Y1FqGaaYFaLGkNMMJbavMrEGFXG/PGrg6y7sutWHUHrz6gy6WEBH6akM1M414dWKCNs+IhKdiQ==}
     engines: {node: '>=12'}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   glob@8.1.0:
     resolution: {integrity: sha512-r8hpEjiQEYlF2QU0df3dS+nxxSIreXQS1qRhMJM0Q5NDdR386C7jb7Hwwod8Fgiuex+k0GFjgft18yvxm5XoCQ==}
     engines: {node: '>=12'}
+    deprecated: Glob versions prior to v9 are no longer supported
 
   global-modules@2.0.0:
     resolution: {integrity: sha512-NGbfmJBp9x8IxyJSd1P+otYK8vonoJactOogrVfFRIAEY1ukil8RSKDz2Yo7wh1oihl51l/r6W4epkeKJHqL8A==}
@@ -3596,6 +3639,7 @@ packages:
 
   inflight@1.0.6:
     resolution: {integrity: sha512-k92I/b08q4wvFscXCLvqfsHCrjrF7yiXsQuIVvVE7N82W3+aqpzuUdBbfhWcy/FZR3/4IgflMgKLOsvPDrGCJA==}
+    deprecated: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
 
   inherits@2.0.4:
     resolution: {integrity: sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==}
@@ -4676,10 +4720,12 @@ packages:
 
   rimraf@2.6.3:
     resolution: {integrity: sha512-mwqeW5XsA2qAejG46gYdENaxXjx9onRNCfn7L0duuP4hCuTIi/QO7PDK07KJfp1d+izWPrzEJDcSqBa0OZQriA==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   rimraf@2.7.1:
     resolution: {integrity: sha512-uWjbaKIK3T1OSVptzX7Nl6PvQ3qAGtKEtVRjRuazjfL3Bx5eI409VZSqgND+4UNnmzLVdPj9FqFJNPqBZFve4w==}
+    deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
   rimraf@3.0.2:
@@ -4766,6 +4812,11 @@ packages:
 
   semver@7.6.0:
     resolution: {integrity: sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.6.3:
+    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -7323,6 +7374,48 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.22.4':
     optional: true
 
+  '@safe-global/api-kit@2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)':
+    dependencies:
+      '@safe-global/protocol-kit': 4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/safe-core-sdk-types': 5.1.0(typescript@4.9.5)
+      ethers: 6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7)
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@safe-global/protocol-kit@4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)':
+    dependencies:
+      '@noble/hashes': 1.4.0
+      '@safe-global/safe-core-sdk-types': 5.1.0(typescript@4.9.5)
+      '@safe-global/safe-deployments': 1.37.10
+      '@safe-global/safe-modules-deployments': 2.2.2
+      abitype: 1.0.6(typescript@4.9.5)
+      ethereumjs-util: 7.1.5
+      ethers: 6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7)
+      semver: 7.6.3
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@safe-global/safe-core-sdk-types@5.1.0(typescript@4.9.5)':
+    dependencies:
+      abitype: 1.0.6(typescript@4.9.5)
+    transitivePeerDependencies:
+      - typescript
+      - zod
+
+  '@safe-global/safe-deployments@1.37.10':
+    dependencies:
+      semver: 7.6.3
+
+  '@safe-global/safe-modules-deployments@2.2.2': {}
+
   '@scure/base@1.1.6': {}
 
   '@scure/bip32@1.1.5':
@@ -7758,6 +7851,10 @@ snapshots:
 
   abbrev@1.0.9: {}
 
+  abitype@1.0.6(typescript@4.9.5):
+    optionalDependencies:
+      typescript: 4.9.5
+
   accepts@1.3.8:
     dependencies:
       mime-types: 2.1.35
@@ -7987,14 +8084,6 @@ snapshots:
       possible-typed-array-names: 1.0.0
 
   axe-core@4.7.0: {}
-
-  axios@1.6.8(debug@4.3.4):
-    dependencies:
-      follow-redirects: 1.15.6(debug@4.3.4)
-      form-data: 4.0.0
-      proxy-from-env: 1.1.0
-    transitivePeerDependencies:
-      - debug
 
   axios@1.7.5(debug@4.3.4):
     dependencies:
@@ -9683,7 +9772,7 @@ snapshots:
       '@ethersproject/transactions': 5.7.0
       '@ethersproject/wallet': 5.7.0
       '@types/qs': 6.9.15
-      axios: 1.6.8(debug@4.3.4)
+      axios: 1.7.5(debug@4.3.4)
       chalk: 4.1.2
       chokidar: 3.6.0
       debug: 4.3.4(supports-color@8.1.1)
@@ -11023,6 +11112,8 @@ snapshots:
   semver@7.6.0:
     dependencies:
       lru-cache: 6.0.0
+
+  semver@7.6.3: {}
 
   send@0.18.0:
     dependencies:

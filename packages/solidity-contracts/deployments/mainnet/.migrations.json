@@ -1,0 +1,20 @@
+{
+  "chain_state": 1724767852,
+  "fuel_message_portal": 1724767873,
+  "register_committer": 1724767885,
+  "register_watchtower": 1724767898,
+  "register_watchtower_portal": 1724768943,
+  "set_deposit_limit_eth": 1724774569,
+  "gateway": 1725464667,
+  "gateway_enable_whitelist": 1725476103,
+  "gateway_whitelist_usdc": 1725476113,
+  "gateway_rate_limit_usdc": 1725476128,
+  "set_asset_issuer": 1725476138,
+  "portal_ownership": 1726352727,
+  "state_ownership": 1726352751,
+  "gateway_ownership": 1726352788,
+  "upgrade_gateway": 1727864679,
+  "upgrade_portal": 1727864801,
+  "rate_limit_proposal": 1727884066,
+  "pausers_proposal": 1728386955
+}
