@@ -407,7 +407,40 @@ solidity
 
         emit ResetRateLimit(_amount);
     }
+
+    /**
+     * @notice Used to enable/disable rate limit.
+     * @param value `true` for enabling rate limit and `false` for disabling.
+     * By default rate limit is disabled.
+    */
+    function updateRateLimitStatus(bool value) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitEnabled = value;
+        emit RateLimitStatusUpdated(value);
+    }
 ```
+
+### Reset Rate Limit Mechanism
+
+Even though `resetRateLimitAmount` is permissioned, it is still critical in the context of enabling rate limits in the bridge, so it is important to understand how it works.
+
+The account having the `SET_RATE_LIMITER_ROLE` role can reset the rate limit any time when it is enabled.
+
+If the rate limit is reset before the `rateLimitDuration` ends, then the rate limit amount is updated (for the ERC20 gateway, the rate limit duration is also updated but only takes effect when the previous `rateLimitDuration` ends). However, the end timestamp when the current rate limit duration ends and the current withdrawn amount remain unchanged.
+
+If the rate limit is reset after the `rateLimitDuration` ends, then the rate limit amount is updated along with the end timestamp when the current rate limit duration ends, and the current withdrawn amount is set to 0.
+
+Here are some Do's and Don'ts to keep in mind when calling resetRateLimitAmount.
+
+Do's
+
+- Simulate the `resetRateLimitAmount` function call and a withdrawal after that to ensure the rate limit behavior is as desired.
+- Ensure that the rate limit is enabled, if it's not, then the rate limit will have no effect.
+- Communicate with the affected stakeholders in the project, before resetting
+
+Don'ts
+
+- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the `rateLimitDuration` as it will affect the user experience and can create confusion among users who want to withdraw.
+- Avoid calling the `resetRateLimitAmount` function near the end of the current `rateLimitDuration`, as increasing the limit at that time would allow a higher withdrawal limit for a short period.
 
 ### Example showcasing the difference in implementation
 
