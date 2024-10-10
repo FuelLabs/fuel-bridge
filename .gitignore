@@ -24,3 +24,6 @@ packages/fungible-token/exports/types
 
 # General dist folders
 dist
+
+# verification ci artifacts
+packages/solidity-contracts/verification.json
