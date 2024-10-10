@@ -407,7 +407,40 @@ solidity
 
         emit ResetRateLimit(_amount);
     }
+
+    /**
+     * @notice Used to enable/disable rate limit.
+     * @param value `true` for enabling rate limit and `false` for disabling.
+     * By default rate limit is disabled.
+    */
+    function updateRateLimitStatus(bool value) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitEnabled = value;
+        emit RateLimitStatusUpdated(value);
+    }
 ```
+
+### Reset Rate Limit Mechanism
+
+Even though `resetRateLimitAmount` is permissioned, it is still critical in the context of enabling rate limits in the bridge, so it is important to understand how it works.
+
+The account having the `SET_RATE_LIMITER_ROLE` role can reset the rate limit any time when it is enabled.
+
+If the rate limit is reset before the `rateLimitDuration` ends, then the rate limit amount is updated (for the ERC20 gateway, the rate limit duration is also updated but only takes effect when the previous `rateLimitDuration` ends). However, the end timestamp when the current rate limit duration ends and the current withdrawn amount remain unchanged.
+
+If the rate limit is reset after the `rateLimitDuration` ends, then the rate limit amount is updated along with the end timestamp when the current rate limit duration ends, and the current withdrawn amount is set to 0.
+
+Here are some Do's and Don'ts to keep in mind when calling resetRateLimitAmount.
+
+Do's
+
+- Simulate the `resetRateLimitAmount` function call and a withdrawal after that to ensure the rate limit behavior is as desired.
+- Ensure that the rate limit is enabled, if it's not, then the rate limit will have no effect.
+- Communicate with the affected stakeholders in the project, before resetting
+
+Don'ts
+
+- Avoid calling the `resetRateLimitAmount` function more than twice for the same asset within the `rateLimitDuration` as it will affect the user experience and can create confusion among users who want to withdraw.
+- Avoid calling the `resetRateLimitAmount` function near the end of the current `rateLimitDuration`, as increasing the limit at that time would allow a higher withdrawal limit for a short period.
 
 ### Example showcasing the difference in implementation
 
@@ -434,6 +467,14 @@ One of Fuel 's key design principles is to minimize execution costs and minimize
 Additionally, it is a de-facto practice in the space to use 18 decimals to represent the token (in itself, this excess of precision contributes to making the amounts in an ERC20 transfers bloated), whereas in Fuel, 9 decimals are used to represent amounts under the unit. This means that there is a loss of precision when bridging L1 amounts. This loss of precision is nullified by enforcing that all deposits made in the L1 do not incur the loss of dust amounts. For example, when depositing ETH, which has 18 decimals of precision, a deposit of 1.0000000010 ETH is allowed, whereas 1.0000000011 would lose 0.0000000001, and therefore such deposit would be rejected and reverted.
 
 DApps that enable bridge operations should observe this limitation and truncate the amounts accordingly to avoid reverted transactions.
+
+This essentially means that if a token with `decimals > 9` is bridged to Fuel, then the L2 token minted will have 9 decimals. However, if a token with `decimals <= 9` is bridged to Fuel, then the L2 token minted will have the same number of decimals as the L1 token.
+
+| Token | L1 Token Decimals | L2 Token Decimals |
+| ----- | :---------------: | ----------------: |
+| USDC  |         6         |                 6 |
+| ETH   |        18         |                 9 |
+| FBTC  |         8         |                 8 |
 
 ## Incompatibilities, risks and SPoF
 

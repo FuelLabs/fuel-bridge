@@ -221,6 +221,10 @@ describe('Bridge mainnet tokens', function () {
               rateLimitAmount.toString(),
               RATE_LIMIT_DURATION
             );
+
+          await env.eth.fuelERC20Gateway
+            .connect(env.eth.deployer)
+            .updateRateLimitStatus(tokenAddress, true);
         }
       );
 
@@ -421,6 +425,7 @@ describe('Bridge mainnet tokens', function () {
         let ethereumTokenReceiverAddress: string;
         let ethereumTokenReceiverBalance: bigint;
         let withdrawMessageProof: MessageProof;
+        let tokenBalanceBeforeWithdrawingOnFuel: BN;
 
         before(async () => {
           fuelTokenSender = env.fuel.signers[0];
@@ -434,6 +439,9 @@ describe('Bridge mainnet tokens', function () {
           ethereumTokenReceiverBalance = await token.balanceOf(
             ethereumTokenReceiverAddress
           );
+
+          tokenBalanceBeforeWithdrawingOnFuel =
+            await fuelTokenSender.getBalance(fuelAssetId);
         });
 
         it('Bridge ERC20 via Fuel token contract', async () => {
@@ -474,6 +482,29 @@ describe('Bridge mainnet tokens', function () {
               BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]) +
                 withdrawnAmountBeforeRelay
           ).to.be.true;
+        });
+
+        it('Check the remaining token balance on Fuel after the first withdrawal', async () => {
+          // fetch the remaining token balance
+          const currentTokenBalance = await fuelTokenSender.getBalance(
+            fuelAssetId
+          );
+
+          // currentTokenBalance has BN type by default hence the use of BN for conversion here
+          const expectedRemainingTokenBalanceOnFuel =
+            tokenBalanceBeforeWithdrawingOnFuel.sub(
+              new BN(
+                (
+                  NUM_TOKENS /
+                  (index == tokenAddresses.length - 1
+                    ? DECIMAL_DIFF
+                    : 10n ** (18n - decimals[index]))
+                ).toString()
+              )
+            );
+
+          expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to
+            .be.true;
         });
 
         it('Rate limit parameters are updated when current withdrawn amount is more than the new limit', async () => {
@@ -574,6 +605,29 @@ describe('Bridge mainnet tokens', function () {
             currentPeriodAmount ===
               BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index])
           ).to.be.true;
+        });
+
+        it('Check the remaining token balance on Fuel after the second withdrawal', async () => {
+          // fetch the remaining token balance
+          const currentTokenBalance = await fuelTokenSender.getBalance(
+            fuelAssetId
+          );
+
+          // currentTokenBalance has BN type by default hence the use of BN for conversion here
+          const expectedRemainingTokenBalanceOnFuel =
+            tokenBalanceBeforeWithdrawingOnFuel.sub(
+              new BN(
+                (
+                  (NUM_TOKENS * 2n) /
+                  (index == tokenAddresses.length - 1
+                    ? DECIMAL_DIFF
+                    : 10n ** (18n - decimals[index]))
+                ).toString()
+              )
+            );
+
+          expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to
+            .be.true;
         });
 
         it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {

@@ -19,12 +19,13 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     error NotSupported();
     error RateLimitExceeded();
     error WithdrawalsPaused();
+    event RateLimitStatusUpdated(bool status);
 
     /// @dev The rate limit setter role
     bytes32 public constant SET_RATE_LIMITER_ROLE = keccak256("SET_RATE_LIMITER_ROLE");
 
     /// @notice Duration after which rate limit resets.
-    uint256 public immutable rateLimitDuration;
+    uint256 public immutable RATE_LIMIT_DURATION;
 
     /// @notice Flag to indicate whether withdrawals are paused or not.
     bool public withdrawalsPaused;
@@ -40,8 +41,11 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /// @notice The eth withdrawal limit amount.
     uint256 public limitAmount;
 
+    /// @notice Flag to enable or disable the rate limit feature
+    bool public rateLimitEnabled;
+
     constructor(uint256 _depositLimitGlobal, uint256 _rateLimitDuration) FuelMessagePortalV2(_depositLimitGlobal) {
-        rateLimitDuration = _rateLimitDuration;
+        RATE_LIMIT_DURATION = _rateLimitDuration;
         _disableInitializers();
     }
 
@@ -54,10 +58,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         _setInitParams(_limitAmount);
     }
 
-    function reinitializeV3(uint256 _limitAmount) reinitializer(3) public {
+    function reinitializeV3(uint256 _limitAmount) public reinitializer(3) {
         _setInitParams(_limitAmount);
     }
-
 
     function pauseWithdrawals() external payable onlyRole(PAUSER_ROLE) {
         withdrawalsPaused = true;
@@ -75,17 +78,22 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         messageIsBlacklisted[messageId] = false;
     }
 
+    function updateRateLimitStatus(bool value) external onlyRole(SET_RATE_LIMITER_ROLE) {
+        rateLimitEnabled = value;
+        emit RateLimitStatusUpdated(value);
+    }
+
     /**
      * @notice Resets the rate limit amount.
      * @param _amount The amount to reset the limit to.
      * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
      * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp then if the new rate limit amount is less than the currentPeriodAmount, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn
      */
-    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {   
+    function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
         // if period has expired then currentPeriodAmount is zero
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-                currentPeriodEnd = block.timestamp + rateLimitDuration;
+                currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
 
             currentPeriodAmount = 0;
@@ -176,7 +184,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
             totalDeposited -= withdrawnAmount;
 
             // rate limit check
-            _addWithdrawnAmount(withdrawnAmount);
+            if (rateLimitEnabled) _addWithdrawnAmount(withdrawnAmount);
 
             (success, result) = address(uint160(uint256(message.recipient))).call{value: withdrawnAmount}(message.data);
         } else {
@@ -221,12 +229,12 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
 
         if (currentPeriodEnd < block.timestamp) {
             unchecked {
-               currentPeriodEnd = block.timestamp + rateLimitDuration;
+                currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
             }
             currentPeriodAmountTemp = _withdrawnAmount;
         } else {
             unchecked {
-               currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
+                currentPeriodAmountTemp = currentPeriodAmount + _withdrawnAmount;
             }
         }
 
@@ -244,9 +252,9 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     function _setInitParams(uint256 _limitAmount) internal {
         // set rate limiter role
         _grantRole(SET_RATE_LIMITER_ROLE, msg.sender);
-        
+
         // initializing rate limit var
-        currentPeriodEnd = block.timestamp + rateLimitDuration;
+        currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
         limitAmount = _limitAmount;
     }
 
@@ -255,6 +263,6 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
      * variables without shifting down storage in the inheritance chain.
      * See https://docs.openzeppelin.com/contracts/4.x/upgradeable#storage_gaps
      */
-    uint256[49] private __gap;
+    uint256[48] private __gap;
 }
 

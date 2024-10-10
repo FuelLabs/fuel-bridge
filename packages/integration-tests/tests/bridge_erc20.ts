@@ -165,6 +165,10 @@ describe('Bridging ERC20 tokens', async function () {
         RATE_LIMIT_DURATION
       );
 
+    await env.eth.fuelERC20Gateway
+      .connect(env.eth.deployer)
+      .updateRateLimitStatus(eth_testTokenAddress, true);
+
     const { value: expectedGatewayContractId } = await fuel_bridge.functions
       .bridged_token_gateway()
       .addContracts([fuel_bridge, fuel_bridgeImpl])
@@ -352,6 +356,19 @@ describe('Bridging ERC20 tokens', async function () {
 
       const txResult = await tx.waitForResult();
       expect(txResult.status).to.equal('success');
+
+      const fuel_name = (
+        await fuel_bridge.functions.name({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+      const fuel_symbol = (
+        await fuel_bridge.functions.symbol({ bits: fuel_testAssetId }).dryRun()
+      ).value;
+
+      const eth_name = await eth_testToken.name();
+      const eth_symbol = await eth_testToken.symbol();
+
+      expect(fuel_name).to.equal(eth_name);
+      expect(fuel_symbol).to.equal(eth_symbol);
     });
   });
 
@@ -363,6 +380,7 @@ describe('Bridging ERC20 tokens', async function () {
     let ethereumTokenReceiverAddress: string;
     let ethereumTokenReceiverBalance: bigint;
     let withdrawMessageProof: MessageProof;
+    let tokenBalanceBeforeWithdrawingOnFuel: BN;
 
     before(async () => {
       fuelTokenSender = env.fuel.signers[0];
@@ -370,6 +388,10 @@ describe('Bridging ERC20 tokens', async function () {
       ethereumTokenReceiverAddress = await ethereumTokenReceiver.getAddress();
       ethereumTokenReceiverBalance = await eth_testToken.balanceOf(
         ethereumTokenReceiverAddress
+      );
+
+      tokenBalanceBeforeWithdrawingOnFuel = await fuelTokenSender.getBalance(
+        fuel_testAssetId
       );
     });
 
@@ -411,6 +433,22 @@ describe('Bridging ERC20 tokens', async function () {
       expect(
         withdrawnAmountAfterRelay === NUM_TOKENS + withdrawnAmountBeforeRelay
       ).to.be.true;
+    });
+
+    it('Check the remaining token balance on Fuel after the first withdrawal', async () => {
+      // fetch the remaining token balance
+      const currentTokenBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
+
+      // currentTokenBalance has BN type by default hence the use of BN for conversion here
+      const expectedRemainingTokenBalanceOnFuel =
+        tokenBalanceBeforeWithdrawingOnFuel.sub(
+          new BN((NUM_TOKENS / DECIMAL_DIFF).toString())
+        );
+
+      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
+        .true;
     });
 
     it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
@@ -517,6 +555,22 @@ describe('Bridging ERC20 tokens', async function () {
         );
 
       expect(currentPeriodAmount === NUM_TOKENS).to.be.true;
+    });
+
+    it('Check the remaining token balance on Fuel after the second withdrawal', async () => {
+      // fetch the remaining token balance
+      const currentTokenBalance = await fuelTokenSender.getBalance(
+        fuel_testAssetId
+      );
+
+      // currentTokenBalance has BN type by default hence the use of BN for conversion here
+      const expectedRemainingTokenBalanceOnFuel =
+        tokenBalanceBeforeWithdrawingOnFuel.sub(
+          new BN(((NUM_TOKENS * 2n) / DECIMAL_DIFF).toString())
+        );
+
+      expect(currentTokenBalance.eq(expectedRemainingTokenBalanceOnFuel)).to.be
+        .true;
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
