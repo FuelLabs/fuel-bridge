@@ -7,7 +7,7 @@ license = "Apache-2.0"
 
 [dependencies]
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
-fuels = { workspace = true }
+fuels = { workspace = true, features = ["fuel-core-lib"] }
 clap = { version = "4.5.17", features = ["env", "derive"] }
 rpassword = "5.0"
 
