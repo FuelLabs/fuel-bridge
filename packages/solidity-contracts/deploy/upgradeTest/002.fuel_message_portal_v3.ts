@@ -18,12 +18,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const { address: fuelChainState } = await get('FuelChainState');
 
+  const constructorArgs = [MaxUint256, RATE_LIMIT_DURATION];
+
+  const initArgs = [fuelChainState, RATE_LIMIT_AMOUNT.toString()];
+
   const contract = await deployProxy(
     new FuelMessagePortal(deployer),
-    [fuelChainState, RATE_LIMIT_AMOUNT.toString()],
+    initArgs,
     {
       initializer: 'initializerV3',
-      constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+      constructorArgs,
     }
   );
   await contract.waitForDeployment();
@@ -31,11 +35,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const address = await contract.getAddress();
   const implementation = await erc1967.getImplementationAddress(address);
 
-  console.log('Deployed FuelMessagePortal at', address);
-  await save('FuelMessagePortal', {
+  console.log('Deployed FuelMessagePortalV3 at', address);
+  await save('FuelMessagePortalV3', {
     address,
     abi: [...FuelMessagePortal.abi],
     implementation,
+    linkedData: {
+      factory: 'FuelMessagePortalV3',
+      constructorArgs,
+    },
   });
 };
 
