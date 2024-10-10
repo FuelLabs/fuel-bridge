@@ -150,6 +150,25 @@
         },
         {
           "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RateLimitStatusUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "indexed": false,
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
@@ -646,6 +665,25 @@
     {
       "inputs": [
         {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "rateLimitStatus",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -815,6 +853,24 @@
       "inputs": [
         {
           "internalType": "address",
+          "name": "_token",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "_rateLimitStatus",
+          "type": "bool"
+        }
+      ],
+      "name": "updateRateLimitStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
           "name": "newImplementation",
           "type": "address"
         }
@@ -856,6 +912,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 1,
-  "implementation": "0x5F9eAEB3b7ec396F01617e9BAd787D0A6f93B7a3"
+  "numDeployments": 2,
+  "implementation": "0xEBFB69C26067777b262Ab5Da74A47e44bfc78EA4"
 }
