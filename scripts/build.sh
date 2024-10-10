@@ -1,5 +1,5 @@
 #!/bin/bash
 
 forc build --release
-cargo run
+cargo run --bin fuel-contract-message-predicate
 turbo run build

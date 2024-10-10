@@ -5,9 +5,13 @@ edition = "2021"
 authors = ["Fuel Labs <contact@fuel.sh>"]
 license = "Apache-2.0"
 
-[dev-dependencies]
+[dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros"] }
 fuels = { workspace = true, features = ["fuel-core-lib"] }
-tokio = { workspace = true, features = ["rt", "macros"] }
+clap = { version = "4.5.17", features = ["env", "derive"] }
+rpassword = "5.0"
+
+[dev-dependencies]
 hex = { workspace = true }
 sha2 = { workspace = true }
 
@@ -15,3 +19,7 @@ sha2 = { workspace = true }
 harness = true
 name = "integration_tests"
 path = "tests/harness.rs"
+
+[[bin]]
+name = "deploy_mainnet"
+path = "scripts/deploy_mainnet.rs"
