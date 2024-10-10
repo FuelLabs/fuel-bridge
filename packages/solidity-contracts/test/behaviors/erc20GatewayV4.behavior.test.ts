@@ -1060,7 +1060,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
         );
       });
 
-      it('reverts when permit fails when their is no approval', async () => {
+      it('reverts when permit fails when there is no approval', async () => {
         const {
           erc20Gateway,
           token,
