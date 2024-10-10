@@ -16,8 +16,9 @@ import {
   WalletUnlocked,
   ZeroBytes32,
 } from 'fuels';
+import { password } from '@inquirer/prompts';
 
-const { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
+let { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
 
 // This helper avoids an exception in the case that the contract
 // was already deployed, and returns the contract instead
@@ -37,6 +38,11 @@ function fetchIfDeployed(provider: Provider, wallet: WalletUnlocked) {
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
+
+  if (!L2_SIGNER) {
+    L2_SIGNER = await password({ message: 'Enter private key' });
+  }
+
   const wallet = Wallet.fromPrivateKey(L2_SIGNER, provider);
 
   console.log('\t> L2 Bridge deployment script initiated');

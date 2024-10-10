@@ -1,6 +1,6 @@
 /**
  * This is a stand-alone script that
- * fetches a deposit message and relays it to the bridge
+ * fetches a metadata message and relays it to the bridge
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
@@ -14,7 +14,6 @@ import {
   TransactionStatus,
   Wallet,
   getPredicateRoot,
-  hexlify,
 } from 'fuels';
 import { password } from '@inquirer/prompts';
 import {
@@ -24,12 +23,19 @@ import {
   waitForMessage,
 } from '../utils';
 
-const TOKEN_RECIPIENT_DATA_OFFSET = 160;
-
-let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
-  process.env;
+let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE } = process.env;
 
 const main = async () => {
+  if (!L2_RPC) {
+    console.log('Must provide L2_RPC');
+    return;
+  }
+
+  if (!L2_MESSAGE_NONCE) {
+    console.log('Must provide L2_MESSAGE_NONCE');
+    return;
+  }
+
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
 
   if (!L2_SIGNER) {
@@ -40,7 +46,7 @@ const main = async () => {
 
   const proxy = new Proxy(L2_BRIDGE_ID, wallet);
 
-  console.log('\t> L2 Bridge deployment script initiated');
+  console.log('\t> L2 relay metadata script initiated');
   console.log('\t> Loaded wallet', wallet.address.toB256());
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
@@ -59,47 +65,7 @@ const main = async () => {
 
   const predicateRoot = getPredicateRoot(contractMessagePredicate);
 
-  let nonce: BN;
-  let endCursor: string | undefined;
-
-  if (L2_MESSAGE_NONCE) nonce = new BN(L2_MESSAGE_NONCE);
-  else
-    while (true) {
-      const response = await provider.getMessages(predicateRoot, {
-        after: endCursor,
-      });
-
-      if (!response.messages || response.messages.length === 0) {
-        console.log('No messages in the predicate');
-        return;
-      }
-
-      const { messages } = response;
-
-      const message = messages.find((message) => {
-        const hex = hexlify(message.data).replace('0x', '');
-        const recipient = hex.substring(
-          TOKEN_RECIPIENT_DATA_OFFSET * 2,
-          TOKEN_RECIPIENT_DATA_OFFSET * 2 + 64 // Recipient is 32 bytes
-        );
-        const expectedRecipient = L2_TOKEN_RECEIVER || wallet.address.toB256();
-
-        return recipient === expectedRecipient.replace('0x', '');
-      });
-
-      if (!message) {
-        if (response.pageInfo.hasNextPage) {
-          endCursor = response.pageInfo.endCursor;
-          continue;
-        } else {
-          console.log('No messages for the recipient');
-          return;
-        }
-      }
-
-      nonce = new BN(message.nonce);
-      break;
-    }
+  const nonce: BN = new BN(L2_MESSAGE_NONCE);
 
   const message = await waitForMessage(
     provider,
@@ -109,7 +75,7 @@ const main = async () => {
   );
 
   if (!message) {
-    console.log('No messages in the predicate');
+    console.log('No messages in the predicate for nonce', nonce.toString());
     return;
   }
 
