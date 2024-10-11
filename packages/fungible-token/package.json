@@ -9,7 +9,7 @@
     "build": "fuels typegen -i ./bridge-fungible-token/**/release/*-abi.json -o ./exports/types && tsup"
   },
   "devDependencies": {
-    "fuels": "0.94.4",
+    "fuels": "0.95.0",
     "@fuel-bridge/esbuild-bin-loader": "workspace:../esbuild-bin-loader",
     "@fuel-bridge/solidity-contracts": "workspace:*"
   }
