@@ -18,7 +18,7 @@
     "deploy:relay": "pnpm ts-node src/scripts/relay-deposit.ts"
   },
   "peerDependencies": {
-    "fuels": "0.94.4",
+    "fuels": "0.95.0",
     "ethers": "6.13.1"
   },
   "devDependencies": {
