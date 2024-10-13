@@ -3,7 +3,10 @@ import {
   RATE_LIMIT_AMOUNT,
   RATE_LIMIT_DURATION,
 } from '@fuel-bridge/solidity-contracts/protocol/constants';
-import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
+import type {
+  Token,
+  MockPermitToken,
+} from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
@@ -11,6 +14,7 @@ import {
   waitForMessage,
   createRelayMessageParams,
   getOrDeployECR20Contract,
+  getOrDeployERC20PermitContract,
   getOrDeployL2Bridge,
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
@@ -42,12 +46,15 @@ describe('Bridging ERC20 tokens', async function () {
 
   let env: TestEnvironment;
   let eth_testToken: Token;
+  let eth_permitTestToken: MockPermitToken;
   let eth_testTokenAddress: string;
+  let eth_permitTestTokenAddress: string;
   let eth_erc20GatewayAddress: string;
   let fuel_bridge: BridgeFungibleToken;
   let fuel_bridgeImpl: BridgeFungibleToken;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
+  let fuel_test_permit_token_AssetId: string;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -114,7 +121,7 @@ describe('Bridging ERC20 tokens', async function () {
     );
   }
 
-  async function relayMessage(
+  async function relayMessageFromFuel(
     env: TestEnvironment,
     withdrawMessageProof: MessageProof
   ) {
@@ -134,6 +141,96 @@ describe('Bridging ERC20 tokens', async function () {
     );
   }
 
+  async function relayMessageFromEthereum(
+    env: TestEnvironment,
+    fuelTokenMessageReceiver: AbstractAddress,
+    fuelTokenMessageNonce: BN,
+    fuel_AssetId: string,
+    amount: bigint
+  ) {
+    // relay the message ourselves
+    const message = await waitForMessage(
+      env.fuel.provider,
+      fuelTokenMessageReceiver,
+      fuelTokenMessageNonce,
+      FUEL_MESSAGE_TIMEOUT_MS
+    );
+    expect(message).to.not.be.null;
+
+    const tx = await relayCommonMessage(env.fuel.deployer, message, {
+      maturity: undefined,
+      contractIds: [fuel_bridgeImpl.id.toHexString()],
+    });
+
+    const txResult = await tx.waitForResult();
+
+    expect(txResult.status).to.equal('success');
+    expect(txResult.mintedAssets.length).to.equal(1);
+
+    const [mintedAsset] = txResult.mintedAssets;
+
+    expect(mintedAsset.assetId).to.equal(fuel_AssetId);
+    expect(mintedAsset.amount.toString()).to.equal(
+      (amount / DECIMAL_DIFF).toString()
+    );
+  }
+
+  async function buildPermitParams(
+    name: string,
+    tokenAddress: string,
+    gatewayAddress: string,
+    amount: bigint,
+    nonce: bigint,
+    deadline: number,
+    deployer: Signer
+  ) {
+    const domain: any = {
+      name: name,
+      version: '1',
+      chainId: env.eth.provider._network.chainId,
+      verifyingContract: tokenAddress,
+    };
+
+    const types: any = {
+      Permit: [
+        { name: 'owner', type: 'address' },
+        { name: 'spender', type: 'address' },
+        { name: 'value', type: 'uint256' },
+        { name: 'nonce', type: 'uint256' },
+        { name: 'deadline', type: 'uint256' },
+      ],
+    };
+
+    const values: any = {
+      owner: await deployer.getAddress(),
+      spender: gatewayAddress,
+      value: amount.toString(),
+      nonce: nonce.toString(),
+      deadline: deadline.toString(),
+    };
+
+    return { domain, types, values };
+  }
+
+  function parseSignature(signature: string) {
+    signature = signature.startsWith('0x') ? signature.slice(2) : signature;
+
+    // Ensure the signature length is correct
+    if (signature.length !== 130) {
+      throw new Error('Invalid signature length!');
+    }
+    // Extract R, S, V
+    const r = '0x' + signature.slice(0, 64);
+    const s = '0x' + signature.slice(64, 128);
+    const v = parseInt(signature.slice(128, 130), 16);
+    // Return formatted values
+    return {
+      r,
+      s,
+      v,
+    };
+  }
+
   before(async () => {
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
@@ -141,7 +238,11 @@ describe('Bridging ERC20 tokens', async function () {
     ).toLowerCase();
 
     eth_testToken = await getOrDeployECR20Contract(env);
+    eth_permitTestToken = await getOrDeployERC20PermitContract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
+    eth_permitTestTokenAddress = (
+      await eth_permitTestToken.getAddress()
+    ).toLowerCase();
 
     const { contract, implementation } = await getOrDeployL2Bridge(
       env,
@@ -155,6 +256,11 @@ describe('Bridging ERC20 tokens', async function () {
 
     await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_bridgeContractId);
     fuel_testAssetId = getTokenId(fuel_bridge, eth_testTokenAddress);
+
+    fuel_test_permit_token_AssetId = getTokenId(
+      fuel_bridge,
+      eth_permitTestTokenAddress
+    );
 
     // initializing rate limit params for the token
     await env.eth.fuelERC20Gateway
@@ -200,13 +306,17 @@ describe('Bridging ERC20 tokens', async function () {
 
   describe('Bridge ERC20 to Fuel', async () => {
     const NUM_TOKENS = 100000000000000000000n;
+    const DEADLINE = Math.floor(Date.now() / 1000) + 600; // 10 mins from current timestamp
     let ethereumTokenSender: Signer;
     let ethereumTokenSenderAddress: string;
     let ethereumTokenSenderBalance: bigint;
+    let ethereumPermitTokenSenderBalance: bigint;
     let fuelTokenReceiver: FuelWallet;
     let fuelTokenReceiverAddress: string;
     let fuelTokenReceiverBalance: BN;
+    let fuelPermitTokenReceiverBalance: BN;
     let fuelTokenMessageNonce: BN;
+    let fuelTokenMessageNonceForPermitToken: BN;
     let fuelTokenMessageReceiver: AbstractAddress;
 
     before(async () => {
@@ -217,7 +327,14 @@ describe('Bridging ERC20 tokens', async function () {
         .mint(ethereumTokenSenderAddress, NUM_TOKENS)
         .then((tx) => tx.wait());
 
+      await eth_permitTestToken
+        .mint(ethereumTokenSenderAddress, NUM_TOKENS)
+        .then((tx) => tx.wait());
+
       ethereumTokenSenderBalance = await eth_testToken.balanceOf(
+        ethereumTokenSenderAddress
+      );
+      ethereumPermitTokenSenderBalance = await eth_permitTestToken.balanceOf(
         ethereumTokenSenderAddress
       );
       fuelTokenReceiver = env.fuel.signers[0];
@@ -225,6 +342,73 @@ describe('Bridging ERC20 tokens', async function () {
       fuelTokenReceiverBalance = await fuelTokenReceiver.getBalance(
         fuel_testAssetId
       );
+      fuelPermitTokenReceiverBalance = await fuelTokenReceiver.getBalance(
+        fuel_test_permit_token_AssetId
+      );
+    });
+
+    it('Bridge ERC20 token with permit via FuelERC20Gateway', async () => {
+      const tokenName = await eth_permitTestToken.name();
+      const tokenAddress = await eth_permitTestToken.getAddress();
+      const gatewayAddress = await env.eth.fuelERC20Gateway.getAddress();
+      const deployerNonce = await eth_permitTestToken.nonces(
+        ethereumTokenSender
+      );
+
+      const signatureParams = await buildPermitParams(
+        tokenName,
+        tokenAddress,
+        gatewayAddress,
+        NUM_TOKENS,
+        deployerNonce,
+        DEADLINE,
+        ethereumTokenSender
+      );
+
+      const signature = await ethereumTokenSender.signTypedData(
+        signatureParams.domain,
+        signatureParams.types,
+        signatureParams.values
+      );
+
+      const { r, s, v } = parseSignature(signature);
+      const permitData = {
+        deadline: DEADLINE,
+        v,
+        r,
+        s,
+      };
+
+      // use the FuelERC20Gateway to deposit test tokens and receive equivalent tokens on Fuel
+      const receipt = await env.eth.fuelERC20Gateway
+        .connect(ethereumTokenSender)
+        .depositWithPermit(
+          fuelTokenReceiverAddress,
+          eth_permitTestTokenAddress,
+          NUM_TOKENS,
+          permitData
+        )
+        .then((tx) => tx.wait());
+
+      expect(receipt.status).to.equal(1);
+
+      // parse events from logs
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          env.eth.fuelMessagePortal.filters.MessageSent,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      fuelTokenMessageNonceForPermitToken = new BN(event.args.nonce.toString());
+
+      // check that the sender balance has decreased by the expected amount
+      const newSenderBalance = await eth_permitTestToken.balanceOf(
+        ethereumTokenSenderAddress
+      );
+      expect(newSenderBalance === ethereumPermitTokenSenderBalance - NUM_TOKENS)
+        .to.be.true;
     });
 
     it('Bridge ERC20 via FuelERC20Gateway', async () => {
@@ -241,7 +425,6 @@ describe('Bridging ERC20 tokens', async function () {
         .then((tx) => tx.wait());
 
       expect(receipt.status).to.equal(1);
-
       // parse events from logs
       const [event, ...restOfEvents] =
         await env.eth.fuelMessagePortal.queryFilter(
@@ -262,34 +445,27 @@ describe('Bridging ERC20 tokens', async function () {
         .true;
     });
 
-    it('Relay message from Ethereum on Fuel', async () => {
+    it('Relay messages from Ethereum on Fuel', async () => {
       // override the default test timeout from 2000ms
       this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
-
-      // relay the message ourselves
-      const message = await waitForMessage(
-        env.fuel.provider,
+      // relay the standard erc20 deposit
+      await relayMessageFromEthereum(
+        env,
         fuelTokenMessageReceiver,
         fuelTokenMessageNonce,
-        FUEL_MESSAGE_TIMEOUT_MS
+        fuel_testAssetId,
+        NUM_TOKENS
       );
-      expect(message).to.not.be.null;
 
-      const tx = await relayCommonMessage(env.fuel.deployer, message, {
-        maturity: undefined,
-        contractIds: [fuel_bridgeImpl.id.toHexString()],
-      });
-
-      const txResult = await tx.waitForResult();
-
-      expect(txResult.status).to.equal('success');
-      expect(txResult.mintedAssets.length).to.equal(1);
-
-      const [mintedAsset] = txResult.mintedAssets;
-
-      expect(mintedAsset.assetId).to.equal(fuel_testAssetId);
-      expect(mintedAsset.amount.toString()).to.equal(
-        (NUM_TOKENS / DECIMAL_DIFF).toString()
+      // override the default test timeout from 2000ms
+      this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
+      // relay the erc20 permit token deposit
+      await relayMessageFromEthereum(
+        env,
+        fuelTokenMessageReceiver,
+        fuelTokenMessageNonceForPermitToken,
+        fuel_test_permit_token_AssetId,
+        NUM_TOKENS
       );
     });
 
@@ -316,6 +492,19 @@ describe('Bridging ERC20 tokens', async function () {
       expect(
         newReceiverBalance.eq(
           fuelTokenReceiverBalance.add(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
+        )
+      ).to.be.true;
+    });
+
+    it('Check ERC20 permit token arrived on Fuel', async () => {
+      // check that the recipient balance has increased by the expected amount
+      const newReceiverPermitBalance = await fuelTokenReceiver.getBalance(
+        fuel_test_permit_token_AssetId
+      );
+
+      expect(
+        newReceiverPermitBalance.eq(
+          fuelPermitTokenReceiverBalance.add(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
         )
       ).to.be.true;
     });
@@ -416,7 +605,7 @@ describe('Bridging ERC20 tokens', async function () {
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
 
       // relay message
-      await relayMessage(env, withdrawMessageProof);
+      await relayMessageFromFuel(env, withdrawMessageProof);
 
       // check rate limit params
       const withdrawnAmountAfterRelay =
@@ -541,7 +730,7 @@ describe('Bridging ERC20 tokens', async function () {
       );
 
       // relay message
-      await relayMessage(env, withdrawMessageProof);
+      await relayMessageFromFuel(env, withdrawMessageProof);
 
       const currentPeriodEndAfterRelay =
         await env.eth.fuelERC20Gateway.currentPeriodEnd(eth_testTokenAddress);
