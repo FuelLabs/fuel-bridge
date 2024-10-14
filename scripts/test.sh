@@ -1,63 +1,43 @@
 #!/bin/bash
-# 
-# This script is used to run tests on the fuel node.
-# it will start the node and wait for it to be ready
-# before running the tests.
-#
-# By ready it means;
-# - The L1 node is started
-# - The solidity-contracts are deployed to the L1 node;
-# - The Fuel Node is started
-# - The Fuel Node is connected to the L1 node and syncing blocks
-#
-# If the node is not ready after 5 minutes (50 checks with interval of 6 seconds),
-# the script will fail.
-#
 
+# Exit immediately on errors
 set -e
 
-# Build the project to collect the artifacts
-echo "\n\nBuild projects..."
+# Build the project artifacts
+echo -e "\n\nBuilding projects..."
 pnpm run build
 
-# Test cargo projects
-echo "\n\nCargo test..."
+# Run tests for Cargo and Forc
+echo -e "\n\nRunning Cargo tests..."
 cargo test
-echo "\n\nForc test..."
+echo -e "\n\nRunning Forc tests..."
 pnpm forc test
 
-# Start the docker compose file with L1 and Fuel Node
-echo "\n\nStarting docker..."
+# Start L1 and Fuel nodes using Docker
+echo -e "\n\nStarting Docker..."
 pnpm run node:up
 
-# Wait for the nodes to be ready and run the tests
-HEALTH_CHECK_COUNTER=0
-HELTH_CHECK_OUTPUT=""
+# Wait for Fuel node readiness with a max of 50 attempts (6s interval)
 MAX_CHECK_ATTEMPTS=50
+NODE_URL="http://localhost:4000/v1/playground"
+HEALTH_CHECK_COUNTER=0
 
-waitForNodesToBeReady() {
-    NODE_URL="http://localhost:4000/v1/playground";
+wait_for_node() {
+    echo -ne "\rWaiting for node to be ready..."
 
-    printf "\rWaiting for node.${HELTH_CHECK_OUTPUT}"
-
-    if [ $HEALTH_CHECK_COUNTER -gt $MAX_CHECK_ATTEMPTS ]; then
-        echo "\n\nTests failed"
+    if [ $HEALTH_CHECK_COUNTER -ge $MAX_CHECK_ATTEMPTS ]; then
+        echo -e "\n\nNode is not ready after $MAX_CHECK_ATTEMPTS attempts, exiting."
         exit 1
     fi
 
-    if curl --silent --head --request GET $NODE_URL | grep "200 OK" > /dev/null; then
-        # If the node responds with 200, it is ready
-        # to run the tests.
-        echo "\nRun tests..."
+    if curl --silent --head --fail "$NODE_URL" | grep -q "200 OK"; then
+        echo -e "\nNode is ready, running tests..."
         pnpm turbo run test
     else
-        # If the request not returns 200 the node is not ready yet
-        # sleep for 6 seconds before and try again.
-        HEALTH_CHECK_COUNTER=$((HEALTH_CHECK_COUNTER+1))
-        HELTH_CHECK_OUTPUT="${HELTH_CHECK_OUTPUT}."
+        HEALTH_CHECK_COUNTER=$((HEALTH_CHECK_COUNTER + 1))
         sleep 6
-        waitForNodesToBeReady
+        wait_for_node
     fi
 }
 
-waitForNodesToBeReady
+wait_for_node
