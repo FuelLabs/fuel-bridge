@@ -154,6 +154,15 @@ importers:
       '@openzeppelin/hardhat-upgrades':
         specifier: ^3.0.4
         version: 3.0.5(@nomicfoundation/hardhat-ethers@3.0.5(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(@nomicfoundation/hardhat-verify@1.1.1(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(bufferutil@4.0.5)(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7))(utf-8-validate@5.0.7)
+      '@safe-global/api-kit':
+        specifier: ^2.4.6
+        version: 2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/protocol-kit':
+        specifier: ^4.1.1
+        version: 4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/safe-core-sdk-types':
+        specifier: ^5.1.0
+        version: 5.1.0(typescript@4.9.5)
       '@typechain/ethers-v6':
         specifier: ^0.5.1
         version: 0.5.1(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(typechain@8.3.2(typescript@4.9.5))(typescript@4.9.5)
@@ -1910,6 +1919,21 @@ packages:
     cpu: [x64]
     os: [win32]
 
+  '@safe-global/api-kit@2.4.6':
+    resolution: {integrity: sha512-57lXrqXnmdUdQ12ssWSVDZhpIY2HcJzDvR4w6edT8xebEaduKx2UpwRJ8U2WVEBrx5K9PYuLAPsPHs+/r0yuGg==}
+
+  '@safe-global/protocol-kit@4.1.1':
+    resolution: {integrity: sha512-11Jui1gIpCOV1sUn5HlT+hVn/+gJnKjik0V0aUPDKIL2zajwc+jReZK43CH5GyOHKOF7gCs2yprMHOrQuKkkqw==}
+
+  '@safe-global/safe-core-sdk-types@5.1.0':
+    resolution: {integrity: sha512-UzXR4zWmVzux25FcIm4H049QhZZpVpIBL5HE+V0p5gHpArZROL+t24fZmsKUf403CtBxIJM5zZSVQL0nFJi+IQ==}
+
+  '@safe-global/safe-deployments@1.37.10':
+    resolution: {integrity: sha512-lcxX9CV+xdcLs4dF6Cx18zDww5JyqaX6RdcvU0o/34IgJ4Wjo3J/RNzJAoMhurCAfTGr+0vyJ9V13Qo50AR6JA==}
+
+  '@safe-global/safe-modules-deployments@2.2.2':
+    resolution: {integrity: sha512-OUP/XF5W01BiVpHuojG/pLjzhiDNp7rxmJbRmhX0XqFc4ie7P9e9xYn/kjl6NbBpUc5XzHm9yD8HmpInAZBWig==}
+
   '@scure/base@1.1.6':
     resolution: {integrity: sha512-ok9AWwhcgYuGG3Zfhyqg+zwl+Wn5uE+dwC0NV/2qQkx4dABbb/bx96vWu8NSj+BNjjSjno+JRYRjle1jV08k3g==}
 
@@ -2392,6 +2416,17 @@ packages:
 
   abbrev@1.0.9:
     resolution: {integrity: sha512-LEyx4aLEC3x6T0UguF6YILf+ntvmOaWsVfENmIW0E9H09vKlLDGelMjjSm0jkDHALj8A8quZ/HapKNigzwge+Q==}
+
+  abitype@1.0.6:
+    resolution: {integrity: sha512-MMSqYh4+C/aVqI2RQaWqbvI4Kxo5cQV40WQ4QFtDnNzCkqChm8MuENhElmynZlO0qUy/ObkEUaXtKqYnx1Kp3A==}
+    peerDependencies:
+      typescript: '>=5.0.4'
+      zod: ^3 >=3.22.0
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+      zod:
+        optional: true
 
   accepts@1.3.8:
     resolution: {integrity: sha512-PYAthTa2m2VKxuvSD3DPC/Gy+U+sOA1LAuT8mkmRuvw+NACSaeXEQ+NHcVF7rONl6qcaxV3Uuemwawk+7+SJLw==}
@@ -5098,6 +5133,11 @@ packages:
 
   semver@7.6.0:
     resolution: {integrity: sha512-EnwXhrlwXMk9gKu5/flx5sv/an57AkRplG3hTK68W7FRDN+k+OWBj65M7719OkA82XLBxrcX0KSHj+X5COhOVg==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.6.3:
+    resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -8059,6 +8099,48 @@ snapshots:
   '@rollup/rollup-win32-x64-msvc@4.22.4':
     optional: true
 
+  '@safe-global/api-kit@2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)':
+    dependencies:
+      '@safe-global/protocol-kit': 4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
+      '@safe-global/safe-core-sdk-types': 5.1.0(typescript@4.9.5)
+      ethers: 6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7)
+      node-fetch: 2.7.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@safe-global/protocol-kit@4.1.1(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)':
+    dependencies:
+      '@noble/hashes': 1.4.0
+      '@safe-global/safe-core-sdk-types': 5.1.0(typescript@4.9.5)
+      '@safe-global/safe-deployments': 1.37.10
+      '@safe-global/safe-modules-deployments': 2.2.2
+      abitype: 1.0.6(typescript@4.9.5)
+      ethereumjs-util: 7.1.5
+      ethers: 6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7)
+      semver: 7.6.3
+    transitivePeerDependencies:
+      - bufferutil
+      - typescript
+      - utf-8-validate
+      - zod
+
+  '@safe-global/safe-core-sdk-types@5.1.0(typescript@4.9.5)':
+    dependencies:
+      abitype: 1.0.6(typescript@4.9.5)
+    transitivePeerDependencies:
+      - typescript
+      - zod
+
+  '@safe-global/safe-deployments@1.37.10':
+    dependencies:
+      semver: 7.6.3
+
+  '@safe-global/safe-modules-deployments@2.2.2': {}
+
   '@scure/base@1.1.6': {}
 
   '@scure/bip32@1.1.5':
@@ -8760,6 +8842,10 @@ snapshots:
   '@ungap/structured-clone@1.2.0': {}
 
   abbrev@1.0.9: {}
+
+  abitype@1.0.6(typescript@4.9.5):
+    optionalDependencies:
+      typescript: 4.9.5
 
   accepts@1.3.8:
     dependencies:
@@ -12036,6 +12122,8 @@ snapshots:
   semver@7.6.0:
     dependencies:
       lru-cache: 6.0.0
+
+  semver@7.6.3: {}
 
   send@0.18.0:
     dependencies:
