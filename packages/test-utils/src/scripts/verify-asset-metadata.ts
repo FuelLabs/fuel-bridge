@@ -1,11 +1,12 @@
 /**
  * This is a stand-alone script that
- * calls the bridge 's withdraw method
+ * checks the metadata of tokens in the L2 bridge
+ * against their L1 counterpart
  */
 
 import { BridgeFungibleToken, Proxy } from '@fuel-bridge/fungible-token';
 
-import { Contract, FuelError, Provider, isB256 } from 'fuels';
+import { FuelError, Provider, isB256 } from 'fuels';
 import { debug, getTokenId } from '../utils';
 import { JsonRpcProvider, isAddress } from 'ethers';
 import { IERC20Metadata__factory } from '@fuel-bridge/solidity-contracts/typechain';

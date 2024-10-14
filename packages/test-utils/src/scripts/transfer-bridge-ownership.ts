@@ -1,5 +1,6 @@
 /**
- * This is a stand-alone script that upgrades the bridge
+ * This is a stand-alone script that transfers
+ * the bridge 's proxy ownership
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
