@@ -1,29 +1,40 @@
 {
-  "address": "0xd1d5a4379dccC46D5c8D1c6c2656ce705698e359",
+  "address": "0xAEB0c00D0125A8a788956ade4f4F12Ead9f65DDf",
   "abi": [
     {
-      "inputs": [],
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_depositLimitGlobal",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rateLimitDuration",
+          "type": "uint256"
+        }
+      ],
       "stateMutability": "nonpayable",
       "type": "constructor"
     },
     {
       "inputs": [],
-      "name": "BridgeFull",
+      "name": "AlreadyRelayed",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "CallerIsNotPortal",
+      "name": "AmountPrecisionIncompatibility",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "CannotDepositZero",
+      "name": "AmountTooBig",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "CannotWithdrawZero",
+      "name": "CurrentMessageSenderNotSet",
       "type": "error"
     },
     {
@@ -33,27 +44,47 @@
     },
     {
       "inputs": [],
-      "name": "InvalidAmount",
+      "name": "InvalidBlockInHistoryProof",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "InvalidAssetIssuerID",
+      "name": "InvalidMessageInBlockProof",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "InvalidMessageSender",
+      "name": "MessageBlacklisted",
       "type": "error"
     },
     {
       "inputs": [],
-      "name": "InvalidSender",
+      "name": "MessageDataTooLarge",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "MessageRelayFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotSupported",
       "type": "error"
     },
     {
       "inputs": [],
       "name": "RateLimitExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "UnfinalizedBlock",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "WithdrawalsPaused",
       "type": "error"
     },
     {
@@ -93,24 +124,24 @@
       "inputs": [
         {
           "indexed": true,
-          "internalType": "bytes32",
+          "internalType": "address",
           "name": "sender",
-          "type": "bytes32"
+          "type": "address"
         },
         {
           "indexed": true,
           "internalType": "address",
-          "name": "tokenAddress",
+          "name": "oldValue",
           "type": "address"
         },
         {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
+          "indexed": true,
+          "internalType": "address",
+          "name": "newValue",
+          "type": "address"
         }
       ],
-      "name": "Deposit",
+      "name": "FuelChainStateUpdated",
       "type": "event"
     },
     {
@@ -130,6 +161,74 @@
       "anonymous": false,
       "inputs": [
         {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "messageId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "sender",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "recipient",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "amount",
+          "type": "uint64"
+        }
+      ],
+      "name": "MessageRelayed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "sender",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "bytes32",
+          "name": "recipient",
+          "type": "bytes32"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "amount",
+          "type": "uint64"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        }
+      ],
+      "name": "MessageSent",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
           "indexed": false,
           "internalType": "address",
           "name": "account",
@@ -142,12 +241,6 @@
     {
       "anonymous": false,
       "inputs": [
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
         {
           "indexed": false,
           "internalType": "bool",
@@ -162,19 +255,13 @@
       "anonymous": false,
       "inputs": [
         {
-          "indexed": true,
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
           "indexed": false,
           "internalType": "uint256",
           "name": "amount",
           "type": "uint256"
         }
       ],
-      "name": "RateLimitUpdated",
+      "name": "ResetRateLimit",
       "type": "event"
     },
     {
@@ -279,31 +366,6 @@
       "type": "event"
     },
     {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "bytes32",
-          "name": "recipient",
-          "type": "bytes32"
-        },
-        {
-          "indexed": true,
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
-          "indexed": false,
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        }
-      ],
-      "name": "Withdrawal",
-      "type": "event"
-    },
-    {
       "inputs": [],
       "name": "DEFAULT_ADMIN_ROLE",
       "outputs": [
@@ -318,7 +380,33 @@
     },
     {
       "inputs": [],
-      "name": "FUEL_ASSET_DECIMALS",
+      "name": "ETH_DECIMALS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "FUEL_BASE_ASSET_DECIMALS",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_MESSAGE_DATA_SIZE",
       "outputs": [
         {
           "internalType": "uint256",
@@ -344,6 +432,32 @@
     },
     {
       "inputs": [],
+      "name": "PRECISION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "RATE_LIMIT_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "SET_RATE_LIMITER_ROLE",
       "outputs": [
         {
@@ -356,26 +470,20 @@
       "type": "function"
     },
     {
-      "inputs": [],
-      "name": "assetIssuerId",
-      "outputs": [
+      "inputs": [
         {
           "internalType": "bytes32",
-          "name": "",
+          "name": "messageId",
           "type": "bytes32"
         }
       ],
-      "stateMutability": "view",
+      "name": "addMessageToBlacklist",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "inputs": [],
       "name": "currentPeriodAmount",
       "outputs": [
         {
@@ -388,13 +496,7 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
+      "inputs": [],
       "name": "currentPeriodEnd",
       "outputs": [
         {
@@ -410,34 +512,18 @@
       "inputs": [
         {
           "internalType": "bytes32",
-          "name": "to",
+          "name": "recipient",
           "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
         }
       ],
-      "name": "deposit",
+      "name": "depositETH",
       "outputs": [],
       "stateMutability": "payable",
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "depositLimits",
+      "inputs": [],
+      "name": "depositLimitGlobal",
       "outputs": [
         {
           "internalType": "uint256",
@@ -449,69 +535,39 @@
       "type": "function"
     },
     {
-      "inputs": [
+      "inputs": [],
+      "name": "fuelBaseAssetDecimals",
+      "outputs": [
         {
-          "internalType": "bytes32",
-          "name": "to",
-          "type": "bytes32"
-        },
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "bytes",
-          "name": "data",
-          "type": "bytes"
-        }
-      ],
-      "name": "depositWithData",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "to",
-          "type": "address"
-        },
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "l2BurntAmount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
+          "internalType": "uint8",
           "name": "",
-          "type": "uint256"
+          "type": "uint8"
         }
       ],
-      "name": "finalizeWithdrawal",
-      "outputs": [],
-      "stateMutability": "payable",
+      "stateMutability": "pure",
       "type": "function"
     },
     {
       "inputs": [],
-      "name": "fuelMessagePortal",
+      "name": "fuelChainStateContract",
       "outputs": [
         {
           "internalType": "address",
           "name": "",
           "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getNextOutgoingMessageNonce",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
         }
       ],
       "stateMutability": "view",
@@ -581,8 +637,27 @@
     {
       "inputs": [
         {
-          "internalType": "contract FuelMessagePortal",
-          "name": "fuelMessagePortal",
+          "internalType": "bytes32",
+          "name": "messageId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "incomingMessageSuccessful",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract FuelChainState",
+          "name": "",
           "type": "address"
         }
       ],
@@ -594,11 +669,23 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "",
+          "internalType": "contract FuelChainState",
+          "name": "fuelChainState",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_limitAmount",
+          "type": "uint256"
         }
       ],
+      "name": "initializerV3",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "limitAmount",
       "outputs": [
         {
@@ -611,10 +698,49 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "name": "messageIsBlacklisted",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "messageSender",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "pause",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pauseWithdrawals",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -644,33 +770,8 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "rateLimitDuration",
-      "outputs": [
-        {
-          "internalType": "uint256",
-          "name": "",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "",
-          "type": "address"
-        }
-      ],
-      "name": "rateLimitStatus",
+      "inputs": [],
+      "name": "rateLimitEnabled",
       "outputs": [
         {
           "internalType": "bool",
@@ -679,6 +780,195 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_limitAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "reinitializeV3",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "sender",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "recipient",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "nonce",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "amount",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes",
+              "name": "data",
+              "type": "bytes"
+            }
+          ],
+          "internalType": "struct Message",
+          "name": "message",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "prevRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "height",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "timestamp",
+              "type": "uint64"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "applicationHash",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct FuelBlockHeaderLite",
+          "name": "rootBlockHeader",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "bytes32",
+              "name": "prevRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint64",
+              "name": "timestamp",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint64",
+              "name": "daHeight",
+              "type": "uint64"
+            },
+            {
+              "internalType": "uint32",
+              "name": "outputMessagesCount",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "consensusParametersVersion",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "stateTransitionBytecodeVersion",
+              "type": "uint32"
+            },
+            {
+              "internalType": "uint32",
+              "name": "height",
+              "type": "uint32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "txRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "outputMessagesRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "eventInboxRoot",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "uint16",
+              "name": "txCount",
+              "type": "uint16"
+            }
+          ],
+          "internalType": "struct FuelBlockHeader",
+          "name": "blockHeader",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "key",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "proof",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct MerkleProof",
+          "name": "blockInHistoryProof",
+          "type": "tuple"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "key",
+              "type": "uint256"
+            },
+            {
+              "internalType": "bytes32[]",
+              "name": "proof",
+              "type": "bytes32[]"
+            }
+          ],
+          "internalType": "struct MerkleProof",
+          "name": "messageInBlockProof",
+          "type": "tuple"
+        }
+      ],
+      "name": "relayMessage",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "messageId",
+          "type": "bytes32"
+        }
+      ],
+      "name": "removeMessageFromBlacklist",
+      "outputs": [],
+      "stateMutability": "payable",
       "type": "function"
     },
     {
@@ -702,38 +992,8 @@
     {
       "inputs": [
         {
-          "internalType": "bool",
-          "name": "value",
-          "type": "bool"
-        }
-      ],
-      "name": "requireWhitelist",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "rescueETH",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "_token",
-          "type": "address"
-        },
-        {
           "internalType": "uint256",
           "name": "_amount",
-          "type": "uint256"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_rateLimitDuration",
           "type": "uint256"
         }
       ],
@@ -763,45 +1023,32 @@
     {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "sendMetadata",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
           "internalType": "bytes32",
-          "name": "id",
+          "name": "recipient",
           "type": "bytes32"
-        }
-      ],
-      "name": "setAssetIssuerId",
-      "outputs": [],
-      "stateMutability": "payable",
-      "type": "function"
-    },
-    {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "token",
-          "type": "address"
         },
         {
-          "internalType": "uint256",
-          "name": "limit",
-          "type": "uint256"
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
         }
       ],
-      "name": "setGlobalDepositLimit",
+      "name": "sendMessage",
       "outputs": [],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newFuelChainState",
+          "type": "address"
+        }
+      ],
+      "name": "setFuelChainState",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -824,14 +1071,8 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "address",
-          "name": "tokenAddress",
-          "type": "address"
-        }
-      ],
-      "name": "tokensDeposited",
+      "inputs": [],
+      "name": "totalDeposited",
       "outputs": [
         {
           "internalType": "uint256",
@@ -850,15 +1091,17 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "unpauseWithdrawals",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
-          "internalType": "address",
-          "name": "_token",
-          "type": "address"
-        },
-        {
           "internalType": "bool",
-          "name": "_rateLimitStatus",
+          "name": "value",
           "type": "bool"
         }
       ],
@@ -900,7 +1143,7 @@
     },
     {
       "inputs": [],
-      "name": "whitelistRequired",
+      "name": "withdrawalsPaused",
       "outputs": [
         {
           "internalType": "bool",
@@ -912,6 +1155,14 @@
       "type": "function"
     }
   ],
-  "numDeployments": 2,
-  "implementation": "0xEBFB69C26067777b262Ab5Da74A47e44bfc78EA4"
+  "numDeployments": 3,
+  "linkedData": {
+    "factory": "FuelMessagePortalV3",
+    "constructorArgs": [
+      "19572000000000000000000",
+      604800
+    ]
+  },
+  "implementation": "0x05f886DDeE0FE07496f6e38b0e140F8eF4655B16",
+  "transactionHash": "0x3ba642fb6850d061b7ef32ce921a0e70c98d028cfd3cc0af59ca51323f262814"
 }
