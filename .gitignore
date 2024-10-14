@@ -1,29 +1,27 @@
-# OS
+# OS-specific files
 .DS_Store
-# Node.js
+
+# Node.js dependencies and environment
 node_modules
 .env
 .turbo
 
-# Misc
+# IDE configurations
 .idea
-.DS_Store
 
-# Hardhat files
+# Hardhat build files
 cache
 artifacts
 
-# Cargo and Forc artifacts
-out
-target
-*/out
-*/target
+# Rust/Cargo and Forc build artifacts
+**/target
+**/out
 
-# fuels-ts typegen artifacts
+# Fuels typegen artifacts
 packages/fungible-token/exports/types
 
-# General dist folders
+# Dist folders
 dist
 
-# verification ci artifacts
+# Verification CI artifacts
 packages/solidity-contracts/verification.json
