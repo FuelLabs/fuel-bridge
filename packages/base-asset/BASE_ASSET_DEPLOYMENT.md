@@ -22,7 +22,6 @@ abi SRC14Extension {
 
 The target contract implementation is deployed at `0xf746b8dfe2a6545119b421753ab465a9c21094709f0df7926c6d33cb90797d45` as the result of deploying the sway source code contained in this package with `forc v0.63.4` with salt `0`.
 
-
 ## Base asset ID
 
 The base asset ID is `0xf8f8b6283d7fa5b672b530cbb84fcccb4ff8dc40f8176ef4544ddb1f1952ad07`, which is the result of `sha256(base_asset_contract_id ++ sub_id)`, where `sub_id` is `Bits256::zero()` (`0x0000000000000000000000000000000000000000000000000000000000000000`).
