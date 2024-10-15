@@ -75,6 +75,8 @@ task(
         hre.ethers.toUtf8Bytes('SET_RATE_LIMITER_ROLE')
       );
 
+      const FROM_BLOCK = 20620432;
+
       const roles = [
         { name: 'DEFAULT_ADMIN_ROLE', value: DEFAULT_ADMIN_ROLE },
         { name: 'PAUSER_ROLE', value: PAUSER_ROLE },
@@ -91,15 +93,32 @@ task(
       const eventPayload: any = [];
 
       try {
-        const events = await contract.queryFilter(
-          contract.filters.RoleGranted()
+        let events = await contract.queryFilter(
+          contract.filters.RoleGranted(),
+          FROM_BLOCK
         );
 
-        for (const event of events) {
+        // check for duplicate events (where the role id and the account are the same)
+        const filteredEvents = events.reduce((previous, current) => {
+          const isDuplicate = previous.find(
+            (event) =>
+              event.args[0] === current.args[0] &&
+              event.args[1] === current.args[1]
+          );
+
+          if (!isDuplicate) {
+            return previous.concat([current]);
+          } else {
+            return previous;
+          }
+        }, []);
+
+        for (const event of filteredEvents) {
+          const eventArgs: any = {};
+
           // only checking for active roles
           const hasRole = await contract.hasRole(event.args[0], event.args[1]);
           if (hasRole) {
-            const eventArgs: any = {};
             // computing the `role` in a readable format
             eventArgs.role =
               roles.find((role) => role.value === event.args[0])?.name ||
