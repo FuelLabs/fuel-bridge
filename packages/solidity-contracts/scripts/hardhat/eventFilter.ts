@@ -93,7 +93,7 @@ task(
       const eventPayload: any = [];
 
       try {
-        let events = await contract.queryFilter(
+        const events = await contract.queryFilter(
           contract.filters.RoleGranted(),
           FROM_BLOCK
         );
