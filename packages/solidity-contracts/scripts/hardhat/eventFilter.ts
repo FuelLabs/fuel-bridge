@@ -28,7 +28,8 @@ task(
           contract.filters.RoleGranted()
         );
 
-        events.forEach((event) => {
+        events.forEach((event: any) => {
+          // Typing bug in the `event` type
           const eventArgs: any = {};
           eventArgs.role = event.args[0];
           eventArgs.account = event.args[1];
