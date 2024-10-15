@@ -11,13 +11,13 @@ task(
     async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
       const provider = new hre.ethers.JsonRpcProvider(process.env.RPC_URL);
 
-      const grantRoleEvent = [
+      const grantRoleEvenABI = [
         'event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)',
       ];
 
       const contract = new hre.ethers.Contract(
         taskArgs.contract,
-        grantRoleEvent,
+        grantRoleEvenABI,
         provider
       );
 
@@ -39,7 +39,7 @@ task(
 
         writeFileSync('grantedRoles.json', JSON.stringify(eventPayload));
       } catch (error) {
-        throw new Error(`Unable to query events: ${error}`);
+        throw new Error(`Unable to filter and query events: ${error}`);
       }
     }
   );
