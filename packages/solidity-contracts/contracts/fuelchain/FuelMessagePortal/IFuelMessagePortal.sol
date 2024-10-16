@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache 2.0
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 import {FuelMessagePortalV3} from "./v3/FuelMessagePortalV3.sol";
 

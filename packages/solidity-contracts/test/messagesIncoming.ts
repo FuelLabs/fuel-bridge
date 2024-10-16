@@ -921,7 +921,10 @@ describe('Incoming Messages', async () => {
           blockInHistoryProof,
           messageInBlockProof
         )
-      ).to.be.revertedWith('ReentrancyGuard: reentrant call');
+      ).to.be.revertedWithCustomError(
+        env.fuelMessagePortal,
+        'ReentrancyGuardReentrantCall()'
+      );
       expect(
         await env.fuelMessagePortal.incomingMessageSuccessful(
           messageReentrantId

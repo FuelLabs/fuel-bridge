@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 import {FuelMessagesEnabledUpgradeable} from "../messaging/FuelMessagesEnabledUpgradeable.sol";
 import {FuelMessagePortal} from "../fuelchain/FuelMessagePortal.sol";

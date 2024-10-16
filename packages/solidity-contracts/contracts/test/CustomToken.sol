@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
@@ -24,7 +24,7 @@ contract CustomToken is ERC20 {
     function decimals() public view virtual override returns (uint8) {
         return customDecimals;
     }
-    
+
     // to handle hardhat_setcode as state is reset after that operation
     function setDecimals(uint8 _decimals) external {
         customDecimals = _decimals;
