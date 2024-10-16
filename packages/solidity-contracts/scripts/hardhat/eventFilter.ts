@@ -11,6 +11,7 @@ task(
     async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
       const provider = new hre.ethers.JsonRpcProvider(process.env.RPC_URL);
 
+      // fetching the abi from the artifacts would require the contract name as an input so avoiding that
       const grantRoleEvenABI = [
         {
           inputs: [
@@ -129,7 +130,7 @@ task(
           }
         }
 
-        writeFileSync('grantedRoles.json', JSON.stringify(eventPayload));
+        writeFileSync('grantedRoles.json', JSON.stringify(eventPayload, undefined, 2));
       } catch (error) {
         throw new Error(`Unable to filter and query events: ${error}`);
       }
