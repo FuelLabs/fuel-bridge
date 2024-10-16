@@ -100,9 +100,11 @@ task(
         );
 
         // check for duplicate events (where the role id and the account are the same)
-        const filteredEvents = events.reduce((previous, current) => {
+        const filteredEvents = events.reduce((previous: any, current: any) => {
+          // typing bug with array of (EventLog | Log) type
           const isDuplicate = previous.find(
-            (event) =>
+            (event: any) =>
+              // typing bug with element of (EventLog | Log) type
               event.args[0] === current.args[0] &&
               event.args[1] === current.args[1]
           );
@@ -130,7 +132,10 @@ task(
           }
         }
 
-        writeFileSync('grantedRoles.json', JSON.stringify(eventPayload, undefined, 2));
+        writeFileSync(
+          'grantedRoles.json',
+          JSON.stringify(eventPayload, undefined, 2)
+        );
       } catch (error) {
         throw new Error(`Unable to filter and query events: ${error}`);
       }
