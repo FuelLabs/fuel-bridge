@@ -1,5 +1,5 @@
 ---
-'@fuel-bridge/solidity-contracts': minor
+'@fuel-bridge/solidity-contracts': major
 ---
 
 Deploy mainnet contracts
