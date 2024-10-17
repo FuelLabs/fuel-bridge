@@ -22,6 +22,6 @@ contract CRY is ERC20 {
 
     /// @notice Override decimals to return 9 decimals.
     function decimals() public view virtual override returns (uint8) {
-        return 9;
+        return 6;
     }
 }
