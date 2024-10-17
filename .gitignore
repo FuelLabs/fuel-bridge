@@ -27,3 +27,6 @@ dist
 
 # verification ci artifacts
 packages/solidity-contracts/verification.json
+
+# grant role query ci artifacts
+packages/solidity-contracts/grantedRoles.json
