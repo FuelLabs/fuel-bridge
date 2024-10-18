@@ -1,5 +1,12 @@
 # @fuel-bridge/fungible-token
 
+## 1.0.0
+
+### Minor Changes
+
+- Upgraded forc to 0.64.0, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- Updated sway contracts compiler to forc v0.63.4, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
 ## 0.6.0
 
 ### Minor Changes

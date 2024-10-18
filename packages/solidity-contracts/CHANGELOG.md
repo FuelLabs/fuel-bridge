@@ -1,5 +1,29 @@
 # @fuel-bridge/solidity-contracts
 
+## 1.0.0
+
+### Major Changes
+
+- Deploy mainnet contracts, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
+### Minor Changes
+
+- Upgrade testnet and devnet artifacts, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- Add rate limit status check for FuelMessagePortal, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- don't update current withdrawn amount when rate limit is reset, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- update comment, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- add zero address check for time to finalise, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- ci proxy upgrade verification flow, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- add rate limit disabling/re-enabling, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- 🐞 Fix upgradability: reduce FuelERC20GatewayV4 \_\_gap variable, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- update naming convention for immutable var, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
+### Patch Changes
+
+- Added base asset deploy script and documentation, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- Updated testnet deployment artifacts, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- Swap symbol and name in the metadata payload, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
 ## 0.6.0
 
 ### Minor Changes

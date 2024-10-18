@@ -1,6 +1,6 @@
 {
   "name": "@fuel-bridge/message-predicates",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "typings": "dist/index.d.ts",
