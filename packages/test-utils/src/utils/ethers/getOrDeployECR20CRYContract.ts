@@ -1,9 +1,11 @@
 import type { Token } from '@fuel-bridge/solidity-contracts/typechain';
-import { CRY__factory, Token__factory } from '@fuel-bridge/solidity-contracts/typechain';
+import {
+  CRY__factory,
+  Token__factory,
+} from '@fuel-bridge/solidity-contracts/typechain';
 
 import { debug } from '../logs';
 import type { TestEnvironment } from '../setup';
-
 
 export async function getOrDeployECR20CRYContract(env: TestEnvironment) {
   debug('Setting up environment...');
@@ -14,7 +16,7 @@ export async function getOrDeployECR20CRYContract(env: TestEnvironment) {
   // load ERC20 contract
   let ethCRYTestToken: Token = null;
   if (!ethCRYTestToken) {
-    debug("Creating ERC-20 token contract to test with...");
+    debug('Creating ERC-20 token contract to test with...');
     const eth_tokenFactory = new CRY__factory(ethDeployer);
     ethCRYTestToken = await eth_tokenFactory
       .deploy()

@@ -223,7 +223,6 @@ export async function setupEnvironment(
   let eth_fuelERC721GatewayAddress: string = fuel_erc721_gateway_addr;
   let eth_cryAddress: string;
 
-
   if (
     !eth_fuelChainStateAddress ||
     !eth_fuelMessagePortalAddress ||
@@ -300,7 +299,7 @@ export async function setupEnvironment(
       eth_deployer
     );
 
-    const cry: CRY = CRY__factory.connect(eth_cryAddress, eth_deployer);
+  const cry: CRY = CRY__factory.connect(eth_cryAddress, eth_deployer);
 
   // Return the Fuel harness object
   return {
