@@ -15,7 +15,6 @@ const func: DeployFunction = async function deployFunction(hre: HardhatRuntimeEn
     log: true,
   });
 
-  // Save the CRY deployment details
   await save('CRY', {
     address: cryDeployment.address,
     abi: cryDeployment.abi,
