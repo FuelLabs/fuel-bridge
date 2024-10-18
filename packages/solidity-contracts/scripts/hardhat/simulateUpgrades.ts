@@ -54,7 +54,7 @@ task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
           if (deployment.abi.length == 0) continue;
 
           // mocking the deployment for the new implementation too, although this can be optional
-          // as we can run this cli after running the `upgradeVerification` script, so we'll have access to the new implementation
+          // as we can run this cli after running the `upgradeVerification` script, so we'll have access to the new implementation and the updated constructor args
           const factory = (await ethers.getContractFactory(
             deployment.linkedData.factory
           )) as ContractFactory; // Typing bug in `getContractFactory`
