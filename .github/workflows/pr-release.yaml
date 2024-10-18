@@ -8,7 +8,7 @@ jobs:
     name: 'Release PR to npm'
     runs-on: buildjet-4vcpu-ubuntu-2204
     # comment out if:false to enable release PR to npm
-    if: false
+    # if: false
     permissions: write-all
     steps:
       - uses: actions/checkout@v3
