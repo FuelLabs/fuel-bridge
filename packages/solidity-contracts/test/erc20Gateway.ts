@@ -1,6 +1,7 @@
 import chai from 'chai';
 import type { BigNumberish } from 'ethers';
 import {
+  ZeroAddress,
   ZeroHash,
   keccak256,
   parseEther,
@@ -12,6 +13,7 @@ import hre from 'hardhat';
 import type { HarnessObject } from '../protocol/harness';
 import { randomAddress, randomBytes32 } from '../protocol/utils';
 import type {
+  CRY,
   FuelERC20Gateway,
   MockFuelMessagePortal,
   Token,
@@ -30,7 +32,10 @@ type Fixture = Pick<
   | 'signers'
   | 'deployer'
   | 'initialTokenAmount'
-> & { fuelMessagePortalMock: MockFuelMessagePortal };
+> & { fuelMessagePortalMock: MockFuelMessagePortal;
+  CRY: CRY;
+  initialCRYAmount: bigint;
+ };
 
 describe('ERC20 Gateway', async () => {
   let env: Fixture;
@@ -73,14 +78,30 @@ describe('ERC20 Gateway', async () => {
       .connect(signers[0])
       .approve(fuelERC20Gateway, initialTokenAmount);
 
+      const CRY = await hre.ethers
+    .getContractFactory('CRY', deployer)
+    .then((factory) => factory.deploy() as Promise<CRY>);
+
+  const initialCRYAmount = parseEther('1000000');
+  for (let i = 0; i < signers.length; i += 1) {
+    await CRY.mint(signers[i], initialCRYAmount);
+  }
+
+  await CRY
+    .connect(signers[0])
+    .approve(fuelERC20Gateway, initialCRYAmount);
+
+
     return {
       token,
+      CRY,
       fuelMessagePortalMock,
       fuelERC20Gateway,
       addresses,
       signers,
       deployer,
       initialTokenAmount,
+      initialCRYAmount,
     };
   });
 
@@ -575,6 +596,73 @@ describe('ERC20 Gateway', async () => {
       await expect(
         env.fuelERC20Gateway.connect(mallory).rescueETH()
       ).to.be.revertedWith(error);
+    });
+  });
+
+  describe('CRY Token', () => {
+    let env: Fixture;
+    let cryToken: CRY;
+  
+    before(async () => {
+      env = await fixture();
+      cryToken = env.CRY;
+    });
+  
+    it('should have the correct name and symbol', async () => {
+      expect(await cryToken.name()).to.equal('Cry Coin');
+      expect(await cryToken.symbol()).to.equal('CRY');
+    });
+  
+    it('should have 6 decimals', async () => {
+      expect(await cryToken.decimals()).to.equal(6);
+    });
+  
+    it('should mint tokens correctly', async () => {
+      const [, recipient] = env.signers;
+      const mintAmount = parseEther('1000');
+      
+      await cryToken.mint(recipient.address, mintAmount);
+      
+      expect(await cryToken.balanceOf(recipient.address)).to.equal(
+        env.initialCRYAmount + mintAmount
+      );
+    });
+  
+    it('should allow anyone to mint tokens', async () => {
+      const [, , randomSigner] = env.signers;
+      const mintAmount = parseEther('500');
+      
+      await cryToken.connect(randomSigner).mint(randomSigner.address, mintAmount);
+      
+      expect(await cryToken.balanceOf(randomSigner.address)).to.equal(
+        env.initialCRYAmount + mintAmount
+      );
+    });
+
+    it('should emit Transfer event when minting', async () => {
+      const mintAmount = parseEther('100');
+      const recipient = env.signers[4];
+      
+      await expect(cryToken.connect(env.deployer).mint(recipient.address, mintAmount))
+        .to.emit(cryToken, 'Transfer')
+        .withArgs(ZeroAddress, recipient.address, mintAmount);
+    });
+    
+    it('should work with the FuelERC20Gateway', async () => {
+      const depositAmount = parseEther('1000');
+      const fuelTokenId = randomBytes32();
+  
+      await cryToken.approve(await env.fuelERC20Gateway.getAddress(), depositAmount);
+  
+      console.log('fsk', await cryToken.getAddress(), await env.deployer.getAddress(), fuelTokenId, depositAmount)
+      await expect(env.fuelERC20Gateway.deposit(fuelTokenId, cryToken, fuelTokenTarget1, depositAmount))
+        .to.emit(env.fuelERC20Gateway, 'Deposit')
+        .withArgs(
+          zeroPadValue(await env.deployer.getAddress(), 32),
+          await cryToken.getAddress(),
+          fuelTokenTarget1,
+          depositAmount
+        );
     });
   });
 });
