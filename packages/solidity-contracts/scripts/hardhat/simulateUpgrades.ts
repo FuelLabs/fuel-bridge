@@ -50,6 +50,9 @@ task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
 
         const deployments = await hre.deployments.all();
 
+        const apiUrl = `https://api.tenderly.co/api/v1/account/${taskArgs.accountslug}/project/${taskArgs.projectname}/vnets/${taskArgs.vnetid}/transactions/simulate`;
+        const accessKey = taskArgs.accesskey;
+
         for (const [contractName, deployment] of Object.entries(deployments)) {
           if (deployment.abi.length == 0) continue;
 
@@ -86,8 +89,6 @@ task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
             proxyContractInstance.interface.encodeFunctionData('upgradeTo', [
               newImplementationAddress,
             ]);
-          const apiUrl = `https://api.tenderly.co/api/v1/account/${taskArgs.accountslug}/project/${taskArgs.projectname}/vnets/${taskArgs.vnetid}/transactions/simulate`;
-          const accessKey = taskArgs.accesskey;
 
           const upgradeImplementationPayload = {
             callArgs: {
