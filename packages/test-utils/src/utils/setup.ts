@@ -5,12 +5,14 @@ import type {
   FuelMessagePortalV3 as FuelMessagePortal,
   FuelERC20GatewayV4 as FuelERC20Gateway,
   FuelERC721Gateway,
+  CRY,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import {
   FuelChainState__factory,
   FuelMessagePortalV3__factory as FuelMessagePortal__factory,
   FuelERC20GatewayV4__factory as FuelERC20Gateway__factory,
   FuelERC721Gateway__factory,
+  CRY__factory,
 } from '@fuel-bridge/solidity-contracts/typechain';
 import * as dotenv from 'dotenv';
 import type { Signer as EthSigner, Provider as EthProvider } from 'ethers';
@@ -83,6 +85,7 @@ export interface TestEnvironment {
     fuelERC721Gateway: FuelERC721Gateway;
     deployer: EthSigner;
     signers: EthSigner[];
+    cry: CRY; // Added CRY contract
   };
   fuel: {
     provider: FuelProvider;
@@ -218,12 +221,15 @@ export async function setupEnvironment(
   let eth_fuelMessagePortalAddress: string = fuel_message_portal_addr;
   let eth_fuelERC20GatewayAddress: string = fuel_erc20_gateway_addr;
   let eth_fuelERC721GatewayAddress: string = fuel_erc721_gateway_addr;
+  let eth_cryAddress: string;
+
 
   if (
     !eth_fuelChainStateAddress ||
     !eth_fuelMessagePortalAddress ||
     !eth_fuelERC20GatewayAddress ||
-    !eth_fuelERC721GatewayAddress
+    !eth_fuelERC721GatewayAddress ||
+    !eth_cryAddress
   ) {
     let deployerAddresses: any = null;
     try {
@@ -237,6 +243,9 @@ export async function setupEnvironment(
           http_deployer +
           "). Are you sure it's running?"
       );
+    }
+    if (!eth_cryAddress) {
+      eth_cryAddress = deployerAddresses.CRY;
     }
     if (!eth_fuelChainStateAddress) {
       if (!deployerAddresses.FuelChainState) {
@@ -270,7 +279,6 @@ export async function setupEnvironment(
   }
 
   // Connect existing contracts
-
   const eth_fuelChainState: FuelChainState = FuelChainState__factory.connect(
     eth_fuelChainStateAddress,
     eth_deployer
@@ -292,7 +300,9 @@ export async function setupEnvironment(
       eth_deployer
     );
 
-  // Return the Fuel harness object
+    const cry: CRY = CRY__factory.connect(eth_cryAddress, eth_deployer);
+
+  // Return the Fuel harness object with CRY
   return {
     eth: {
       provider: eth_provider,
@@ -303,6 +313,7 @@ export async function setupEnvironment(
       fuelERC721Gateway: eth_fuelERC721Gateway,
       deployer: eth_deployer,
       signers: [eth_signer1, eth_signer2],
+      cry, // Include CRY in the environment
     },
     fuel: {
       provider: fuel_provider,
