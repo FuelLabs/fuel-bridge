@@ -85,7 +85,7 @@ export interface TestEnvironment {
     fuelERC721Gateway: FuelERC721Gateway;
     deployer: EthSigner;
     signers: EthSigner[];
-    cry: CRY; // Added CRY contract
+    cry: CRY;
   };
   fuel: {
     provider: FuelProvider;
@@ -302,7 +302,7 @@ export async function setupEnvironment(
 
     const cry: CRY = CRY__factory.connect(eth_cryAddress, eth_deployer);
 
-  // Return the Fuel harness object with CRY
+  // Return the Fuel harness object
   return {
     eth: {
       provider: eth_provider,
@@ -313,7 +313,7 @@ export async function setupEnvironment(
       fuelERC721Gateway: eth_fuelERC721Gateway,
       deployer: eth_deployer,
       signers: [eth_signer1, eth_signer2],
-      cry, // Include CRY in the environment
+      cry,
     },
     fuel: {
       provider: fuel_provider,
