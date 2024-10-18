@@ -1,5 +1,12 @@
 # @fuel-bridge/test-utils
 
+## 1.0.0
+
+### Minor Changes
+
+- Improve sway scripts, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+- integrate fork tokens in e2e test, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
 ## 0.6.0
 
 ### Minor Changes
