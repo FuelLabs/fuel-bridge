@@ -37,97 +37,100 @@ task(
     };
 
     const rpc: string = process.env.RPC_URL!;
-
-    await fetch(rpc, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(setBalancePayload),
-    });
-
-    const deployments = await hre.deployments.all();
-
-    for (const [contractName, deployment] of Object.entries(deployments)) {
-      if (deployment.abi.length == 0) continue;
-
-      // mocking the deployment for the new implementation too, although this can be optional
-      // as we can run this cli after running the `upgradeVerification` script, so we'll have access to the new implementation
-      const factory = (await ethers.getContractFactory(
-        deployment.linkedData.factory
-      )) as ContractFactory; // Typing bug in `getContractFactory`
-
-      const deploymentResponse = (await prepareUpgrade(
-        deployment.address,
-        factory,
-        {
-          kind: 'uups',
-          constructorArgs: deployment.linkedData.constructorArgs,
-          getTxResponse: true,
-          redeployImplementation: 'always',
-        }
-      )) as ethers.TransactionResponse;
-
-      const receipt = await hre.ethers.provider.getTransactionReceipt(
-        deploymentResponse.hash
-      );
-
-      const newImplementationAddress = receipt?.contractAddress!;
-
-      const proxy = new ethers.Contract(deployment.address, deployment.abi);
-
-      // simulating upgrade enables to impersonate the security council multisig, without the need of signatures
-      const encodedUpgradeData = proxy.interface.encodeFunctionData(
-        'upgradeTo',
-        [newImplementationAddress]
-      );
-      const apiUrl =
-        'https://api.tenderly.co/api/v1/account/fuel-network/project/preprod/vnets/d8f2a557-5b38-4e23-91a4-390bb5bb0750/transactions/simulate';
-      const accessKey = 'jFGmjrxi116C8f-ODkCpOcLU6KIoQ04c';
-
-      const upgradeImplementationPayload = {
-        callArgs: {
-          from: SECURITY_COUNCIL_MULTISIG,
-          to: deployment.address,
-          gas: GAS_AMOUNT,
-          gasPrice: GAS_PRICE,
-          value: '0x0',
-          data: encodedUpgradeData,
-        },
-        blockNumber: 'latest',
-      };
-
-      const response = await fetch(apiUrl, {
+    try {
+      await fetch(rpc, {
         method: 'POST',
         headers: {
-          Accept: 'application/json',
           'Content-Type': 'application/json',
-          'X-Access-Key': accessKey,
         },
-        body: JSON.stringify(upgradeImplementationPayload),
+        body: JSON.stringify(setBalancePayload),
       });
 
-      // simulations don't result in visible state changes so not checking the new implementation here, so instead we check
-      // the event logs that the `Upgraded` event was emitted
-      if (response.ok) {
-        const responsePayload: any = await response.json();
+      const deployments = await hre.deployments.all();
 
-        if (responsePayload.logs[0].name === 'Upgraded') {
-          console.log(
-            `✅ Upgrade simulation successful for ${contractName} (${deployment.address})`
-          );
+      for (const [contractName, deployment] of Object.entries(deployments)) {
+        if (deployment.abi.length == 0) continue;
+
+        // mocking the deployment for the new implementation too, although this can be optional
+        // as we can run this cli after running the `upgradeVerification` script, so we'll have access to the new implementation
+        const factory = (await ethers.getContractFactory(
+          deployment.linkedData.factory
+        )) as ContractFactory; // Typing bug in `getContractFactory`
+
+        const deploymentResponse = (await prepareUpgrade(
+          deployment.address,
+          factory,
+          {
+            kind: 'uups',
+            constructorArgs: deployment.linkedData.constructorArgs,
+            getTxResponse: true,
+            redeployImplementation: 'always',
+          }
+        )) as ethers.TransactionResponse;
+
+        const receipt = await hre.ethers.provider.getTransactionReceipt(
+          deploymentResponse.hash
+        );
+
+        const newImplementationAddress = receipt?.contractAddress!;
+
+        const proxy = new ethers.Contract(deployment.address, deployment.abi);
+
+        // simulating upgrade enables to impersonate the security council multisig, without the need of signatures
+        const encodedUpgradeData = proxy.interface.encodeFunctionData(
+          'upgradeTo',
+          [newImplementationAddress]
+        );
+        const apiUrl =
+          'https://api.tenderly.co/api/v1/account/fuel-network/project/preprod/vnets/d8f2a557-5b38-4e23-91a4-390bb5bb0750/transactions/simulate';
+        const accessKey = 'jFGmjrxi116C8f-ODkCpOcLU6KIoQ04c';
+
+        const upgradeImplementationPayload = {
+          callArgs: {
+            from: SECURITY_COUNCIL_MULTISIG,
+            to: deployment.address,
+            gas: GAS_AMOUNT,
+            gasPrice: GAS_PRICE,
+            value: '0x0',
+            data: encodedUpgradeData,
+          },
+          blockNumber: 'latest',
+        };
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-Access-Key': accessKey,
+          },
+          body: JSON.stringify(upgradeImplementationPayload),
+        });
+
+        // simulations don't result in visible state changes so not checking the new implementation here, so instead we check
+        // the event logs that the `Upgraded` event was emitted
+        if (response.ok) {
+          const responsePayload: any = await response.json();
+
+          if (responsePayload.logs[0].name === 'Upgraded') {
+            console.log(
+              `✅ Upgrade simulation successful for ${contractName} (${deployment.address})`
+            );
+          } else {
+            console.log(
+              `❌ Upgrade simulation failed for ${contractName} (${deployment.address})`
+            );
+            throw new Error('Upgrade simulation failed');
+          }
         } else {
           console.log(
             `❌ Upgrade simulation failed for ${contractName} (${deployment.address})`
           );
           throw new Error('Upgrade simulation failed');
         }
-      } else {
-        console.log(
-          `❌ Upgrade simulation failed for ${contractName} (${deployment.address})`
-        );
-        throw new Error('Upgrade simulation failed');
       }
+    } catch (error) {
+      console.log(`❌ Upgrade simulation failed: ${error}`);
     }
   }
 );
