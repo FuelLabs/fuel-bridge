@@ -8,8 +8,6 @@ const GAS_AMOUNT = '0x7a1200';
 const GAS_PRICE = '0xF4241';
 
 task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
-  .addParam('accountslug', 'tenderly account slug')
-  .addParam('projectname', 'tenderly project name')
   .addParam('vnetid', 'tenderly virtual testnet id')
   .addParam('accesskey', 'tenderly account access key')
   .setAction(
@@ -39,6 +37,12 @@ task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
       };
 
       const rpc: string = process.env.RPC_URL!;
+
+      const deployments = await hre.deployments.all();
+
+      const apiUrl = `https://api.tenderly.co/api/v1/account/fuel-network/project/preprod/vnets/${taskArgs.vnetid}/transactions/simulate`;
+      const accessKey = taskArgs.accesskey;
+
       try {
         await fetch(rpc, {
           method: 'POST',
@@ -48,16 +52,11 @@ task('simulate-upgrades', 'Mocks proxy upgrades with tenderly simulation')
           body: JSON.stringify(setBalancePayload),
         });
 
-        const deployments = await hre.deployments.all();
-
-        const apiUrl = `https://api.tenderly.co/api/v1/account/${taskArgs.accountslug}/project/${taskArgs.projectname}/vnets/${taskArgs.vnetid}/transactions/simulate`;
-        const accessKey = taskArgs.accesskey;
-
         for (const [contractName, deployment] of Object.entries(deployments)) {
           if (deployment.abi.length == 0) continue;
 
-          // mocking the deployment for the new implementation too, although this can be optional
-          // as we can run this cli after running the `upgradeVerification` script, so we'll have access to the new implementation and the updated constructor args
+          // mocking the deployment for the new implementation too.
+          // we currently assume that this script will be ran, after the `upgradeVerification` script is executed so we have access to the updated `constructorArgs`, otherwise we can allow the contructor arguments to be entered manually.
           const factory = (await ethers.getContractFactory(
             deployment.linkedData.factory
           )) as ContractFactory; // Typing bug in `getContractFactory`
