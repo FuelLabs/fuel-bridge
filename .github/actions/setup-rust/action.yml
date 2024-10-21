@@ -2,9 +2,9 @@ name: 'Rust & Forc Setup'
 
 inputs:
   rust-version:
-    default: 1.80.1
+    default: 1.81.0
   forc-components:
-    default: 'forc@0.63.1, fuel-core@0.36.0'
+    default: 'forc@0.63.4, fuel-core@0.36.0'
 
 runs:
   using: 'composite'
@@ -14,6 +14,7 @@ runs:
       with:
         toolchain: ${{ inputs.rust-version }}
         components: clippy, rustfmt
+        targets: wasm32-unknown-unknown
 
     - name: Init cache
       uses: Swatinem/rust-cache@v2

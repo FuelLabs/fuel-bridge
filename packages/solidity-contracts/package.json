@@ -1,6 +1,6 @@
 {
   "name": "@fuel-bridge/solidity-contracts",
-  "version": "0.6.0",
+  "version": "1.0.0",
   "description": "The Fuel v2 Solidity smart contracts.",
   "license": "APACHE-2.0",
   "files": [
@@ -39,6 +39,9 @@
     "@openzeppelin/contracts": "^4.8.3",
     "@openzeppelin/contracts-upgradeable": "^4.8.3",
     "@openzeppelin/hardhat-upgrades": "^3.0.4",
+    "@safe-global/api-kit": "^2.4.6",
+    "@safe-global/protocol-kit": "^4.1.1",
+    "@safe-global/safe-core-sdk-types": "^5.1.0",
     "@typechain/ethers-v6": "^0.5.1",
     "@typechain/hardhat": "^9.1.0",
     "@types/chai": "^4.3.4",

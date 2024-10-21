@@ -20,7 +20,7 @@ Build:
 
 ```sh
 pnpm forc build --release
-cargo run
+cargo run --bin fuel-contract-message-predicate
 ```
 
 Run tests:

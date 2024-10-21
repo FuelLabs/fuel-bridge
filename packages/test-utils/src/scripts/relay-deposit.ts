@@ -1,6 +1,6 @@
 /**
- * This is a stand-alone script that deploys the
- * fetches a deposit messages and relays it to the bridge
+ * This is a stand-alone script that
+ * fetches a deposit message and relays it to the bridge
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
@@ -16,6 +16,7 @@ import {
   getPredicateRoot,
   hexlify,
 } from 'fuels';
+import { password } from '@inquirer/prompts';
 import {
   FUEL_MESSAGE_TIMEOUT_MS,
   debug,
@@ -25,11 +26,16 @@ import {
 
 const TOKEN_RECIPIENT_DATA_OFFSET = 160;
 
-const { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
+let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
   process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
+
+  if (!L2_SIGNER) {
+    L2_SIGNER = await password({ message: 'Enter private key' });
+  }
+
   const wallet = Wallet.fromPrivateKey(L2_SIGNER, provider);
 
   const proxy = new Proxy(L2_BRIDGE_ID, wallet);
@@ -43,46 +49,57 @@ const main = async () => {
     .proxy_target()
     .dryRun()
     .then((result) => {
-      debug('bridge_proxy.target() succeeded, assuming proxy');
+      debug(`.proxy_target() returned ${result.value.bits}, assuming proxy`);
       return result.value.bits;
     })
     .catch(() => {
-      debug('bridge.proxy_target() errored, assuming not proxy');
+      debug('.proxy_target() errored, assuming not proxy');
       return null;
     });
 
   const predicateRoot = getPredicateRoot(contractMessagePredicate);
 
   let nonce: BN;
+  let endCursor: string | undefined;
 
   if (L2_MESSAGE_NONCE) nonce = new BN(L2_MESSAGE_NONCE);
-  else {
-    const response = await provider.getMessages(predicateRoot);
-    if (!response.messages || response.messages.length === 0) {
-      console.log('No messages in the predicate');
-      return;
+  else
+    while (true) {
+      const response = await provider.getMessages(predicateRoot, {
+        after: endCursor,
+      });
+
+      if (!response.messages || response.messages.length === 0) {
+        console.log('No messages in the predicate');
+        return;
+      }
+
+      const { messages } = response;
+
+      const message = messages.find((message) => {
+        const hex = hexlify(message.data).replace('0x', '');
+        const recipient = hex.substring(
+          TOKEN_RECIPIENT_DATA_OFFSET * 2,
+          TOKEN_RECIPIENT_DATA_OFFSET * 2 + 64 // Recipient is 32 bytes
+        );
+        const expectedRecipient = L2_TOKEN_RECEIVER || wallet.address.toB256();
+
+        return recipient === expectedRecipient.replace('0x', '');
+      });
+
+      if (!message) {
+        if (response.pageInfo.hasNextPage) {
+          endCursor = response.pageInfo.endCursor;
+          continue;
+        } else {
+          console.log('No messages for the recipient');
+          return;
+        }
+      }
+
+      nonce = new BN(message.nonce);
+      break;
     }
-
-    const { messages } = response;
-
-    const message = messages.find((message) => {
-      const hex = hexlify(message.data).replace('0x', '');
-      const recipient = hex.substring(
-        TOKEN_RECIPIENT_DATA_OFFSET * 2,
-        TOKEN_RECIPIENT_DATA_OFFSET * 2 + 64 // Recipient is 32 bytes
-      );
-      const expectedRecipient = L2_TOKEN_RECEIVER || wallet.address.toB256();
-
-      return recipient === expectedRecipient.replace('0x', '');
-    });
-
-    if (!message) {
-      console.log('No messages for the recipient');
-      return;
-    }
-
-    nonce = new BN(message.nonce);
-  }
 
   const message = await waitForMessage(
     provider,
@@ -105,6 +122,10 @@ const main = async () => {
 
   if (txResult.status === TransactionStatus.success) {
     console.log('\t> Transaction succeeded');
+    console.log(
+      '\t > Minted asset IDs: ',
+      txResult.mintedAssets.map((asset) => asset.assetId)
+    );
   } else {
     console.log('\t> Transaction errored');
   }
