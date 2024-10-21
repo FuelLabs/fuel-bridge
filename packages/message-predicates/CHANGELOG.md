@@ -1,5 +1,11 @@
 # @fuel-bridge/message-predicates
 
+## 1.0.0
+
+### Patch Changes
+
+- Added base asset deploy script and documentation, by [@DefiCake](https://github.com/DefiCake) (See [#340](https://github.com/FuelLabs/fuel-bridge/pull/340))
+
 ## 0.6.0
 
 ### Minor Changes
