@@ -1,8 +1,8 @@
+import type { TransactionResponse } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelERC20GatewayV4__factory as FuelERC20Gateway } from '../../typechain';
-import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -25,10 +25,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     response.hash
   );
 
+  const implementation = receipt?.contractAddress ?? '';
+
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposement failed for FuelERC20GatewayV4 proxy (${contractDeployment.address})`
+    );
+
   await save('FuelERC20GatewayV4', {
     address: contractDeployment.address,
     abi: [...FuelERC20Gateway.abi],
-    implementation: receipt?.contractAddress!,
+    implementation,
     transactionHash: response.hash,
     linkedData: {
       factory: 'FuelERC20GatewayV4',

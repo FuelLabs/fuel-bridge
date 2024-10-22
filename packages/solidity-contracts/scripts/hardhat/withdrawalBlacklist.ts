@@ -1,6 +1,7 @@
 import { Wallet, getBytes } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
+
 import { enterPrivateKey } from './utils';
 
 task('withdrawalBlacklist', 'blacklists a l2 -> l1 message')

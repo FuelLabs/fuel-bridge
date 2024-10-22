@@ -1088,7 +1088,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           it('emits event when rate limit is set', async () => {
             const {
               erc20Gateway,
-              signers: [deployer, user],
+              signers: [deployer],
             } = env;
 
             const rateLimitAmount =
@@ -1383,7 +1383,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               RATE_LIMIT_DURATION * 2,
             ]);
 
-            let rateLimitAmount =
+            const rateLimitAmount =
               RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
 
             await erc20Gateway
