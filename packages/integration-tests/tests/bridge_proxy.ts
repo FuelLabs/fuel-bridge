@@ -1,8 +1,8 @@
+import type { Proxy } from '@fuel-bridge/fungible-token';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
-import { Proxy } from '@fuel-bridge/fungible-token';
 
 const { expect } = chai;
 

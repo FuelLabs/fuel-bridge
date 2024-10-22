@@ -1,5 +1,5 @@
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
-  TestEnvironment,
   setupEnvironment,
   fuels_parseEther,
   createRelayMessageParams,
@@ -14,9 +14,8 @@ import {
   hardhatSkipTime,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import type { Signer } from 'ethers';
 import { parseEther } from 'ethers';
-import type { JsonRpcProvider } from 'ethers';
+import type { Signer, JsonRpcProvider } from 'ethers';
 import { Address, BN, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
@@ -264,6 +263,8 @@ describe('Transferring ETH', async function () {
       // withdraw ETH back to the base chain
       const blocksPerCommitInterval =
         await env.eth.fuelChainState.BLOCKS_PER_COMMIT_INTERVAL();
+
+      // eslint-disable-next-line no-constant-condition
       while (true) {
         const currentBlock = await env.fuel.provider.getBlockNumber();
         debug(`Current block ${currentBlock.toString()}`);
@@ -349,7 +350,7 @@ describe('Transferring ETH', async function () {
   });
 
   describe('ETH Withdrawls based on rate limit updates', async () => {
-    let NUM_ETH = '9';
+    const NUM_ETH = '9';
     const largeRateLimit = `30`;
     let fuelETHSender: FuelWallet;
     let ethereumETHReceiver: Signer;

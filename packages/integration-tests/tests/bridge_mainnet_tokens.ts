@@ -2,19 +2,19 @@ import type { BridgeFungibleToken } from '@fuel-bridge/fungible-token';
 import {
   RATE_LIMIT_AMOUNT,
   RATE_LIMIT_DURATION,
-} from '@fuel-bridge/solidity-contracts/protocol/constants';
-import {
-  CustomToken,
-  CustomTokenWETH,
-  CustomToken__factory,
-  CustomTokenWETH__factory,
-} from '@fuel-bridge/solidity-contracts/typechain';
-import {
   USDT_ADDRESS,
   USDC_ADDRESS,
   WBTC_ADDRESS,
   WETH_ADDRESS,
 } from '@fuel-bridge/solidity-contracts/protocol/constants';
+import type {
+  CustomToken,
+  CustomTokenWETH,
+} from '@fuel-bridge/solidity-contracts/typechain';
+import {
+  CustomToken__factory,
+  CustomTokenWETH__factory,
+} from '@fuel-bridge/solidity-contracts/typechain';
 import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import {
   setupEnvironment,
@@ -89,8 +89,7 @@ describe('Bridge mainnet tokens', function () {
       fuel_AssetId
     );
 
-    let transactionRequest;
-    transactionRequest = await fuel_bridge.functions
+    const transactionRequest = await fuel_bridge.functions
       .withdraw(paddedAddress)
       .addContracts([fuel_bridge, fuel_bridgeImpl])
       .txParams({
@@ -232,7 +231,6 @@ describe('Bridge mainnet tokens', function () {
         const NUM_TOKENS = 100000000000000000000n;
         let ethereumTokenSender: Signer;
         let ethereumTokenSenderAddress: string;
-        let ethereumTokenSenderBalance: bigint;
         let fuelTokenReceiver: FuelWallet;
         let fuelTokenReceiverAddress: string;
         let fuelTokenReceiverBalance: BN;
@@ -247,20 +245,12 @@ describe('Bridge mainnet tokens', function () {
             await weth_testToken
               .connect(ethereumTokenSender)
               .deposit({ value: NUM_TOKENS });
-
-            ethereumTokenSenderBalance = await weth_testToken.balanceOf(
-              ethereumTokenSenderAddress
-            );
           } else {
             const mintAmount =
               BigInt(NUM_TOKENS) / 10n ** (18n - decimals[index]);
             await customToken
               .mint(ethereumTokenSender, mintAmount)
               .then((tx) => tx.wait());
-
-            ethereumTokenSenderBalance = await customToken.balanceOf(
-              ethereumTokenSenderAddress
-            );
           }
 
           fuelTokenReceiver = env.fuel.signers[0];
@@ -302,10 +292,10 @@ describe('Bridge mainnet tokens', function () {
 
           fuelTokenMessageNonce = new BN(event.args.nonce.toString());
 
-          let newSenderBalance;
-
           // check that the sender balance has decreased by the expected amount
-          newSenderBalance = await token.balanceOf(ethereumTokenSenderAddress);
+          const newSenderBalance = await token.balanceOf(
+            ethereumTokenSenderAddress
+          );
 
           expect(newSenderBalance === 0n).to.be.true;
         });
@@ -315,7 +305,7 @@ describe('Bridge mainnet tokens', function () {
           this.timeout(FUEL_MESSAGE_TIMEOUT_MS);
 
           // relay the message ourselves
-          let message = await waitForMessage(
+          const message = await waitForMessage(
             env.fuel.provider,
             fuelTokenMessageReceiver,
             fuelTokenMessageNonce,
@@ -323,7 +313,7 @@ describe('Bridge mainnet tokens', function () {
           );
           expect(message).to.not.be.null;
 
-          let tx = await relayCommonMessage(env.fuel.deployer, message, {
+          const tx = await relayCommonMessage(env.fuel.deployer, message, {
             gasLimit: 30000000,
             maturity: undefined,
             contractIds: [fuel_bridgeImpl.id.toHexString()],
