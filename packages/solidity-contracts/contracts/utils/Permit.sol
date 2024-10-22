@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 /// @notice Structure for erc20 token permit signature
 struct PermitSignature {
