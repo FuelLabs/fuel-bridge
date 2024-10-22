@@ -23,8 +23,7 @@ import {
 import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
-  NoDecimalsToken__factory,
-  MockPermitToken,
+  NoDecimalsToken__factory
 } from '../../typechain';
 import type {
   MockFuelMessagePortal,
@@ -32,7 +31,8 @@ import type {
   Token,
   CustomToken,
   NoDecimalsToken,
-} from '../../typechain';
+
+  MockPermitToken} from '../../typechain';
 import { impersonateAccount } from '../utils/impersonateAccount';
 
 type Env = {
