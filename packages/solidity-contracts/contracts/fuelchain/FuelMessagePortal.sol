@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+pragma solidity 0.8.24;
 
 import {Initializable} from "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import {AccessControlUpgradeable} from "@openzeppelin/contracts-upgradeable/access/AccessControlUpgradeable.sol";
 import {PausableUpgradeable} from "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import {verifyBinaryTree} from "../lib/VerifyBinaryTree/VerifyBinaryTree.sol";
 import {FuelChainState} from "./FuelChainState.sol";
 import {FuelBlockHeader, FuelBlockHeaderLib} from "./types/FuelBlockHeader.sol";
 import {FuelBlockHeaderLite, FuelBlockHeaderLiteLib} from "./types/FuelBlockHeaderLite.sol";
 import {CryptographyLib} from "../lib/Cryptography.sol";
 import {CommonPredicates} from "../lib/CommonPredicates.sol";
+import {ReentrancyGuardTransientUpgradable} from "../security/ReentrancyGuardTransientUpgradable.sol";
 
 /// @notice Structure for proving an element in a merkle tree
 struct MerkleProof {
@@ -35,7 +35,7 @@ contract FuelMessagePortal is
     Initializable,
     PausableUpgradeable,
     AccessControlUpgradeable,
-    ReentrancyGuardUpgradeable,
+    ReentrancyGuardTransientUpgradable,
     UUPSUpgradeable
 {
     using FuelBlockHeaderLib for FuelBlockHeader;
@@ -123,7 +123,7 @@ contract FuelMessagePortal is
     function initializerV1(FuelChainState fuelChainState) internal virtual onlyInitializing {
         __Pausable_init();
         __AccessControl_init();
-        __ReentrancyGuard_init();
+        __ReentrancyGuardTransient_init();
         __UUPSUpgradeable_init();
 
         //grant initial roles
