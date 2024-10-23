@@ -14,7 +14,7 @@ on:
         type: string
 
 jobs:
-  verify-upgrade:
+  generate-grant-role-logs:
     runs-on: ubuntu-latest
     env:
       RPC_URL: ${{ github.event.inputs.rpc }}
