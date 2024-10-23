@@ -1,7 +1,6 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { writeFileSync } from 'fs';
-import * as path from 'path';
 
 task(
   'grant-role-event-filter',
