@@ -17,9 +17,6 @@ jobs:
   build-fuel-bridge:
     name: Build and Push fuel-bridge Image
     runs-on: buildjet-4vcpu-ubuntu-2204
-    if: |
-      (github.event_name == 'release' && github.event.action == 'published') ||
-      github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
 
@@ -41,16 +38,13 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/fuellabs/fuel-bridge:latest
+          tags: ghcr.io/fuellabs/fuel-bridge:${{ github.event.pull_request.base.sha }}
           file: docker/l1-chain/Dockerfile
           platforms: linux/amd64,linux/arm64
 
   build-fuel-bridge-full:
     name: Build and Push fuel-bridge-full Image
     runs-on: buildjet-4vcpu-ubuntu-2204
-    if: |
-      (github.event_name == 'release' && github.event.action == 'published') ||
-      github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v3
 
@@ -72,6 +66,6 @@ jobs:
         with:
           context: .
           push: true
-          tags: ghcr.io/fuellabs/fuel-bridge-full:latest
+          tags: ghcr.io/fuellabs/fuel-bridge-full:${{ github.event.pull_request.base.sha }}
           file: docker/full-env/Dockerfile
           platforms: linux/amd64,linux/arm64
