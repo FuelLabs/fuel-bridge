@@ -12,9 +12,6 @@ task(
     async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
       const provider = new hre.ethers.JsonRpcProvider(process.env.RPC_URL);
 
-      // using absolute path
-      const filePath = path.resolve(__dirname, '..', '..', 'grantedRoles.json'); 
-
       // fetching the abi from the artifacts would require the contract name as an input so avoiding that
       const grantRoleEvenABI = [
         {
@@ -137,7 +134,7 @@ task(
         }
 
         writeFileSync(
-          filePath,
+          'grantedRoles.json',
           JSON.stringify(eventPayload, undefined, 2)
         );
       } catch (error) {
