@@ -75,7 +75,7 @@ jobs:
           tags: ghcr.io/fuellabs/fuel-bridge-full:latest
           file: docker/full-env/Dockerfile
           platforms: linux/amd64,linux/arm64
-      - name: Build and push multi-arch fuel-bridge-full arm image
+      - name: Build and push multi-arch fuel-bridge-full image for arch deployments
         uses: docker/build-push-action@v4
         with:
           context: .
