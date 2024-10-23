@@ -10,5 +10,4 @@ import _bridgeProxyBinary from '../bridge-fungible-token/proxy/out/release/proxy
 export const fungibleTokenBinary = _fungibleTokenBinary;
 export const bridgeProxyBinary = _bridgeProxyBinary;
 
-// eslint-comments/no-unused-disable
 export * from './types';

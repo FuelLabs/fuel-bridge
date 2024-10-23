@@ -1,3 +1,4 @@
 {
-  "extends": "@fuels/ts-config/base.json"
+  "extends": "@fuels/ts-config/base.json",
+  "exclude": ["**/dist", "**/build", "node_modules", "**/node_modules", "**/exports"]
 }
