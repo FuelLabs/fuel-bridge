@@ -1,6 +1,7 @@
 import { task } from 'hardhat/config';
 import { HardhatRuntimeEnvironment } from 'hardhat/types';
 import { writeFileSync } from 'fs';
+import * as path from 'path';
 
 task(
   'grant-role-event-filter',
@@ -10,6 +11,9 @@ task(
   .setAction(
     async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
       const provider = new hre.ethers.JsonRpcProvider(process.env.RPC_URL);
+
+      // using absolute path
+      const filePath = path.resolve(__dirname, '..', '..', 'grantedRoles.json'); 
 
       // fetching the abi from the artifacts would require the contract name as an input so avoiding that
       const grantRoleEvenABI = [
@@ -133,7 +137,7 @@ task(
         }
 
         writeFileSync(
-          'grantedRoles.json',
+          filePath,
           JSON.stringify(eventPayload, undefined, 2)
         );
       } catch (error) {
