@@ -1,5 +1,17 @@
 # @fuel-bridge/solidity-contracts
 
+## 1.1.0
+
+### Minor Changes
+
+- add manual ci for querying grant role events, by [@viraj124](https://github.com/viraj124) (See [#336](https://github.com/FuelLabs/fuel-bridge/pull/336))
+- add support for permit tokens in the erc20 gateway, by [@viraj124](https://github.com/viraj124) (See [#329](https://github.com/FuelLabs/fuel-bridge/pull/329))
+- add transient storage version of the reentrancy guard, by [@viraj124](https://github.com/viraj124) (See [#324](https://github.com/FuelLabs/fuel-bridge/pull/324))
+
+### Patch Changes
+
+- Build and publish docker images on arm, by [@arthurgeron](https://github.com/arthurgeron) (See [#348](https://github.com/FuelLabs/fuel-bridge/pull/348))
+
 ## 1.0.0
 
 ### Major Changes
