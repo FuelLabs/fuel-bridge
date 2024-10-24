@@ -14,7 +14,7 @@ on:
         type: string
 
 jobs:
-  verify-upgrade:
+  generate-grant-role-logs:
     runs-on: ubuntu-latest
     env:
       RPC_URL: ${{ github.event.inputs.rpc }}
@@ -32,5 +32,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: event-query-payload
-          path: grantedRoles.json
+          path: ./packages/solidity-contracts/grantedRoles.json
           retention-days: 90
