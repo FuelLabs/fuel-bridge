@@ -1,16 +1,15 @@
+import { password } from '@inquirer/prompts';
+import SafeApiKit from '@safe-global/api-kit';
+import SafeProtocolKit from '@safe-global/protocol-kit';
+import type { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 import type {
   HardhatRuntimeEnvironment,
   HttpNetworkConfig,
 } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-import SafeProtocolKit from '@safe-global/protocol-kit';
-import SafeApiKit from '@safe-global/api-kit';
 
-import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
-
-import { password } from '@inquirer/prompts';
-import { FuelERC20GatewayV4__factory } from '../../typechain';
 import { MAINNET_MULTISIG_ADDRESS } from '../../protocol/constants';
+import { FuelERC20GatewayV4__factory } from '../../typechain';
 
 const MAINNET_TOKENS = [
   '0x4041381e947CFD3D483d67a25C6aa9Dc924250c5',

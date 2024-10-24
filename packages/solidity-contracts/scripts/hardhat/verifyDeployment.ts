@@ -1,8 +1,7 @@
-import { task } from 'hardhat/config';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { config as dotEnvConfig } from 'dotenv';
-import { ContractFactory } from 'ethers';
+import type { ContractFactory } from 'ethers';
 import { writeFileSync } from 'fs';
+import { task } from 'hardhat/config';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -66,9 +65,10 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
         deployment.transactionHash!
       )!;
 
-      const receipt = await ethers.provider.getTransactionReceipt(
-        fetchedDeploymentTx?.hash!
-      );
+      const txHash = fetchedDeploymentTx?.hash ?? '';
+      if (txHash === '') throw new Error('Transaction hash not found');
+
+      const receipt = await ethers.provider.getTransactionReceipt(txHash);
 
       // checking for null/undefined value too
       if (

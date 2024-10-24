@@ -32,7 +32,6 @@ import {
   TIME_TO_FINALIZE,
   COMMIT_COOLDOWN,
 } from './utils';
-
 import { createBlock } from './utils/createBlock';
 
 const { expect } = chai;

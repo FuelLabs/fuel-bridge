@@ -1,7 +1,8 @@
-import { Wallet, parseEther, parseUnits } from 'ethers';
+import { Wallet, parseUnits } from 'ethers';
 import type { Signer } from 'ethers';
 import { isB256, isBech32, toB256 } from 'fuels';
 import { task } from 'hardhat/config';
+
 import { enterPrivateKey } from './utils';
 
 task('depositToken', 'deposits a token to Fuel')

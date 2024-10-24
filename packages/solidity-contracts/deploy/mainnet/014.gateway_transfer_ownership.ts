@@ -1,8 +1,9 @@
 import { ZeroHash as DEFAULT_ADMIN_ROLE } from 'ethers';
-import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { FuelERC20GatewayV4__factory } from '../../typechain';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { DeployFunction } from 'hardhat-deploy/dist/types';
+
 import { MAINNET_MULTISIG_ADDRESS } from '../../protocol/constants';
+import { FuelERC20GatewayV4__factory } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;

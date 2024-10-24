@@ -1,6 +1,7 @@
 import { ZeroHash as DEFAULT_ADMIN_ROLE } from 'ethers';
-import { DeployFunction } from 'hardhat-deploy/dist/types';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { DeployFunction } from 'hardhat-deploy/dist/types';
+
 import {
   FuelChainState__factory,
   FuelERC20GatewayV4__factory,

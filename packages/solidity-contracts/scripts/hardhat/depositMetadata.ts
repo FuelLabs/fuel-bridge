@@ -1,6 +1,7 @@
 import { Wallet, hexlify, toBeHex, zeroPadValue } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
+
 import { enterPrivateKey } from './utils';
 
 task('depositMetadata', 'relays metadata of a token to Fuel')
@@ -43,7 +44,7 @@ task('depositMetadata', 'relays metadata of a token to Fuel')
 
     const [message] = await portal.queryFilter(
       portal.filters.MessageSent,
-      receipt?.blockNumber!,
+      receipt?.blockNumber,
       receipt?.blockNumber
     );
 

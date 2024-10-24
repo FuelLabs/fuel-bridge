@@ -1,6 +1,7 @@
+import type { ContractFactory } from 'ethers';
+import { isAddress } from 'ethers';
 import { task } from 'hardhat/config';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { ContractFactory, isAddress } from 'ethers';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 task(
   'verify-mainnet-deployments',
@@ -78,9 +79,10 @@ task(
       deployment.transactionHash!
     )!;
 
-    const receipt = await ethers.provider.getTransactionReceipt(
-      fetchedDeploymentTx?.hash!
-    );
+    const txHash = fetchedDeploymentTx?.hash ?? '';
+    if (txHash === '') throw new Error('Transaction hash not found');
+
+    const receipt = await ethers.provider.getTransactionReceipt(txHash);
 
     // checking for null/undefined value too
     if (

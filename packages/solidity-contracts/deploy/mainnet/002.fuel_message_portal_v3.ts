@@ -2,12 +2,11 @@ import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
-
 import {
   RATE_LIMIT_AMOUNT,
   RATE_LIMIT_DURATION,
 } from '../../protocol/constants';
+import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {

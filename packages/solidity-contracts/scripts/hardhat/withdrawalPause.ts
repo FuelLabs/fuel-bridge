@@ -1,6 +1,7 @@
 import { Wallet } from 'ethers';
 import type { Signer } from 'ethers';
 import { task } from 'hardhat/config';
+
 import { enterPrivateKey } from './utils';
 
 task('withdrawalPause', 'pauses all l2 > l1 messages')

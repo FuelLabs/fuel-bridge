@@ -1,16 +1,15 @@
+import { password } from '@inquirer/prompts';
+import SafeApiKit from '@safe-global/api-kit';
+import SafeProtocolKit from '@safe-global/protocol-kit';
+import type { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
 import type {
   HardhatRuntimeEnvironment,
   HttpNetworkConfig,
 } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-import SafeProtocolKit from '@safe-global/protocol-kit';
-import SafeApiKit from '@safe-global/api-kit';
 
-import { MetaTransactionData } from '@safe-global/safe-core-sdk-types';
-
-import { password } from '@inquirer/prompts';
-import { FuelMessagePortalV3__factory } from '../../typechain';
 import { MAINNET_MULTISIG_ADDRESS } from '../../protocol/constants';
+import { FuelMessagePortalV3__factory } from '../../typechain';
 
 const PAUSERS = [
   '0x958470a2ADe72b7a01A2e160F3286767b9623Ad7',

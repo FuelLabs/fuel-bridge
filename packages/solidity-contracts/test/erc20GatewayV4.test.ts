@@ -1,7 +1,6 @@
 import { zeroPadValue } from 'ethers';
 import hre, { deployments } from 'hardhat';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 import { randomBytes32 } from '../protocol/utils';
 import {
   FuelERC20GatewayV4__factory,
