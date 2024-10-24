@@ -36,12 +36,18 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get short SHA
+        id: short_sha
+        run: echo "::set-output name=SHORT_SHA::${GITHUB_SHA::7}"
+
       - name: Build and push multi-arch fuel-bridge image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ghcr.io/fuellabs/fuel-bridge:latest
+          tags: |
+            ghcr.io/fuellabs/fuel-bridge:latest
+            ghcr.io/fuellabs/fuel-bridge:${{ steps.short_sha.outputs.SHORT_SHA }}
           file: docker/l1-chain/Dockerfile
           platforms: linux/amd64,linux/arm64
 
@@ -67,11 +73,17 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Get short SHA
+        id: short_sha
+        run: echo "::set-output name=SHORT_SHA::${GITHUB_SHA::7}"
+
       - name: Build and push multi-arch fuel-bridge-full image
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
-          tags: ghcr.io/fuellabs/fuel-bridge-full:latest
+          tags: |
+            ghcr.io/fuellabs/fuel-bridge-full:latest
+            ghcr.io/fuellabs/fuel-bridge-full:${{ steps.short_sha.outputs.SHORT_SHA }}
           file: docker/full-env/Dockerfile
           platforms: linux/amd64,linux/arm64
