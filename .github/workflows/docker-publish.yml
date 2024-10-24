@@ -1,4 +1,4 @@
-name: Build ad publish Docker image
+name: Build and publish Docker image
 
 on:
   push:
@@ -14,7 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build-and-publish-image:
+  build-fuel-bridge:
+    name: Build and Push fuel-bridge Image
     runs-on: buildjet-4vcpu-ubuntu-2204
     if: |
       (github.event_name == 'release' && github.event.action == 'published') ||
@@ -22,20 +23,67 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build and push a test image containing only the ETH node and contracts
-        uses: ./.github/actions/docker-publish
-        id: publish
-        with:
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-          image: ghcr.io/fuellabs/fuel-bridge
-          dockerfile: docker/l1-chain/Dockerfile
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-      - name: Build and push a test image containing all components for e2e tests
-        uses: ./.github/actions/docker-publish
-        id: publish-full
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
         with:
+          registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          image: ghcr.io/fuellabs/fuel-bridge-full
-          dockerfile: docker/full-env/Dockerfile
+
+      - name: Get short SHA
+        id: short_sha
+        run: echo "::set-output name=SHORT_SHA::${GITHUB_SHA::7}"
+
+      - name: Build and push multi-arch fuel-bridge image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/fuellabs/fuel-bridge:latest
+            ghcr.io/fuellabs/fuel-bridge:${{ steps.short_sha.outputs.SHORT_SHA }}
+          file: docker/l1-chain/Dockerfile
+          platforms: linux/amd64,linux/arm64
+
+  build-fuel-bridge-full:
+    name: Build and Push fuel-bridge-full Image
+    runs-on: buildjet-4vcpu-ubuntu-2204
+    if: |
+      (github.event_name == 'release' && github.event.action == 'published') ||
+      github.ref == 'refs/heads/main' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get short SHA
+        id: short_sha
+        run: echo "::set-output name=SHORT_SHA::${GITHUB_SHA::7}"
+
+      - name: Build and push multi-arch fuel-bridge-full image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/fuellabs/fuel-bridge-full:latest
+            ghcr.io/fuellabs/fuel-bridge-full:${{ steps.short_sha.outputs.SHORT_SHA }}
+          file: docker/full-env/Dockerfile
+          platforms: linux/amd64,linux/arm64

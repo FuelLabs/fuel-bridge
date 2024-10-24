@@ -1,0 +1,36 @@
+name: Manually Query Grant Role Events
+
+on:
+  workflow_dispatch:
+    inputs:
+      contractAddress:
+        description: 'Enter the contract address for which you wanna query the grant role events for'
+        required: true
+        type: string
+      rpc:
+        description: 'Enter network rpc'
+        required: true
+        default: 'https://rpc.ankr.com/eth'
+        type: string
+
+jobs:
+  verify-upgrade:
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ github.event.inputs.rpc }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - name: Query Events
+        run: |
+          npx hardhat compile && npx hardhat grant-role-event-filter --contract ${{ github.event.inputs.contractAddress }}
+        working-directory: ./packages/solidity-contracts
+      - name: Upload event payload as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: event-query-payload
+          path: grantedRoles.json
+          retention-days: 90

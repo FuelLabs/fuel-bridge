@@ -13,3 +13,4 @@ export * from './withdrawalBlacklist';
 export * from './withdrawalWhitelist';
 export * from './verifyMainnetDeployment';
 export * from './simulateUpgrades';
+export * from './eventFilter';
