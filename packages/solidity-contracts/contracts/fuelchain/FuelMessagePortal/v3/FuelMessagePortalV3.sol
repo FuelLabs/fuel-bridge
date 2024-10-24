@@ -86,7 +86,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     /**
      * @notice Resets the rate limit amount.
      * @param _amount The amount to reset the limit to.
-     * Fuel's implementation is inspired by the Linea Bridge dessign (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
+     * Fuel's implementation is inspired by the Linea Bridge design (https://github.com/Consensys/linea-contracts/blob/main/contracts/messageService/lib/RateLimiter.sol)
      * Only point of difference from the linea implementation is that when currentPeriodEnd >= block.timestamp, then currentPeriodAmount is not updated this makes sure that if rate limit is first reduced & then increased within the rate limit duration then any extra amount can't be withdrawn.
      */
     function resetRateLimitAmount(uint256 _amount) external onlyRole(SET_RATE_LIMITER_ROLE) {
