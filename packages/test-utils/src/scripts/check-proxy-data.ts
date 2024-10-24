@@ -4,11 +4,9 @@
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
-
 import { Provider } from 'fuels';
 
-let { L2_RPC, L2_BRIDGE_ID } = process.env;
-const L1_LLAMA_RPC = 'https://eth.llamarpc.com';
+const { L2_RPC, L2_BRIDGE_ID } = process.env;
 const main = async () => {
   const fuel_provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
 

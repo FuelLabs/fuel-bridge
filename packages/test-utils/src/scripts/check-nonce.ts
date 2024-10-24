@@ -2,9 +2,10 @@
  * This is a stand-alone script that looks for a message nonce
  */
 
-import { BN, Message, Provider } from 'fuels';
+import type { Message } from 'fuels';
+import { BN, Provider } from 'fuels';
 
-let { L2_RPC, L2_MESSAGE_NONCE } = process.env;
+const { L2_RPC, L2_MESSAGE_NONCE } = process.env;
 
 const main = async () => {
   if (!L2_MESSAGE_NONCE) {

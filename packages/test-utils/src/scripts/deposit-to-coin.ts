@@ -3,10 +3,11 @@
  * to convert a message coin into a coin utxo
  */
 
-import { Provider, TransactionStatus, Wallet } from 'fuels';
 import { password } from '@inquirer/prompts';
+import { Provider, TransactionStatus, Wallet } from 'fuels';
 
-let { L2_SIGNER, L2_RPC } = process.env;
+let { L2_SIGNER } = process.env;
+const { L2_RPC } = process.env;
 
 const main = async () => {
   if (!L2_RPC) {

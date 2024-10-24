@@ -1,12 +1,7 @@
 /// @dev The Fuel testing utils.
 /// A set of useful helper methods for the integration test environment.
-import {
-  type Provider as FuelProvider,
-  type Message,
-  BN,
-  AbstractAddress,
-  hexlify,
-} from 'fuels';
+import type { BN, AbstractAddress } from 'fuels';
+import { type Provider as FuelProvider, type Message, hexlify } from 'fuels';
 
 import { FUEL_MESSAGE_POLL_MS } from '../constants';
 import { delay } from '../delay';

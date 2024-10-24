@@ -642,7 +642,7 @@ describe('Bridging ERC20 tokens', async function () {
 
     it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
       const deployer = await env.eth.deployer;
-      let newRateLimit = '5';
+      const newRateLimit = '5';
 
       let withdrawnAmountBeforeReset =
         await env.eth.fuelERC20Gateway.currentPeriodAmount(

@@ -4,9 +4,8 @@
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
-
 import { contractMessagePredicate } from '@fuel-bridge/message-predicates';
-
+import { password } from '@inquirer/prompts';
 import {
   Account,
   BN,
@@ -15,7 +14,7 @@ import {
   Wallet,
   getPredicateRoot,
 } from 'fuels';
-import { password } from '@inquirer/prompts';
+
 import {
   FUEL_MESSAGE_TIMEOUT_MS,
   debug,
@@ -23,7 +22,8 @@ import {
   waitForMessage,
 } from '../utils';
 
-let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE } = process.env;
+let { L2_SIGNER } = process.env;
+const { L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE } = process.env;
 
 const main = async () => {
   if (!L2_RPC) {
@@ -51,7 +51,7 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   debug('Detecting if the bridge is a proxy...');
-  let implementation_id: string | null = await proxy.functions
+  const implementation_id: string | null = await proxy.functions
     .proxy_target()
     .dryRun()
     .then((result) => {

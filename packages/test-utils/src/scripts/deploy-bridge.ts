@@ -8,17 +8,12 @@ import {
   BridgeFungibleTokenFactory,
   ProxyFactory,
 } from '@fuel-bridge/fungible-token';
-
-import {
-  DeployContractResult,
-  Provider,
-  Wallet,
-  WalletUnlocked,
-  ZeroBytes32,
-} from 'fuels';
 import { password } from '@inquirer/prompts';
+import type { DeployContractResult, WalletUnlocked } from 'fuels';
+import { Provider, Wallet, ZeroBytes32 } from 'fuels';
 
-let { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC } = process.env;
+let { L2_SIGNER } = process.env;
+const { L1_TOKEN_GATEWAY, L2_RPC } = process.env;
 
 // This helper avoids an exception in the case that the contract
 // was already deployed, and returns the contract instead
