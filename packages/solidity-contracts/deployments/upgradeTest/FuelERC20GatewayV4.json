@@ -1,5 +1,5 @@
 {
-  "address": "0x840e5a0dF831aCB8e90fD5f92E09b9a7731758d6",
+  "address": "0x9B7722f30f6e3D4516C783a3a1Eaeb42c199c891",
   "abi": [
     {
       "inputs": [],
@@ -49,6 +49,11 @@
     {
       "inputs": [],
       "name": "InvalidSender",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "PermitNotAllowed",
       "type": "error"
     },
     {
@@ -472,6 +477,111 @@
         }
       ],
       "name": "depositWithData",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "to",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "internalType": "bytes",
+          "name": "data",
+          "type": "bytes"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct PermitSignature",
+          "name": "permitSignature",
+          "type": "tuple"
+        }
+      ],
+      "name": "depositWithDataAndPermit",
+      "outputs": [],
+      "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bytes32",
+          "name": "to",
+          "type": "bytes32"
+        },
+        {
+          "internalType": "address",
+          "name": "tokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        },
+        {
+          "components": [
+            {
+              "internalType": "uint256",
+              "name": "deadline",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint8",
+              "name": "v",
+              "type": "uint8"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "r",
+              "type": "bytes32"
+            },
+            {
+              "internalType": "bytes32",
+              "name": "s",
+              "type": "bytes32"
+            }
+          ],
+          "internalType": "struct PermitSignature",
+          "name": "permitSignature",
+          "type": "tuple"
+        }
+      ],
+      "name": "depositWithPermit",
       "outputs": [],
       "stateMutability": "payable",
       "type": "function"
@@ -912,11 +1022,11 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0x5b2eb393512ae396615f2d57a74a5291b10e874bca57412a9e6c66145be6c183",
+  "transactionHash": "0xd8f22449167581468fca36cdde153de3157551ba60ad1c410a65d082ff546496",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelERC20GatewayV4",
     "constructorArgs": []
   },
-  "implementation": "0x757F667dd94626677a01829b86675FD53988eFA3"
+  "implementation": "0x619859BfD233372B517846E4B66217b76851e9c6"
 }
