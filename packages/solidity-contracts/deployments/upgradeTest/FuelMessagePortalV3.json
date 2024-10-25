@@ -1,5 +1,5 @@
 {
-  "address": "0x61725EBCc5a6db36184D55DBbc275a08aD63B0Ad",
+  "address": "0x6DF09348cfe521a471198aa5eFFA76FDA43fC558",
   "abi": [
     {
       "inputs": [
@@ -75,6 +75,11 @@
     {
       "inputs": [],
       "name": "RateLimitExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
       "type": "error"
     },
     {
@@ -1155,7 +1160,7 @@
       "type": "function"
     }
   ],
-  "transactionHash": "0x9314a0f4d36da6c46f2860c5aaa3430b26b92c61e0f3e14cd5efc9b24c976257",
+  "transactionHash": "0x8abcc66151b5f31e66775ba28c9d8b550f4474794eb256b7ec8e4e77abd2c964",
   "numDeployments": 2,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
@@ -1164,5 +1169,5 @@
       604800
     ]
   },
-  "implementation": "0xbc05BF1F0d82391e38e3AF54B2A578709AeF11c5"
+  "implementation": "0x92430AA9235452c01142aC1eFc4fc6346a521Bd4"
 }
