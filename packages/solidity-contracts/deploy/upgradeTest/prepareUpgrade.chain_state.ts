@@ -29,7 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (implementation === '')
     throw new Error(
-      `Upgrade proposement failed for FuelChainState proxy (${contractDeployment.address})`
+      `Upgrade proposal failed for FuelChainState proxy (${contractDeployment.address})`
     );
 
   await save('FuelChainState', {

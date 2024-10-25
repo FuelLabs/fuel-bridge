@@ -35,7 +35,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (implementation === '')
     throw new Error(
-      `Upgrade proposement failed for FuelMessagePortal proxy (${address})`
+      `Upgrade proposal failed for FuelMessagePortal proxy (${address})`
     );
 
   console.log('Proposed FuelMessagePortal upgrade to', implementation);

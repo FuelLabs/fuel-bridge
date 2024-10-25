@@ -29,7 +29,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   if (implementation === '')
     throw new Error(
-      `Upgrade proposement failed for FuelERC20GatewayV4 proxy (${contractDeployment.address})`
+      `Upgrade proposal failed for FuelERC20GatewayV4 proxy (${contractDeployment.address})`
     );
 
   await save('FuelERC20GatewayV4', {
