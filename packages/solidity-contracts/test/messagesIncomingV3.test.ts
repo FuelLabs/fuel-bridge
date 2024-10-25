@@ -1470,7 +1470,10 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
           blockInHistoryProof,
           messageInBlockProof
         )
-      ).to.be.revertedWith('ReentrancyGuard: reentrant call');
+      ).to.be.revertedWithCustomError(
+        fuelMessagePortal,
+        'ReentrancyGuardReentrantCall()'
+      );
     });
   });
 });
