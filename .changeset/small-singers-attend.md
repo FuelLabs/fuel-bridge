@@ -1,6 +1,6 @@
 ---
-'@fuel-bridge/solidity-contracts': minor
-'@fuel-bridge/test-utils': minor
+'@fuel-bridge/solidity-contracts': patch
+'@fuel-bridge/test-utils': patch
 ---
 
 ts linting for test packages
