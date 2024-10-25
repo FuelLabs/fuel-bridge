@@ -4,12 +4,13 @@
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
-
-import { Provider, Wallet } from 'fuels';
 import { password } from '@inquirer/prompts';
+import { Provider, Wallet } from 'fuels';
+
 import { debug } from '../utils';
 
-let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_NEW_OWNER } = process.env;
+let { L2_SIGNER } = process.env;
+const { L2_RPC, L2_BRIDGE_ID, L2_NEW_OWNER } = process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
@@ -27,7 +28,7 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   debug('Detecting if the bridge is a proxy...');
-  let owner: string | null = await proxy.functions
+  const owner: string | null = await proxy.functions
     ._proxy_owner()
     .dryRun()
     .then((result) => {
