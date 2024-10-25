@@ -21,6 +21,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       RPC_URL: ${{ github.event.inputs.rpc }}
+      VNET_ID: ${{ github.event.inputs.vnetId }}
+      ACCESS_KEY: ${{ github.event.inputs.accessKey }}
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
@@ -29,5 +31,5 @@ jobs:
           pnpm-version: 9.0.6
       - name: Simulate Upgrades
         run: |
-          npx hardhat compile && npx hardhat simulate-upgrades --network mainnet --vnetid ${{ github.event.inputs.vnetId }} --accesskey ${{ github.event.inputs.accessKey }}
+          npx hardhat compile && npx hardhat simulate-upgrades --network mainnet
         working-directory: ./packages/solidity-contracts
