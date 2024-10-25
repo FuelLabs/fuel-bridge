@@ -33,5 +33,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: deployment-bytecode
-          path: verification.json
+          path: ./packages/solidity-contracts/verification.json
           retention-days: 90
