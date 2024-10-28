@@ -4,9 +4,8 @@
  */
 
 import { Proxy } from '@fuel-bridge/fungible-token';
-
 import { contractMessagePredicate } from '@fuel-bridge/message-predicates';
-
+import { password } from '@inquirer/prompts';
 import {
   Account,
   BN,
@@ -16,7 +15,7 @@ import {
   getPredicateRoot,
   hexlify,
 } from 'fuels';
-import { password } from '@inquirer/prompts';
+
 import {
   FUEL_MESSAGE_TIMEOUT_MS,
   debug,
@@ -26,7 +25,9 @@ import {
 
 const TOKEN_RECIPIENT_DATA_OFFSET = 160;
 
-let { L2_SIGNER, L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
+let { L2_SIGNER } = process.env;
+
+const { L2_RPC, L2_BRIDGE_ID, L2_MESSAGE_NONCE, L2_TOKEN_RECEIVER } =
   process.env;
 
 const main = async () => {
@@ -45,7 +46,7 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   debug('Detecting if the bridge is a proxy...');
-  let implementation_id: string | null = await proxy.functions
+  const implementation_id: string | null = await proxy.functions
     .proxy_target()
     .dryRun()
     .then((result) => {
@@ -63,7 +64,9 @@ const main = async () => {
   let endCursor: string | undefined;
 
   if (L2_MESSAGE_NONCE) nonce = new BN(L2_MESSAGE_NONCE);
+   
   else
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       const response = await provider.getMessages(predicateRoot, {
         after: endCursor,
