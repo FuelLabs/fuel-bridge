@@ -22,7 +22,7 @@ jobs:
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
-      - name: Mask ENV var
+      - name: Mask env var
         run: |
           RPC_URL=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
           echo ::add-mask::$RPC_URL
