@@ -7,7 +7,7 @@ import type {
   Signer,
 } from 'ethers';
 
-interface ConstructorWithStatic<T, K> extends Function {
+interface ConstructorWithStatic<T, K> {
   new (signer: Signer): T; // Instance type
   connect: (address: string, runner?: ContractRunner | null) => K;
 }

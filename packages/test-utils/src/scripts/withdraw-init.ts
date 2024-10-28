@@ -4,27 +4,17 @@
  */
 
 import { BridgeFungibleToken, Proxy } from '@fuel-bridge/fungible-token';
-
-import {
-  AbstractContract,
-  BN,
-  Provider,
-  TransactionStatus,
-  Wallet,
-  isB256,
-} from 'fuels';
-import { isAddress, parseUnits } from 'ethers';
 import { password } from '@inquirer/prompts';
+import { isAddress, parseUnits } from 'ethers';
+import type { AbstractContract } from 'fuels';
+import { BN, Provider, TransactionStatus, Wallet, isB256 } from 'fuels';
+
 import { debug, eth_address_to_b256 } from '../utils';
 
-let {
-  L2_SIGNER,
-  L2_RPC,
-  L2_BRIDGE_ID,
-  L2_ASSET_ID,
-  AMOUNT,
-  L1_TOKEN_RECEIVER,
-} = process.env;
+let { L2_SIGNER } = process.env;
+
+const { L2_ASSET_ID, L2_RPC, L2_BRIDGE_ID, AMOUNT, L1_TOKEN_RECEIVER } =
+  process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
@@ -52,7 +42,7 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   debug('Detecting if the bridge is a proxy...');
-  let implementation_id: string | null = await proxy.functions
+  const implementation_id: string | null = await proxy.functions
     .proxy_target()
     .dryRun()
     .then((result) => {

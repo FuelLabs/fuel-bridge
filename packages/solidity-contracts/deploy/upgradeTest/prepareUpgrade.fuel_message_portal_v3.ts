@@ -1,8 +1,8 @@
+import type { TransactionResponse } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
-import { TransactionResponse } from 'ethers';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -25,10 +25,17 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     response.hash
   );
 
+  const implementation = receipt?.contractAddress ?? '';
+
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposal failed for FuelMessagePortalV3 proxy (${contractDeployment.address})`
+    );
+
   await save('FuelMessagePortalV3', {
     address: contractDeployment.address,
     abi: [...FuelMessagePortal.abi],
-    implementation: receipt?.contractAddress!,
+    implementation,
     transactionHash: response.hash,
     linkedData: {
       factory: 'FuelMessagePortalV3',

@@ -2,6 +2,7 @@ import { Wallet, parseEther } from 'ethers';
 import type { Signer } from 'ethers';
 import { isB256, isBech32, toB256 } from 'fuels';
 import { task } from 'hardhat/config';
+
 import { enterPrivateKey } from './utils';
 
 task('depositETH', 'deposits ETH to Fuel')

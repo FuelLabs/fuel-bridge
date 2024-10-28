@@ -7,12 +7,14 @@ import {
   BridgeFungibleTokenFactory,
   BridgeFungibleToken,
 } from '@fuel-bridge/fungible-token';
-
-import { Provider, TransactionStatus, Wallet, ZeroBytes32 } from 'fuels';
 import { password } from '@inquirer/prompts';
+import { Provider, TransactionStatus, Wallet, ZeroBytes32 } from 'fuels';
+
 import { debug } from '../utils';
 
-let { L1_TOKEN_GATEWAY, L2_SIGNER, L2_RPC, L2_BRIDGE_ID } = process.env;
+let { L2_SIGNER } = process.env;
+
+const { L2_RPC, L2_BRIDGE_ID, L1_TOKEN_GATEWAY } = process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC!, { resourceCacheTTL: -1 });
@@ -28,7 +30,7 @@ const main = async () => {
   console.log('\t> Balance: ', (await wallet.getBalance()).toString());
 
   debug('Detecting if the bridge is a proxy: implementation');
-  let current_implementation: string = await proxy.functions
+  const current_implementation: string = await proxy.functions
     .proxy_target()
     .dryRun()
     .then((result) => {
@@ -46,7 +48,7 @@ const main = async () => {
   debug(`Current implementation at ${current_implementation}`);
 
   debug('Detecting if the bridge is a proxy: owner');
-  let owner: string | null = await proxy.functions
+  const owner: string | null = await proxy.functions
     ._proxy_owner()
     .dryRun()
     .then((result) => {

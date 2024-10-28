@@ -1,4 +1,4 @@
-import { type Provider as FuelProvider, type BigNumberish, BN } from 'fuels';
+import { type Provider as FuelProvider, type BigNumberish } from 'fuels';
 
 export async function waitForBlock(
   blockNumber: BigNumberish,

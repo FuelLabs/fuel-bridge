@@ -24,7 +24,6 @@ import { randomAddress, randomBytes32 } from '../../protocol/utils';
 import {
   CustomToken__factory,
   NoDecimalsToken__factory,
-  MockPermitToken,
 } from '../../typechain';
 import type {
   MockFuelMessagePortal,
@@ -32,6 +31,7 @@ import type {
   Token,
   CustomToken,
   NoDecimalsToken,
+  MockPermitToken,
 } from '../../typechain';
 import { impersonateAccount } from '../utils/impersonateAccount';
 
@@ -1262,7 +1262,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
           it('emits event when rate limit is set', async () => {
             const {
               erc20Gateway,
-              signers: [deployer, user],
+              signers: [deployer],
             } = env;
 
             const rateLimitAmount =
@@ -1557,7 +1557,7 @@ export function behavesLikeErc20GatewayV4(fixture: () => Promise<Env>) {
               RATE_LIMIT_DURATION * 2,
             ]);
 
-            let rateLimitAmount =
+            const rateLimitAmount =
               RATE_LIMIT_AMOUNT / 10 ** (STANDARD_TOKEN_DECIMALS - decimals);
 
             await erc20Gateway
