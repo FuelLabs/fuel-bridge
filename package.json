@@ -32,7 +32,7 @@
     "@fuels/eslint-plugin": "0.20.0",
     "@fuels/prettier-config": "0.0.10",
     "@fuels/ts-config": "0.0.10",
-    "fuels": "0.94.4",
+    "fuels": "0.96.1",
     "eslint": "^8.49.0",
     "prettier": "^2.7.1",
     "tsup": "^8.3.0",
