@@ -1,0 +1,35 @@
+name: Manual Simulate Upgrade
+
+on:
+  workflow_dispatch:
+    inputs:
+      vnetId:
+        description: 'Enter the tenderly virtual testnet id'
+        required: true
+        type: string
+      accessKey:
+        description: 'Enter the tenderly account access key'
+        required: true
+        type: string
+      rpc:
+        description: 'Enter tenderly virtual network rpc'
+        required: true
+        type: string
+
+jobs:
+  simulate-upgrades:
+    runs-on: ubuntu-latest
+    env:
+      RPC_URL: ${{ github.event.inputs.rpc }}
+      VNET_ID: ${{ github.event.inputs.vnetId }}
+      ACCESS_KEY: ${{ github.event.inputs.accessKey }}
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - name: Simulate Upgrades
+        run: |
+          npx hardhat compile && npx hardhat simulate-upgrades --network mainnet
+        working-directory: ./packages/solidity-contracts
