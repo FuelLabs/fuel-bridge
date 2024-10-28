@@ -64,9 +64,8 @@ const main = async () => {
   let endCursor: string | undefined;
 
   if (L2_MESSAGE_NONCE) nonce = new BN(L2_MESSAGE_NONCE);
-   
+  // eslint-disable-next-line no-constant-condition
   else
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const response = await provider.getMessages(predicateRoot, {
         after: endCursor,
