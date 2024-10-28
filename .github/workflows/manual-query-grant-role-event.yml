@@ -24,9 +24,9 @@ jobs:
           pnpm-version: 9.0.6
       - name: Mask ENV var
         run: |
-          RPC=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
-          echo ::add-mask::$RPC
-          echo RPC=$RPC >> $GITHUB_ENV
+          RPC_URL=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$RPC_URL
+          echo RPC_URL=$RPC_URL >> $GITHUB_ENV
       - name: Query Events
         run: |
           npx hardhat compile && npx hardhat grant-role-event-filter --contract ${{ github.event.inputs.contractAddress }}
