@@ -19,16 +19,23 @@ on:
 jobs:
   simulate-upgrades:
     runs-on: ubuntu-latest
-    env:
-      RPC_URL: ${{ github.event.inputs.rpc }}
-      VNET_ID: ${{ github.event.inputs.vnetId }}
-      ACCESS_KEY: ${{ github.event.inputs.accessKey }}
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
+      - name: Mask env vars
+        run: |
+          RPC_URL=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$RPC_URL
+          echo RPC_URL=$RPC_URL >> $GITHUB_ENV
+          VNET_ID=$(jq -r '.inputs.vnetId' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$VNET_ID
+          echo VNET_ID=$VNET_ID >> $GITHUB_ENV
+          ACCESS_KEY=$(jq -r '.inputs.accessKey' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$ACCESS_KEY
+          echo ACCESS_KEY=$ACCESS_KEY >> $GITHUB_ENV
       - name: Simulate Upgrades
         run: |
           npx hardhat compile && npx hardhat simulate-upgrades --network mainnet
