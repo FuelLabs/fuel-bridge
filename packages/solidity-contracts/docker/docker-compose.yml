@@ -1,0 +1,55 @@
+version: '3.4'
+
+services:
+  l1_chain:
+    platform: linux/amd64
+    image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
+    container_name: l1_chain
+    build:
+      context: ../
+      dockerfile: ./docker/docker.l1_chain.Dockerfile
+    volumes:
+      - ../deployments/localhost:/l1chain/fuel-v2-contracts/deployments
+    stop_grace_period: 1s
+
+  fuel_core:
+    container_name: fuel_core
+    depends_on:
+      l1_chain:
+        condition: service_started
+    volumes:
+      - ../deployments/localhost:/l1chain/fuel-v2-contracts/deployments
+    platform: linux/amd64
+    build:
+      context: ../
+      dockerfile: ./docker/docker.fuel_core.Dockerfile
+    environment:
+      L1_CHAIN_HTTP: http://l1_chain:8545
+      RUST_LOG: debug
+      DEBUG: true
+      CONSENSUS_KEY_SECRET: $CONSENSUS_KEY_SECRET
+    ports:
+      # expose the service to the host for integration testing
+      - ${FUEL_CORE_HTTP_PORT:-4000}:4001
+    stop_grace_period: 1s
+    restart: always
+
+  fuel_block_commiter:
+    container_name: fuel_block_commiter
+    depends_on:
+      fuel_core:
+        condition: service_started
+    volumes:
+      - ../deployments/localhost:/l1chain/fuel-v2-contracts/deployments
+    platform: linux/amd64
+    build:
+      context: ../
+      dockerfile: ./docker/docker.block_committer.Dockerfile
+    environment:
+      ETHEREUM_RPC: ws://l1_chain:8545/
+      FUEL_GRAPHQL_ENDPOINT: http://fuel_core:4001/v1
+    ports:
+      # expose the service to the host for integration testing
+      - ${COMMITTER_HTTP_PORT:-8888}:8888
+    stop_grace_period: 1s
+    restart: always
