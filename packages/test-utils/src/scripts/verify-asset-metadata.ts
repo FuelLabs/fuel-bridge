@@ -5,14 +5,17 @@
  */
 
 import { BridgeFungibleToken, Proxy } from '@fuel-bridge/fungible-token';
-
-import { FuelError, Provider, isB256 } from 'fuels';
-import { debug, getTokenId } from '../utils';
-import { JsonRpcProvider, isAddress } from 'ethers';
 import { IERC20Metadata__factory } from '@fuel-bridge/solidity-contracts/typechain';
+import { JsonRpcProvider, isAddress } from 'ethers';
+import type { FuelError } from 'fuels';
+import { Provider, isB256 } from 'fuels';
 
-let { L1_RPC, L2_RPC, L2_BRIDGE_ID, L2_ASSET_ID, L1_TOKEN_ADDRESS } =
-  process.env;
+import { debug, getTokenId } from '../utils';
+
+let { L2_ASSET_ID } = process.env;
+
+const { L1_RPC, L2_RPC, L2_BRIDGE_ID, L1_TOKEN_ADDRESS } = process.env;
+
 const L1_LLAMA_RPC = 'https://eth.llamarpc.com';
 const main = async () => {
   const fuel_provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });
@@ -31,7 +34,7 @@ const main = async () => {
   console.log('\t> Checking asset metadata...');
 
   debug('Detecting if the bridge is a proxy...');
-  let implementation_id: string | null = await proxy.functions
+  await proxy.functions
     .proxy_target()
     .dryRun()
     .then((result) => {
@@ -64,7 +67,7 @@ const main = async () => {
     return;
   }
 
-  let l1_token_address = '0x' + (call_result.value as string).slice(-40);
+  const l1_token_address = '0x' + (call_result.value as string).slice(-40);
   console.log('l1_token_address', `${l1_token_address}`);
 
   const fuel_symbol = (await bridge.functions.symbol(asset).dryRun()).value;

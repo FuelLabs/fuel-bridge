@@ -1,14 +1,14 @@
-import { TransactionResponse } from 'ethers';
+import { password } from '@inquirer/prompts';
+import type { TransactionResponse } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelERC20GatewayV4__factory } from '../../typechain';
-import { password } from '@inquirer/prompts';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
     ethers,
-    upgrades: { prepareUpgrade, upgradeProxy, erc1967 },
+    upgrades: { prepareUpgrade },
     deployments: { get, save },
   } = hre;
 
@@ -22,7 +22,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     getTxResponse: true,
   })) as TransactionResponse;
   const receipt = await tx.wait();
-  const implementation = receipt?.contractAddress!;
+  const implementation = receipt?.contractAddress ?? '';
+
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposal failed for FuelERC20GatewayV4 proxy (${address})`
+    );
 
   console.log(`Proposed FuelERC20GatewayV4 upgrade to ${implementation}`);
   await save('FuelERC20GatewayV4', {

@@ -5,7 +5,8 @@
 import { password } from '@inquirer/prompts';
 import { Provider, WalletUnlocked } from 'fuels';
 
-let { L2_ADDRESS, L2_RPC } = process.env;
+let { L2_ADDRESS } = process.env;
+const { L2_RPC } = process.env;
 
 const main = async () => {
   const provider = await Provider.create(L2_RPC, { resourceCacheTTL: -1 });

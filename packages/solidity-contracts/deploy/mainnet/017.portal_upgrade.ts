@@ -1,9 +1,10 @@
-import { TransactionResponse, parseEther } from 'ethers';
+import { password } from '@inquirer/prompts';
+import type { TransactionResponse } from 'ethers';
+import { parseEther } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
-import { password } from '@inquirer/prompts';
 
 const RATE_LIMIT_DURATION = 3600 * 24 * 7;
 
@@ -30,7 +31,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   })) as TransactionResponse;
   const receipt = await tx.wait();
 
-  const implementation = receipt?.contractAddress!;
+  const implementation = receipt?.contractAddress ?? '';
+
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposal failed for FuelMessagePortal proxy (${address})`
+    );
 
   console.log('Proposed FuelMessagePortal upgrade to', implementation);
   await save('FuelMessagePortal', {
