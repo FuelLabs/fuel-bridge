@@ -20,7 +20,7 @@ echo "Connected to Fuel Core chain."
 # PORTAL_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/mainnetFork/FuelMessagePortal.json)
 
 # pull data from deployer dump
-export STATE_CONTRACT_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/FuelChainState.json)
+export STATE_CONTRACT_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/localhost/FuelChainState.json)
 echo "STATE_CONTRACT_ADDRESS: $STATE_CONTRACT_ADDRESS"
 echo "FUEL_GRAPHQL_ENDPOINT: $FUEL_GRAPHQL_ENDPOINT"
 echo "RPC: $ETHEREUM_RPC"

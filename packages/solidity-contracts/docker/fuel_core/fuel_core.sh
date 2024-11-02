@@ -1,7 +1,7 @@
 #!/bin/sh
 set -euo
 
-PORTAL_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/FuelMessagePortal.json)
+PORTAL_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/localhost/FuelMessagePortal.json)
 
 echo "Launching fuel node with PORTAL_ADDRESS=$PORTAL_ADDRESS"
 
