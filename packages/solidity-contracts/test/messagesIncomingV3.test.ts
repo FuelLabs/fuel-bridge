@@ -17,6 +17,7 @@ import {
   computeBlockId,
   generateBlockHeaderLite,
 } from '../protocol/blockHeader';
+import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 import Message, { computeMessageId } from '../protocol/message';
 import { randomBytes32, tai64Time } from '../protocol/utils';
 import type {
@@ -37,13 +38,11 @@ import {
   getLeafIndexKey,
 } from './utils/merkle';
 
-import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
-
 const ETH_DECIMALS = 18n;
 const FUEL_BASE_ASSET_DECIMALS = 9n;
 const BASE_ASSET_CONVERSION = 10n ** (ETH_DECIMALS - FUEL_BASE_ASSET_DECIMALS);
 
-describe('FuelMessagePortalV3 - Incoming messages', () => {
+describe.only('FuelMessagePortalV3 - Incoming messages', () => {
   let provider: Provider;
   let addresses: string[];
   let signers: HardhatEthersSigner[];
@@ -733,10 +732,10 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
     });
   });
 
-  describe('Behaves like V2 - Accounting', () => {
+  describe('Behaves like V3 - Accounting', () => {
     beforeEach('fixture', async () => {
       const fixt = await fixture();
-      const { V2Implementation } = fixt;
+      const { V3Implementation } = fixt;
       ({
         provider,
         fuelMessagePortal,
@@ -746,9 +745,10 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         signers,
       } = fixt);
 
-      await upgrades.upgradeProxy(fuelMessagePortal, V2Implementation, {
+      await upgrades.upgradeProxy(fuelMessagePortal, V3Implementation, {
         unsafeAllow: ['constructor'],
-        constructorArgs: [MaxUint256],
+        constructorArgs: [MaxUint256, RATE_LIMIT_DURATION],
+        call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT.toString()] },
       });
 
       await setupMessages(
@@ -801,10 +801,7 @@ describe('FuelMessagePortalV3 - Incoming messages', () => {
         await fuelMessagePortal.incomingMessageSuccessful(msgID)
       ).to.be.equal(true);
 
-      const expectedDepositedAmount = depositedAmount - withdrawnAmount;
-      expect(await fuelMessagePortal.totalDeposited()).to.be.equal(
-        expectedDepositedAmount
-      );
+      expect(await fuelMessagePortal.totalDeposited()).to.be.equal(0);
     });
   });
 

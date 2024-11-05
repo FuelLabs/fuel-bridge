@@ -180,9 +180,6 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         if (message.amount > 0) {
             uint256 withdrawnAmount = message.amount * PRECISION;
 
-            // Underflow check enabled since the amount is coded in `message`
-            totalDeposited -= withdrawnAmount;
-
             // rate limit check
             if (rateLimitEnabled) _addWithdrawnAmount(withdrawnAmount);
 
@@ -256,6 +253,31 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
         // initializing rate limit var
         currentPeriodEnd = block.timestamp + RATE_LIMIT_DURATION;
         limitAmount = _limitAmount;
+    }
+
+    /// @notice Performs all necessary logic to send a message to a target on Fuel
+    /// @param recipient The message receiver address or predicate root
+    /// @param data The message data to be sent to the receiver
+    function _sendOutgoingMessage(bytes32 recipient, bytes memory data) internal virtual override {
+        bytes32 sender = bytes32(uint256(uint160(msg.sender)));
+        unchecked {
+            //make sure data size is not too large
+            if (data.length >= MAX_MESSAGE_DATA_SIZE) revert MessageDataTooLarge();
+
+            //make sure amount fits into the Fuel base asset decimal level
+            uint256 amount = msg.value / PRECISION;
+            if (msg.value > 0) {
+                if (amount * PRECISION != msg.value) revert AmountPrecisionIncompatibility();
+                if (amount > type(uint64).max) revert AmountTooBig();
+            }
+
+            //emit message for Fuel clients to pickup (messageID calculated offchain)
+            uint256 nonce = _outgoingMessageNonce;
+            emit MessageSent(sender, recipient, nonce, uint64(amount), data);
+
+            // increment nonce for next message
+            _outgoingMessageNonce = nonce + 1;
+        }
     }
 
     /**
