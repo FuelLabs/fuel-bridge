@@ -1,8 +1,7 @@
-import { task } from 'hardhat/config';
-import { HardhatRuntimeEnvironment } from 'hardhat/types';
-import { config as dotEnvConfig } from 'dotenv';
-import { ContractFactory } from 'ethers';
+import { isAddress, type ContractFactory } from 'ethers';
 import { writeFileSync } from 'fs';
+import { task } from 'hardhat/config';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 
 task('verify-deployment', 'Verifies proxy upgrades').setAction(
   async (taskArgs: any, hre: HardhatRuntimeEnvironment): Promise<void> => {
@@ -23,6 +22,16 @@ task('verify-deployment', 'Verifies proxy upgrades').setAction(
 
     for (const [contractName, deployment] of Object.entries(deployments)) {
       console.log(`\nVerifying ${contractName} (${deployment.address}):`);
+
+      // Edge case: we are also holding Fuel network artifacts (Fuell2BridgeId)
+      if (!isAddress(deployment.address)) {
+        continue;
+      }
+
+      // Skip if not a proxy
+      if (!isAddress(deployment.implementation)) {
+        continue;
+      }
 
       const currentImplementation = await erc1967.getImplementationAddress(
         deployment.address
