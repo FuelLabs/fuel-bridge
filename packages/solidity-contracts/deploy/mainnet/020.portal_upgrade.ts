@@ -4,11 +4,10 @@ import { MaxUint256 } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
-import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
+import { FuelMessagePortalV3__factory as FuelMessagePortalV3 } from '../../typechain';
 
 const RATE_LIMIT_DURATION = 3600 * 24 * 7;
 
-// Deprecated constructor argument: does not have any effect
 const ETH_DEPOSIT_CAP = MaxUint256;
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
@@ -25,7 +24,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const constructorArgs = [ETH_DEPOSIT_CAP.toString(), RATE_LIMIT_DURATION];
 
-  const tx = (await prepareUpgrade(address, new FuelMessagePortal(deployer), {
+  const tx = (await prepareUpgrade(address, new FuelMessagePortalV3(deployer), {
     constructorArgs,
     getTxResponse: true,
   })) as TransactionResponse;
@@ -40,8 +39,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   console.log('Proposed FuelMessagePortal upgrade to', implementation);
   await save('FuelMessagePortal', {
     address,
-    abi: [...FuelMessagePortal.abi],
+    abi: [...FuelMessagePortalV3.abi],
     implementation,
+    transactionHash: tx.hash,
     linkedData: { factory: 'FuelMessagePortalV3', constructorArgs },
   });
 

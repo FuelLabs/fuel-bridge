@@ -9,10 +9,7 @@ import type {
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { MAINNET_MULTISIG_ADDRESS } from '../../protocol/constants';
-import {
-  FuelERC20GatewayV4__factory,
-  FuelMessagePortalV3__factory,
-} from '../../typechain';
+import { FuelMessagePortalV3__factory } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const privateKey = await password({ message: 'Enter private key' });
@@ -25,10 +22,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   if (!newPortalImplementation) {
     throw new Error('No implementations found in artifacts');
   }
-
-  const { address: gatewayAddress } = await hre.deployments.get(
-    'FuelERC20GatewayV4'
-  );
 
   const safeAddress = MAINNET_MULTISIG_ADDRESS;
   const apiKit = new SafeApiKit({ chainId: 1n });
@@ -48,17 +41,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   transactions.push({
     to: portalAddress,
     data: upgradeTransactionData,
-    value: '0',
-  });
-
-  const { data: disableWhitelistTransactionData } =
-    await FuelERC20GatewayV4__factory.connect(
-      gatewayAddress,
-      hre.ethers.provider
-    ).requireWhitelist.populateTransaction(false);
-  transactions.push({
-    to: gatewayAddress,
-    data: disableWhitelistTransactionData,
     value: '0',
   });
 
