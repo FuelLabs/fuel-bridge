@@ -42,8 +42,8 @@ const config: HardhatUserConfig = {
         count: 128,
       },
       forking: {
-        enabled: true,
-        url: process.env.TENDERLY_RPC_URL!,
+        enabled: !!process.env.TENDERLY_RPC_URL,
+        url: process.env.TENDERLY_RPC_URL ? process.env.TENDERLY_RPC_URL : "",
       },
       deploy: ['deploy/hardhat'],
     },

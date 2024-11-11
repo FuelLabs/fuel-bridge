@@ -10,10 +10,14 @@ services:
       dockerfile: ./docker/docker.l1_chain.Dockerfile
     volumes:
       - ../deployments/localhost:/l1chain/fuel-v2-contracts/deployments
+    ports:
+      # expose the service to the host for integration testing
+      - ${L1_CHAIN_HTTP_PORT:-8545}:8545
     stop_grace_period: 1s
 
   fuel_core:
     container_name: fuel_core
+    image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
     depends_on:
       l1_chain:
         condition: service_started
@@ -36,6 +40,7 @@ services:
 
   fuel_block_commiter:
     container_name: fuel_block_commiter
+    image: fueldev/block-committer:${DOCKER_TAG_FUEL_CORE:-latest}
     depends_on:
       fuel_core:
         condition: service_started
