@@ -1,4 +1,4 @@
-FROM ghcr.io/fuellabs/fuel-block-committer:sha-9e8d65b
+FROM ghcr.io/fuellabs/fuel-block-committer:sha-77607e4
 
 ARG COMMITER_IP=0.0.0.0
 ARG COMMITER_PORT=8888

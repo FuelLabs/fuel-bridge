@@ -49,13 +49,12 @@ services:
     stop_grace_period: 1s
 
   commiter:
-    image: ghcr.io/fuellabs/fuel-block-committer:sha-9e8d65b
+    image: ghcr.io/fuellabs/fuel-block-committer:sha-77607e4
     platform: linux/amd64
-    # build:
-    #   context: ./block-committer/
+    build:
+      context: ./block-committer/
     environment:
       COMMITTER__ETH__RPC: 'ws://l1_chain:9545/'
-      COMMITTER__ETH__STATE_CONTRACT_ADDRESS: "0000000000000000000000000000000000000000"
       COMMITTER__ETH__L1_KEYS__MAIN: 'Private(ac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)'
       COMMITTER__ETH__L1_KEYS__BLOB: 'Private(59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d)'
       COMMITTER__FUEL__GRAPHQL_ENDPOINT: 'http://fuel-core:4001/graphql'
