@@ -42,7 +42,7 @@ services:
       DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
       RUST_LOG: debug
       DEBUG: true
-      # DB_PATH: /db
+      DB_PATH: /db
     ports:
       # expose the service to the host for integration testing
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
