@@ -4,6 +4,7 @@ set -euo
 RETRIES=${RETRIES:-60}
 DELAY=${DELAY:-10}
 JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
+HEALTH_URL=${HEALTH_URL:-"http://fuel_core:4001/v1/health"}
 
 if [ -z "$COMMITTER__ETH__RPC" ]; then
     echo "Must specify \$ETHEREUM_RPC."
@@ -29,7 +30,7 @@ curl \
     --retry-connrefused \
     --retry $RETRIES \
     --retry-delay $DELAY \
-    $COMMITTER__FUEL__GRAPHQL_ENDPOINT/health > /dev/null
+    $HEALTH_URL > /dev/null
 echo "Connected to Fuel Core chain."
 
 # get the deployments file from the deployer
