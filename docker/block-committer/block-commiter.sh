@@ -53,6 +53,6 @@ echo "COMMITTER__ETH__STATE_CONTRACT_ADDRESS: $COMMITTER__ETH__STATE_CONTRACT_AD
 echo "ETHEREUM_RPC: $COMMITTER__ETH__RPC"
 echo "FUEL_GRAPHQL_ENDPOINT: $COMMITTER__FUEL__GRAPHQL_ENDPOINT"
 
-# # start the Block Commiter
+# start the Block Commiter
 echo "Starting block commiter"
 exec /root/fuel-block-committer

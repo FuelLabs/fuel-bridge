@@ -48,7 +48,7 @@ services:
       - ${FUEL_CORE_HTTP_PORT:-4000}:4001
     stop_grace_period: 1s
 
-  commiter:
+  fuel_block_commiter:
     image: ghcr.io/fuellabs/fuel-block-committer:sha-77607e4
     platform: linux/amd64
     build:
