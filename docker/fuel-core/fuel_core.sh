@@ -2,8 +2,10 @@
 set -euo
 
 RETRIES=${RETRIES:-90}
+DA_COMPRESSION=${DA_COMPRESSION:-"3600sec"}
+GRAPHQL_COMPLEXITY=${GRAPHQL_COMPLEXITY:-500000}
 JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
-FUEL_DB_PATH=./mnt/db/
+# FUEL_DB_PATH=./mnt/db/
 
 if [ -z "$L1_CHAIN_HTTP" ]; then
     echo "Must specify \$L1_CHAIN_HTTP."
@@ -53,7 +55,6 @@ echo "Starting fuel node."
 exec /root/fuel-core run \
     --ip $FUEL_IP \
     --port $FUEL_PORT \
-    --db-type in-memory \
     --utxo-validation \
     --vm-backtrace \
     --enable-relayer \
@@ -61,5 +62,7 @@ exec /root/fuel-core run \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
     --poa-interval-period 1sec \
     --debug \
+    --da-compression $DA_COMPRESSION \
+    --graphql-max-complexity $GRAPHQL_COMPLEXITY \
     --min-gas-price 0 \
     --snapshot ./
