@@ -55,7 +55,6 @@ echo "Starting fuel node."
 exec /root/fuel-core run \
     --ip $FUEL_IP \
     --port $FUEL_PORT \
-    --db-path ${DB_PATH} \
     --utxo-validation \
     --vm-backtrace \
     --enable-relayer \
