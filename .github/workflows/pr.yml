@@ -53,7 +53,7 @@ jobs:
       - name: Fetch origin/main
         run: |
           git fetch origin main
-          git branch --set-upstream-to=origin/main main
+          git branch --set-upstream-to=origin/main
 
       - name: Debug Git History
         run: git log --oneline --graph --all
