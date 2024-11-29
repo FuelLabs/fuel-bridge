@@ -14,10 +14,6 @@ if [ -z "$COMMITTER__FUEL__GRAPHQL_ENDPOINT" ]; then
     echo "Must specify \$FUEL_GRAPHQL_ENDPOINT."
     exit 1
 fi
-if [ -z "$DEPLOYMENTS_HTTP" ]; then
-    echo "Must specify \$DEPLOYMENTS_HTTP."
-    exit 1
-fi
 
 echo $COMMITTER__FUEL__GRAPHQL_ENDPOINT/health
 
@@ -33,22 +29,8 @@ curl \
     $HEALTH_URL > /dev/null
 echo "Connected to Fuel Core chain."
 
-# get the deployments file from the deployer
-echo "Waiting for l1 chain deployment data."
-curl \
-    --fail \
-    --show-error \
-    --silent \
-    --retry-connrefused \
-    --retry-all-errors \
-    --retry $RETRIES \
-    --retry-delay $DELAY \
-    $DEPLOYMENTS_HTTP \
-    -o addresses.json
-echo "Got l1 chain deployment data."
-
 # pull data from deployer dump
-export COMMITTER__ETH__STATE_CONTRACT_ADDRESS=$(cat "./addresses.json" | jq -r .FuelChainState)
+export COMMITTER__ETH__STATE_CONTRACT_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/localhost/FuelChainState.json)
 echo "COMMITTER__ETH__STATE_CONTRACT_ADDRESS: $COMMITTER__ETH__STATE_CONTRACT_ADDRESS"
 echo "ETHEREUM_RPC: $COMMITTER__ETH__RPC"
 echo "FUEL_GRAPHQL_ENDPOINT: $COMMITTER__FUEL__GRAPHQL_ENDPOINT"

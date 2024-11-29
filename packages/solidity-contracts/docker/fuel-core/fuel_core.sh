@@ -1,6 +1,9 @@
 #!/bin/sh
 set -euo
 
+#!/bin/sh
+set -euo
+
 RETRIES=${RETRIES:-90}
 DA_COMPRESSION=${DA_COMPRESSION:-"3600sec"}
 GRAPHQL_COMPLEXITY=${GRAPHQL_COMPLEXITY:-500000}
@@ -9,10 +12,6 @@ JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
 
 if [ -z "$L1_CHAIN_HTTP" ]; then
     echo "Must specify \$L1_CHAIN_HTTP."
-    exit 1
-fi
-if [ -z "$DEPLOYMENTS_HTTP" ]; then
-    echo "Must specify \$DEPLOYMENTS_HTTP."
     exit 1
 fi
 
@@ -30,22 +29,8 @@ curl \
     $L1_CHAIN_HTTP > /dev/null
 echo "Connected to l1 chain."
 
-# get the deployments file from the deployer
-echo "Waiting for l1 chain deployment data."
-curl \
-    --fail \
-    --show-error \
-    --silent \
-    --retry-connrefused \
-    --retry-all-errors \
-    --retry $RETRIES \
-    --retry-delay 5 \
-    $DEPLOYMENTS_HTTP \
-    -o addresses.json
-echo "Got l1 chain deployment data."
-
 # pull data from deployer dump
-export FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS=$(cat "./addresses.json" | jq -r .FuelMessagePortal)
+export FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS=$(jq -r '.address' /l1chain/fuel-v2-contracts/deployments/localhost/FuelMessagePortal.json)
 echo "FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS: $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS"
 echo "L1_CHAIN_HTTP: $L1_CHAIN_HTTP"
 

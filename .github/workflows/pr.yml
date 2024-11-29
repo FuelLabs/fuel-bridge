@@ -49,10 +49,16 @@ jobs:
         with:
           # need this to get full git-history/clone in order to build changelogs and check changesets
           fetch-depth: 0
+          fetch-tags: true
       - uses: FuelLabs/github-actions/setups/node@master
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
+      - name: Fetch and verify remote branches
+        run: |
+        git fetch origin main:main
+        git branch -vv
+        git remote -v
       - run: pnpm changeset:check
 
   validate:

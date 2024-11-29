@@ -3,7 +3,7 @@ import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
 import { FuelChainState__factory } from '../../typechain';
 
-const COMMITTER_ADDRESS = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
+const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
