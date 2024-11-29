@@ -233,6 +233,9 @@ importers:
       markdownlint-cli:
         specifier: ^0.32.2
         version: 0.32.2
+      mocha:
+        specifier: ^10.0.0
+        version: 10.4.0
       node-fetch:
         specifier: ^2.6.6
         version: 2.7.0
