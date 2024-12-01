@@ -1,5 +1,5 @@
 ---
-'@fuel-bridge/solidity-contracts': patch
+'@fuel-bridge/solidity-contracts': minor
 ---
 
 testing changeset ci
