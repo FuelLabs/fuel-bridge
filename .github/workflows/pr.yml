@@ -48,12 +48,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Fetch full history
-      - run: |
-          # Ensure origin/main exists locally
-          git fetch origin main:main
-          git branch -a
-          git log --oneline --graph
-      - uses: FuelLabs/github-actions/setups/node@master
+      - uses: FuelLabs/github-actions/setups/node@ps/chore/enable-docs-with-snippets-inline
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
