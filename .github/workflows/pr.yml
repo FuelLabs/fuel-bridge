@@ -45,8 +45,9 @@ jobs:
     if: ${{ github.head_ref != 'changeset-release/main' && needs.check-packages-changed.outputs.changed == 'true' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
         with:
+          ref: ${{github.event.pull_request.head.sha}}
           # need this to get full git-history/clone in order to build changelogs and check changesets
           fetch-depth: 0
       - uses: FuelLabs/github-actions/setups/node@master
