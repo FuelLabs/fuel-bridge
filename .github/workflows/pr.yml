@@ -78,6 +78,9 @@ jobs:
 
       - name: Test projects
         run: pnpm test
+      
+      - name: Integration tests
+        run: pnpm --filter @fuel-bridge/integration-tests test
 
       # TODO issue 115: https://github.com/FuelLabs/fuel-bridge/issues/115
       # Run test again to ensure it works with node that already has transactions/messages
