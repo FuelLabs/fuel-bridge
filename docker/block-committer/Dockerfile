@@ -17,4 +17,5 @@ ENV PORT="${COMMITER_PORT}"
 EXPOSE ${PORT}
 
 # copy over script and run
-ENTRYPOINT ["sh", "./block-commiter.sh"]
+COPY ./block-committer.sh .
+ENTRYPOINT ["sh", "./block-committer.sh"]
