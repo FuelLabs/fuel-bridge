@@ -30,6 +30,9 @@ pnpm forc test
 echo "\n\nStarting docker..."
 pnpm run node:up
 
+echo "\n\ndocker logs..."
+pnpm run node:logs
+
 # Wait for the nodes to be ready and run the tests
 HEALTH_CHECK_COUNTER=0
 HELTH_CHECK_OUTPUT=""
@@ -49,6 +52,7 @@ waitForNodesToBeReady() {
         # If the node responds with 200, it is ready
         # to run the tests.
         echo "\nRun tests..."
+        pnpm run node:logs
         pnpm turbo run test
     else
         # If the request not returns 200 the node is not ready yet
