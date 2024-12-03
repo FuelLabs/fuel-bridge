@@ -16,14 +16,17 @@ on:
 jobs:
   generate-grant-role-logs:
     runs-on: ubuntu-latest
-    env:
-      RPC_URL: ${{ github.event.inputs.rpc }}
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
+      - name: Mask env var
+        run: |
+          RPC_URL=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$RPC_URL
+          echo RPC_URL=$RPC_URL >> $GITHUB_ENV
       - name: Query Events
         run: |
           npx hardhat compile && npx hardhat grant-role-event-filter --contract ${{ github.event.inputs.contractAddress }}

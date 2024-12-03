@@ -17,14 +17,17 @@ on:
 jobs:
   verify-upgrade:
     runs-on: ubuntu-latest
-    env:
-      RPC_URL: ${{ github.event.inputs.rpc }}
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
+      - name: Mask env var
+        run: |
+          RPC_URL=$(jq -r '.inputs.rpc' $GITHUB_EVENT_PATH)
+          echo ::add-mask::$RPC_URL
+          echo RPC_URL=$RPC_URL >> $GITHUB_ENV
       - name: Verify deployment bytecode
         run: |
           npx hardhat compile && npx hardhat verify-deployment --network ${{ github.event.inputs.network }}
