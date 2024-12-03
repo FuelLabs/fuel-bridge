@@ -49,6 +49,7 @@ waitForNodesToBeReady() {
         # If the node responds with 200, it is ready
         # to run the tests.
         echo "\nRun tests..."
+        pnpm run node:logs &
         pnpm turbo run test
     else
         # If the request not returns 200 the node is not ready yet
