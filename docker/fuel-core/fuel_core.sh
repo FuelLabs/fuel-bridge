@@ -2,10 +2,10 @@
 set -euo
 
 RETRIES=${RETRIES:-90}
+# new fuel core version config params
 DA_COMPRESSION=${DA_COMPRESSION:-"3600sec"}
 GRAPHQL_COMPLEXITY=${GRAPHQL_COMPLEXITY:-500000}
 JSON='{"jsonrpc":"2.0","id":0,"method":"net_version","params":[]}'
-# FUEL_DB_PATH=./mnt/db/
 
 if [ -z "$L1_CHAIN_HTTP" ]; then
     echo "Must specify \$L1_CHAIN_HTTP."
@@ -50,7 +50,6 @@ echo "FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS: $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRES
 echo "L1_CHAIN_HTTP: $L1_CHAIN_HTTP"
 
 # start the Fuel client
-#--db-path ${FUEL_DB_PATH}
 echo "Starting fuel node."
 exec /root/fuel-core run \
     --ip $FUEL_IP \
