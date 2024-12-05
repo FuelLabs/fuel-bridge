@@ -1,0 +1,97 @@
+version: '3.4'
+
+services:
+  db:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: committer_db
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U username -d committer_db']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  l1_chain:
+    image: fueldev/l1chain:${DOCKER_TAG_L1_CHAIN:-latest}
+    build:
+      dockerfile: ./docker/l1-chain/Dockerfile
+      # Use build context of the root directory
+      # to allow copying solidity-contracts on Dockerfile
+      context: ../
+    ports:
+      # expose the service to the host for integration testing
+      - ${L1_CHAIN_HTTP_PORT:-8545}:9545
+      - ${DEPLOYMENTS_PORT:-8080}:8081
+    stop_grace_period: 1s
+
+  fuel_core:
+    image: fueldev/fuelcore:${DOCKER_TAG_FUEL_CORE:-latest}
+    depends_on:
+      l1_chain:
+        condition: service_started
+    platform: linux/amd64
+    build:
+      context: ./fuel-core/
+    env_file:
+      - ./envs/fuel_core.env
+    environment:
+      L1_CHAIN_HTTP: http://l1_chain:9545
+      DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
+      RUST_LOG: trace
+      DEBUG: true
+      DB_PATH: /db
+    ports:
+      # expose the service to the host for integration testing
+      - ${FUEL_CORE_HTTP_PORT:-4000}:4001
+    stop_grace_period: 1s
+    restart: always
+
+  fuel_block_commiter:
+    image: ghcr.io/fuellabs/fuel-block-committer:sha-77607e4
+    platform: linux/amd64
+    build:
+      context: ./block-committer/
+    environment:
+      COMMITTER__ETH__RPC: 'ws://l1_chain:9545/'
+      COMMITTER__ETH__L1_KEYS__MAIN: 'Private(8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba)'
+      COMMITTER__ETH__L1_KEYS__BLOB: 'Private(59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d)'
+      COMMITTER__FUEL__GRAPHQL_ENDPOINT: 'http://fuel_core:4001/graphql'
+      COMMITTER__FUEL__NUM_BUFFERED_REQUESTS: '5'
+      COMMITTER__APP__DB__PORT: '5432'
+      COMMITTER__APP__DB__HOST: 'db'
+      COMMITTER__APP__DB__USERNAME: 'username'
+      COMMITTER__APP__DB__PASSWORD: 'password'
+      COMMITTER__APP__DB__MAX_CONNECTIONS: '10'
+      COMMITTER__APP__DB__USE_SSL: 'false'
+      COMMITTER__APP__DB__DATABASE: 'committer_db'
+      COMMITTER__APP__PORT: '8080'
+      COMMITTER__APP__HOST: '0.0.0.0'
+      COMMITTER__APP__BLOCK_CHECK_INTERVAL: '5s'
+      COMMITTER__APP__TX_FINALIZATION_CHECK_INTERVAL: '5s'
+      COMMITTER__APP__NUM_BLOCKS_TO_FINALIZE_TX: '3'
+      COMMITTER__APP__GAS_BUMP_TIMEOUT: '300s'
+      COMMITTER__APP__TX_MAX_FEE: '4000000000000000'
+      COMMITTER__APP__SEND_TX_REQUEST_TIMEOUT: '10s'
+      COMMITTER__APP__BUNDLE__ACCUMULATION_TIMEOUT: '3600s'
+      COMMITTER__APP__BUNDLE__BLOCKS_TO_ACCUMULATE: '400'
+      COMMITTER__APP__BUNDLE__OPTIMIZATION_TIMEOUT: '60s'
+      COMMITTER__APP__BUNDLE__BLOCK_HEIGHT_LOOKBACK: '8500'
+      COMMITTER__APP__BUNDLE__COMPRESSION_LEVEL: 'level6'
+      COMMITTER__APP__BUNDLE__OPTIMIZATION_STEP: '100'
+      COMMITTER__APP__BUNDLE__FRAGMENTS_TO_ACCUMULATE: '3'
+      COMMITTER__APP__BUNDLE__FRAGMENT_ACCUMULATION_TIMEOUT: '10m'
+      COMMITTER__APP__BUNDLE__NEW_BUNDLE_CHECK_INTERVAL: '3s'
+      DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
+    ports:
+      # expose the service to the host for integration testing
+      - ${COMMITTER_HTTP_PORT:-8888}:8888
+    depends_on:
+      db:
+        condition: service_healthy
+      l1_chain:
+        condition: service_started
+      fuel_core:
+        condition: service_started
+    restart: always
