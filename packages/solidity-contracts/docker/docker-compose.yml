@@ -39,7 +39,7 @@ services:
     environment:
       L1_CHAIN_HTTP: http://l1_chain:9545
       DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
-      RUST_LOG: trace
+      RUST_LOG: debug
       DEBUG: true
       DB_PATH: /db
     ports:

@@ -60,11 +60,12 @@ exec /root/fuel-core run \
     --enable-relayer \
     --relayer $L1_CHAIN_HTTP \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
-    --poa-instant false \
+    --poa-interval-period=1s \
+    --relayer-da-deploy-height=20620434 \
     --debug \
     --da-compression $DA_COMPRESSION \
     --graphql-max-complexity $GRAPHQL_COMPLEXITY \
     --min-gas-price 0 \
-    --tx-ttl-check-interval 50sec \
-    --tx-pool-ttl  50sec \
+    --tx-ttl-check-interval 10sec \
+    --tx-pool-ttl  30sec \
     --snapshot ./
