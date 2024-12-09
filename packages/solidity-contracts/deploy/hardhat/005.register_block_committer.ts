@@ -7,6 +7,8 @@ import { FuelChainState__factory } from '../../typechain';
 
 const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
+const ADMIN = '0x32da601374b38154f05904B16F44A1911Aa6f314';
+
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
 
@@ -42,13 +44,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   );
 
   await deployer.sendTransaction({
-    to: '0x32da601374b38154f05904B16F44A1911Aa6f314',
+    to: ADMIN,
     value: ethers.parseEther('1'), // Send 0.1 ETH
   });
 
-  const impersonatedSigner = await ethers.getImpersonatedSigner(
-    '0x32da601374b38154f05904B16F44A1911Aa6f314'
-  );
+  const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
   await impersonatedSigner.sendTransaction({
     to: address,
     data: txData,

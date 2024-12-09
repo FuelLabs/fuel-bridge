@@ -4,9 +4,13 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import path from 'path';
 
-import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
+import { FuelChainState__factory } from '../../typechain';
 
-const RATE_LIMIT_DURATION = 3600 * 24 * 7;
+const BLOCKS_PER_COMMIT_INTERVAL = 30;
+const TIME_TO_FINALIZE = 5;
+const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
+
+const ADMIN = '0x32da601374b38154f05904B16F44A1911Aa6f314';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -27,19 +31,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       '/',
       'deployments',
       'mainnet',
-      'FuelMessagePortal.json'
+      'FuelChainState.json'
     );
 
     const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
     address = deployment.address;
 
-    const portal = FuelMessagePortal.connect(address, deployer);
+    const portal = FuelChainState__factory.connect(address, deployer);
 
-    const factory = await hre.ethers.getContractFactory('FuelMessagePortalV3');
+    const factory = await hre.ethers.getContractFactory('FuelChainState');
 
     const newImplementation = await factory.deploy(
-      MaxUint256,
-      RATE_LIMIT_DURATION
+      TIME_TO_FINALIZE,
+      BLOCKS_PER_COMMIT_INTERVAL,
+      COMMIT_COOLDOWN
     );
 
     const newImplementationAddress = await newImplementation.getAddress();
@@ -49,13 +54,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ]);
 
     await deployer.sendTransaction({
-      to: '0x32da601374b38154f05904B16F44A1911Aa6f314',
+      to: ADMIN,
       value: ethers.parseEther('1'), // Send 0.1 ETH
     });
 
-    const impersonatedSigner = await ethers.getImpersonatedSigner(
-      '0x32da601374b38154f05904B16F44A1911Aa6f314'
-    );
+    const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
     await impersonatedSigner.sendTransaction({
       to: address,
       data: txData,
@@ -63,12 +66,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const implementation = await erc1967.getImplementationAddress(address);
 
-    console.log('Upgraded FuelMessagePortal to', implementation);
+    console.log('Upgraded FuelChainState to', implementation);
 
     return true;
   }
 };
 
-func.tags = ['upgrade_portal'];
-func.id = 'upgrade_portal';
+func.tags = ['upgrade_chain_state'];
+func.id = 'upgrade_chain_state';
 export default func;

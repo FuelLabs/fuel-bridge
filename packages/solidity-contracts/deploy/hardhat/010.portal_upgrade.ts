@@ -1,9 +1,14 @@
+import { MaxUint256 } from 'ethers';
 import fs from 'fs';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import path from 'path';
 
-import { FuelERC20GatewayV4__factory } from '../../typechain';
+import { FuelMessagePortalV3__factory as FuelMessagePortal } from '../../typechain';
+
+const RATE_LIMIT_DURATION = 3600 * 24 * 7;
+
+const ADMIN = '0x32da601374b38154f05904B16F44A1911Aa6f314';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -24,17 +29,20 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       '/',
       'deployments',
       'mainnet',
-      'FuelERC20GatewayV4.json'
+      'FuelMessagePortal.json'
     );
 
     const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
     address = deployment.address;
 
-    const portal = FuelERC20GatewayV4__factory.connect(address, deployer);
+    const portal = FuelMessagePortal.connect(address, deployer);
 
-    const factory = await hre.ethers.getContractFactory('FuelERC20GatewayV4');
+    const factory = await hre.ethers.getContractFactory('FuelMessagePortalV3');
 
-    const newImplementation = await factory.deploy();
+    const newImplementation = await factory.deploy(
+      MaxUint256,
+      RATE_LIMIT_DURATION
+    );
 
     const newImplementationAddress = await newImplementation.getAddress();
 
@@ -43,13 +51,11 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     ]);
 
     await deployer.sendTransaction({
-      to: '0x32da601374b38154f05904B16F44A1911Aa6f314',
+      to: ADMIN,
       value: ethers.parseEther('1'), // Send 0.1 ETH
     });
 
-    const impersonatedSigner = await ethers.getImpersonatedSigner(
-      '0x32da601374b38154f05904B16F44A1911Aa6f314'
-    );
+    const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
     await impersonatedSigner.sendTransaction({
       to: address,
       data: txData,
@@ -57,12 +63,12 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const implementation = await erc1967.getImplementationAddress(address);
 
-    console.log('Upgraded FuelGateway to', implementation);
+    console.log('Upgraded FuelMessagePortal to', implementation);
 
     return true;
   }
 };
 
-func.tags = ['upgrade_gateway'];
-func.id = 'upgrade_gateway';
+func.tags = ['upgrade_portal'];
+func.id = 'upgrade_portal';
 export default func;
