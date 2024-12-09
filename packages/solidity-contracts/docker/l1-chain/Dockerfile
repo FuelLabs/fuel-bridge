@@ -24,6 +24,7 @@ RUN pnpm compile
 # replace the fuel chain consts values and change contract code
 COPY contracts/ /l1chain/fuel-v2-contracts/contracts/
 COPY deploy/ /l1chain/fuel-v2-contracts/deploy/
+COPY deployments/ /l1chain/fuel-v2-contracts/deployments/
 COPY protocol/ /l1chain/fuel-v2-contracts/protocol/
 
 
@@ -32,7 +33,6 @@ COPY protocol/ /l1chain/fuel-v2-contracts/protocol/
 RUN pnpm compile
 
 # Create deployments dir
-RUN mkdir deployments
 
 ENV L1_IP="${L1_IP}"
 ENV L1_PORT="${L1_PORT}"
