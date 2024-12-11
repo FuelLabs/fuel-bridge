@@ -34,13 +34,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const portal = FuelERC20GatewayV4__factory.connect(address, deployer);
 
+    const ADMIN_ROLE = await portal.DEFAULT_ADMIN_ROLE();
+    const SET_RATE_LIMITER_ROLE = await portal.SET_RATE_LIMITER_ROLE();
+
     const factory = await hre.ethers.getContractFactory('FuelERC20GatewayV4');
 
     const newImplementation = await factory.deploy();
 
     const newImplementationAddress = await newImplementation.getAddress();
 
-    const txData = portal.interface.encodeFunctionData('upgradeTo', [
+    let txData = portal.interface.encodeFunctionData('upgradeTo', [
       newImplementationAddress,
     ]);
 
@@ -50,6 +53,24 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     });
 
     const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
+
+    txData = await portal.interface.encodeFunctionData('grantRole', [
+      ADMIN_ROLE,
+      await deployer.getAddress(),
+    ]);
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
+
+    txData = await portal.interface.encodeFunctionData('grantRole', [
+      SET_RATE_LIMITER_ROLE,
+      await deployer.getAddress(),
+    ]);
     await impersonatedSigner.sendTransaction({
       to: address,
       data: txData,

@@ -31,28 +31,35 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
     address = deployment.address;
+
+    const fuelChainState = FuelChainState__factory.connect(address, deployer);
+    const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
+
+    const txData = await fuelChainState.interface.encodeFunctionData(
+      'grantRole',
+      [COMMITTER_ROLE, COMMITTER_ADDRESS]
+    );
+
+    await deployer.sendTransaction({
+      to: ADMIN,
+      value: ethers.parseEther('1'), // Send 0.1 ETH
+    });
+
+    const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
   } else {
     ({ address } = await deployments.get('FuelChainState'));
+
+    const fuelChainState = FuelChainState__factory.connect(address, deployer);
+    const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
+
+    await fuelChainState
+      .grantRole(COMMITTER_ROLE, COMMITTER_ADDRESS)
+      .then((tx) => tx.wait());
   }
-
-  const fuelChainState = FuelChainState__factory.connect(address, deployer);
-  const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
-
-  const txData = await fuelChainState.interface.encodeFunctionData(
-    'grantRole',
-    [COMMITTER_ROLE, COMMITTER_ADDRESS]
-  );
-
-  await deployer.sendTransaction({
-    to: ADMIN,
-    value: ethers.parseEther('1'), // Send 0.1 ETH
-  });
-
-  const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
-  await impersonatedSigner.sendTransaction({
-    to: address,
-    data: txData,
-  });
 
   console.log('Granted role COMMITTER_ROLE to', COMMITTER_ADDRESS);
 };
