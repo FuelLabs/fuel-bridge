@@ -49,7 +49,7 @@ services:
     restart: always
 
   fuel_block_commiter:
-    image: ghcr.io/fuellabs/fuel-block-committer:sha-77607e4
+    image: ghcr.io/fuellabs/fuel-block-committer:v0.10.4
     platform: linux/amd64
     build:
       context: ./block-committer/

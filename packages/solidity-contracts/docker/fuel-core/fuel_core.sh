@@ -61,7 +61,7 @@ exec /root/fuel-core run \
     --relayer $L1_CHAIN_HTTP \
     --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
     --poa-interval-period=1s \
-    --relayer-da-deploy-height=20620434 \
+    --relayer-da-deploy-height=21371952 \
     --debug \
     --da-compression $DA_COMPRESSION \
     --graphql-max-complexity $GRAPHQL_COMPLEXITY \

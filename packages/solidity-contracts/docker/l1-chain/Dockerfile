@@ -32,7 +32,6 @@ COPY protocol/ /l1chain/fuel-v2-contracts/protocol/
 # RUN pnpm prune --prod
 RUN pnpm compile
 
-# Create deployments dir
 
 ENV L1_IP="${L1_IP}"
 ENV L1_PORT="${L1_PORT}"
