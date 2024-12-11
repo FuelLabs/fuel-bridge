@@ -1155,14 +1155,14 @@
       "type": "function"
     }
   ],
-  "numDeployments": 3,
+  "transactionHash": "0xaaa628d33a2247ea28a9db05472e879c8aa63689a2561c947dfc8facac06ce11",
+  "numDeployments": 4,
   "linkedData": {
     "factory": "FuelMessagePortalV3",
     "constructorArgs": [
-      "19572000000000000000000",
+      "115792089237316195423570985008687907853269984665640564039457584007913129639935",
       604800
     ]
   },
-  "implementation": "0x05f886DDeE0FE07496f6e38b0e140F8eF4655B16",
-  "transactionHash": "0x3ba642fb6850d061b7ef32ce921a0e70c98d028cfd3cc0af59ca51323f262814"
+  "implementation": "0x2C4df10a82CF077122eD99573acA6daCd76F2E67"
 }
