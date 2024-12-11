@@ -1,5 +1,15 @@
 # @fuel-bridge/fungible-token
 
+## 1.1.0
+
+### Minor Changes
+
+- update fuels package version to 0.96.1, by [@viraj124](https://github.com/viraj124) (See [#359](https://github.com/FuelLabs/fuel-bridge/pull/359))
+
+### Patch Changes
+
+- Build and publish docker images on arm, by [@arthurgeron](https://github.com/arthurgeron) (See [#348](https://github.com/FuelLabs/fuel-bridge/pull/348))
+
 ## 1.0.0
 
 ### Minor Changes
