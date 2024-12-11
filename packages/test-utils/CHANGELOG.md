@@ -1,5 +1,17 @@
 # @fuel-bridge/test-utils
 
+## 1.1.0
+
+### Minor Changes
+
+- update fuels package version to 0.96.1, by [@viraj124](https://github.com/viraj124) (See [#359](https://github.com/FuelLabs/fuel-bridge/pull/359))
+- add support for permit tokens in the erc20 gateway, by [@viraj124](https://github.com/viraj124) (See [#329](https://github.com/FuelLabs/fuel-bridge/pull/329))
+
+### Patch Changes
+
+- Build and publish docker images on arm, by [@arthurgeron](https://github.com/arthurgeron) (See [#348](https://github.com/FuelLabs/fuel-bridge/pull/348))
+- ts linting for test packages, by [@viraj124](https://github.com/viraj124) (See [#350](https://github.com/FuelLabs/fuel-bridge/pull/350))
+
 ## 1.0.0
 
 ### Minor Changes
