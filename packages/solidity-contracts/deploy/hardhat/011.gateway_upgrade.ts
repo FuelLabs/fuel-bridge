@@ -76,6 +76,14 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       data: txData,
     });
 
+    txData = await portal.interface.encodeFunctionData('requireWhitelist', [
+      false,
+    ]);
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
+
     const implementation = await erc1967.getImplementationAddress(address);
 
     console.log('Upgraded FuelGateway to', implementation);
