@@ -76,7 +76,7 @@ Deploys new implementation contracts. This is most useful in preparation for pro
 npm run script-verify-source --network <name of the network>
 ```
 
-Verifies the contract source code on Etherscan and Sourcify. This is only possible on recognized public networks (spolia, mainnet) and requires a deployment file either added manually under the `deployments` directory or auto generated after the deploy/upgrade scripts. This is useful to run in case there was an issue verifying the source during the deploy or updgrade scripts.
+Verifies the contract source code on Etherscan and Sourcify. This is only possible on recognized public networks (spolia, mainnet) and requires a deployment file either added manually under the `deployments` directory or auto generated after the deploy/upgrade scripts. This is useful to run in case there was an issue verifying the source during the deploy or upgrade scripts.
 
 ### Verify Address
 
