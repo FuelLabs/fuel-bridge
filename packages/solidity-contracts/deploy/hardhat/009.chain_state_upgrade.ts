@@ -10,6 +10,7 @@ const TIME_TO_FINALIZE = 5;
 const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
 const ADMIN = '0x32da601374b38154f05904B16F44A1911Aa6f314';
+const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -36,7 +37,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
     address = deployment.address;
 
-    const portal = FuelChainState__factory.connect(address, deployer);
+    const chainState = FuelChainState__factory.connect(address, deployer);
 
     const factory = await hre.ethers.getContractFactory('FuelChainState');
 
@@ -48,16 +49,28 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     const newImplementationAddress = await newImplementation.getAddress();
 
-    const txData = portal.interface.encodeFunctionData('upgradeTo', [
+    let txData = chainState.interface.encodeFunctionData('upgradeTo', [
       newImplementationAddress,
     ]);
 
     await deployer.sendTransaction({
       to: ADMIN,
-      value: ethers.parseEther('1'), // Send 0.1 ETH
+      value: ethers.parseEther('100'),
     });
 
     const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
+
+    const COMMITTER_ROLE = await chainState.COMMITTER_ROLE();
+
+    txData = await chainState.interface.encodeFunctionData('grantRole', [
+      COMMITTER_ROLE,
+      COMMITTER_ADDRESS,
+    ]);
+
     await impersonatedSigner.sendTransaction({
       to: address,
       data: txData,

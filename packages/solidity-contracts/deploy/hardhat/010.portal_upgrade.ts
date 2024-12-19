@@ -52,7 +52,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
     await deployer.sendTransaction({
       to: ADMIN,
-      value: ethers.parseEther('1'), // Send 0.1 ETH
+      value: ethers.parseEther('100'),
     });
 
     const impersonatedSigner = await ethers.getImpersonatedSigner(ADMIN);
