@@ -50,6 +50,7 @@ const eth_private_keys: string[] = [
 const def_pk_eth_deployer: string = eth_private_keys[0];
 const def_pk_eth_signer1: string = eth_private_keys[3];
 const def_pk_eth_signer2: string = eth_private_keys[4];
+const def_pk_eth_signer3: string = eth_private_keys[5];
 
 const def_pk_fuel_deployer: string =
   '0xde97d8624a438121b86a1956544bd72ed68cd69f2c99555b08b1e8c51ffd511c';
@@ -66,6 +67,7 @@ export interface SetupOptions {
   pk_eth_deployer?: string;
   pk_eth_signer1?: string;
   pk_eth_signer2?: string;
+  pk_eth_signer3?: string;
   pk_fuel_deployer?: string;
   pk_fuel_signer1?: string;
   pk_fuel_signer2?: string;
@@ -109,6 +111,8 @@ export async function setupEnvironment(
     opts.pk_eth_signer1 || process.env.PK_ETH_SIGNER1 || def_pk_eth_signer1;
   const pk_eth_signer2: string =
     opts.pk_eth_signer2 || process.env.PK_ETH_SIGNER2 || def_pk_eth_signer2;
+  const pk_eth_signer3: string =
+    opts.pk_eth_signer3 || process.env.PK_ETH_SIGNER3 || def_pk_eth_signer3;
   const pk_fuel_deployer: string =
     opts.pk_fuel_deployer ||
     process.env.PK_FUEL_DEPLOYER ||
@@ -213,6 +217,18 @@ export async function setupEnvironment(
     await tx.wait();
   }
 
+  const eth_signer3 = new NonceManager(
+    new ethers.Wallet(pk_eth_signer3, eth_provider)
+  );
+  const eth_signer3Balance = await eth_provider.getBalance(eth_signer3);
+  if (eth_signer3Balance < parseEther('1') && skip_deployer_balance) {
+    const tx = await eth_deployer.sendTransaction({
+      to: eth_signer3,
+      value: parseEther('1'),
+    });
+    await tx.wait();
+  }
+
   // Get contract addresses
   let eth_fuelChainStateAddress: string = fuel_chain_consensus_addr;
   let eth_fuelMessagePortalAddress: string = fuel_message_portal_addr;
@@ -302,7 +318,7 @@ export async function setupEnvironment(
       fuelERC20Gateway: eth_fuelERC20Gateway,
       fuelERC721Gateway: eth_fuelERC721Gateway,
       deployer: eth_deployer,
-      signers: [eth_signer1, eth_signer2],
+      signers: [eth_signer1, eth_signer2, eth_signer3],
     },
     fuel: {
       provider: fuel_provider,
