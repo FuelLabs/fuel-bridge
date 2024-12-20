@@ -6,7 +6,6 @@ import {
   getMessageOutReceipt,
   waitForMessage,
   waitForBlockFinalization,
-  tryToForwardFuelChain,
   getBlock,
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
@@ -18,6 +17,7 @@ import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
+  Provider
 } from 'fuels';
 
 const { expect } = chai;
@@ -32,6 +32,13 @@ describe('Transferring ETH', async function () {
 
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
+
+  async function forwardFuelChain(
+    provider: Provider,
+    blocksToForward: string
+  ) {  
+    await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
+  }
 
   async function getBlockWithHeight(env: any, height: string): Promise<any> {
     const BLOCK_BY_HEIGHT_QUERY = `query Block($height: U64) {
@@ -118,7 +125,7 @@ describe('Transferring ETH', async function () {
     await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
     await env.eth.provider.send('evm_mine', []); // Mine a new block
 
-    await tryToForwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
+    await forwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
 
     const block = await getBlockWithHeight(env, nextBlockHeight.toString());
 
