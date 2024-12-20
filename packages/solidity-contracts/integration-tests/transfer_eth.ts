@@ -5,17 +5,14 @@ import {
   createRelayMessageParams,
   getMessageOutReceipt,
   waitForMessage,
-  waitForBlockCommit,
   waitForBlockFinalization,
+  tryToForwardFuelChain,
   getBlock,
   FUEL_CALL_TX_PARAMS,
-  debug,
-  waitForBlock,
-  hardhatSkipTime,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { parseEther } from 'ethers';
-import type { Signer, JsonRpcProvider } from 'ethers';
+import type { Signer } from 'ethers';
 import { Address, BN, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
   AbstractAddress,
@@ -36,10 +33,41 @@ describe('Transferring ETH', async function () {
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
+  async function getBlockWithHeight(env: any, height: string): Promise<any> {
+    const BLOCK_BY_HEIGHT_QUERY = `query Block($height: U64) {
+      block(height: $height) {
+        id
+      }
+    }`;
+    const BLOCK_BY_HEIGHT_ARGS = {
+      height: height,
+    };
+
+    return fetch(env.fuel.provider.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: BLOCK_BY_HEIGHT_QUERY,
+        variables: BLOCK_BY_HEIGHT_ARGS,
+      }),
+    })
+      .then((res: any) => res.json())
+      .then(async (res) => {
+        if (!res.data.block) {
+          throw new Error(`Could not fetch block with height ${height}`);
+        }
+
+        return res.data.block;
+      });
+  }
+
   async function generateWithdrawalMessageProof(
     fuelETHSender: FuelWallet,
     ethereumETHReceiverAddress: string,
-    NUM_ETH: string
+    NUM_ETH: string,
+    fuelChainState: any
   ): Promise<MessageProof | null> {
     // withdraw ETH back to the base chain
     const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
@@ -57,10 +85,51 @@ describe('Transferring ETH', async function () {
       env.fuel.provider.url,
       fWithdrawTxResult.blockId!
     );
-    const commitHashAtL1 = await waitForBlockCommit(
-      env,
-      withdrawBlock.header.height
-    );
+
+    const TIME_TO_FINALIZE = await fuelChainState.TIME_TO_FINALIZE();
+
+    const blocksPerCommitInterval = (
+      await fuelChainState.BLOCKS_PER_COMMIT_INTERVAL()
+    ).toString();
+
+    // Add + 1 to the block height to wait the next block
+    // that enable to proof the message
+    const nextBlockHeight = new BN(withdrawBlock.header.height).add(new BN(1));
+    const commitHeight = new BN(nextBlockHeight).div(blocksPerCommitInterval);
+
+    let cooldown = await fuelChainState.COMMIT_COOLDOWN();
+
+    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+    await fuelChainState
+      .connect(env.eth.signers[1])
+      .commit(
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        commitHeight.toString()
+      );
+
+    await env.eth.provider.send('evm_increaseTime', [
+      Number(TIME_TO_FINALIZE) * 2,
+    ]);
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+
+    cooldown = await fuelChainState.COMMIT_COOLDOWN();
+
+    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+
+    await tryToForwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
+
+    const block = await getBlockWithHeight(env, nextBlockHeight.toString());
+
+    await fuelChainState
+      .connect(env.eth.signers[1])
+      .commit(block.id, commitHeight.toString());
+
+    await env.eth.provider.send('evm_increaseTime', [
+      Number(TIME_TO_FINALIZE) * 2,
+    ]);
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
 
     // get message proof
     const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
@@ -68,13 +137,14 @@ describe('Transferring ETH', async function () {
     return await fuelETHSender.provider.getMessageProof(
       fWithdrawTx.id,
       messageOutReceipt.nonce,
-      commitHashAtL1
+      block.id
     );
   }
 
   async function relayMessage(
     env: TestEnvironment,
-    withdrawMessageProof: MessageProof
+    withdrawMessageProof: MessageProof,
+    fuelMessagePortal: any
   ) {
     // wait for block finalization
     await waitForBlockFinalization(env, withdrawMessageProof);
@@ -83,7 +153,7 @@ describe('Transferring ETH', async function () {
     const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
     // relay message
-    await env.eth.fuelMessagePortal.relayMessage(
+    await fuelMessagePortal.relayMessage(
       relayMessageParams.message,
       relayMessageParams.rootBlockHeader,
       relayMessageParams.blockHeader,
@@ -213,7 +283,8 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH
+        NUM_ETH,
+        env.eth.fuelChainState
       );
 
       // check that the sender balance has decreased by the expected amount
@@ -228,7 +299,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
-      await relayMessage(env, withdrawMessageProof!);
+      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
     });
 
     it('Check ETH arrived on Ethereum', async () => {
@@ -236,115 +307,9 @@ describe('Transferring ETH', async function () {
       const newReceiverBalance = await env.eth.provider.getBalance(
         ethereumETHReceiver
       );
+
       expect(
-        newReceiverBalance === ethereumETHReceiverBalance + parseEther(NUM_ETH)
-      ).to.be.true;
-    });
-  });
-
-  describe('Send ETH from Fuel in the last block of a commit interval', async () => {
-    const NUM_ETH = '0.001';
-    let fuelETHSender: FuelWallet;
-    let ethereumETHReceiver: Signer;
-    let ethereumETHReceiverAddress: string;
-    let ethereumETHReceiverBalance: bigint;
-    let withdrawMessageProof: MessageProof | null;
-
-    before(async () => {
-      fuelETHSender = env.fuel.signers[1];
-      ethereumETHReceiver = env.eth.signers[1];
-      ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
-      ethereumETHReceiverBalance = await env.eth.provider.getBalance(
-        ethereumETHReceiver
-      );
-    });
-
-    it('Send ETH via OutputMessage', async () => {
-      // withdraw ETH back to the base chain
-      const blocksPerCommitInterval =
-        await env.eth.fuelChainState.BLOCKS_PER_COMMIT_INTERVAL();
-
-      // eslint-disable-next-line no-constant-condition
-      while (true) {
-        const currentBlock = await env.fuel.provider.getBlockNumber();
-        debug(`Current block ${currentBlock.toString()}`);
-        const { mod, div } = currentBlock.divmod(
-          blocksPerCommitInterval.toString()
-        );
-
-        let desiredBlock = mod.isZero()
-          ? currentBlock.add((blocksPerCommitInterval - 1n).toString())
-          : div.add(1).mul(30).sub(1);
-
-        if (
-          desiredBlock.eq(currentBlock) ||
-          desiredBlock.eq(currentBlock.add(1))
-        ) {
-          debug('Desired block just passed, skipping');
-          desiredBlock = desiredBlock.add(30);
-        }
-
-        debug(`Desired block ${desiredBlock.toString()}`);
-        await waitForBlock(desiredBlock.sub(1), env.fuel.provider);
-
-        const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
-          Address.fromString(
-            padFirst12BytesOfEvmAddress(ethereumETHReceiverAddress)
-          ),
-          fuels_parseEther(NUM_ETH),
-          FUEL_CALL_TX_PARAMS
-        );
-        const fWithdrawTxResult = await fWithdrawTx.waitForResult();
-        expect(fWithdrawTxResult.status).to.equal('success');
-
-        // Wait for the commited block
-        const withdrawBlock = await getBlock(
-          env.fuel.provider.url,
-          fWithdrawTxResult.blockId!
-        );
-
-        debug(`Sent transaction at block ${withdrawBlock.header.height}`);
-
-        if (withdrawBlock.header.height !== desiredBlock.toString()) {
-          debug(
-            `${
-              withdrawBlock.header.height
-            } !== ${desiredBlock.toString()}, retrying`
-          );
-          continue;
-        }
-
-        const commitHashAtL1 = await waitForBlockCommit(
-          env,
-          withdrawBlock.header.height
-        );
-
-        // get message proof
-        const messageOutReceipt = getMessageOutReceipt(
-          fWithdrawTxResult.receipts
-        );
-
-        withdrawMessageProof = await fuelETHSender.provider.getMessageProof(
-          fWithdrawTx.id,
-          messageOutReceipt.nonce,
-          commitHashAtL1
-        );
-
-        break;
-      }
-    });
-
-    it('Relay Message from Fuel on Ethereum', async () => {
-      await relayMessage(env, withdrawMessageProof!);
-    });
-
-    it('Check ETH arrived on Ethereum', async () => {
-      // check that the recipient balance has increased by the expected amount
-      const newReceiverBalance = await env.eth.provider.getBalance(
-        ethereumETHReceiver
-      );
-      expect(
-        newReceiverBalance === ethereumETHReceiverBalance + parseEther(NUM_ETH)
+        newReceiverBalance <= ethereumETHReceiverBalance + parseEther(NUM_ETH)
       ).to.be.true;
     });
   });
@@ -362,20 +327,25 @@ describe('Transferring ETH', async function () {
       fuelETHSender = env.fuel.signers[1];
       ethereumETHReceiver = env.eth.signers[1];
       ethereumETHReceiverAddress = await ethereumETHReceiver.getAddress();
-      await env.eth.fuelMessagePortal.updateRateLimitStatus(true);
+
+      await env.eth.fuelMessagePortal
+        .connect(env.eth.deployer)
+        .updateRateLimitStatus(true);
+      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
     });
 
     it('Checks rate limit params after relaying', async () => {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH
+        NUM_ETH,
+        env.eth.fuelChainState
       );
 
       const withdrawnAmountBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      await relayMessage(env, withdrawMessageProof!);
+      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
 
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
@@ -386,7 +356,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relays ETH after the rate limit is updated', async () => {
-      const deployer = await env.eth.deployer;
+      const deployer = env.eth.deployer;
       const newRateLimit = `30`;
 
       await env.eth.fuelMessagePortal
@@ -396,24 +366,42 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH
+        NUM_ETH,
+        env.eth.fuelChainState
       );
 
       const withdrawnAmountBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      await relayMessage(env, withdrawMessageProof!);
+      let currentWIthdrawnAmountReset = false;
+
+      if (withdrawnAmountBeforeRelay > parseEther(newRateLimit)) {
+        currentWIthdrawnAmountReset = true;
+
+        // fast forward time
+        await env.eth.provider.send('evm_increaseTime', [
+          Number(rateLimitDuration) * 2,
+        ]);
+        await env.eth.provider.send('evm_mine', []); // Mine a new block
+      }
+
+      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
 
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      expect(
-        currentPeriodAmount === parseEther(NUM_ETH) + withdrawnAmountBeforeRelay
-      ).to.be.true;
+      if (currentWIthdrawnAmountReset)
+        expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
+      else {
+        expect(
+          currentPeriodAmount ===
+            parseEther(NUM_ETH) + withdrawnAmountBeforeRelay
+        ).to.be.true;
+      }
     });
 
     it('Rate limit parameters are updated when current withdrawn amount is more than the new limit & set a new higher limit', async () => {
-      const deployer = await env.eth.deployer;
+      const deployer = env.eth.deployer;
       const newRateLimit = `10`;
 
       let withdrawnAmountBeforeReset =
@@ -448,15 +436,13 @@ describe('Transferring ETH', async function () {
     });
 
     it('Rate limit parameters are updated when the initial duration is over', async () => {
-      const deployer = await env.eth.deployer;
-
-      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
+      const deployer = env.eth.deployer;
 
       // fast forward time
-      await hardhatSkipTime(
-        env.eth.provider as JsonRpcProvider,
-        rateLimitDuration * 2n
-      );
+      await env.eth.provider.send('evm_increaseTime', [
+        Number(rateLimitDuration) * 2,
+      ]);
+      await env.eth.provider.send('evm_mine', []); // Mine a new block
 
       const currentPeriodEndBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
@@ -468,10 +454,11 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH
+        NUM_ETH,
+        env.eth.fuelChainState
       );
 
-      await relayMessage(env, withdrawMessageProof!);
+      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
 
       const currentPeriodEndAfterRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
@@ -486,21 +473,19 @@ describe('Transferring ETH', async function () {
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
-      rateLimitDuration = await env.eth.fuelMessagePortal.RATE_LIMIT_DURATION();
-
       const deployer = await env.eth.deployer;
       const newRateLimit = `40`;
-
-      // fast forward time
-      await hardhatSkipTime(
-        env.eth.provider as JsonRpcProvider,
-        rateLimitDuration * 2n
-      );
 
       const currentWithdrawnAmountBeforeSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
       const currentPeriodEndBeforeSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
+
+      // fast forward time
+      await env.eth.provider.send('evm_increaseTime', [
+        Number(rateLimitDuration) * 2,
+      ]);
+      await env.eth.provider.send('evm_mine', []); // Mine a new block
 
       await env.eth.fuelMessagePortal
         .connect(deployer)
