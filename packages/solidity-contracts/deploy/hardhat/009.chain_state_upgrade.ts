@@ -10,7 +10,7 @@ const TIME_TO_FINALIZE = 5;
 const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
 const ADMIN = '0x32da601374b38154f05904B16F44A1911Aa6f314';
-const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
+let COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
@@ -65,6 +65,18 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     });
 
     const COMMITTER_ROLE = await chainState.COMMITTER_ROLE();
+
+    txData = await chainState.interface.encodeFunctionData('grantRole', [
+      COMMITTER_ROLE,
+      COMMITTER_ADDRESS,
+    ]);
+
+    await impersonatedSigner.sendTransaction({
+      to: address,
+      data: txData,
+    });
+
+    COMMITTER_ADDRESS = '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65';
 
     txData = await chainState.interface.encodeFunctionData('grantRole', [
       COMMITTER_ROLE,
