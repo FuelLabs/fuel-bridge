@@ -10,7 +10,6 @@ import {
   FUEL_TX_PARAMS,
   getMessageOutReceipt,
   fuel_to_eth_address,
-  waitForBlockCommit,
   waitForBlockFinalization,
   getTokenId,
   getBlock,
@@ -25,6 +24,7 @@ import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
+  Provider,
 } from 'fuels';
 
 import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
@@ -49,6 +49,40 @@ describe('Bridging ERC20 tokens', async function () {
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
+
+  async function forwardFuelChain(provider: Provider, blocksToForward: string) {
+    await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
+  }
+
+  async function getBlockWithHeight(env: any, height: string): Promise<any> {
+    const BLOCK_BY_HEIGHT_QUERY = `query Block($height: U64) {
+      block(height: $height) {
+        id
+      }
+    }`;
+    const BLOCK_BY_HEIGHT_ARGS = {
+      height: height,
+    };
+
+    return fetch(env.fuel.provider.url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: BLOCK_BY_HEIGHT_QUERY,
+        variables: BLOCK_BY_HEIGHT_ARGS,
+      }),
+    })
+      .then((res: any) => res.json())
+      .then(async (res) => {
+        if (!res.data.block) {
+          throw new Error(`Could not fetch block with height ${height}`);
+        }
+
+        return res.data.block;
+      });
+  }
 
   async function generateWithdrawalMessageProof(
     fuel_bridge: BridgeFungibleToken,
@@ -99,16 +133,57 @@ describe('Bridging ERC20 tokens', async function () {
       env.fuel.provider.url,
       fWithdrawTxResult.blockId!
     );
-    const commitHashAtL1 = await waitForBlockCommit(
-      env,
-      withdrawBlock.header.height
-    );
+
+    const TIME_TO_FINALIZE = await env.eth.fuelChainState.TIME_TO_FINALIZE();
+
+    const blocksPerCommitInterval = (
+      await env.eth.fuelChainState.BLOCKS_PER_COMMIT_INTERVAL()
+    ).toString();
+
+    // Add + 1 to the block height to wait the next block
+    // that enable to proof the message
+    const nextBlockHeight = new BN(withdrawBlock.header.height).add(new BN(1));
+    const commitHeight = new BN(nextBlockHeight).div(blocksPerCommitInterval);
+
+    let cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
+
+    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+    await env.eth.fuelChainState
+      .connect(env.eth.signers[1])
+      .commit(
+        '0x0000000000000000000000000000000000000000000000000000000000000000',
+        commitHeight.toString()
+      );
+
+    await env.eth.provider.send('evm_increaseTime', [
+      Number(TIME_TO_FINALIZE) * 2,
+    ]);
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+
+    cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
+
+    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
+
+    await forwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
+
+    const block = await getBlockWithHeight(env, nextBlockHeight.toString());
+
+    await env.eth.fuelChainState
+      .connect(env.eth.signers[1])
+      .commit(block.id, commitHeight.toString());
+
+    await env.eth.provider.send('evm_increaseTime', [
+      Number(TIME_TO_FINALIZE) * 2,
+    ]);
+    await env.eth.provider.send('evm_mine', []); // Mine a new block
 
     const messageOutReceipt = getMessageOutReceipt(fWithdrawTxResult.receipts);
     return await fuelTokenSender.provider.getMessageProof(
       tx.id,
       messageOutReceipt.nonce,
-      commitHashAtL1
+      block.id
     );
   }
 
@@ -185,7 +260,9 @@ describe('Bridging ERC20 tokens', async function () {
 
     fuel_bridgeContractId = fuel_bridge.id.toHexString();
 
-    await env.eth.fuelERC20Gateway.setAssetIssuerId(fuel_bridgeContractId);
+    await env.eth.fuelERC20Gateway
+      .connect(env.eth.deployer)
+      .setAssetIssuerId(fuel_bridgeContractId);
     fuel_testAssetId = getTokenId(fuel_bridge, eth_testTokenAddress);
 
     // initializing rate limit params for the token

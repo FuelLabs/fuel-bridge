@@ -17,7 +17,7 @@ import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
-  Provider
+  Provider,
 } from 'fuels';
 
 const { expect } = chai;
@@ -33,10 +33,7 @@ describe('Transferring ETH', async function () {
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
-  async function forwardFuelChain(
-    provider: Provider,
-    blocksToForward: string
-  ) {  
+  async function forwardFuelChain(provider: Provider, blocksToForward: string) {
     await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
   }
 
@@ -73,8 +70,7 @@ describe('Transferring ETH', async function () {
   async function generateWithdrawalMessageProof(
     fuelETHSender: FuelWallet,
     ethereumETHReceiverAddress: string,
-    NUM_ETH: string,
-    fuelChainState: any
+    NUM_ETH: string
   ): Promise<MessageProof | null> {
     // withdraw ETH back to the base chain
     const fWithdrawTx = await fuelETHSender.withdrawToBaseLayer(
@@ -93,10 +89,10 @@ describe('Transferring ETH', async function () {
       fWithdrawTxResult.blockId!
     );
 
-    const TIME_TO_FINALIZE = await fuelChainState.TIME_TO_FINALIZE();
+    const TIME_TO_FINALIZE = await env.eth.fuelChainState.TIME_TO_FINALIZE();
 
     const blocksPerCommitInterval = (
-      await fuelChainState.BLOCKS_PER_COMMIT_INTERVAL()
+      await env.eth.fuelChainState.BLOCKS_PER_COMMIT_INTERVAL()
     ).toString();
 
     // Add + 1 to the block height to wait the next block
@@ -104,11 +100,11 @@ describe('Transferring ETH', async function () {
     const nextBlockHeight = new BN(withdrawBlock.header.height).add(new BN(1));
     const commitHeight = new BN(nextBlockHeight).div(blocksPerCommitInterval);
 
-    let cooldown = await fuelChainState.COMMIT_COOLDOWN();
+    let cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
 
     await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
     await env.eth.provider.send('evm_mine', []); // Mine a new block
-    await fuelChainState
+    await env.eth.fuelChainState
       .connect(env.eth.signers[1])
       .commit(
         '0x0000000000000000000000000000000000000000000000000000000000000000',
@@ -120,7 +116,7 @@ describe('Transferring ETH', async function () {
     ]);
     await env.eth.provider.send('evm_mine', []); // Mine a new block
 
-    cooldown = await fuelChainState.COMMIT_COOLDOWN();
+    cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
 
     await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
     await env.eth.provider.send('evm_mine', []); // Mine a new block
@@ -129,7 +125,7 @@ describe('Transferring ETH', async function () {
 
     const block = await getBlockWithHeight(env, nextBlockHeight.toString());
 
-    await fuelChainState
+    await env.eth.fuelChainState
       .connect(env.eth.signers[1])
       .commit(block.id, commitHeight.toString());
 
@@ -150,8 +146,7 @@ describe('Transferring ETH', async function () {
 
   async function relayMessage(
     env: TestEnvironment,
-    withdrawMessageProof: MessageProof,
-    fuelMessagePortal: any
+    withdrawMessageProof: MessageProof
   ) {
     // wait for block finalization
     await waitForBlockFinalization(env, withdrawMessageProof);
@@ -160,7 +155,7 @@ describe('Transferring ETH', async function () {
     const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
     // relay message
-    await fuelMessagePortal.relayMessage(
+    await env.eth.fuelMessagePortal.relayMessage(
       relayMessageParams.message,
       relayMessageParams.rootBlockHeader,
       relayMessageParams.blockHeader,
@@ -290,8 +285,7 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH,
-        env.eth.fuelChainState
+        NUM_ETH
       );
 
       // check that the sender balance has decreased by the expected amount
@@ -306,7 +300,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Relay Message from Fuel on Ethereum', async () => {
-      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
+      await relayMessage(env, withdrawMessageProof!);
     });
 
     it('Check ETH arrived on Ethereum', async () => {
@@ -345,14 +339,13 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH,
-        env.eth.fuelChainState
+        NUM_ETH
       );
 
       const withdrawnAmountBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
+      await relayMessage(env, withdrawMessageProof!);
 
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
@@ -373,8 +366,7 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH,
-        env.eth.fuelChainState
+        NUM_ETH
       );
 
       const withdrawnAmountBeforeRelay =
@@ -392,7 +384,7 @@ describe('Transferring ETH', async function () {
         await env.eth.provider.send('evm_mine', []); // Mine a new block
       }
 
-      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
+      await relayMessage(env, withdrawMessageProof!);
 
       const currentPeriodAmount =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
@@ -461,11 +453,10 @@ describe('Transferring ETH', async function () {
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
-        NUM_ETH,
-        env.eth.fuelChainState
+        NUM_ETH
       );
 
-      await relayMessage(env, withdrawMessageProof!, env.eth.fuelMessagePortal);
+      await relayMessage(env, withdrawMessageProof!);
 
       const currentPeriodEndAfterRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
