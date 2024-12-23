@@ -20,6 +20,8 @@ services:
       # Use build context of the root directory
       # to allow copying solidity-contracts on Dockerfile
       context: ../
+    env_file:
+      - ./envs/l1_chain.env
     ports:
       # expose the service to the host for integration testing
       - ${L1_CHAIN_HTTP_PORT:-8545}:9545

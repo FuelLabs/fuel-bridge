@@ -16,7 +16,6 @@ COPY docker/l1-chain/package.json /l1chain/fuel-v2-contracts/
 # build the ethereum contracts and environment
 RUN pnpm install
 COPY contracts/test/PlaceHolder.sol /l1chain/fuel-v2-contracts/contracts/test/PlaceHolder.sol
-COPY .env /l1chain/fuel-v2-contracts/
 COPY hardhat.config.ts /l1chain/fuel-v2-contracts/
 COPY scripts/ /l1chain/fuel-v2-contracts/scripts/
 RUN pnpm compile
