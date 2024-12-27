@@ -127,6 +127,13 @@ importers:
         version: link:../solidity-contracts
 
   packages/solidity-contracts:
+    dependencies:
+      '@fuel-bridge/fungible-token':
+        specifier: workspace:*
+        version: link:../fungible-token
+      '@fuel-bridge/test-utils':
+        specifier: workspace:*
+        version: link:../test-utils
     devDependencies:
       '@fuel-ts/merkle':
         specifier: ^0.21.2
@@ -230,6 +237,9 @@ importers:
       markdownlint-cli:
         specifier: ^0.32.2
         version: 0.32.2
+      mocha:
+        specifier: ^10.0.0
+        version: 10.4.0
       node-fetch:
         specifier: ^2.6.6
         version: 2.7.0
