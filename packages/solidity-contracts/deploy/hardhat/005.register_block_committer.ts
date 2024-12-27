@@ -7,16 +7,21 @@ const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
+
+  const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
+
   const [deployer] = await ethers.getSigners();
 
-  const { address } = await deployments.get('FuelChainState');
+  if (!isForking) {
+    const { address } = await deployments.get('FuelChainState');
 
-  const fuelChainState = FuelChainState__factory.connect(address, deployer);
-  const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
+    const fuelChainState = FuelChainState__factory.connect(address, deployer);
+    const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
 
-  await fuelChainState
-    .grantRole(COMMITTER_ROLE, COMMITTER_ADDRESS)
-    .then((tx) => tx.wait());
+    await fuelChainState
+      .grantRole(COMMITTER_ROLE, COMMITTER_ADDRESS)
+      .then((tx) => tx.wait());
+  }
 
   console.log('Granted role COMMITTER_ROLE to', COMMITTER_ADDRESS);
 };
