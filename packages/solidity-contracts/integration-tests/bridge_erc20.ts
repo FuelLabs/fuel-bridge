@@ -146,16 +146,20 @@ describe('Bridging ERC20 tokens', async function () {
     const commitHeight = new BN(nextBlockHeight).div(blocksPerCommitInterval);
 
     let cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
-
+    
+    // fast forward post the commit cooldown period
     await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
     await env.eth.provider.send('evm_mine', []); // Mine a new block
+
+    // override the commit hash in a existing block
     await env.eth.fuelChainState
       .connect(env.eth.signers[1])
       .commit(
         '0x0000000000000000000000000000000000000000000000000000000000000000',
         commitHeight.toString()
       );
-
+    
+    // fast forward to the block finalization time
     await env.eth.provider.send('evm_increaseTime', [
       Number(TIME_TO_FINALIZE) * 2,
     ]);
@@ -163,17 +167,21 @@ describe('Bridging ERC20 tokens', async function () {
 
     cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
 
+    // fast forward post the commit cooldown period
     await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
     await env.eth.provider.send('evm_mine', []); // Mine a new block
-
+    
+    // produce more blocks to fetch the block height
     await forwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
 
     const block = await getBlockWithHeight(env, nextBlockHeight.toString());
 
+    // reset the commit hash in the local L2 network
     await env.eth.fuelChainState
       .connect(env.eth.signers[1])
       .commit(block.id, commitHeight.toString());
 
+    // fast forward to the block finalization time
     await env.eth.provider.send('evm_increaseTime', [
       Number(TIME_TO_FINALIZE) * 2,
     ]);
