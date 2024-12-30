@@ -24,6 +24,11 @@ jobs:
         with:
           node-version: 20.16.0
           pnpm-version: 9.0.6
+      - uses: FuelLabs/github-actions/setups/docker@master
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/setup-rust
       - name: Build project
         run: pnpm build
       - name: Sets the tenderly rpc endpoint in the L1 docker container env
