@@ -16,7 +16,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     upgrades: { erc1967 },
   } = hre;
 
-  const [deployer, , ,secondaryUser] = await ethers.getSigners();
+  const [deployer] = await ethers.getSigners();
 
   const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
   let address;
@@ -72,17 +72,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       to: address,
       data: txData,
     });
-
-    txData = await portal.interface.encodeFunctionData('grantRole', [
-      SET_RATE_LIMITER_ROLE,
-      await secondaryUser.getAddress(),
-    ]);
-
-    await impersonatedSigner.sendTransaction({
-      to: address,
-      data: txData,
-    });
-
 
     const implementation = await erc1967.getImplementationAddress(address);
 

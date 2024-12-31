@@ -430,7 +430,6 @@ describe('Transferring ETH', async function () {
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
       // current withdrawn amount doesn't change when rate limit is updated
-
       expect(
         currentWithdrawnAmountAfterSettingLimit === withdrawnAmountBeforeReset
       ).to.be.true;
@@ -462,14 +461,6 @@ describe('Transferring ETH', async function () {
       const currentPeriodEndBeforeRelay =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-      console.log("reset limit")
-
-      await env.eth.fuelMessagePortal
-        .connect(deployer)
-        .resetRateLimitAmount(parseEther(largeRateLimit));
-      
-      console.log("generateWithdrawalMessageProof")
-
       withdrawMessageProof = await generateWithdrawalMessageProof(
         fuelETHSender,
         ethereumETHReceiverAddress,
@@ -478,16 +469,16 @@ describe('Transferring ETH', async function () {
 
       await relayMessage(env, withdrawMessageProof!);
 
-      // const currentPeriodEndAfterRelay =
-      //   await env.eth.fuelMessagePortal.currentPeriodEnd();
+      const currentPeriodEndAfterRelay =
+        await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-      // expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
-      //   .true;
+      expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
+        .true;
 
-      // const currentPeriodAmount =
-      //   await env.eth.fuelMessagePortal.currentPeriodAmount();
+      const currentPeriodAmount =
+        await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      // expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
+      expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
     });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
@@ -505,30 +496,25 @@ describe('Transferring ETH', async function () {
       ]);
       await env.eth.provider.send('evm_mine', []); // Mine a new block
 
-      console.log("reset limit")
-
       await env.eth.fuelMessagePortal
         .connect(deployer)
         .resetRateLimitAmount(parseEther(newRateLimit));
-
-      console.log("reset done")
-
 
       const currentPeriodEndAfterSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodEnd();
       const currentWithdrawnAmountAfterSettingLimit =
         await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-      // expect(
-      //   currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
-      // ).to.be.true;
+      expect(
+        currentPeriodEndAfterSettingLimit > currentPeriodEndBeforeSettingLimit
+      ).to.be.true;
 
-      // expect(
-      //   currentWithdrawnAmountBeforeSettingLimit >
-      //     currentWithdrawnAmountAfterSettingLimit
-      // ).to.be.true;
+      expect(
+        currentWithdrawnAmountBeforeSettingLimit >
+          currentWithdrawnAmountAfterSettingLimit
+      ).to.be.true;
 
-      // expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
+      expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
     });
   });
 });
