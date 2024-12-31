@@ -451,7 +451,7 @@ describe('Transferring ETH', async function () {
     });
 
     it('Rate limit parameters are updated when the initial duration is over', async () => {
-      const deployer = env.eth.deployer;
+      const deployer = await env.eth.signers[0];
 
       // fast forward time
       await env.eth.provider.send('evm_increaseTime', [
