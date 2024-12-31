@@ -450,45 +450,45 @@ describe('Transferring ETH', async function () {
       ).to.be.true;
     });
 
-    // it('Rate limit parameters are updated when the initial duration is over', async () => {
-    //   const deployer = env.eth.deployer;
+    it('Rate limit parameters are updated when the initial duration is over', async () => {
+      const deployer = env.eth.deployer;
 
-    //   // fast forward time
-    //   await env.eth.provider.send('evm_increaseTime', [
-    //     Number(rateLimitDuration) * 2,
-    //   ]);
-    //   await env.eth.provider.send('evm_mine', []); // Mine a new block
+      // fast forward time
+      await env.eth.provider.send('evm_increaseTime', [
+        Number(rateLimitDuration) * 2,
+      ]);
+      await env.eth.provider.send('evm_mine', []); // Mine a new block
 
-    //   const currentPeriodEndBeforeRelay =
-    //     await env.eth.fuelMessagePortal.currentPeriodEnd();
+      const currentPeriodEndBeforeRelay =
+        await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-    //   console.log("reset limit")
+      console.log("reset limit")
 
-    //   await env.eth.fuelMessagePortal
-    //     .connect(deployer)
-    //     .resetRateLimitAmount(parseEther(largeRateLimit));
+      await env.eth.fuelMessagePortal
+        .connect(deployer)
+        .resetRateLimitAmount(parseEther(largeRateLimit));
       
-    //   console.log("generateWithdrawalMessageProof")
+      console.log("generateWithdrawalMessageProof")
 
-    //   withdrawMessageProof = await generateWithdrawalMessageProof(
-    //     fuelETHSender,
-    //     ethereumETHReceiverAddress,
-    //     NUM_ETH
-    //   );
+      withdrawMessageProof = await generateWithdrawalMessageProof(
+        fuelETHSender,
+        ethereumETHReceiverAddress,
+        NUM_ETH
+      );
 
-    //   await relayMessage(env, withdrawMessageProof!);
+      await relayMessage(env, withdrawMessageProof!);
 
-    //   const currentPeriodEndAfterRelay =
-    //     await env.eth.fuelMessagePortal.currentPeriodEnd();
+      // const currentPeriodEndAfterRelay =
+      //   await env.eth.fuelMessagePortal.currentPeriodEnd();
 
-    //   expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
-    //     .true;
+      // expect(currentPeriodEndAfterRelay > currentPeriodEndBeforeRelay).to.be
+      //   .true;
 
-    //   const currentPeriodAmount =
-    //     await env.eth.fuelMessagePortal.currentPeriodAmount();
+      // const currentPeriodAmount =
+      //   await env.eth.fuelMessagePortal.currentPeriodAmount();
 
-    //   expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
-    // });
+      // expect(currentPeriodAmount === parseEther(NUM_ETH)).to.be.true;
+    });
 
     it('Rate limit parameters are updated when new limit is set after the initial duration', async () => {
       const deployer = await env.eth.deployer;
