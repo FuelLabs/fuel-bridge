@@ -163,7 +163,7 @@ describe('Transferring ETH', async function () {
     const relayMessageParams = createRelayMessageParams(withdrawMessageProof);
 
     const TIME_TO_FINALIZE = await env.eth.fuelChainState.TIME_TO_FINALIZE();
-    
+
     // fast forward to the block finalization time
     await env.eth.provider.send('evm_increaseTime', [
       Number(TIME_TO_FINALIZE) * 100,
