@@ -73,6 +73,9 @@ jobs:
       - name: Build projects
         run: pnpm build
 
+      - name: Forc formatting
+        run: forc fmt --check
+
       - name: Check projects formatting
         run: pnpm check
 
