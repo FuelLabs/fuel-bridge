@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { writeFile } from 'fs';
+import fs, { writeFile } from 'fs';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 import path from 'path';
