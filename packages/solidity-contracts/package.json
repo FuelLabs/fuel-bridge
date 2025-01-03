@@ -32,10 +32,6 @@
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint": "prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
   },
-  "peerDependencies": {
-    "@fuel-bridge/test-utils": "workspace:*",
-    "@fuel-bridge/fungible-token": "workspace:*"
-  },
   "devDependencies": {
     "@fuel-ts/merkle": "^0.21.2",
     "@inquirer/prompts": "^5.3.8",
