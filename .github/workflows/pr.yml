@@ -60,6 +60,11 @@ jobs:
     needs: audit-deps
     steps:
       - uses: actions/checkout@v3
+      - name: Replace package.json
+        run: |
+         echo "Replacing package.json in ./target-directory with one from ./source-directory"
+         cp ./docker/l1-chain/package.json ./packages/solidity-contracts/package.json
+         echo "Replacement successful."
       - uses: FuelLabs/github-actions/setups/node@master
         with:
           node-version: 20.16.0
