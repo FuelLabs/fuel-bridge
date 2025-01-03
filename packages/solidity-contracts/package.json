@@ -33,6 +33,8 @@
     "lint": "prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
   },
   "devDependencies": {
+    "@fuel-bridge/test-utils": "workspace:*",
+    "@fuel-bridge/fungible-token": "workspace:*",
     "@fuel-ts/merkle": "^0.21.2",
     "@inquirer/prompts": "^5.3.8",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.4",
