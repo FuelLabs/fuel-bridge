@@ -127,13 +127,11 @@ importers:
         version: link:../solidity-contracts
 
   packages/solidity-contracts:
-    devDependencies:
-      '@fuel-bridge/fungible-token':
-        specifier: workspace:*
-        version: link:../fungible-token
+    dependencies:
       '@fuel-bridge/test-utils':
         specifier: workspace:*
         version: link:../test-utils
+    devDependencies:
       '@fuel-ts/merkle':
         specifier: ^0.21.2
         version: 0.21.2
