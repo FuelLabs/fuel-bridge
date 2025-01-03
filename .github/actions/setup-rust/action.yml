@@ -16,27 +16,11 @@ runs:
         components: clippy, rustfmt
         targets: wasm32-unknown-unknown
 
-    # - name: Init cache
-    #   uses: Swatinem/rust-cache@v2
-    
-    - uses: buildjet/cache@v3
-      with:
-        prefix-key: "v1-rust"
-
-    - name: Set git config
-      run: |
-        git config --global core.bigfilethreshold 100m
-      shell: bash
+    - name: Init cache
+      uses: Swatinem/rust-cache@v2
 
     - name: Install Fuel toolchain
-      run: |
-        curl -sSLf https://github.com/FuelLabs/sway/releases/download/v0.66.5/forc-binaries-linux_amd64.tar.gz -L -o forc.tar.gz
-        tar -xvf forc.tar.gz
-        chmod +x forc-binaries/forc
-        mv forc-binaries/forc /usr/local/bin/forc
-        mv forc-binaries/forc-fmt /usr/local/bin/forc-fmt
-      shell: bash
-    #   uses: FuelLabs/action-fuel-toolchain@v0.6.0
-    #   with:
-    #     name: fuel-bridge
-    #     components: ${{ inputs.forc-components }}
+      uses: FuelLabs/action-fuel-toolchain@v0.6.0
+      with:
+        name: fuel-bridge
+        components: ${{ inputs.forc-components }}

@@ -70,26 +70,8 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/setup-rust
 
-      - name: Forc Build
-        run: |
-            curl -sSLf https://github.com/FuelLabs/sway/releases/download/v${{ env.FORC_VERSION }}/forc-binaries-linux_amd64.tar.gz -L -o forc.tar.gz
-            tar -xvf forc.tar.gz
-            chmod +x forc-binaries/forc
-            mv forc-binaries/forc /usr/local/bin/forc
-            mv forc-binaries/forc-fmt /usr/local/bin/forc-fmt
-            forc-fmt --check
-          fi
-
-     
-      - name: Forc Build
-        run: forc build --release 
-      
-
       - name: Build projects
-        run: pnpm build      
-
-      - name: Forc formatting
-        run: rm -rf ~/.forc/.lsp-locks/ && forc-fmt --check
+        run: pnpm build
 
       - name: Check projects formatting
         run: pnpm check

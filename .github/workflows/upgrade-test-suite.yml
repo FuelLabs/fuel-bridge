@@ -29,8 +29,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - uses: ./.github/actions/setup-rust
-      - name:  project
-        run: forc-fmt --check
       - name: Build project
         run: pnpm build
       - name: Sets the tenderly rpc endpoint in the L1 docker container env
