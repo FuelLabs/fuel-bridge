@@ -21,13 +21,20 @@
     "coverage": "pnpm run build && pnpm hardhat coverage --temp artifacts --network hardhat",
     "check": "pnpm solhint \"contracts/**/*.sol\"",
     "node": "pnpm hardhat node --network hardhat",
+    "test:integration": "pnpm mocha -b -r ts-node/register 'integration-tests/**/*.ts'",
+    "node:up": "sh ./scripts/node:up.sh",
     "start-mining": "pnpm hardhat run --no-compile --network localhost scripts/startAutoMining.ts",
     "serve-deployments": "pnpm ts-node scripts/serveDeployments.ts",
     "test": "pnpm hardhat test",
+    "upgrade:test:integration": "sh ./scripts/test.sh",
     "test-no-compile": "pnpm hardhat test --no-compile",
     "test-parallel": "pnpx mocha 'test/**/*.ts' --recursive --parallel --require hardhat/register",
     "prettier": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "lint": "prettier --list-different --plugin=prettier-plugin-solidity 'contracts/**/*.sol'"
+  },
+  "peerDependencies": {
+    "@fuel-bridge/test-utils": "workspace:*",
+    "@fuel-bridge/fungible-token": "workspace:*"
   },
   "devDependencies": {
     "@fuel-ts/merkle": "^0.21.2",
@@ -54,6 +61,7 @@
     "@typescript-eslint/parser": "^5.43.0",
     "chai": "^4.3.7",
     "cors": "2.8.5",
+    "mocha": "^10.0.0",
     "dotenv": "^16.0.3",
     "ethers": "6.13.1",
     "express": "^4.18.2",
