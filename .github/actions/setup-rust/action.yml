@@ -16,8 +16,16 @@ runs:
         components: clippy, rustfmt
         targets: wasm32-unknown-unknown
 
-    - name: Init cache
-      uses: Swatinem/rust-cache@v2
+    # - name: Init cache
+    #   uses: Swatinem/rust-cache@v2
+    
+    - uses: buildjet/cache@v3
+      with:
+        prefix-key: "v1-rust"
+
+    - name: Set git config
+      run: |
+        git config --global core.bigfilethreshold 100m
 
     - name: Install Fuel toolchain
       run: |
