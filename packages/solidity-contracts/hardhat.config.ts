@@ -41,6 +41,10 @@ const config: HardhatUserConfig = {
       accounts: {
         count: 128,
       },
+      forking: {
+        enabled: !!process.env.TENDERLY_RPC_URL,
+        url: process.env.TENDERLY_RPC_URL ? process.env.TENDERLY_RPC_URL : '',
+      },
       deploy: ['deploy/hardhat'],
     },
     localhost: {
