@@ -1,4 +1,4 @@
-import { debug } from '../debug';
+import { debug } from '../utils/debug';
 
 const query = `
   query Block($id: BlockId!) {
