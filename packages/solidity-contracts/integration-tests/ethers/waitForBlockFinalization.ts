@@ -1,29 +1,12 @@
-import type { JsonRpcProvider, Provider, BigNumberish } from 'ethers';
-import { toBeHex } from 'ethers';
+import type { JsonRpcProvider, Provider } from 'ethers';
 import type { MessageProof } from 'fuels';
 import { arrayify } from 'fuels';
 
-import { debug } from '../debug';
 import type { TestEnvironment } from '../setup/setup';
+import {debug} from '../utils/debug';
 
-/**
- * @description jumps time in the blockchain by the specified amount of time
- * @param provider A provider that exposes hardhat_ methods
- */
-async function hardhatSkipTime(provider: any, time: BigNumberish) {
-  const startingBlockNumber = await provider.getBlockNumber();
-  const hexTime = toBeHex(time).replace(/^0x0+/, '0x');
+import { hardhatSkipTime } from './hardhatSkipTime';
 
-  await provider.send('evm_increaseTime', [hexTime]);
-  const success = await provider.send('hardhat_mine', ['0x1']);
-
-  while (success) {
-    if ((await provider.getBlockNumber()) > startingBlockNumber) break;
-    await new Promise((resolve) => setTimeout(() => resolve(null), 100));
-  }
-
-  return success;
-}
 
 async function isHardhatProvider(provider: Provider) {
   if (!('send' in provider)) return false;
