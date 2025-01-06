@@ -3,7 +3,7 @@
 import type { BN, AbstractAddress } from 'fuels';
 import { type Provider as FuelProvider, type Message, hexlify } from 'fuels';
 
-import { debug } from '../debug';
+import {debug} from '../utils/debug';
 
 // Simple async delay function
 function delay(ms: number) {
