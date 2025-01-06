@@ -8,6 +8,13 @@
     "lib": ["ES2021"],
     "strict": true
   },
-  "include": ["./scripts", "./protocol", "./test", "./typechain", "./deploy"],
+  "include": [
+    "./scripts",
+    "./protocol",
+    "./test",
+    "./typechain",
+    "./deploy",
+    "./integration-tests"
+  ],
   "files": ["./hardhat.config.ts"]
 }
