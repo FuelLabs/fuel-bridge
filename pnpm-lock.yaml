@@ -68,9 +68,6 @@ importers:
       '@fuel-bridge/esbuild-bin-loader':
         specifier: workspace:../esbuild-bin-loader
         version: link:../esbuild-bin-loader
-      '@fuel-bridge/solidity-contracts':
-        specifier: workspace:*
-        version: link:../solidity-contracts
       fuels:
         specifier: 0.96.1
         version: 0.96.1
@@ -122,12 +119,15 @@ importers:
       '@fuel-bridge/esbuild-bin-loader':
         specifier: workspace:../esbuild-bin-loader
         version: link:../esbuild-bin-loader
-      '@fuel-bridge/solidity-contracts':
-        specifier: workspace:*
-        version: link:../solidity-contracts
 
   packages/solidity-contracts:
     devDependencies:
+      '@fuel-bridge/fungible-token':
+        specifier: workspace:*
+        version: link:../fungible-token
+      '@fuel-bridge/message-predicates':
+        specifier: workspace:*
+        version: link:../message-predicates
       '@fuel-ts/merkle':
         specifier: ^0.21.2
         version: 0.21.2
