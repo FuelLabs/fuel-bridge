@@ -1,14 +1,3 @@
-import type { TestEnvironment } from '@fuel-bridge/test-utils';
-import {
-  setupEnvironment,
-  fuels_parseEther,
-  createRelayMessageParams,
-  getMessageOutReceipt,
-  waitForMessage,
-  waitForBlockFinalization,
-  getBlock,
-  FUEL_CALL_TX_PARAMS,
-} from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { parseEther } from 'ethers';
 import type { Signer } from 'ethers';
@@ -19,6 +8,12 @@ import type {
   MessageProof,
   Provider,
 } from 'fuels';
+
+import { FUEL_CALL_TX_PARAMS } from './constants';
+import { createRelayMessageParams, waitForBlockFinalization } from './ethers';
+import { waitForMessage, getMessageOutReceipt, getBlock } from './fuels';
+import { setupEnvironment, fuels_parseEther } from './setup/setup';
+import type { TestEnvironment } from './setup/setup';
 
 const { expect } = chai;
 
@@ -181,7 +176,7 @@ describe('Transferring ETH', async function () {
   }
 
   before(async () => {
-    env = await setupEnvironment({});
+    env = await setupEnvironment();
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
 

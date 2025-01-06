@@ -1,21 +1,3 @@
-import type { BridgeFungibleToken } from '@fuel-bridge/fungible-token';
-import type { TestEnvironment } from '@fuel-bridge/test-utils';
-import {
-  setupEnvironment,
-  relayCommonMessage,
-  waitForMessage,
-  createRelayMessageParams,
-  getOrDeployECR20Contract,
-  getOrDeployL2Bridge,
-  FUEL_TX_PARAMS,
-  getMessageOutReceipt,
-  fuel_to_eth_address,
-  waitForBlockFinalization,
-  getTokenId,
-  getBlock,
-  FUEL_CALL_TX_PARAMS,
-  hardhatSkipTime,
-} from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { toBeHex, parseEther } from 'ethers';
 import type { JsonRpcProvider, Signer } from 'ethers';
@@ -30,6 +12,17 @@ import type {
 import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 import type { Token } from '../typechain';
 
+import { FUEL_CALL_TX_PARAMS, FUEL_TX_PARAMS } from './constants';
+import { createRelayMessageParams, waitForBlockFinalization } from './ethers';
+import { getOrDeployECR20Contract } from './ethers/getOrDeployECR20Contract';
+import { hardhatSkipTime } from './ethers/hardhatSkipTime';
+import { waitForMessage, getMessageOutReceipt, getBlock } from './fuels';
+import { getOrDeployL2Bridge } from './fuels/getOrDeployL2Bridge';
+import { getTokenId } from './fuels/getTokenId';
+import { relayCommonMessage } from './fuels/relayCommonMessage';
+import type { TestEnvironment } from './setup/setup';
+import { setupEnvironment } from './setup/setup';
+
 const { expect } = chai;
 
 describe('Bridging ERC20 tokens', async function () {
@@ -42,13 +35,17 @@ describe('Bridging ERC20 tokens', async function () {
   let eth_testToken: Token;
   let eth_testTokenAddress: string;
   let eth_erc20GatewayAddress: string;
-  let fuel_bridge: BridgeFungibleToken;
-  let fuel_bridgeImpl: BridgeFungibleToken;
+  let fuel_bridge: any;
+  let fuel_bridgeImpl: any;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
+
+  function fuel_to_eth_address(address: string): string {
+    return `0x${address.substring(26)}`.toLowerCase();
+  }
 
   async function forwardFuelChain(provider: Provider, blocksToForward: string) {
     await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
@@ -85,7 +82,7 @@ describe('Bridging ERC20 tokens', async function () {
   }
 
   async function generateWithdrawalMessageProof(
-    fuel_bridge: BridgeFungibleToken,
+    fuel_bridge: any,
     fuelTokenSender: FuelWallet,
     ethereumTokenReceiverAddress: string,
     NUM_TOKENS: bigint,
@@ -223,7 +220,7 @@ describe('Bridging ERC20 tokens', async function () {
     amount: bigint
   ) {
     // relay the message ourselves
-    const message = await waitForMessage(
+    const message: any = await waitForMessage(
       env.fuel.provider,
       fuelTokenMessageReceiver,
       fuelTokenMessageNonce,
@@ -250,7 +247,7 @@ describe('Bridging ERC20 tokens', async function () {
   }
 
   before(async () => {
-    env = await setupEnvironment({});
+    env = await setupEnvironment();
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
     ).toLowerCase();
@@ -441,7 +438,7 @@ describe('Bridging ERC20 tokens', async function () {
       const fuelReceiver = Address.fromB256(event.args.recipient);
 
       // relay the message ourselves
-      const message = await waitForMessage(
+      const message: any = await waitForMessage(
         env.fuel.provider,
         fuelReceiver,
         nonce,
