@@ -24,7 +24,7 @@ import {
   BN,
 } from 'fuels';
 
-import { debug } from '../debug';
+import { debug } from '../utils/debug';
 
 import { resourcesToInputs } from './transaction';
 

@@ -2,8 +2,8 @@ import { parseEther } from 'ethers';
 
 import type { Token } from '../../typechain';
 import { Token__factory } from '../../typechain';
-import { debug } from '../debug';
 import type { TestEnvironment } from '../setup/setup';
+import { debug } from '../utils/debug';
 
 const { ETH_ERC20_TOKEN_ADDRESS } = process.env;
 const ETHEREUM_ETH_DECIMALS = 18n;

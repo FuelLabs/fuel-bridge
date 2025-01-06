@@ -7,9 +7,9 @@ import {
 import { resolveAddress, type AddressLike } from 'ethers';
 
 // import { BridgeFungibleToken, BridgeFungibleTokenFactory, Proxy, ProxyFactory } from '../../../fungible-token/exports/types/index'
-import { debug } from '../debug';
-import { eth_address_to_b256 } from '../parsers';
 import type { TestEnvironment } from '../setup/setup';
+import { debug } from '../utils/debug';
+import { eth_address_to_b256 } from '../utils/parsers';
 
 const { FUEL_FUNGIBLE_TOKEN_ADDRESS } = process.env;
 

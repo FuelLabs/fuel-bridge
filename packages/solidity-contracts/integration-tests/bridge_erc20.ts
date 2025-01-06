@@ -14,7 +14,6 @@ import type { Token } from '../typechain';
 
 // due to cyclic workspace dependencies with test-utils package, the CI which runs `pnpm forc fmt --check` was getting timed out
 // so hence had to re-use some test helpers in the test-utils package
-import { FUEL_CALL_TX_PARAMS, FUEL_TX_PARAMS } from './constants';
 import { createRelayMessageParams, waitForBlockFinalization } from './ethers';
 import { getOrDeployECR20Contract } from './ethers/getOrDeployECR20Contract';
 import { hardhatSkipTime } from './ethers/hardhatSkipTime';
@@ -24,6 +23,7 @@ import { getTokenId } from './fuels/getTokenId';
 import { relayCommonMessage } from './fuels/relayCommonMessage';
 import type { TestEnvironment } from './setup/setup';
 import { setupEnvironment } from './setup/setup';
+import { FUEL_CALL_TX_PARAMS, FUEL_TX_PARAMS } from './utils/constants';
 
 const { expect } = chai;
 
