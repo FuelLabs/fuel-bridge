@@ -12,6 +12,8 @@ import type {
 import { RATE_LIMIT_AMOUNT, RATE_LIMIT_DURATION } from '../protocol/constants';
 import type { Token } from '../typechain';
 
+// due to cyclic workspace dependencies with test-utils package, the CI which runs `pnpm forc fmt --check` was getting timed out
+// so hence had to re-use some test helpers in the test-utils package
 import { FUEL_CALL_TX_PARAMS, FUEL_TX_PARAMS } from './constants';
 import { createRelayMessageParams, waitForBlockFinalization } from './ethers';
 import { getOrDeployECR20Contract } from './ethers/getOrDeployECR20Contract';

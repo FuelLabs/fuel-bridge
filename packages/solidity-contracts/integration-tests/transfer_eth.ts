@@ -9,6 +9,8 @@ import type {
   Provider,
 } from 'fuels';
 
+// due to cyclic workspace dependencies with test-utils package, the CI which runs `pnpm forc fmt --check` was getting timed out
+// so hence had to re-use some test helpers in the test-utils package
 import { FUEL_CALL_TX_PARAMS } from './constants';
 import { createRelayMessageParams, waitForBlockFinalization } from './ethers';
 import { waitForMessage, getMessageOutReceipt, getBlock } from './fuels';
