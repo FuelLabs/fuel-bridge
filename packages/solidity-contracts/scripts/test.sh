@@ -1,7 +1,3 @@
-# Start the docker compose file with L1 and Fuel Node
-echo "\n\nStarting docker..."
-pnpm run node:up
-
 # Wait for the nodes to be ready and run the tests
 HEALTH_CHECK_COUNTER=0
 HELTH_CHECK_OUTPUT=""
