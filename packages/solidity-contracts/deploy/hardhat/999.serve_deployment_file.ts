@@ -43,19 +43,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       '..',
       '/',
       'deployments',
-      'localhost',
-      'FuelERC721Gateway.json'
-    );
-
-    const deployment = JSON.parse(fs.readFileSync(deploymentDir, 'utf8'));
-    deploymentsFile['FuelERC721Gateway'] = deployment.address;
-
-    deploymentDir = path.join(
-      __dirname,
-      '..',
-      '..',
-      '/',
-      'deployments',
       'mainnet',
       'FuelChainState.json'
     );
