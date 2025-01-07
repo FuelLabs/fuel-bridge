@@ -31,12 +31,18 @@ jobs:
       - uses: ./.github/actions/setup-rust
       - name: Build project
         run: pnpm build
-      - name: Sets the tenderly rpc endpoint in the L1 docker container env
+      - name: Sets the tenderly rpc endpoint in the L1 docker container env and sets forking variable for fuel core setup
         run: |
           cat << EOF > l1_chain.env
           TENDERLY_RPC_URL=${{ secrets.TENDERLY_RPC_URL }}
           EOF
-        working-directory: ./packages/solidity-contracts/docker/envs
+
+          cat << EOF > fuel_core.env
+          FORKING=true
+          EOF
+        working-directory: docker/envs
+      - name: Starts docker containers
+        run: pnpm run node:up
       - name: Run integration tests on a L1 fork after upgrading contracts
         run: |
           pnpm upgrade:test:integration
