@@ -11,6 +11,7 @@ RUN npm i -g pnpm
 
 # clone the contracts repo
 ADD docker/l1-chain/package.json /l1chain/fuel-v2-contracts/
+
 # copy over the fuel chain and replace consts values
 WORKDIR /l1chain/fuel-v2-contracts
 
@@ -27,15 +28,10 @@ RUN pnpm compile
 ADD ./docker/l1-chain/.fuelChainConsts.env /l1chain/fuel-v2-contracts/.fuelChainConsts.env
 ADD ./packages/solidity-contracts/contracts /l1chain/fuel-v2-contracts/contracts
 ADD ./packages/solidity-contracts/deploy /l1chain/fuel-v2-contracts/deploy
+ADD ./packages/solidity-contracts/deployments/ /l1chain/fuel-v2-contracts/deployments/
 ADD ./packages/solidity-contracts/protocol /l1chain/fuel-v2-contracts/protocol
 
-
-# remove build dependencies
-# RUN pnpm prune --prod
 RUN pnpm compile
-
-# Create deployments dir
-RUN mkdir deployments
 
 # expose node and server port
 ENV L1_IP="${L1_IP}"
