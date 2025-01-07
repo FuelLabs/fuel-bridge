@@ -22,7 +22,6 @@
     "check": "pnpm solhint \"contracts/**/*.sol\"",
     "node": "pnpm hardhat node --network hardhat",
     "test:integration": "pnpm mocha -b -r ts-node/register 'integration-tests/**/*.ts'",
-    "node:up": "sh ./scripts/node:up.sh",
     "start-mining": "pnpm hardhat run --no-compile --network localhost scripts/startAutoMining.ts",
     "serve-deployments": "pnpm ts-node scripts/serveDeployments.ts",
     "test": "pnpm hardhat test",
