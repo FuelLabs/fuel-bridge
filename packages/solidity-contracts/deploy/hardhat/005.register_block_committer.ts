@@ -12,16 +12,16 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
 
   const [deployer] = await ethers.getSigners();
 
-  if (!isForking) {
-    const { address } = await deployments.get('FuelChainState');
+  if (isForking) return;
 
-    const fuelChainState = FuelChainState__factory.connect(address, deployer);
-    const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
+  const { address } = await deployments.get('FuelChainState');
 
-    await fuelChainState
-      .grantRole(COMMITTER_ROLE, COMMITTER_ADDRESS)
-      .then((tx) => tx.wait());
-  }
+  const fuelChainState = FuelChainState__factory.connect(address, deployer);
+  const COMMITTER_ROLE = await fuelChainState.COMMITTER_ROLE();
+
+  await fuelChainState
+    .grantRole(COMMITTER_ROLE, COMMITTER_ADDRESS)
+    .then((tx) => tx.wait());
 
   console.log('Granted role COMMITTER_ROLE to', COMMITTER_ADDRESS);
 };
