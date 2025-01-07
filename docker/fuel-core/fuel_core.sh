@@ -49,19 +49,40 @@ export FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS=$(cat "./addresses.json" | jq -r .Fu
 echo "FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS: $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS"
 echo "L1_CHAIN_HTTP: $L1_CHAIN_HTTP"
 
+export FORKING=${FORKING}
+
 # start the Fuel client
-echo "Starting fuel node."
-exec /root/fuel-core run \
-    --ip $FUEL_IP \
-    --port $FUEL_PORT \
-    --utxo-validation \
-    --vm-backtrace \
-    --enable-relayer \
-    --relayer $L1_CHAIN_HTTP \
-    --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
-    --poa-interval-period 1sec \
-    --debug \
-    --da-compression $DA_COMPRESSION \
-    --graphql-max-complexity $GRAPHQL_COMPLEXITY \
-    --min-gas-price 0 \
-    --snapshot ./
+if [ "$FORKING" = "true" ]; then
+    echo "FORKING is enabled. Running with da deploy height"
+    exec /root/fuel-core run \
+        --ip $FUEL_IP \
+        --port $FUEL_PORT \
+        --utxo-validation \
+        --vm-backtrace \
+        --enable-relayer \
+        --relayer $L1_CHAIN_HTTP \
+        --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
+        --poa-interval-period 1sec \
+        --relayer-da-deploy-height=21371952 \
+        --debug \
+        --da-compression $DA_COMPRESSION \
+        --graphql-max-complexity $GRAPHQL_COMPLEXITY \
+        --min-gas-price 0 \
+        --snapshot ./
+else
+    echo "FORKING is disabled. Running without da deploy height"
+    exec /root/fuel-core run \
+        --ip $FUEL_IP \
+        --port $FUEL_PORT \
+        --utxo-validation \
+        --vm-backtrace \
+        --enable-relayer \
+        --relayer $L1_CHAIN_HTTP \
+        --relayer-v2-listening-contracts $FUEL_MESSAGE_PORTAL_CONTRACT_ADDRESS \
+        --poa-interval-period 1sec \
+        --debug \
+        --da-compression $DA_COMPRESSION \
+        --graphql-max-complexity $GRAPHQL_COMPLEXITY \
+        --min-gas-price 0 \
+        --snapshot ./
+fi
