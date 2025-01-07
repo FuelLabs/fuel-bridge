@@ -75,7 +75,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       to: address,
       data: txData,
     });
-
+    
+    // hardhat with forking sometimes throws a `nonce too low error` using only one committer, so added another to be used in tests
     COMMITTER_ADDRESS = '0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65';
 
     txData = await chainState.interface.encodeFunctionData('grantRole', [
