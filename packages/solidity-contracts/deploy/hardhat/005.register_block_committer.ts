@@ -9,10 +9,9 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
 
   const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
+  if (isForking) return;
 
   const [deployer] = await ethers.getSigners();
-
-  if (isForking) return;
 
   const { address } = await deployments.get('FuelChainState');
 

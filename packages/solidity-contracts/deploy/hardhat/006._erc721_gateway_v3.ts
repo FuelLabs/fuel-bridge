@@ -1,7 +1,5 @@
-import fs from 'fs';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
-import path from 'path';
 
 import { FuelERC721GatewayV2__factory as FuelERC721GatewayV2 } from '../../typechain';
 
@@ -13,31 +11,15 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   } = hre;
 
   const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
+  if (isForking) return;
 
   const [deployer] = await ethers.getSigners();
 
-  let portlAddress;
-  if (isForking) {
-    const deploymentPath = path.join(
-      __dirname,
-      '..',
-      '..',
-      '/',
-      'deployments',
-      'mainnet',
-      'FuelMessagePortal.json'
-    );
-
-    const deployment = JSON.parse(fs.readFileSync(deploymentPath, 'utf8'));
-    portlAddress = deployment.address;
-  } else {
-    const fuelMessagePortal = await get('FuelMessagePortal');
-    portlAddress = fuelMessagePortal.address;
-  }
+  const fuelMessagePortal = await get('FuelMessagePortal');
 
   const contract = await deployProxy(
     new FuelERC721GatewayV2(deployer),
-    [portlAddress],
+    [fuelMessagePortal.address],
     {
       initializer: 'initialize',
     }
