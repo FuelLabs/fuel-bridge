@@ -17,9 +17,6 @@ const ASSET_ISSUER_ID =
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
 
-  const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
-  if (isForking) return;
-
   const [deployer] = await ethers.getSigners();
 
   await deployments.execute(

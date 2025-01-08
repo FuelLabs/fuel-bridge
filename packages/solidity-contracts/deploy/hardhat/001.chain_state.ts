@@ -14,9 +14,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deployments: { save },
   } = hre;
 
-  const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
-  if (isForking) return;
-
   const [deployer] = await ethers.getSigners();
 
   const contract = await deployProxy(new FuelChainState(deployer), [], {
