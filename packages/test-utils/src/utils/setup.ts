@@ -276,12 +276,10 @@ export async function setupEnvironment(
     }
 
     if (!eth_fuelERC721GatewayAddress) {
-      if (!deployerAddresses.FuelERC721Gateway) {
-        throw new Error(
-          'Failed to get FuelERC721Gateway address from deployer'
-        );
+      if (deployerAddresses.FuelERC721Gateway) {
+        // we don't use the erc71 gateway for the fork test suite
+        eth_fuelERC721GatewayAddress = deployerAddresses.FuelERC721Gateway;
       }
-      eth_fuelERC721GatewayAddress = deployerAddresses.FuelERC721Gateway;
     }
   }
 
@@ -301,7 +299,8 @@ export async function setupEnvironment(
       eth_fuelERC20GatewayAddress,
       eth_deployer
     );
-
+  
+  
   const eth_fuelERC721Gateway: FuelERC721Gateway =
     FuelERC721Gateway__factory.connect(
       eth_fuelERC721GatewayAddress,
