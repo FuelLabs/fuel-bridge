@@ -13,8 +13,7 @@
     "./protocol",
     "./test",
     "./typechain",
-    "./deploy",
-    "./integration-tests"
+    "./deploy"
   ],
   "files": ["./hardhat.config.ts"]
 }
