@@ -16,6 +16,7 @@ const CONTRACTS_DEPLOYER_KEY = process.env.CONTRACTS_DEPLOYER_KEY || '';
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || '';
 const INFURA_API_KEY = process.env.INFURA_API_KEY || '';
 const RPC_URL = process.env.RPC_URL || 'http://127.0.0.1:8545';
+const isForkingEnabled = !!process.env.TENDERLY_RPC_URL;
 
 const config: HardhatUserConfig = {
   defaultNetwork: 'hardhat',
@@ -42,10 +43,10 @@ const config: HardhatUserConfig = {
         count: 128,
       },
       forking: {
-        enabled: !!process.env.TENDERLY_RPC_URL,
+        enabled: isForkingEnabled,
         url: process.env.TENDERLY_RPC_URL ? process.env.TENDERLY_RPC_URL : '',
       },
-      deploy: ['deploy/hardhat'],
+      deploy: isForkingEnabled ? ['deploy/fork'] : ['deploy/hardhat'],
     },
     localhost: {
       url: 'http://127.0.0.1:8545/',
