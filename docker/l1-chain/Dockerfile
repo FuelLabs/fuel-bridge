@@ -10,7 +10,7 @@ RUN apk --no-cache add git curl
 RUN npm i -g pnpm
 
 # clone the contracts repo
-ADD docker/l1-chain/package.json /l1chain/fuel-v2-contracts/
+ADD ./packages/solidity-contracts/package.json /l1chain/fuel-v2-contracts/
 
 # copy over the fuel chain and replace consts values
 WORKDIR /l1chain/fuel-v2-contracts
