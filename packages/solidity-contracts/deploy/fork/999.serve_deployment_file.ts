@@ -7,7 +7,7 @@ import { promisify } from 'util';
 import { FuelChainState__factory } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
-  const { deployments, ethers } = hre;
+  const { ethers } = hre;
 
   let address: any;
   const isForking = hre.config.networks[hre.network.name]?.forking?.enabled;
