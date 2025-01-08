@@ -54,7 +54,6 @@
     "@typescript-eslint/parser": "^5.43.0",
     "chai": "^4.3.7",
     "cors": "2.8.5",
-    "mocha": "^10.0.0",
     "dotenv": "^16.0.3",
     "ethers": "6.13.1",
     "express": "^4.18.2",
