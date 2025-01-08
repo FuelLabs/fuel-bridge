@@ -299,8 +299,7 @@ export async function setupEnvironment(
       eth_fuelERC20GatewayAddress,
       eth_deployer
     );
-  
-  
+
   const eth_fuelERC721Gateway: FuelERC721Gateway =
     FuelERC721Gateway__factory.connect(
       eth_fuelERC721GatewayAddress,

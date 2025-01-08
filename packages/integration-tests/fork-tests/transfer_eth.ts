@@ -109,10 +109,7 @@ describe('Transferring ETH', async function () {
     // override the commit hash in a existing block
     await env.eth.fuelChainState
       .connect(env.eth.signers[1])
-      .commit(
-        ZeroHash,
-        commitHeight.toString()
-      );
+      .commit(ZeroHash, commitHeight.toString());
 
     // fast forward to the block finalization time
     await env.eth.provider.send('evm_increaseTime', [
