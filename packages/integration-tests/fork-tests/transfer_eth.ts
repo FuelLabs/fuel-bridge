@@ -37,36 +37,6 @@ describe('Transferring ETH', async function () {
     await provider.produceBlocks(Number(blocksToForward)).catch(console.error);
   }
 
-  async function getBlockWithHeight(env: any, height: string): Promise<any> {
-    const BLOCK_BY_HEIGHT_QUERY = `query Block($height: U64) {
-      block(height: $height) {
-        id
-      }
-    }`;
-    const BLOCK_BY_HEIGHT_ARGS = {
-      height: height,
-    };
-
-    return fetch(env.fuel.provider.url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        query: BLOCK_BY_HEIGHT_QUERY,
-        variables: BLOCK_BY_HEIGHT_ARGS,
-      }),
-    })
-      .then((res: any) => res.json())
-      .then(async (res) => {
-        if (!res.data.block) {
-          throw new Error(`Could not fetch block with height ${height}`);
-        }
-
-        return res.data.block;
-      });
-  }
-
   async function generateWithdrawalMessageProof(
     fuelETHSender: FuelWallet,
     ethereumETHReceiverAddress: string,
@@ -109,7 +79,7 @@ describe('Transferring ETH', async function () {
     // produce more blocks to fetch the block height
     await forwardFuelChain(env.fuel.provider, blocksPerCommitInterval);
 
-    const block = await getBlockWithHeight(env, nextBlockHeight.toString());
+    const block = await env.fuel.provider.getBlock(nextBlockHeight.toString());
 
     // reset the commit hash in the local L2 network
     await env.eth.fuelChainState
