@@ -181,6 +181,7 @@ impl Bridge for Contract {
             to: to,
             from: sender,
             amount: amount,
+            token_id: token_id
         });
     }
 
@@ -455,6 +456,7 @@ fn _process_deposit(message_data: DepositMessage, msg_idx: u64) {
         to: message_data.to,
         from: message_data.from,
         amount: amount,
+        token_id: message_data.token_id
     });
 }
 
