@@ -22,7 +22,7 @@ import {
   hardhatSkipTime,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { toBeHex, parseEther, ZeroHash } from 'ethers';
+import { toBeHex, parseEther } from 'ethers';
 import type { JsonRpcProvider, Signer } from 'ethers';
 import { Address, BN } from 'fuels';
 import type {

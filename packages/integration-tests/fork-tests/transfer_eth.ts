@@ -10,7 +10,7 @@ import {
   FUEL_CALL_TX_PARAMS,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
-import { parseEther, ZeroHash } from 'ethers';
+import { parseEther } from 'ethers';
 import type { Signer } from 'ethers';
 import { Address, BN, padFirst12BytesOfEvmAddress } from 'fuels';
 import type {
