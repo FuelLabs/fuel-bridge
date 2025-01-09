@@ -100,27 +100,10 @@ describe('Transferring ETH', async function () {
     const nextBlockHeight = new BN(withdrawBlock.header.height).add(new BN(1));
     const commitHeight = new BN(nextBlockHeight).div(blocksPerCommitInterval);
 
-    let cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
+    const cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
 
     // fast forward post the commit cooldown period
-    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
-    await env.eth.provider.send('evm_mine', []); // Mine a new block
-
-    // override the commit hash in a existing block
-    await env.eth.fuelChainState
-      .connect(env.eth.signers[1])
-      .commit(ZeroHash, commitHeight.toString());
-
-    // fast forward to the block finalization time
-    await env.eth.provider.send('evm_increaseTime', [
-      Number(TIME_TO_FINALIZE) * 2,
-    ]);
-    await env.eth.provider.send('evm_mine', []); // Mine a new block
-
-    cooldown = await env.eth.fuelChainState.COMMIT_COOLDOWN();
-
-    // fast forward post the commit cooldown period
-    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]); // Advance 1 hour
+    await env.eth.provider.send('evm_increaseTime', [Number(cooldown) * 10]);
     await env.eth.provider.send('evm_mine', []); // Mine a new block
 
     // produce more blocks to fetch the block height
