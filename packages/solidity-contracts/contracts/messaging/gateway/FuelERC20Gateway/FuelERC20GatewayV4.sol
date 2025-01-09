@@ -43,10 +43,10 @@ contract FuelERC20GatewayV4 is
     error RateLimitExceeded();
 
     /// @dev Emitted when tokens are deposited from Ethereum to Fuel
-    event Deposit(bytes32 indexed sender, address indexed tokenAddress, uint256 amount);
+    event Deposit(bytes32 sender, address indexed tokenAddress, uint256 amount);
 
     /// @dev Emitted when tokens are withdrawn from Fuel to Ethereum
-    event Withdrawal(bytes32 indexed recipient, address indexed tokenAddress, uint256 amount);
+    event Withdrawal(bytes32 recipient, address indexed tokenAddress, uint256 amount);
 
     /// @dev Emitted when rate limit is reset
     event RateLimitUpdated(address indexed tokenAddress, uint256 amount);
