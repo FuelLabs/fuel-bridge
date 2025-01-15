@@ -1,5 +1,11 @@
 # @fuel-bridge/message-predicates
 
+## 1.1.0
+
+### Patch Changes
+
+- Build and publish docker images on arm, by [@arthurgeron](https://github.com/arthurgeron) (See [#348](https://github.com/FuelLabs/fuel-bridge/pull/348))
+
 ## 1.0.0
 
 ### Patch Changes
