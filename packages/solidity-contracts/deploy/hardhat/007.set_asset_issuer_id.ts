@@ -16,6 +16,7 @@ const ASSET_ISSUER_ID =
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
+
   const [deployer] = await ethers.getSigners();
 
   await deployments.execute(

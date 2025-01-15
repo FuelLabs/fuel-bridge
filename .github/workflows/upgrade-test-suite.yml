@@ -1,0 +1,46 @@
+name: Upgrade Test Suite
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main # Target branch for the PR
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  upgrade-test-suite:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v3
+      - uses: FuelLabs/github-actions/setups/node@master
+        with:
+          node-version: 20.16.0
+          pnpm-version: 9.0.6
+      - uses: FuelLabs/github-actions/setups/docker@master
+        with:
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/setup-rust
+      - name: Build project
+        run: pnpm build
+      - name: Sets the tenderly rpc endpoint in the L1 docker container env and sets forking variable for fuel core setup
+        run: |
+          cat << EOF > l1_chain.env
+          TENDERLY_RPC_URL=${{ secrets.TENDERLY_RPC_URL }}
+          EOF
+
+          cat << EOF > fuel_core.env
+          FORKING=true
+          EOF
+        working-directory: docker/envs
+      - name: Run integration tests on a L1 fork after upgrading contracts
+        run: |
+          pnpm run test:fork
