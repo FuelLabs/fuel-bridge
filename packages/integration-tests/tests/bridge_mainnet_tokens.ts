@@ -40,6 +40,7 @@ import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
+  ScriptTransactionRequest,
 } from 'fuels';
 
 const { expect } = chai;
@@ -73,13 +74,78 @@ describe('Bridge mainnet tokens', function () {
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
+  async function fetchTransaction(
+    fuel_bridge: BridgeFungibleToken,
+    fuelTokenSender: FuelWallet,
+    to: string,
+    NUM_TOKENS: bigint,
+    fuel_AssetId: string,
+    decimals: bigint,
+    useMessageCoin: boolean
+  ): Promise<ScriptTransactionRequest> {
+    if (useMessageCoin) {
+      const tx = await fuel_bridge.functions
+        .withdraw(to)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN((10n ** (18n - decimals)).toString())
+            ),
+            assetId: fuel_AssetId,
+          },
+        });
+
+      const cost = await tx.getTransactionCost();
+
+      // message coin resource
+      const resource = await fuelTokenSender.getResourcesToSpend([
+        [cost.maxFee, env.fuel.provider.getBaseAssetId()],
+      ]);
+
+      const transactionRequest = await tx.getTransactionRequest();
+
+      // add message coin input
+      await transactionRequest.addResources(resource);
+
+      // update fee params
+      transactionRequest.gasLimit = cost.gasUsed;
+      transactionRequest.maxFee = cost.maxFee;
+
+      await fuelTokenSender.fund(transactionRequest, cost);
+      return transactionRequest;
+    } else {
+      return await fuel_bridge.functions
+        .withdraw(to)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN((10n ** (18n - decimals)).toString())
+            ),
+            assetId: fuel_AssetId,
+          },
+        })
+        .fundWithRequiredCoins();
+    }
+  }
+
   async function generateWithdrawalMessageProof(
     fuel_bridge: BridgeFungibleToken,
     fuelTokenSender: FuelWallet,
     ethereumTokenReceiverAddress: string,
     NUM_TOKENS: bigint,
     fuel_AssetId: string,
-    decimals: bigint
+    decimals: bigint,
+    useMessageCoin: boolean
   ): Promise<MessageProof> {
     // withdraw tokens back to the base chain
     fuel_bridge.account = fuelTokenSender;
@@ -89,22 +155,15 @@ describe('Bridge mainnet tokens', function () {
       fuel_AssetId
     );
 
-    const transactionRequest = await fuel_bridge.functions
-      .withdraw(paddedAddress)
-      .addContracts([fuel_bridge, fuel_bridgeImpl])
-      .txParams({
-        tip: 0,
-        maxFee: 1,
-      })
-      .callParams({
-        forward: {
-          amount: new BN(NUM_TOKENS.toString()).div(
-            new BN((10n ** (18n - decimals)).toString())
-          ),
-          assetId: fuel_AssetId,
-        },
-      })
-      .fundWithRequiredCoins();
+    const transactionRequest = await fetchTransaction(
+      fuel_bridge,
+      fuelTokenSender,
+      paddedAddress,
+      NUM_TOKENS,
+      fuel_AssetId,
+      decimals,
+      useMessageCoin
+    );
 
     const tx = await fuelTokenSender.sendTransaction(transactionRequest);
     const fWithdrawTxResult = await tx.waitForResult();
@@ -442,7 +501,8 @@ describe('Bridge mainnet tokens', function () {
             ethereumTokenReceiverAddress,
             NUM_TOKENS,
             fuelAssetId,
-            decimals[index] == 18n ? 9n : decimals[index]
+            decimals[index] == 18n ? 9n : decimals[index],
+            true
           );
         });
 
@@ -576,7 +636,8 @@ describe('Bridge mainnet tokens', function () {
             ethereumTokenReceiverAddress,
             NUM_TOKENS,
             fuelAssetId,
-            decimals[index] == 18n ? 9n : decimals[index]
+            decimals[index] == 18n ? 9n : decimals[index],
+            false
           );
 
           // relay message

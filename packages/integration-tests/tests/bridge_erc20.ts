@@ -34,6 +34,7 @@ import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
   MessageProof,
+  ScriptTransactionRequest,
 } from 'fuels';
 
 const { expect } = chai;
@@ -59,12 +60,76 @@ describe('Bridging ERC20 tokens', async function () {
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
+  async function fetchTransaction(
+    fuel_bridge: BridgeFungibleToken,
+    fuelTokenSender: FuelWallet,
+    to: string,
+    NUM_TOKENS: bigint,
+    DECIMAL_DIFF: bigint,
+    useMessageCoin: boolean
+  ): Promise<ScriptTransactionRequest> {
+    if (useMessageCoin) {
+      const tx = await fuel_bridge.functions
+        .withdraw(to)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN(DECIMAL_DIFF.toString())
+            ),
+            assetId: fuel_testAssetId,
+          },
+        });
+
+      const cost = await tx.getTransactionCost();
+
+      // message coin resource
+      const resource = await fuelTokenSender.getResourcesToSpend([
+        [cost.maxFee, env.fuel.provider.getBaseAssetId()],
+      ]);
+
+      const transactionRequest = await tx.getTransactionRequest();
+
+      // add message coin input
+      await transactionRequest.addResources(resource);
+
+      // update fee params
+      transactionRequest.gasLimit = cost.gasUsed;
+      transactionRequest.maxFee = cost.maxFee;
+
+      await fuelTokenSender.fund(transactionRequest, cost);
+      return transactionRequest;
+    } else {
+      return await fuel_bridge.functions
+        .withdraw(to)
+        .addContracts([fuel_bridge, fuel_bridgeImpl])
+        .txParams({
+          tip: 0,
+          maxFee: 1,
+        })
+        .callParams({
+          forward: {
+            amount: new BN(NUM_TOKENS.toString()).div(
+              new BN(DECIMAL_DIFF.toString())
+            ),
+            assetId: fuel_testAssetId,
+          },
+        })
+        .fundWithRequiredCoins();
+    }
+  }
+
   async function generateWithdrawalMessageProof(
     fuel_bridge: BridgeFungibleToken,
     fuelTokenSender: FuelWallet,
     ethereumTokenReceiverAddress: string,
     NUM_TOKENS: bigint,
-    DECIMAL_DIFF: bigint
+    DECIMAL_DIFF: bigint,
+    useMessageCoin: boolean
   ): Promise<MessageProof> {
     // withdraw tokens back to the base chain
     fuel_bridge.account = fuelTokenSender;
@@ -73,24 +138,18 @@ describe('Bridging ERC20 tokens', async function () {
     const fuelTokenSenderBalance = await fuelTokenSender.getBalance(
       fuel_testAssetId
     );
-    const transactionRequest = await fuel_bridge.functions
-      .withdraw(paddedAddress)
-      .addContracts([fuel_bridge, fuel_bridgeImpl])
-      .txParams({
-        tip: 0,
-        maxFee: 1,
-      })
-      .callParams({
-        forward: {
-          amount: new BN(NUM_TOKENS.toString()).div(
-            new BN(DECIMAL_DIFF.toString())
-          ),
-          assetId: fuel_testAssetId,
-        },
-      })
-      .fundWithRequiredCoins();
+
+    const transactionRequest = await fetchTransaction(
+      fuel_bridge,
+      fuelTokenSender,
+      paddedAddress,
+      NUM_TOKENS,
+      DECIMAL_DIFF,
+      useMessageCoin
+    );
 
     const tx = await fuelTokenSender.sendTransaction(transactionRequest);
+
     const fWithdrawTxResult = await tx.waitForResult();
     expect(fWithdrawTxResult.status).to.equal('success');
 
@@ -591,7 +650,8 @@ describe('Bridging ERC20 tokens', async function () {
         fuelTokenSender,
         ethereumTokenReceiverAddress,
         NUM_TOKENS,
-        DECIMAL_DIFF
+        DECIMAL_DIFF,
+        true
       );
     });
 
@@ -726,7 +786,8 @@ describe('Bridging ERC20 tokens', async function () {
         fuelTokenSender,
         ethereumTokenReceiverAddress,
         NUM_TOKENS,
-        DECIMAL_DIFF
+        DECIMAL_DIFF,
+        false
       );
 
       // relay message
