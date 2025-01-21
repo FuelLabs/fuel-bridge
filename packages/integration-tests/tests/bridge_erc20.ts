@@ -25,6 +25,7 @@ import {
   getBlock,
   FUEL_CALL_TX_PARAMS,
   hardhatSkipTime,
+  fuels_parseEther,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { toBeHex, parseEther } from 'ethers';
@@ -88,20 +89,32 @@ describe('Bridging ERC20 tokens', async function () {
       const cost = await tx.getTransactionCost();
 
       // message coin resource
-      const resource = await fuelTokenSender.getResourcesToSpend([
-        [cost.maxFee, env.fuel.provider.getBaseAssetId()],
+      const resources = await fuelTokenSender.getResourcesToSpend([
+        [fuels_parseEther('1'), env.fuel.provider.getBaseAssetId()],
       ]);
+
+      expect(resources.length === 1);
+
+      const messageCoin: any = resources[0];
+
+      // making sure resource is of Message Coin type and DA Height is non zero
+      expect(messageCoin.daHeight > new BN(0));
 
       const transactionRequest = await tx.getTransactionRequest();
 
       // add message coin input
-      await transactionRequest.addResources(resource);
+      await transactionRequest.addResources(resources);
 
       // update fee params
       transactionRequest.gasLimit = cost.gasUsed;
       transactionRequest.maxFee = cost.maxFee;
 
       await fuelTokenSender.fund(transactionRequest, cost);
+
+      // verify that the message coin is consumed
+      const incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
+      expect(incomingMessagesonFuel.messages.length === 0);
+
       return transactionRequest;
     } else {
       return await fuel_bridge.functions
@@ -406,6 +419,55 @@ describe('Bridging ERC20 tokens', async function () {
       );
     });
 
+    it('Bridge ETH to Fuel to be used as Message Coin during token withdrawal', async () => {
+      // use the FuelMessagePortal to directly send ETH which should be immediately spendable
+      const tx = await env.eth.fuelMessagePortal
+        .connect(ethereumTokenSender)
+        .depositETH(fuelTokenReceiverAddress, {
+          value: parseEther('1'),
+        });
+      const receipt = await tx.wait();
+      expect(receipt.status).to.equal(1);
+
+      // parse events from logs
+      const filter = env.eth.fuelMessagePortal.filters.MessageSent(
+        null, // Args set to null since there should be just 1 event for MessageSent
+        null,
+        null,
+        null,
+        null
+      );
+
+      const [event, ...restOfEvents] =
+        await env.eth.fuelMessagePortal.queryFilter(
+          filter,
+          receipt.blockNumber,
+          receipt.blockNumber
+        );
+      expect(restOfEvents.length).to.be.eq(0); // Should be only 1 event
+
+      const fuelETHMessageNonce = new BN(event.args.nonce.toString());
+
+      fuelTokenMessageReceiver = fuelTokenReceiver.address;
+
+      // wait for message to appear in fuel client
+      expect(
+        await waitForMessage(
+          env.fuel.provider,
+          fuelTokenMessageReceiver,
+          fuelETHMessageNonce,
+          FUEL_MESSAGE_TIMEOUT_MS
+        )
+      ).to.not.be.null;
+
+      // verify the incoming messages generated when base asset is minted on fuel
+      const incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
+      expect(incomingMessagesonFuel.messages.length === 1);
+      expect(
+        incomingMessagesonFuel.messages[0].amount === fuels_parseEther('1')
+      );
+    });
+
     it('Bridge ERC20 token with permit via FuelERC20Gateway', async () => {
       const tokenName = await eth_permitTestToken.name();
       const tokenAddress = await eth_permitTestToken.getAddress();
@@ -553,6 +615,11 @@ describe('Bridging ERC20 tokens', async function () {
           fuelTokenReceiverBalance.add(toBeHex(NUM_TOKENS / DECIMAL_DIFF))
         )
       ).to.be.true;
+
+      const res = await fuelTokenReceiver.getResourcesToSpend([
+        [new BN('1'), env.fuel.provider.getBaseAssetId()],
+      ]);
+      console.log(res);
     });
 
     it('Check ERC20 permit token arrived on Fuel', async () => {
