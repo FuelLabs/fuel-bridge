@@ -30,7 +30,7 @@
   "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@fuels/changeset": "0.0.10",
+    "@fuels/changeset": "0.26.0",
     "@fuels/eslint-plugin": "0.20.0",
     "@fuels/prettier-config": "0.0.10",
     "@fuels/ts-config": "0.0.10",
