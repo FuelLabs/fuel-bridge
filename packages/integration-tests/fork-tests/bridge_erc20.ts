@@ -29,6 +29,7 @@ import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
+  MessageCoin,
   MessageProof,
   Provider,
   ScriptTransactionRequest,
@@ -83,33 +84,48 @@ describe('Bridging ERC20 tokens', async function () {
           },
         });
 
-      const cost = await tx.getTransactionCost();
+      // verify the incoming messages generated when base asset is minted on fuel
+      let incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
 
-      // message coin resource
-      const resources = await fuelTokenSender.getResourcesToSpend([
-        [fuels_parseEther('1'), env.fuel.provider.getBaseAssetId()],
-      ]);
+      expect(incomingMessagesonFuel.messages.length === 1);
+      expect(
+        incomingMessagesonFuel.messages[0].amount === fuels_parseEther('1')
+      );
 
-      expect(resources.length === 1);
-
-      const messageCoin: any = resources[0];
-
-      // making sure resource is of Message Coin type and DA Height is non zero
-      expect(messageCoin.daHeight > new BN(0));
+      // construct message coin
+      const messageCoin: MessageCoin = {
+        assetId: env.fuel.provider.getBaseAssetId(),
+        sender: incomingMessagesonFuel.messages[0].sender,
+        recipient: incomingMessagesonFuel.messages[0].recipient,
+        nonce: incomingMessagesonFuel.messages[0].nonce,
+        daHeight: incomingMessagesonFuel.messages[0].daHeight,
+        amount: incomingMessagesonFuel.messages[0].amount,
+      };
 
       const transactionRequest = await tx.getTransactionRequest();
 
-      // add message coin input
-      await transactionRequest.addResources(resources);
+      // add message coin as input to fund the tx
+      transactionRequest.addMessageInput(messageCoin);
+
+      // add the erc20 token input which will be burnt on withdrawal
+      const resource = await fuelTokenSender.getResourcesToSpend([
+        [
+          new BN(NUM_TOKENS.toString()).div(new BN(DECIMAL_DIFF.toString())),
+          fuel_testAssetId,
+        ],
+      ]);
+
+      transactionRequest.addResources(resource);
+
+      // fetch tx cost
+      const cost = await fuelTokenSender.getTransactionCost(transactionRequest);
 
       // update fee params
       transactionRequest.gasLimit = cost.gasUsed;
       transactionRequest.maxFee = cost.maxFee;
 
-      await fuelTokenSender.fund(transactionRequest, cost);
-
       // verify that the message coin is consumed
-      const incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
+      incomingMessagesonFuel = await fuelTokenSender.getMessages();
       expect(incomingMessagesonFuel.messages.length === 0);
 
       return transactionRequest;
@@ -407,13 +423,6 @@ describe('Bridging ERC20 tokens', async function () {
           FUEL_MESSAGE_TIMEOUT_MS
         )
       ).to.not.be.null;
-
-      // verify the incoming messages generated when base asset is minted on fuel
-      const incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
-      expect(incomingMessagesonFuel.messages.length === 1);
-      expect(
-        incomingMessagesonFuel.messages[0].amount === fuels_parseEther('1')
-      );
     });
 
     it('Bridge ERC20 via FuelERC20Gateway', async () => {
