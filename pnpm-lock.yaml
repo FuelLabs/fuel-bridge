@@ -20,8 +20,8 @@ importers:
   .:
     dependencies:
       '@fuels/changeset':
-        specifier: 0.26.0
-        version: 0.26.0
+        specifier: 0.0.10
+        version: 0.0.10
       '@fuels/eslint-plugin':
         specifier: 0.20.0
         version: 0.20.0(eslint@8.57.1)(typescript@5.7.3)
@@ -1122,8 +1122,8 @@ packages:
     engines: {node: ^18.20.3 || ^20.0.0 || ^22.0.0}
     hasBin: true
 
-  '@fuels/changeset@0.26.0':
-    resolution: {integrity: sha512-MN9HohWlhxfahDBB8pqAV7bF3h0m5+zEbPI4o1jxaGPVLG8lBNGR8d2MIaA1koI0ztR0HNCx5puG4gXfmk8u3Q==}
+  '@fuels/changeset@0.0.10':
+    resolution: {integrity: sha512-JRHAo8bYqCe4cGq7YsqurL7Vcmr/nu4nCHY1SdOZN/7sRcf3fbfrTz9VF9+WURjs6aGt1k9WcZGckHa3OJ89Ng==}
 
   '@fuels/eslint-plugin@0.20.0':
     resolution: {integrity: sha512-Z5AmqfMeEKpYE8gb+dhZu0Li6rUp1Ji/sLWWEWrD3vK3+GLQ88ojUV1j6hc2Z9XAxFCu/UL9DMac0YtFkk2E6A==}
@@ -6745,7 +6745,7 @@ snapshots:
       chalk: 4.1.2
       cli-table: 0.3.11
 
-  '@fuels/changeset@0.26.0':
+  '@fuels/changeset@0.0.10':
     dependencies:
       '@changesets/get-github-info': 0.5.2
       dotenv: 16.4.7

@@ -30,7 +30,7 @@
   "author": "Fuel Labs <contact@fuel.sh> (https://fuel.network/)",
   "license": "APACHE-2.0",
   "dependencies": {
-    "@fuels/changeset": "0.26.0",
+    "@fuels/changeset": "0.0.10",
     "@fuels/eslint-plugin": "0.20.0",
     "@fuels/prettier-config": "0.0.10",
     "@fuels/ts-config": "0.0.10",
@@ -57,5 +57,6 @@
       "micromatch@<4.0.8": ">=4.0.8",
       "cross-spawn@>=7.0.0 <7.0.5": ">=7.0.5"
     }
-  }
+  },
+  "packageManager": "pnpm@9.12.3+sha512.cce0f9de9c5a7c95bef944169cc5dfe8741abfb145078c0d508b868056848a87c81e626246cb60967cbd7fd29a6c062ef73ff840d96b3c86c40ac92cf4a813ee"
 }
