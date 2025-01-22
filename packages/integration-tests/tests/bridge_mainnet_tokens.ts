@@ -31,7 +31,6 @@ import {
   getBlock,
   FUEL_CALL_TX_PARAMS,
   hardhatSkipTime,
-  fuels_parseEther,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { toBeHex, parseEther, MaxUint256 } from 'ethers';
@@ -40,10 +39,10 @@ import { Address, BN } from 'fuels';
 import type {
   AbstractAddress,
   WalletUnlocked as FuelWallet,
-  MessageCoin,
   MessageProof,
-  ScriptTransactionRequest,
 } from 'fuels';
+
+import { fundWithdrawalTransactionWithBaseAssetResource } from '../utils/utils';
 
 const { expect } = chai;
 
@@ -76,99 +75,6 @@ describe('Bridge mainnet tokens', function () {
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
-  async function fetchTransaction(
-    fuel_bridge: BridgeFungibleToken,
-    fuelTokenSender: FuelWallet,
-    to: string,
-    NUM_TOKENS: bigint,
-    fuel_AssetId: string,
-    decimals: bigint,
-    useMessageCoin: boolean
-  ): Promise<ScriptTransactionRequest> {
-    if (useMessageCoin) {
-      const tx = await fuel_bridge.functions
-        .withdraw(to)
-        .addContracts([fuel_bridge, fuel_bridgeImpl])
-        .txParams({
-          tip: 0,
-          maxFee: 1,
-        })
-        .callParams({
-          forward: {
-            amount: new BN(NUM_TOKENS.toString()).div(
-              new BN((10n ** (18n - decimals)).toString())
-            ),
-            assetId: fuel_AssetId,
-          },
-        });
-
-      // verify the incoming messages generated when base asset is minted on fuel
-      let incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
-
-      expect(incomingMessagesonFuel.messages.length === 1);
-      expect(
-        incomingMessagesonFuel.messages[0].amount === fuels_parseEther('1')
-      );
-
-      // construct message coin
-      const messageCoin: MessageCoin = {
-        assetId: env.fuel.provider.getBaseAssetId(),
-        sender: incomingMessagesonFuel.messages[0].sender,
-        recipient: incomingMessagesonFuel.messages[0].recipient,
-        nonce: incomingMessagesonFuel.messages[0].nonce,
-        daHeight: incomingMessagesonFuel.messages[0].daHeight,
-        amount: incomingMessagesonFuel.messages[0].amount,
-      };
-
-      const transactionRequest = await tx.getTransactionRequest();
-
-      // add message coin as input to fund the tx
-      transactionRequest.addMessageInput(messageCoin);
-
-      // add the erc20 token input which will be burnt on withdrawal
-      const resource = await fuelTokenSender.getResourcesToSpend([
-        [
-          new BN(NUM_TOKENS.toString()).div(
-            new BN((10n ** (18n - decimals)).toString())
-          ),
-          fuel_AssetId,
-        ],
-      ]);
-
-      transactionRequest.addResources(resource);
-
-      // fetch tx cost
-      const cost = await fuelTokenSender.getTransactionCost(transactionRequest);
-
-      // update fee params
-      transactionRequest.gasLimit = cost.gasUsed;
-      transactionRequest.maxFee = cost.maxFee;
-
-      // verify that the message coin is consumed
-      incomingMessagesonFuel = await fuelTokenSender.getMessages();
-      expect(incomingMessagesonFuel.messages.length === 0);
-
-      return transactionRequest;
-    } else {
-      return await fuel_bridge.functions
-        .withdraw(to)
-        .addContracts([fuel_bridge, fuel_bridgeImpl])
-        .txParams({
-          tip: 0,
-          maxFee: 1,
-        })
-        .callParams({
-          forward: {
-            amount: new BN(NUM_TOKENS.toString()).div(
-              new BN((10n ** (18n - decimals)).toString())
-            ),
-            assetId: fuel_AssetId,
-          },
-        })
-        .fundWithRequiredCoins();
-    }
-  }
-
   async function generateWithdrawalMessageProof(
     fuel_bridge: BridgeFungibleToken,
     fuelTokenSender: FuelWallet,
@@ -186,15 +92,18 @@ describe('Bridge mainnet tokens', function () {
       fuel_AssetId
     );
 
-    const transactionRequest = await fetchTransaction(
-      fuel_bridge,
-      fuelTokenSender,
-      paddedAddress,
-      NUM_TOKENS,
-      fuel_AssetId,
-      decimals,
-      useMessageCoin
-    );
+    const transactionRequest =
+      await fundWithdrawalTransactionWithBaseAssetResource(
+        env,
+        fuel_bridge,
+        fuelTokenSender,
+        paddedAddress,
+        NUM_TOKENS,
+        decimals,
+        fuel_bridgeImpl,
+        fuel_AssetId,
+        useMessageCoin
+      );
 
     const tx = await fuelTokenSender.sendTransaction(transactionRequest);
     const fWithdrawTxResult = await tx.waitForResult();
