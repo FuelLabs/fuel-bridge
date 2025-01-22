@@ -1,17 +1,11 @@
 import type { BridgeFungibleToken } from '@fuel-bridge/fungible-token';
-import {
-  fuels_parseEther,
-  type TestEnvironment,
-} from '@fuel-bridge/test-utils';
-import chai from 'chai';
+import { type TestEnvironment } from '@fuel-bridge/test-utils';
 import { BN } from 'fuels';
 import type {
   WalletUnlocked as FuelWallet,
   MessageCoin,
   ScriptTransactionRequest,
 } from 'fuels';
-
-const { expect } = chai;
 
 // funds the withdrawal transaction with `MessageCoin` or `Coin` type
 export async function fundWithdrawalTransactionWithBaseAssetResource(
@@ -41,15 +35,8 @@ export async function fundWithdrawalTransactionWithBaseAssetResource(
       },
     });
   if (useMessageCoin) {
-    // verify the incoming messages generated when base asset is minted on fuel
+    // fetch the message generated on bridging eth
     const incomingMessagesonFuel = await env.fuel.signers[0].getMessages();
-
-    // eth as bridged once at the start
-    expect(incomingMessagesonFuel.messages.length === 1).to.be.true;
-
-    // 1 eth was bridged
-    expect(incomingMessagesonFuel.messages[0].amount.eq(fuels_parseEther('1')))
-      .to.be.true;
 
     // construct message coin
     const messageCoin: MessageCoin = {

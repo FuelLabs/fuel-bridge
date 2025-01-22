@@ -31,6 +31,7 @@ import {
   getBlock,
   FUEL_CALL_TX_PARAMS,
   hardhatSkipTime,
+  fuels_parseEther,
 } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import { toBeHex, parseEther, MaxUint256 } from 'ethers';
@@ -299,6 +300,18 @@ describe('Bridge mainnet tokens', function () {
               FUEL_MESSAGE_TIMEOUT_MS
             )
           ).to.not.be.null;
+
+          // verify the incoming messages generated when base asset is minted on fuel
+          const incomingMessagesonFuel =
+            await env.fuel.signers[0].getMessages();
+
+          // eth as bridged once at the start
+          expect(incomingMessagesonFuel.messages.length === 1).to.be.true;
+
+          // 1 eth was bridged
+          expect(
+            incomingMessagesonFuel.messages[0].amount.eq(fuels_parseEther('1'))
+          ).to.be.true;
         });
 
         it('Bridge ERC20 via FuelERC20Gateway', async () => {
