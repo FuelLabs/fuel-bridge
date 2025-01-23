@@ -7,5 +7,5 @@
     "resolveJsonModule": true,
     "lib": ["ES2021", "dom"]
   },
-  "include": ["./tests", "./scripts", "./**/*.ts"]
+  "include": ["./tests", "./fork-tests", "./scripts", "./**/*.ts"]
 }

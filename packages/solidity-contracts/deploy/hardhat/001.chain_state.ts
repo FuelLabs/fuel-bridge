@@ -13,6 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     upgrades: { deployProxy, erc1967 },
     deployments: { save },
   } = hre;
+
   const [deployer] = await ethers.getSigners();
 
   const contract = await deployProxy(new FuelChainState(deployer), [], {

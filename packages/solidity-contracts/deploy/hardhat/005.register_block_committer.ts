@@ -7,6 +7,7 @@ const COMMITTER_ADDRESS = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const { ethers, deployments } = hre;
+
   const [deployer] = await ethers.getSigners();
 
   const { address } = await deployments.get('FuelChainState');

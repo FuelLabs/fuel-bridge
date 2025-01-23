@@ -7,7 +7,8 @@ FROM ghcr.io/fuellabs/fuel-core:v0.40.0
 
 ARG FUEL_IP=0.0.0.0
 ARG FUEL_PORT=4001
-ARG CONSENSUS_KEY_SECRET=""
+# since we need to set the FORKING var in the upgrade-test-suite ci so setting it here
+ARG CONSENSUS_KEY_SECRET="0xa449b1ffee0e2205fa924c6740cc48b3b473aa28587df6dab12abc245d1f5298"
 
 # dependencies
 ENV DEBIAN_FRONTEND=noninteractive

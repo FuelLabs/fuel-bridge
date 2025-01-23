@@ -62,6 +62,7 @@ export interface SetupOptions {
   pk_eth_deployer?: string;
   pk_eth_signer1?: string;
   pk_eth_signer2?: string;
+  pk_eth_signer3?: string;
   pk_fuel_deployer?: string;
   pk_fuel_signer1?: string;
   pk_fuel_signer2?: string;
@@ -257,12 +258,10 @@ export async function setupEnvironment(
     }
 
     if (!eth_fuelERC721GatewayAddress) {
-      if (!deployerAddresses.FuelERC721Gateway) {
-        throw new Error(
-          'Failed to get FuelERC721Gateway address from deployer'
-        );
+      if (deployerAddresses.FuelERC721Gateway) {
+        // we don't use the erc71 gateway for the fork test suite
+        eth_fuelERC721GatewayAddress = deployerAddresses.FuelERC721Gateway;
       }
-      eth_fuelERC721GatewayAddress = deployerAddresses.FuelERC721Gateway;
     }
   }
 
