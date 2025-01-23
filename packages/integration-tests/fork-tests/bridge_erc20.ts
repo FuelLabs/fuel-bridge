@@ -31,6 +31,14 @@ import type {
   MessageProof,
   Provider,
 } from 'fuels';
+import type { StartedTestContainer } from 'testcontainers';
+
+import {
+  startL1ChainContainer,
+  startFuelNodeContainer,
+  startPostGresDBContainer,
+  startBlockCommitterContainer,
+} from '../docker-setup/docker';
 
 const { expect } = chai;
 
@@ -48,6 +56,11 @@ describe('Bridging ERC20 tokens', async function () {
   let fuel_bridgeImpl: BridgeFungibleToken;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
+
+  let postgresDB: StartedTestContainer;
+  let l1_node: StartedTestContainer;
+  let fuel_node: StartedTestContainer;
+  let block_committer: StartedTestContainer;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -202,6 +215,18 @@ describe('Bridging ERC20 tokens', async function () {
   }
 
   before(async () => {
+    // spinning up docker containers
+    postgresDB = await startPostGresDBContainer();
+
+    l1_node = await startL1ChainContainer();
+
+    fuel_node = await startFuelNodeContainer(l1_node, true);
+
+    block_committer = await startBlockCommitterContainer(
+      postgresDB,
+      l1_node,
+      fuel_node
+    );
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
@@ -665,5 +690,15 @@ describe('Bridging ERC20 tokens', async function () {
         newReceiverBalance === ethereumTokenReceiverBalance + NUM_TOKENS * 2n
       ).to.be.true;
     });
+  });
+
+  // stopping containers post the test
+  after(async () => {
+    await postgresDB.stop();
+    await l1_node.stop();
+
+    await fuel_node.stop();
+
+    await block_committer.stop();
   });
 });

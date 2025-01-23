@@ -1,9 +1,11 @@
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { exec } from 'child_process';
+import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
 import type { StartedTestContainer } from 'testcontainers';
 import { GenericContainer } from 'testcontainers';
 import { promisify } from 'util';
+dotEnvConfig();
 
 export async function startPostGresDBContainer() {
   const container = await new PostgreSqlContainer('postgres:14')
@@ -44,13 +46,19 @@ export async function startL1ChainContainer() {
     )
     .withNetworkAliases('l1_chain')
     .withName('l1_chain')
+    .withEnvironment({
+      TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
+        ? process.env.TENDERLY_RPC_URL
+        : '',
+    })
     .start();
 
   return container;
 }
 
 export async function startFuelNodeContainer(
-  l1Container: StartedTestContainer
+  l1Container: StartedTestContainer,
+  forkingEnabled: boolean
 ) {
   if (l1Container) {
     const l1ChainIp = l1Container.getIpAddress('bridge');
@@ -63,9 +71,13 @@ export async function startFuelNodeContainer(
       'ghcr.io/fuellabs/fuel-core:v0.40.0'
     )
       .withCommand(
-        `./fuel-core run --ip 0.0.0.0 --port 4001 --utxo-validation --vm-backtrace --enable-relayer --relayer http://${l1ChainIp}:9545 --relayer-v2-listening-contracts ${deployerAddresses.FuelMessagePortal} --poa-interval-period 1sec --da-compression 3600sec --graphql-max-complexity 500000 --debug --min-gas-price 0`.split(
-          ' '
-        )
+        forkingEnabled
+          ? `./fuel-core run --ip 0.0.0.0 --port 4001 --utxo-validation --vm-backtrace --enable-relayer --relayer http://${l1ChainIp}:9545 --relayer-v2-listening-contracts ${deployerAddresses.FuelMessagePortal} --poa-interval-period 1sec --da-compression 3600sec --graphql-max-complexity 500000 --relayer-da-deploy-height=21371952 --debug --min-gas-price 0`.split(
+              ' '
+            )
+          : `./fuel-core run --ip 0.0.0.0 --port 4001 --utxo-validation --vm-backtrace --enable-relayer --relayer http://${l1ChainIp}:9545 --relayer-v2-listening-contracts ${deployerAddresses.FuelMessagePortal} --poa-interval-period 1sec --da-compression 3600sec --graphql-max-complexity 500000 --debug --min-gas-price 0`.split(
+              ' '
+            )
       )
       .withNetworkAliases('fuel_core')
       .withExposedPorts({ container: 4001, host: 4000 })
@@ -95,9 +107,9 @@ export async function startFuelNodeContainer(
 }
 
 export async function startBlockCommitterContainer(
-  postgresContainer: any,
-  l1Container: any,
-  fuelNodeContainer: any
+  postgresContainer: StartedTestContainer,
+  l1Container: StartedTestContainer,
+  fuelNodeContainer: StartedTestContainer
 ) {
   const execAsync = promisify(exec);
 
