@@ -63,5 +63,4 @@ exec /root/fuel-core run \
     --debug \
     --da-compression $DA_COMPRESSION \
     --graphql-max-complexity $GRAPHQL_COMPLEXITY \
-    --min-gas-price 0 \
-    --snapshot ./
+    --min-gas-price 0
