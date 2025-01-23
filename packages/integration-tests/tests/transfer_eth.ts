@@ -111,7 +111,7 @@ describe('Transferring ETH', async function () {
 
     l1_node = await startL1ChainContainer();
 
-    fuel_node = await startFuelNodeContainer(l1_node);
+    fuel_node = await startFuelNodeContainer(l1_node, false);
 
     block_committer = await startBlockCommitterContainer(
       postgresDB,
