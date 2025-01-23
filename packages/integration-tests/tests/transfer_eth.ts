@@ -22,6 +22,14 @@ import type {
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
+import type { StartedTestContainer } from 'testcontainers';
+
+import {
+  startL1ChainContainer,
+  startFuelNodeContainer,
+  startPostGresDBContainer,
+  startBlockCommitterContainer,
+} from '../docker-setup/docker';
 
 const { expect } = chai;
 
@@ -32,6 +40,11 @@ describe('Transferring ETH', async function () {
   let BASE_ASSET_ID: string;
 
   let env: TestEnvironment;
+
+  let postgresDB: StartedTestContainer;
+  let l1_node: StartedTestContainer;
+  let fuel_node: StartedTestContainer;
+  let block_committer: StartedTestContainer;
 
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -93,6 +106,19 @@ describe('Transferring ETH', async function () {
   }
 
   before(async () => {
+    // spinning up docker containers
+    postgresDB = await startPostGresDBContainer();
+
+    l1_node = await startL1ChainContainer();
+
+    fuel_node = await startFuelNodeContainer(l1_node);
+
+    block_committer = await startBlockCommitterContainer(
+      postgresDB,
+      l1_node,
+      fuel_node
+    );
+
     env = await setupEnvironment({});
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
@@ -357,6 +383,7 @@ describe('Transferring ETH', async function () {
     let ethereumETHReceiverAddress: string;
     let withdrawMessageProof: MessageProof;
     let rateLimitDuration: bigint;
+    // let fuel_signer2: FuelWallet;
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
@@ -522,5 +549,13 @@ describe('Transferring ETH', async function () {
 
       expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
     });
+  });
+
+  after(async () => {
+    // stopping containers post the test
+    await postgresDB.stop();
+    await l1_node.stop();
+    await fuel_node.stop();
+    await block_committer.stop();
   });
 });
