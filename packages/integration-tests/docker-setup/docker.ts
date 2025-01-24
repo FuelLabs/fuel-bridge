@@ -29,6 +29,7 @@ export async function startL1ChainContainer() {
 
   const IMAGE_NAME = 'fueldev/l1chain:latest';
 
+  // since the docker file is doing some copying operations from the host machine so first building the image
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(projectRoot, 'docker/l1-chain/Dockerfile');
 
@@ -112,7 +113,7 @@ export async function startBlockCommitterContainer(
   fuelNodeContainer: StartedTestContainer
 ) {
   const execAsync = promisify(exec);
-
+  
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(
     projectRoot,
