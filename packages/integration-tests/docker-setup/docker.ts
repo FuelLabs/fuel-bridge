@@ -1,6 +1,7 @@
+import type {
+  StartedPostgreSqlContainer} from '@testcontainers/postgresql';
 import {
-  PostgreSqlContainer,
-  StartedPostgreSqlContainer,
+  PostgreSqlContainer
 } from '@testcontainers/postgresql';
 import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
