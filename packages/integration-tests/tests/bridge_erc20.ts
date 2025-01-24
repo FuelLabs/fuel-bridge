@@ -37,9 +37,7 @@ import type {
 } from 'fuels';
 // import type { StartedTestContainer } from 'testcontainers';
 
-import {
-  startContainers
-} from '../docker-setup/docker';
+import { startContainers } from '../docker-setup/docker';
 
 const { expect } = chai;
 
@@ -62,7 +60,6 @@ describe('Bridging ERC20 tokens', async function () {
   let fuel_test_permit_token_AssetId: string;
 
   let containers;
-
 
   // let postgresDB: StartedTestContainer;
   // let l1_node: StartedTestContainer;

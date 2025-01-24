@@ -1,4 +1,7 @@
-import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import {
+  PostgreSqlContainer,
+  StartedPostgreSqlContainer,
+} from '@testcontainers/postgresql';
 import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
@@ -7,10 +10,7 @@ import { GenericContainer, Network } from 'testcontainers';
 import { promisify } from 'util';
 dotEnvConfig();
 
-
-
 export async function startContainers(forkingEnabled: boolean) {
-
   const network = await new Network().start();
 
   const postGresContainer = await new PostgreSqlContainer('postgres:14')
@@ -27,11 +27,21 @@ export async function startContainers(forkingEnabled: boolean) {
     })
     .start();
 
-  const l1_node: StartedTestContainer = await startL1ChainContainer(network)
-  const fuel_node: StartedTestContainer = await startFuelNodeContainer(network, l1_node, forkingEnabled)
-  const block_committer: StartedTestContainer = await startBlockCommitterContainer(network, postGresContainer, l1_node, fuel_node)
+  const l1_node: StartedTestContainer = await startL1ChainContainer(network);
+  const fuel_node: StartedTestContainer = await startFuelNodeContainer(
+    network,
+    l1_node,
+    forkingEnabled
+  );
+  const block_committer: StartedTestContainer =
+    await startBlockCommitterContainer(
+      network,
+      postGresContainer,
+      l1_node,
+      fuel_node
+    );
 
-  return {postGresContainer, l1_node, fuel_node, block_committer};
+  return { postGresContainer, l1_node, fuel_node, block_committer };
 }
 
 async function startL1ChainContainer(network: StartedNetwork) {
@@ -69,7 +79,7 @@ async function startL1ChainContainer(network: StartedNetwork) {
 }
 
 async function startFuelNodeContainer(
-    network: StartedNetwork,
+  network: StartedNetwork,
   l1Container: StartedTestContainer,
   forkingEnabled: boolean
 ) {
@@ -121,13 +131,13 @@ async function startFuelNodeContainer(
 }
 
 async function startBlockCommitterContainer(
-    network: StartedNetwork,
+  network: StartedNetwork,
   postgresContainer: StartedPostgreSqlContainer,
   l1Container: StartedTestContainer,
   fuelNodeContainer: StartedTestContainer
 ) {
   const execAsync = promisify(exec);
-  
+
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(
     projectRoot,
