@@ -3,6 +3,14 @@ import type { TestEnvironment } from '@fuel-bridge/test-utils';
 import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
+import type { StartedTestContainer } from 'testcontainers';
+
+import {
+  startL1ChainContainer,
+  startFuelNodeContainer,
+  startPostGresDBContainer,
+  startBlockCommitterContainer,
+} from '../docker-setup/docker';
 
 const { expect } = chai;
 
@@ -15,7 +23,24 @@ describe('Proxy', async function () {
   let fuel_bridgeImpl: Contract;
   let fuel_proxy: Proxy;
 
+  let postgresDB: StartedTestContainer;
+  let l1_node: StartedTestContainer;
+  let fuel_node: StartedTestContainer;
+  let block_committer: StartedTestContainer;
+
   before(async () => {
+    // spinning up docker containers
+    postgresDB = await startPostGresDBContainer();
+
+    l1_node = await startL1ChainContainer();
+
+    fuel_node = await startFuelNodeContainer(l1_node, false);
+
+    block_committer = await startBlockCommitterContainer(
+      postgresDB,
+      l1_node,
+      fuel_node
+    );
     env = await setupEnvironment({});
 
     const { proxy, implementation } = await getOrDeployL2Bridge(
@@ -176,5 +201,15 @@ describe('Proxy', async function () {
 
       expect(message).contains('NotOwner');
     });
+  });
+
+  // stopping containers post the test
+  after(async () => {
+    await postgresDB.stop();
+    await l1_node.stop();
+
+    await fuel_node.stop();
+
+    await block_committer.stop();
   });
 });
