@@ -35,13 +35,10 @@ import type {
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
-import type { StartedTestContainer } from 'testcontainers';
+// import type { StartedTestContainer } from 'testcontainers';
 
 import {
-  startL1ChainContainer,
-  startFuelNodeContainer,
-  startPostGresDBContainer,
-  startBlockCommitterContainer,
+  startContainers
 } from '../docker-setup/docker';
 
 const { expect } = chai;
@@ -64,10 +61,13 @@ describe('Bridging ERC20 tokens', async function () {
   let fuel_testAssetId: string;
   let fuel_test_permit_token_AssetId: string;
 
-  let postgresDB: StartedTestContainer;
-  let l1_node: StartedTestContainer;
-  let fuel_node: StartedTestContainer;
-  let block_committer: StartedTestContainer;
+  let containers;
+
+
+  // let postgresDB: StartedTestContainer;
+  // let l1_node: StartedTestContainer;
+  // let fuel_node: StartedTestContainer;
+  // let block_committer: StartedTestContainer;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -246,17 +246,7 @@ describe('Bridging ERC20 tokens', async function () {
 
   before(async () => {
     // spinning up docker containers
-    postgresDB = await startPostGresDBContainer();
-
-    l1_node = await startL1ChainContainer();
-
-    fuel_node = await startFuelNodeContainer(l1_node, false);
-
-    block_committer = await startBlockCommitterContainer(
-      postgresDB,
-      l1_node,
-      fuel_node
-    );
+    containers = await startContainers(false);
 
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
@@ -848,11 +838,11 @@ describe('Bridging ERC20 tokens', async function () {
 
   // stopping containers post the test
   after(async () => {
-    await postgresDB.stop();
-    await l1_node.stop();
+    await containers.postGresContainer.stop();
+    await containers.l1_node.stop();
 
-    await fuel_node.stop();
+    await containers.fuel_node.stop();
 
-    await block_committer.stop();
+    await containers.block_committer.stop();
   });
 });

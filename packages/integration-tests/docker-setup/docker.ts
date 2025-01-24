@@ -1,18 +1,24 @@
-import { PostgreSqlContainer } from '@testcontainers/postgresql';
+import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
-import type { StartedTestContainer } from 'testcontainers';
-import { GenericContainer } from 'testcontainers';
+import type { StartedNetwork, StartedTestContainer } from 'testcontainers';
+import { GenericContainer, Network } from 'testcontainers';
 import { promisify } from 'util';
 dotEnvConfig();
 
-export async function startPostGresDBContainer() {
-  const container = await new PostgreSqlContainer('postgres:14')
+
+
+export async function startContainers(forkingEnabled: boolean) {
+
+  const network = await new Network().start();
+
+  const postGresContainer = await new PostgreSqlContainer('postgres:14')
     .withUsername('username')
     .withPassword('password')
     .withDatabase('committer_db')
     .withName('postgres')
+    .withNetwork(network)
     .withHealthCheck({
       test: ['CMD-SHELL', 'pg_isready -U username -d committer_db'],
       interval: 5000,
@@ -21,10 +27,14 @@ export async function startPostGresDBContainer() {
     })
     .start();
 
-  return container;
+  const l1_node: StartedTestContainer = await startL1ChainContainer(network)
+  const fuel_node: StartedTestContainer = await startFuelNodeContainer(network, l1_node, forkingEnabled)
+  const block_committer: StartedTestContainer = await startBlockCommitterContainer(network, postGresContainer, l1_node, fuel_node)
+
+  return {postGresContainer, l1_node, fuel_node, block_committer};
 }
 
-export async function startL1ChainContainer() {
+async function startL1ChainContainer(network: StartedNetwork) {
   const execAsync = promisify(exec);
 
   const IMAGE_NAME = 'fueldev/l1chain:latest';
@@ -45,6 +55,7 @@ export async function startL1ChainContainer() {
       { host: 8545, container: 9545 },
       { host: 8080, container: 8081 }
     )
+    .withNetwork(network)
     .withNetworkAliases('l1_chain')
     .withName('l1_chain')
     .withEnvironment({
@@ -57,12 +68,13 @@ export async function startL1ChainContainer() {
   return container;
 }
 
-export async function startFuelNodeContainer(
+async function startFuelNodeContainer(
+    network: StartedNetwork,
   l1Container: StartedTestContainer,
   forkingEnabled: boolean
 ) {
   if (l1Container) {
-    const l1ChainIp = l1Container.getIpAddress('bridge');
+    const l1ChainIp = l1Container.getIpAddress(network.getName());
 
     const deployerAddresses = await fetch(
       `http://${l1Container.getHost()}:8080/deployments.local.json`
@@ -83,6 +95,7 @@ export async function startFuelNodeContainer(
       .withNetworkAliases('fuel_core')
       .withExposedPorts({ container: 4001, host: 4000 })
       .withName('fuel_node')
+      .withNetwork(network)
       .withEnvironment({
         RUST_LOG: 'debug',
         DEBUG: 'true',
@@ -107,8 +120,9 @@ export async function startFuelNodeContainer(
   }
 }
 
-export async function startBlockCommitterContainer(
-  postgresContainer: StartedTestContainer,
+async function startBlockCommitterContainer(
+    network: StartedNetwork,
+  postgresContainer: StartedPostgreSqlContainer,
   l1Container: StartedTestContainer,
   fuelNodeContainer: StartedTestContainer
 ) {
@@ -121,10 +135,10 @@ export async function startBlockCommitterContainer(
   );
 
   if (postgresContainer && l1Container && fuelNodeContainer) {
-    const l1ChainIp = l1Container.getIpAddress('bridge');
-    const fuelcoreip = fuelNodeContainer.getIpAddress('bridge');
+    const l1ChainIp = l1Container.getIpAddress(network.getName());
+    const fuelcoreip = fuelNodeContainer.getIpAddress(network.getName());
 
-    const db = postgresContainer.getIpAddress('bridge');
+    const db = postgresContainer.getIpAddress(network.getName());
 
     const IMAGE_NAME = 'block-committer';
     const buildCommand = `docker build \
@@ -142,6 +156,7 @@ export async function startBlockCommitterContainer(
 
     const container = await new GenericContainer(IMAGE_NAME)
       .withName('block-committer')
+      .withNetwork(network)
       .withEnvironment({
         COMMITTER__ETH__RPC: `ws://${l1ChainIp}:9545/`,
         COMMITTER__FUEL__GRAPHQL_ENDPOINT: `http://${fuelcoreip}:4001/graphql`,
