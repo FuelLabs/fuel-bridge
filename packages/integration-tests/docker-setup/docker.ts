@@ -25,7 +25,7 @@ export async function startContainers(forkingEnabled: boolean) {
     })
     .start();
 
-  const l1_node: StartedTestContainer = await startL1ChainContainer(network);
+  const l1_node: StartedTestContainer = await startL1ChainContainer();
   const fuel_node: StartedTestContainer = await startFuelNodeContainer(
     network,
     l1_node,
@@ -42,7 +42,7 @@ export async function startContainers(forkingEnabled: boolean) {
   return { postGresContainer, l1_node, fuel_node, block_committer };
 }
 
-async function startL1ChainContainer(network: StartedNetwork) {
+async function startL1ChainContainer() {
   const execAsync = promisify(exec);
 
   const IMAGE_NAME = 'fueldev/l1chain:latest';
