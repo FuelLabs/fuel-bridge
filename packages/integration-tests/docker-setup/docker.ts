@@ -64,7 +64,7 @@ async function startL1ChainContainer(network: StartedNetwork) {
   const container = await new GenericContainer(IMAGE_NAME)
     .withExposedPorts(
       { host: 8545, container: 9545 },
-      { host: 8080, container: 8081 }
+    //   { host: 8080, container: 8081 }
     )
     .withNetwork(network)
     .withNetworkAliases('l1_chain')
