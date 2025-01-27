@@ -58,7 +58,8 @@ jobs:
   validate:
     runs-on: buildjet-4vcpu-ubuntu-2204
     needs: audit-deps
-    # env:
+    env:
+        DEBUG: "testcontainers*"
     #   # Required for Testcontainers to work in CI
     #   TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
     #   DOCKER_HOST: unix:///var/run/docker.sock
