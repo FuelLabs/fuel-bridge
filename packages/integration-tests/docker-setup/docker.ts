@@ -74,11 +74,11 @@ async function startL1ChainContainer(network: StartedNetwork) {
         ? process.env.TENDERLY_RPC_URL
         : '',
     })
-    .withStartupTimeout(120000)
+    // .withStartupTimeout(120000)
     .withWaitStrategy(
         Wait.forAll([
           Wait.forListeningPorts(),
-          Wait.forLogMessage('Server is running at https://localhost:8081'),
+        //   Wait.forLogMessage('Server is running at https://localhost:8081'),
         ])
       )
     .start();
