@@ -1,8 +1,5 @@
-import type {
-  StartedPostgreSqlContainer} from '@testcontainers/postgresql';
-import {
-  PostgreSqlContainer
-} from '@testcontainers/postgresql';
+import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
+import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
@@ -59,29 +56,43 @@ async function startL1ChainContainer(network: StartedNetwork) {
       -f ${dockerfilePath} \
       ${projectRoot}`;
 
-  await execAsync(buildCommand);
+  //   await execAsync(buildCommand);
+
+  try {
+    const { stdout, stderr } = await execAsync(buildCommand);
+    console.log('Docker build output:');
+    console.log('stdout:', stdout);
+    if (stderr) {
+      console.error('stderr:', stderr);
+    }
+  } catch (error) {
+    console.error('Docker build error:', error);
+    throw error;
+  }
 
   const container = await new GenericContainer(IMAGE_NAME)
     .withExposedPorts(
       { host: 8545, container: 9545 },
-    //   { host: 8080, container: 8081 }
+      { host: 8080, container: 8081 }
     )
-    .withNetwork(network)
-    .withNetworkAliases('l1_chain')
-    .withName('l1_chain')
-    .withEnvironment({
-      TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
-        ? process.env.TENDERLY_RPC_URL
-        : '',
-    })
+    // .withNetwork(network)
+    // .withNetworkAliases('l1_chain')
+    // .withName('l1_chain')
+    // .withEnvironment({
+    //   TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
+    //     ? process.env.TENDERLY_RPC_URL
+    //     : '',
+    // })
     // .withStartupTimeout(120000)
     .withWaitStrategy(
-        Wait.forAll([
-          Wait.forListeningPorts(),
+      Wait.forAll([
+        Wait.forListeningPorts(),
         //   Wait.forLogMessage('Server is running at https://localhost:8081'),
-        ])
-      )
+      ])
+    )
     .start();
+
+  console.log(container.logs);
 
   return container;
 }

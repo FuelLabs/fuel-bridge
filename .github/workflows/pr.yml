@@ -58,16 +58,16 @@ jobs:
   validate:
     runs-on: buildjet-4vcpu-ubuntu-2204
     needs: audit-deps
-    env:
-      # Required for Testcontainers to work in CI
-      TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
-      DOCKER_HOST: unix:///var/run/docker.sock
-      DOCKER_BUILDKIT: 1
-      COMPOSE_DOCKER_CLI_BUILD: 1
-      # Disable Ryuk container to prevent port conflicts
-      TESTCONTAINERS_RYUK_DISABLED: true
-      # Force host networking
-      TESTCONTAINERS_HOST_OVERRIDE: "localhost"
+    # env:
+    #   # Required for Testcontainers to work in CI
+    #   TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+    #   DOCKER_HOST: unix:///var/run/docker.sock
+    #   DOCKER_BUILDKIT: 1
+    #   COMPOSE_DOCKER_CLI_BUILD: 1
+    #   # Disable Ryuk container to prevent port conflicts
+    #   TESTCONTAINERS_RYUK_DISABLED: true
+    #   # Force host networking
+    #   TESTCONTAINERS_HOST_OVERRIDE: 'localhost'
     steps:
       - uses: actions/checkout@v3
       - uses: FuelLabs/github-actions/setups/node@master
