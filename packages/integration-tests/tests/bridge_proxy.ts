@@ -1,215 +1,198 @@
-// import type { Proxy } from '@fuel-bridge/fungible-token';
-// import type { TestEnvironment } from '@fuel-bridge/test-utils';
-// import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
-// import chai from 'chai';
-// import type { Contract, FuelError } from 'fuels';
-// import type { StartedTestContainer } from 'testcontainers';
+import type { Proxy } from '@fuel-bridge/fungible-token';
+import type { TestEnvironment } from '@fuel-bridge/test-utils';
+import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
+import chai from 'chai';
+import type { Contract, FuelError } from 'fuels';
 
-// import {
-//   startL1ChainContainer,
-//   startFuelNodeContainer,
-//   startPostGresDBContainer,
-//   startBlockCommitterContainer,
-// } from '../docker-setup/docker';
+import type { Containers } from '../docker-setup/docker';
+import { startContainers } from '../docker-setup/docker';
 
-// const { expect } = chai;
+const { expect } = chai;
 
-// describe('Proxy', async function () {
-//   // override the default test timeout from 2000ms
-//   const DEFAULT_TIMEOUT_MS: number = 400_000;
-//   this.timeout(DEFAULT_TIMEOUT_MS);
+describe('Proxy', async function () {
+  // override the default test timeout from 2000ms
+  const DEFAULT_TIMEOUT_MS: number = 400_000;
+  this.timeout(DEFAULT_TIMEOUT_MS);
 
-//   let env: TestEnvironment;
-//   let fuel_bridgeImpl: Contract;
-//   let fuel_proxy: Proxy;
+  let env: TestEnvironment;
+  let fuel_bridgeImpl: Contract;
+  let fuel_proxy: Proxy;
 
-//   let postgresDB: StartedTestContainer;
-//   let l1_node: StartedTestContainer;
-//   let fuel_node: StartedTestContainer;
-//   let block_committer: StartedTestContainer;
+  let containers: Containers;
 
-//   before(async () => {
-//     // spinning up docker containers
-//     postgresDB = await startPostGresDBContainer();
+  before(async () => {
+    // spinning up all docker containers
+    containers = await startContainers(false);
 
-//     l1_node = await startL1ChainContainer();
+    env = await setupEnvironment({});
 
-//     fuel_node = await startFuelNodeContainer(l1_node, false);
+    const { proxy, implementation } = await getOrDeployL2Bridge(
+      env,
+      env.eth.fuelERC20Gateway
+    );
 
-//     block_committer = await startBlockCommitterContainer(
-//       postgresDB,
-//       l1_node,
-//       fuel_node
-//     );
-//     env = await setupEnvironment({});
+    fuel_proxy = proxy;
+    fuel_bridgeImpl = implementation;
+  });
 
-//     const { proxy, implementation } = await getOrDeployL2Bridge(
-//       env,
-//       env.eth.fuelERC20Gateway
-//     );
+  describe('_proxy_owner()', () => {
+    it('correctly initializes the proxy owner', async () => {
+      const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
+      expect(value).to.have.property('Initialized');
+      expect(value.Initialized.Address.bits).to.be.equal(
+        env.fuel.deployer.address.toHexString()
+      );
+    });
+  });
 
-//     fuel_proxy = proxy;
-//     fuel_bridgeImpl = implementation;
-//   });
+  describe('_proxy_change_owner()', () => {
+    it('rejects unauthorized calls', async () => {
+      const mallory = env.fuel.signers[0];
+      fuel_proxy.account = mallory;
 
-//   describe('_proxy_owner()', () => {
-//     it('correctly initializes the proxy owner', async () => {
-//       const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
-//       expect(value).to.have.property('Initialized');
-//       expect(value.Initialized.Address.bits).to.be.equal(
-//         env.fuel.deployer.address.toHexString()
-//       );
-//     });
-//   });
+      const addressInput = { bits: mallory.address.toB256() };
+      const addressIdentityInput = { Address: addressInput };
 
-//   describe('_proxy_change_owner()', () => {
-//     it('rejects unauthorized calls', async () => {
-//       const mallory = env.fuel.signers[0];
-//       fuel_proxy.account = mallory;
+      const tx = fuel_proxy.functions
+        ._proxy_change_owner(addressIdentityInput)
+        .call();
+      const [txResult] = await Promise.allSettled([tx]);
 
-//       const addressInput = { bits: mallory.address.toB256() };
-//       const addressIdentityInput = { Address: addressInput };
+      if (txResult.status === 'fulfilled') {
+        throw new Error('Transaction did not revert');
+      }
+      const { message } = txResult.reason as FuelError;
 
-//       const tx = fuel_proxy.functions
-//         ._proxy_change_owner(addressIdentityInput)
-//         .call();
-//       const [txResult] = await Promise.allSettled([tx]);
+      expect(message).contains('NotOwner');
+    });
 
-//       if (txResult.status === 'fulfilled') {
-//         throw new Error('Transaction did not revert');
-//       }
-//       const { message } = txResult.reason as FuelError;
+    it('changes the owner', async () => {
+      const oldOwner = env.fuel.deployer;
+      const newOwner = env.fuel.signers[0];
 
-//       expect(message).contains('NotOwner');
-//     });
+      {
+        fuel_proxy.account = oldOwner;
+        const addressInput = { bits: newOwner.address.toB256() };
+        const addressIdentityInput = { Address: addressInput };
+        const tx = await fuel_proxy.functions
+          ._proxy_change_owner(addressIdentityInput)
+          .call();
+        const { transactionResponse } = await tx.waitForResult();
+        const { status } = await transactionResponse.waitForResult();
 
-//     it('changes the owner', async () => {
-//       const oldOwner = env.fuel.deployer;
-//       const newOwner = env.fuel.signers[0];
+        expect(status).to.equal('success');
 
-//       {
-//         fuel_proxy.account = oldOwner;
-//         const addressInput = { bits: newOwner.address.toB256() };
-//         const addressIdentityInput = { Address: addressInput };
-//         const tx = await fuel_proxy.functions
-//           ._proxy_change_owner(addressIdentityInput)
-//           .call();
-//         const { transactionResponse } = await tx.waitForResult();
-//         const { status } = await transactionResponse.waitForResult();
+        const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
+        expect(value).to.have.property('Initialized');
+        expect(value.Initialized.Address.bits).to.be.equal(
+          newOwner.address.toHexString()
+        );
+      }
 
-//         expect(status).to.equal('success');
+      {
+        fuel_proxy.account = newOwner;
+        const addressInput = { bits: oldOwner.address.toB256() };
+        const addressIdentityInput = { Address: addressInput };
+        const tx = await fuel_proxy.functions
+          ._proxy_change_owner(addressIdentityInput)
+          .call();
+        const { transactionResponse } = await tx.waitForResult();
+        const { status } = await transactionResponse.waitForResult();
+        expect(status).to.equal('success');
 
-//         const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
-//         expect(value).to.have.property('Initialized');
-//         expect(value.Initialized.Address.bits).to.be.equal(
-//           newOwner.address.toHexString()
-//         );
-//       }
+        const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
+        expect(value).to.have.property('Initialized');
+        expect(value.Initialized.Address.bits).to.be.equal(
+          oldOwner.address.toHexString()
+        );
+      }
+    });
+  });
 
-//       {
-//         fuel_proxy.account = newOwner;
-//         const addressInput = { bits: oldOwner.address.toB256() };
-//         const addressIdentityInput = { Address: addressInput };
-//         const tx = await fuel_proxy.functions
-//           ._proxy_change_owner(addressIdentityInput)
-//           .call();
-//         const { transactionResponse } = await tx.waitForResult();
-//         const { status } = await transactionResponse.waitForResult();
-//         expect(status).to.equal('success');
+  describe('proxy_target()', () => {
+    it('correctly initializes the proxy target', async () => {
+      fuel_proxy.account = env.fuel.deployer;
+      const { value } = await fuel_proxy.functions.proxy_target().dryRun();
+      expect(value.bits).to.be.equal(fuel_bridgeImpl.id.toHexString());
+    });
+  });
 
-//         const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
-//         expect(value).to.have.property('Initialized');
-//         expect(value.Initialized.Address.bits).to.be.equal(
-//           oldOwner.address.toHexString()
-//         );
-//       }
-//     });
-//   });
+  describe('set_proxy_target', () => {
+    const contractId =
+      '0x7296ff960b5eb86b5f79aa587d7ebe1bae147c7cac046a16d062fbd7f3a753ec';
+    const contractIdentityInput = { bits: contractId.toString() };
 
-//   describe('proxy_target()', () => {
-//     it('correctly initializes the proxy target', async () => {
-//       fuel_proxy.account = env.fuel.deployer;
-//       const { value } = await fuel_proxy.functions.proxy_target().dryRun();
-//       expect(value.bits).to.be.equal(fuel_bridgeImpl.id.toHexString());
-//     });
-//   });
+    it('rejects unauthorized calls', async () => {
+      const mallory = env.fuel.signers[0];
+      fuel_proxy.account = mallory;
 
-//   describe('set_proxy_target', () => {
-//     const contractId =
-//       '0x7296ff960b5eb86b5f79aa587d7ebe1bae147c7cac046a16d062fbd7f3a753ec';
-//     const contractIdentityInput = { bits: contractId.toString() };
+      const tx = fuel_proxy.functions
+        .set_proxy_target(contractIdentityInput)
+        .call();
+      const [txResult] = await Promise.allSettled([tx]);
 
-//     it('rejects unauthorized calls', async () => {
-//       const mallory = env.fuel.signers[0];
-//       fuel_proxy.account = mallory;
+      if (txResult.status === 'fulfilled') {
+        throw new Error('Transaction did not revert');
+      }
+      const { message } = txResult.reason as FuelError;
 
-//       const tx = fuel_proxy.functions
-//         .set_proxy_target(contractIdentityInput)
-//         .call();
-//       const [txResult] = await Promise.allSettled([tx]);
+      expect(message).contains('NotOwner');
+    });
 
-//       if (txResult.status === 'fulfilled') {
-//         throw new Error('Transaction did not revert');
-//       }
-//       const { message } = txResult.reason as FuelError;
+    it('correctly changes the target', async () => {
+      fuel_proxy.account = env.fuel.deployer;
 
-//       expect(message).contains('NotOwner');
-//     });
+      const tx = await fuel_proxy.functions
+        .set_proxy_target(contractIdentityInput)
+        .call();
+      const { transactionResponse } = await tx.waitForResult();
+      const { status } = await transactionResponse.waitForResult();
+      expect(status).to.equal('success');
 
-//     it('correctly changes the target', async () => {
-//       fuel_proxy.account = env.fuel.deployer;
+      const { value } = await fuel_proxy.functions.proxy_target().dryRun();
+      expect(value.bits).to.be.equal(contractId);
+    });
+  });
 
-//       const tx = await fuel_proxy.functions
-//         .set_proxy_target(contractIdentityInput)
-//         .call();
-//       const { transactionResponse } = await tx.waitForResult();
-//       const { status } = await transactionResponse.waitForResult();
-//       expect(status).to.equal('success');
+  describe('_proxy_revoke_ownership()', () => {
+    const contractId =
+      '0x7296ff960b5eb86b5f79aa587d7ebe1bae147c7cac046a16d062fbd7f3a753ec';
+    const contractIdentityInput = { bits: contractId.toString() };
 
-//       const { value } = await fuel_proxy.functions.proxy_target().dryRun();
-//       expect(value.bits).to.be.equal(contractId);
-//     });
-//   });
+    it('revokes ownership', async () => {
+      fuel_proxy.account = env.fuel.deployer;
+      const tx = await fuel_proxy.functions._proxy_revoke_ownership().call();
+      const { transactionResponse } = await tx.waitForResult();
+      const { status } = await transactionResponse.waitForResult();
+      expect(status).to.equal('success');
 
-//   describe('_proxy_revoke_ownership()', () => {
-//     const contractId =
-//       '0x7296ff960b5eb86b5f79aa587d7ebe1bae147c7cac046a16d062fbd7f3a753ec';
-//     const contractIdentityInput = { bits: contractId.toString() };
+      const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
+      expect(value).to.equal('Revoked');
+    });
 
-//     it('revokes ownership', async () => {
-//       fuel_proxy.account = env.fuel.deployer;
-//       const tx = await fuel_proxy.functions._proxy_revoke_ownership().call();
-//       const { transactionResponse } = await tx.waitForResult();
-//       const { status } = await transactionResponse.waitForResult();
-//       expect(status).to.equal('success');
+    it('disallows proxy upgrades', async () => {
+      fuel_proxy.account = env.fuel.deployer;
+      const tx = fuel_proxy.functions
+        .set_proxy_target(contractIdentityInput)
+        .call();
+      const [txResult] = await Promise.allSettled([tx]);
 
-//       const { value } = await fuel_proxy.functions._proxy_owner().dryRun();
-//       expect(value).to.equal('Revoked');
-//     });
+      if (txResult.status === 'fulfilled') {
+        throw new Error('Transaction did not revert');
+      }
+      const { message } = txResult.reason as FuelError;
 
-//     it('disallows proxy upgrades', async () => {
-//       fuel_proxy.account = env.fuel.deployer;
-//       const tx = fuel_proxy.functions
-//         .set_proxy_target(contractIdentityInput)
-//         .call();
-//       const [txResult] = await Promise.allSettled([tx]);
+      expect(message).contains('NotOwner');
+    });
+  });
 
-//       if (txResult.status === 'fulfilled') {
-//         throw new Error('Transaction did not revert');
-//       }
-//       const { message } = txResult.reason as FuelError;
+  // stopping containers post the test
+  after(async () => {
+    await containers.postGresContainer.stop();
+    await containers.l1_node.stop();
 
-//       expect(message).contains('NotOwner');
-//     });
-//   });
+    await containers.fuel_node.stop();
 
-//   // stopping containers post the test
-//   after(async () => {
-//     await postgresDB.stop();
-//     await l1_node.stop();
-
-//     await fuel_node.stop();
-
-//     await block_committer.stop();
-//   });
-// });
+    await containers.block_committer.stop();
+  });
+});

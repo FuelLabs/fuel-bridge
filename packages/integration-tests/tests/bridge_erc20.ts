@@ -35,8 +35,8 @@ import type {
   WalletUnlocked as FuelWallet,
   MessageProof,
 } from 'fuels';
-// import type { StartedTestContainer } from 'testcontainers';
 
+import type { Containers } from '../docker-setup/docker';
 import { startContainers } from '../docker-setup/docker';
 
 const { expect } = chai;
@@ -59,12 +59,7 @@ describe('Bridging ERC20 tokens', async function () {
   let fuel_testAssetId: string;
   let fuel_test_permit_token_AssetId: string;
 
-  let containers;
-
-  // let postgresDB: StartedTestContainer;
-  // let l1_node: StartedTestContainer;
-  // let fuel_node: StartedTestContainer;
-  // let block_committer: StartedTestContainer;
+  let containers: Containers;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -242,7 +237,7 @@ describe('Bridging ERC20 tokens', async function () {
   }
 
   before(async () => {
-    // spinning up docker containers
+    // spinning up all docker containers
     containers = await startContainers(false);
 
     env = await setupEnvironment({});

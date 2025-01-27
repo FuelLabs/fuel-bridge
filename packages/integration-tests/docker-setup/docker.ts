@@ -4,10 +4,18 @@ import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
 import type { StartedNetwork, StartedTestContainer } from 'testcontainers';
-import { GenericContainer, Network, Wait } from 'testcontainers';
+import { GenericContainer, Network } from 'testcontainers';
 import { promisify } from 'util';
 dotEnvConfig();
 
+export type Containers = {
+  postGresContainer: StartedTestContainer;
+  l1_node: StartedTestContainer;
+  fuel_node: StartedTestContainer;
+  block_committer: StartedTestContainer;
+};
+
+// responsible for starting all containers
 export async function startContainers(forkingEnabled: boolean) {
   const network = await new Network().start();
 
@@ -25,7 +33,7 @@ export async function startContainers(forkingEnabled: boolean) {
     })
     .start();
 
-  const l1_node: StartedTestContainer = await startL1ChainContainer();
+  const l1_node: StartedTestContainer = await startL1ChainContainer(network);
   const fuel_node: StartedTestContainer = await startFuelNodeContainer(
     network,
     l1_node,
@@ -42,7 +50,7 @@ export async function startContainers(forkingEnabled: boolean) {
   return { postGresContainer, l1_node, fuel_node, block_committer };
 }
 
-async function startL1ChainContainer() {
+async function startL1ChainContainer(network: StartedNetwork) {
   const execAsync = promisify(exec);
 
   const IMAGE_NAME = 'fueldev/l1chain:latest';
@@ -56,43 +64,22 @@ async function startL1ChainContainer() {
       -f ${dockerfilePath} \
       ${projectRoot}`;
 
-  //   await execAsync(buildCommand);
-
-  try {
-    const { stdout, stderr } = await execAsync(buildCommand);
-    console.log('Docker build output:');
-    console.log('stdout:', stdout);
-    if (stderr) {
-      console.error('stderr:', stderr);
-    }
-  } catch (error) {
-    console.error('Docker build error:', error);
-    throw error;
-  }
+  await execAsync(buildCommand);
 
   const container = await new GenericContainer(IMAGE_NAME)
     .withExposedPorts(
       { host: 8545, container: 9545 },
       { host: 8080, container: 8081 }
     )
-    // .withNetwork(network)
-    // .withNetworkAliases('l1_chain')
-    // .withName('l1_chain')
-    // .withEnvironment({
-    //   TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
-    //     ? process.env.TENDERLY_RPC_URL
-    //     : '',
-    // })
-    // .withStartupTimeout(120000)
-    .withWaitStrategy(
-      Wait.forAll([
-        Wait.forListeningPorts(),
-        //   Wait.forLogMessage('Server is running at https://localhost:8081'),
-      ])
-    )
+    .withNetwork(network)
+    .withNetworkAliases('l1_chain')
+    .withName('l1_chain')
+    .withEnvironment({
+      TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
+        ? process.env.TENDERLY_RPC_URL
+        : '',
+    })
     .start();
-
-  console.log(container.logs);
 
   return container;
 }
