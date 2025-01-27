@@ -7,7 +7,7 @@ import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
 import type { StartedNetwork, StartedTestContainer } from 'testcontainers';
-import { GenericContainer, Network } from 'testcontainers';
+import { GenericContainer, Network, Wait } from 'testcontainers';
 import { promisify } from 'util';
 dotEnvConfig();
 
@@ -74,6 +74,13 @@ async function startL1ChainContainer(network: StartedNetwork) {
         ? process.env.TENDERLY_RPC_URL
         : '',
     })
+    .withWaitStrategy(
+        Wait.forAll([
+          Wait.forListeningPorts(),
+          Wait.forLogMessage('Server is running at https://localhost:8081'),
+          Wait.forHealthCheck()
+        ])
+      )
     .start();
 
   return container;
