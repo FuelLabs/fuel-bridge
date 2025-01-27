@@ -162,9 +162,7 @@ async function startBlockCommitterContainer(
         -f ${dockerfilePath} \
             ${projectRoot}`;
 
-    const { stdout } = await execAsync(buildCommand);
-
-    console.log('Build output:', stdout);
+    await execAsync(buildCommand);
 
     const deployerAddresses = await fetch(
       `http://${l1Container.getHost()}:8080/deployments.local.json`
