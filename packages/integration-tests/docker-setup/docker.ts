@@ -59,7 +59,7 @@ async function startL1ChainContainer(network: StartedNetwork) {
     dockerfilePath
   ).build(IMAGE_NAME);
 
-  const con: StartedTestContainer = await buildInstance
+  const container: StartedTestContainer = await buildInstance
     .withExposedPorts(
       { host: 8545, container: 9545 },
       { host: 8080, container: 8081 }
@@ -74,7 +74,7 @@ async function startL1ChainContainer(network: StartedNetwork) {
     })
     .start();
 
-  return con;
+  return container;
 }
 
 async function startFuelNodeContainer(
@@ -136,10 +136,7 @@ async function startBlockCommitterContainer(
   fuelNodeContainer: StartedTestContainer
 ) {
   const projectRoot = path.resolve(__dirname, '../../../');
-  const dockerfilePath = path.join(
-    projectRoot,
-    'docker/block-committer'
-  );
+  const dockerfilePath = path.join(projectRoot, 'docker/block-committer');
 
   if (postgresContainer && l1Container && fuelNodeContainer) {
     const l1ChainIp = l1Container.getIpAddress(network.getName());
@@ -157,7 +154,7 @@ async function startBlockCommitterContainer(
       `http://${l1Container.getHost()}:8080/deployments.local.json`
     ).then((resp) => resp.json());
 
-    const container = await buildInstance
+    const container: StartedTestContainer = await buildInstance
       .withName('block-committer')
       .withNetwork(network)
       .withEnvironment({
