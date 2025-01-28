@@ -1,11 +1,9 @@
 import type { StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
-import { exec } from 'child_process';
 import { config as dotEnvConfig } from 'dotenv';
 import * as path from 'path';
 import type { StartedNetwork, StartedTestContainer } from 'testcontainers';
 import { GenericContainer, Network } from 'testcontainers';
-import { promisify } from 'util';
 dotEnvConfig();
 
 export type Containers = {
@@ -51,22 +49,17 @@ export async function startContainers(forkingEnabled: boolean) {
 }
 
 async function startL1ChainContainer(network: StartedNetwork) {
-  const execAsync = promisify(exec);
-
   const IMAGE_NAME = 'fueldev/l1chain:latest';
 
   // since the docker file is doing some copying operations from the host machine so first building the image
   const projectRoot = path.resolve(__dirname, '../../../');
-  const dockerfilePath = path.join(projectRoot, 'docker/l1-chain/Dockerfile');
+  const dockerfilePath = path.join(projectRoot, 'docker/l1-chain');
 
-  const buildCommand = `docker build \
-      -t ${IMAGE_NAME} \
-      -f ${dockerfilePath} \
-      ${projectRoot}`;
+  const buildInstance = await GenericContainer.fromDockerfile(
+    dockerfilePath
+  ).build(IMAGE_NAME);
 
-  await execAsync(buildCommand);
-
-  const container = await new GenericContainer(IMAGE_NAME)
+  const con: StartedTestContainer = await buildInstance
     .withExposedPorts(
       { host: 8545, container: 9545 },
       { host: 8080, container: 8081 }
@@ -81,7 +74,7 @@ async function startL1ChainContainer(network: StartedNetwork) {
     })
     .start();
 
-  return container;
+  return con;
 }
 
 async function startFuelNodeContainer(
@@ -142,12 +135,10 @@ async function startBlockCommitterContainer(
   l1Container: StartedTestContainer,
   fuelNodeContainer: StartedTestContainer
 ) {
-  const execAsync = promisify(exec);
-
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(
     projectRoot,
-    'docker/block-committer/Dockerfile'
+    'docker/block-committer'
   );
 
   if (postgresContainer && l1Container && fuelNodeContainer) {
@@ -157,18 +148,16 @@ async function startBlockCommitterContainer(
     const db = postgresContainer.getIpAddress(network.getName());
 
     const IMAGE_NAME = 'block-committer';
-    const buildCommand = `docker build \
-        -t ${IMAGE_NAME} \
-        -f ${dockerfilePath} \
-            ${projectRoot}`;
 
-    await execAsync(buildCommand);
+    const buildInstance = await GenericContainer.fromDockerfile(
+      dockerfilePath
+    ).build(IMAGE_NAME);
 
     const deployerAddresses = await fetch(
       `http://${l1Container.getHost()}:8080/deployments.local.json`
     ).then((resp) => resp.json());
 
-    const container = await new GenericContainer(IMAGE_NAME)
+    const container = await buildInstance
       .withName('block-committer')
       .withNetwork(network)
       .withEnvironment({
