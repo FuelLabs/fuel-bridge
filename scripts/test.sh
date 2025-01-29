@@ -36,7 +36,7 @@ HELTH_CHECK_OUTPUT=""
 MAX_CHECK_ATTEMPTS=50
 
 waitForNodesToBeReady() {
-    NODE_URL="http://localhost:4000/v1/playground";
+    NODE_URL="http://localhost:4000/v1/playground"
 
     printf "\rWaiting for node.${HELTH_CHECK_OUTPUT}"
 
@@ -46,16 +46,17 @@ waitForNodesToBeReady() {
     fi
 
     CURL_RESPONSE=$(curl --head --request GET --silent --show-error --fail $NODE_URL 2>&1 || true)
+
     echo -e "\nCurl response headers:\n$CURL_RESPONSE"
 
-    if curl --silent --head --request GET $NODE_URL | grep "200 OK" > /dev/null; then
-        # If the node responds with 200, it is ready
-        # to run the tests.
+    if echo "$CURL_RESPONSE" | grep "200 OK" > /dev/null; then
         echo "\nRun tests..."
         pnpm turbo run test
     else
-        # If the request not returns 200 the node is not ready yet
-        # sleep for 6 seconds before and try again.
+        echo -e "\n--- Docker Logs (docker-fuel_core-1) ---"
+        docker logs docker-fuel_core-1 || echo "Failed to get logs for docker-fuel_core-1"
+        echo -e "\n--------------------------------------"
+
         HEALTH_CHECK_COUNTER=$((HEALTH_CHECK_COUNTER+1))
         HELTH_CHECK_OUTPUT="${HELTH_CHECK_OUTPUT}."
         sleep 6

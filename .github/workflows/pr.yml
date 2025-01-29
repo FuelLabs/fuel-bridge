@@ -13,48 +13,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  audit-deps:
-    name: Audit Dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - uses: FuelLabs/github-actions/setups/node@master
-        with:
-          node-version: 20.16.0
-          pnpm-version: 9.0.6
-      - run: pnpm audit --prod --audit-level high
-
-  check-packages-changed:
-    needs: audit-deps
-    name: Check if packages have change
-    runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.packages-changed.outputs.any_changed }}
-    steps:
-      - uses: actions/checkout@v3
-      - name: Check external packages changes
-        id: packages-changed
-        uses: tj-actions/changed-files@v22.2
-        with:
-          files: |
-            **/packages/**
-
-  changesets:
-    name: Changeset Checks
-    needs: [audit-deps, check-packages-changed]
-    if: ${{ github.head_ref != 'changeset-release/main' && needs.check-packages-changed.outputs.changed == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          # need this to get full git-history/clone in order to build changelogs and check changesets
-          fetch-depth: 0
-      - uses: FuelLabs/github-actions/setups/node@ps/chore/enable-docs-with-snippets-inline # temporary fix to point to this branch instead of master, to avoid the changeset ci breaking due to the latest commit(https://github.com/FuelLabs/github-actions/commit/0c63b2f8b88ce896748ac4ec42a3b8e40daf8647)
-        with:
-          node-version: 20.16.0
-          pnpm-version: 9.0.6
-      - run: pnpm changeset:check
-
   validate:
     runs-on: buildjet-4vcpu-ubuntu-2204
     needs: audit-deps
