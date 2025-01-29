@@ -45,10 +45,7 @@ waitForNodesToBeReady() {
         exit 1
     fi
 
-    set -x
-    CURL_RESPONSE=$(curl --head --request GET $NODE_URL 2>&1)
-    set +x
-
+    CURL_RESPONSE=$(curl --head --request GET --silent --show-error --fail $NODE_URL 2>&1 || true)
     echo -e "\nCurl response headers:\n$CURL_RESPONSE"
 
     if curl --silent --head --request GET $NODE_URL | grep "200 OK" > /dev/null; then
