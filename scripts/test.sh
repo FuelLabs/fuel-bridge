@@ -45,6 +45,12 @@ waitForNodesToBeReady() {
         exit 1
     fi
 
+    set -x
+    CURL_RESPONSE=$(curl --head --request GET $NODE_URL 2>&1)
+    set +x
+
+    echo -e "\nCurl response headers:\n$CURL_RESPONSE"
+
     if curl --silent --head --request GET $NODE_URL | grep "200 OK" > /dev/null; then
         # If the node responds with 200, it is ready
         # to run the tests.
