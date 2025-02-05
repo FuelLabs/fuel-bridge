@@ -28,11 +28,6 @@ import { fuels_parseEther, fuels_formatEther } from './parsers';
 
 dotenv.config();
 
-// Default config values
-const def_http_eth: string = 'http://127.0.0.1:8545';
-const def_http_deployer: string = 'http://127.0.0.1:8080';
-const def_http_fuel: string = 'http://127.0.0.1:4000/v1/graphql';
-
 // Default private keys of the developer mnemonic
 const eth_private_keys: string[] = [
   '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80', // Deployer private key
@@ -93,13 +88,10 @@ export async function setupEnvironment(
   opts: SetupOptions
 ): Promise<TestEnvironment> {
   const http_ethereum_client: string =
-    opts.http_ethereum_client ||
-    process.env.HTTP_ETHEREUM_CLIENT ||
-    def_http_eth;
-  const http_deployer: string =
-    opts.http_deployer || process.env.HTTP_DEPLOYER || def_http_deployer;
+    opts.http_ethereum_client || process.env.HTTP_ETHEREUM_CLIENT;
+  const http_deployer: string = opts.http_deployer || process.env.HTTP_DEPLOYER;
   const http_fuel_client: string =
-    opts.http_fuel_client || process.env.HTTP_FUEL_CLIENT || def_http_fuel;
+    opts.http_fuel_client || process.env.HTTP_FUEL_CLIENT;
   const pk_eth_deployer: string =
     opts.pk_eth_deployer || process.env.PK_ETH_DEPLOYER || def_pk_eth_deployer;
   const pk_eth_signer1: string =
