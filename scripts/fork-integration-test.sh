@@ -1,0 +1,1 @@
+pnpm run test:fork:transfer & pnpm run test:fork:erc20

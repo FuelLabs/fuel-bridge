@@ -7,9 +7,13 @@
   "scripts": {
     "test": "pnpm mocha -b -r ts-node/register 'tests/**/*.ts'",
     "test-fork": "pnpm mocha -b -r ts-node/register 'fork-tests/**/*.ts'",
+    "test:fork:erc20": "pnpm mocha -b -r ts-node/register 'fork-tests/bridge_erc20.ts'",
+    "test:fork:transfer": "pnpm mocha -b -r ts-node/register 'fork-tests/transfer_eth.ts'",
     "test:erc20": "pnpm mocha -b -r ts-node/register 'tests/bridge_erc20.ts'",
     "test:erc721": "pnpm mocha -b -r ts-node/register 'tests/bridge_erc721.ts'",
     "test:transfer": "pnpm mocha -b -r ts-node/register 'tests/transfer_eth.ts'",
+    "test:bridge_mainnet_tokens": "pnpm mocha -b -r ts-node/register 'tests/bridge_mainnet_tokens.ts'",
+    "test:bridge_proxy": "pnpm mocha -b -r ts-node/register 'tests/bridge_proxy.ts'",
     "depositETH": "pnpm ts-node scripts/depositETH.ts",
     "bridgeETH": "pnpm ts-node scripts/bridgeETH.ts",
     "bridgeERC20": "pnpm ts-node scripts/bridgeERC20.ts",
