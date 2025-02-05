@@ -14,14 +14,18 @@ export type Containers = {
 };
 
 // responsible for starting all containers
-export async function startContainers(forkingEnabled: boolean) {
+export async function startContainers(
+  forkingEnabled: boolean,
+  deploymentPort: number,
+  l1NodePort: number,
+  fuelNodePort: number
+) {
   const network = await new Network().start();
 
   const postGresContainer = await new PostgreSqlContainer('postgres:14')
     .withUsername('username')
     .withPassword('password')
     .withDatabase('committer_db')
-    .withName('postgres')
     .withNetwork(network)
     .withHealthCheck({
       test: ['CMD-SHELL', 'pg_isready -U username -d committer_db'],
@@ -31,24 +35,35 @@ export async function startContainers(forkingEnabled: boolean) {
     })
     .start();
 
-  const l1_node: StartedTestContainer = await startL1ChainContainer(network);
+  const l1_node: StartedTestContainer = await startL1ChainContainer(
+    network,
+    deploymentPort,
+    l1NodePort
+  );
   const fuel_node: StartedTestContainer = await startFuelNodeContainer(
     network,
     l1_node,
-    forkingEnabled
+    forkingEnabled,
+    deploymentPort,
+    fuelNodePort
   );
   const block_committer: StartedTestContainer =
     await startBlockCommitterContainer(
       network,
       postGresContainer,
       l1_node,
-      fuel_node
+      fuel_node,
+      deploymentPort
     );
 
   return { postGresContainer, l1_node, fuel_node, block_committer };
 }
 
-async function startL1ChainContainer(network: StartedNetwork) {
+async function startL1ChainContainer(
+  network: StartedNetwork,
+  deploymentPort: number,
+  l1NodePort: number
+) {
   const IMAGE_NAME = 'fueldev/l1chain:latest';
 
   // since the docker file is doing some copying operations from the host machine so first building the image
@@ -61,12 +76,11 @@ async function startL1ChainContainer(network: StartedNetwork) {
 
   const container: StartedTestContainer = await buildInstance
     .withExposedPorts(
-      { host: 8545, container: 9545 },
-      { host: 8080, container: 8081 }
+      { host: l1NodePort, container: 9545 },
+      { host: deploymentPort, container: 8081 }
     )
     .withNetwork(network)
     .withNetworkAliases('l1_chain')
-    .withName('l1_chain')
     .withEnvironment({
       TENDERLY_RPC_URL: process.env.TENDERLY_RPC_URL
         ? process.env.TENDERLY_RPC_URL
@@ -80,13 +94,15 @@ async function startL1ChainContainer(network: StartedNetwork) {
 async function startFuelNodeContainer(
   network: StartedNetwork,
   l1Container: StartedTestContainer,
-  forkingEnabled: boolean
+  forkingEnabled: boolean,
+  deploymentPort: number,
+  fuelNodePort: number
 ) {
   if (l1Container) {
     const l1ChainIp = l1Container.getIpAddress(network.getName());
 
     const deployerAddresses = await fetch(
-      `http://${l1Container.getHost()}:8080/deployments.local.json`
+      `http://${l1Container.getHost()}:${deploymentPort}/deployments.local.json`
     ).then((resp) => resp.json());
 
     const container = await new GenericContainer(
@@ -102,8 +118,7 @@ async function startFuelNodeContainer(
             )
       )
       .withNetworkAliases('fuel_core')
-      .withExposedPorts({ container: 4001, host: 4000 })
-      .withName('fuel_node')
+      .withExposedPorts({ container: 4001, host: fuelNodePort })
       .withNetwork(network)
       .withEnvironment({
         RUST_LOG: 'debug',
@@ -133,7 +148,8 @@ async function startBlockCommitterContainer(
   network: StartedNetwork,
   postgresContainer: StartedPostgreSqlContainer,
   l1Container: StartedTestContainer,
-  fuelNodeContainer: StartedTestContainer
+  fuelNodeContainer: StartedTestContainer,
+  deploymentPort: number
 ) {
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(projectRoot, 'docker/block-committer');
@@ -151,11 +167,10 @@ async function startBlockCommitterContainer(
     ).build(IMAGE_NAME);
 
     const deployerAddresses = await fetch(
-      `http://${l1Container.getHost()}:8080/deployments.local.json`
+      `http://${l1Container.getHost()}:${deploymentPort}/deployments.local.json`
     ).then((resp) => resp.json());
 
     const container: StartedTestContainer = await buildInstance
-      .withName('block-committer')
       .withNetwork(network)
       .withEnvironment({
         COMMITTER__ETH__RPC: `ws://${l1ChainIp}:9545/`,

@@ -99,9 +99,14 @@ describe('Transferring ETH', async function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(false);
+    containers = await startContainers(false, 9090, 7545, 3000);
 
-    env = await setupEnvironment({});
+    env = await setupEnvironment({
+      http_ethereum_client: 'http://127.0.0.1:7545',
+      http_deployer: 'http://127.0.0.1:9090',
+      http_fuel_client: 'http://127.0.0.1:3000/v1/graphql',
+    });
+
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
 

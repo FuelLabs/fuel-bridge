@@ -208,9 +208,14 @@ describe('Bridging ERC20 tokens', async function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(true);
+    containers = await startContainers(true, 8080, 8545, 4000);
 
-    env = await setupEnvironment({});
+    env = await setupEnvironment({
+      http_ethereum_client: 'http://127.0.0.1:8545',
+      http_deployer: 'http://127.0.0.1:8080',
+      http_fuel_client: 'http://127.0.0.1:4000/v1/graphql',
+    });
+
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
     ).toLowerCase();

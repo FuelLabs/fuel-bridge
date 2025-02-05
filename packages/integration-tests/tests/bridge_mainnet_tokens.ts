@@ -166,9 +166,14 @@ describe('Bridge mainnet tokens', function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(false);
+    containers = await startContainers(false, 6060, 5545, 1000);
 
-    env = await setupEnvironment({});
+    env = await setupEnvironment({
+      http_ethereum_client: 'http://127.0.0.1:5545',
+      http_deployer: 'http://127.0.0.1:6060',
+      http_fuel_client: 'http://127.0.0.1:1000/v1/graphql',
+    });
+
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
     ).toLowerCase();

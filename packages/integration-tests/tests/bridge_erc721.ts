@@ -54,9 +54,14 @@ describe.skip('Bridging ERC721 tokens', async function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(false);
+    containers = await startContainers(false, 7070, 6545, 2000);
 
-    env = await setupEnvironment({});
+    env = await setupEnvironment({
+      http_ethereum_client: 'http://127.0.0.1:6545',
+      http_deployer: 'http://127.0.0.1:7070',
+      http_fuel_client: 'http://127.0.0.1:2000/v1/graphql',
+    });
+
     eth_testToken = await getOrDeployERC721Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
     eth_erc721GatewayAddress = (

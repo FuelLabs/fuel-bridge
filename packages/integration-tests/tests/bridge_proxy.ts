@@ -22,9 +22,13 @@ describe('Proxy', async function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(false);
+    containers = await startContainers(false, 5050, 4545, 6232);
 
-    env = await setupEnvironment({});
+    env = await setupEnvironment({
+      http_ethereum_client: 'http://127.0.0.1:4545',
+      http_deployer: 'http://127.0.0.1:5050',
+      http_fuel_client: 'http://127.0.0.1:6232/v1/graphql',
+    });
 
     const { proxy, implementation } = await getOrDeployL2Bridge(
       env,
