@@ -149,6 +149,9 @@ importers:
       '@openzeppelin/hardhat-upgrades':
         specifier: ^3.0.4
         version: 3.0.5(@nomicfoundation/hardhat-ethers@3.0.5(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(@nomicfoundation/hardhat-verify@1.1.1(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(bufferutil@4.0.5)(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7))(utf-8-validate@5.0.7)
+      '@openzeppelin/upgrades-core':
+        specifier: 1.41.0
+        version: 1.41.0
       '@safe-global/api-kit':
         specifier: ^2.4.6
         version: 2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
@@ -449,6 +452,9 @@ packages:
   '@babel/runtime@7.24.4':
     resolution: {integrity: sha512-dkxf7+hn8mFBwKjs9bvBlArzLVxVbS8usaPUDd5p2a9JCL9tB8OaOVN1isD4+Xyk4ns89/xeOmbQvgdK7IIVdA==}
     engines: {node: '>=6.9.0'}
+
+  '@bytecodealliance/preview2-shim@0.17.0':
+    resolution: {integrity: sha512-JorcEwe4ud0x5BS/Ar2aQWOQoFzjq/7jcnxYXCvSMh0oRm0dQXzOA+hqLDBnOMks1LLBA7dmiLLsEBl09Yd6iQ==}
 
   '@changesets/apply-release-plan@7.0.0':
     resolution: {integrity: sha512-vfi69JR416qC9hWmFGSxj7N6wA5J222XNBmezSVATPWDVPIF7gkd4d8CpbEbXmRWbVrkoli3oerGS6dcL/BGsQ==}
@@ -1545,6 +1551,9 @@ packages:
     peerDependencies:
       hardhat: ^2.0.4
 
+  '@nomicfoundation/slang@0.18.3':
+    resolution: {integrity: sha512-YqAWgckqbHM0/CZxi9Nlf4hjk9wUNLC9ngWCWBiqMxPIZmzsVKYuChdlrfeBPQyvQQBoOhbx+7C1005kLVQDZQ==}
+
   '@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.1':
     resolution: {integrity: sha512-KcTodaQw8ivDZyF+D76FokN/HdpgGpfjc/gFCImdLUyqB6eSWVaZPazMbeAjmfhx3R0zm/NYVzxwAokFKgrc0w==}
     engines: {node: '>= 10'}
@@ -1644,8 +1653,8 @@ packages:
       '@nomicfoundation/hardhat-verify':
         optional: true
 
-  '@openzeppelin/upgrades-core@1.32.6':
-    resolution: {integrity: sha512-TS8596pD1iAOIJMKSeqfYM4likHs/qw+D11xF+l0OklJ4IGwZ5qE4qkuPuOhwj7R8gwhT4ryFVjOztx2HLwKpw==}
+  '@openzeppelin/upgrades-core@1.41.0':
+    resolution: {integrity: sha512-+oryinqZnxkiZvg7bWqWX4Ki/CNwVUZEqC6Elpi5PQoahpL3/6Sq9xjIozD5AiI2O61h8JHQ+A//5NtczyavJw==}
     hasBin: true
 
   '@pkgjs/parseargs@0.11.0':
@@ -4354,6 +4363,10 @@ packages:
     resolution: {integrity: sha512-KqWh+VchfxcMNRAJjj2tnsSJdNbHsVgnkBhTNrW7AjVo6OvLtxw8zfT9oLw1JSohlFzJ8jCoTgaoXvJ+kHt6fw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
+  minimatch@9.0.5:
+    resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
+    engines: {node: '>=16 || 14 >=14.17'}
+
   minimist-options@4.1.0:
     resolution: {integrity: sha512-Q4r8ghd80yhO/0j1O3B2BjweX3fiHg9cdOwjJd2J76Q135c+NDxGCqdYKQ1SKBuFfgWbAUzBfvYjPUEeNgqN1A==}
     engines: {node: '>= 6'}
@@ -6315,6 +6328,8 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
+  '@bytecodealliance/preview2-shim@0.17.0': {}
+
   '@changesets/apply-release-plan@7.0.0':
     dependencies:
       '@babel/runtime': 7.24.4
@@ -7570,6 +7585,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@nomicfoundation/slang@0.18.3':
+    dependencies:
+      '@bytecodealliance/preview2-shim': 0.17.0
+
   '@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.1':
     optional: true
 
@@ -7674,7 +7693,7 @@ snapshots:
       '@openzeppelin/defender-sdk-base-client': 1.12.0
       '@openzeppelin/defender-sdk-deploy-client': 1.12.0(debug@4.3.4)
       '@openzeppelin/defender-sdk-network-client': 1.12.0(debug@4.3.4)
-      '@openzeppelin/upgrades-core': 1.32.6
+      '@openzeppelin/upgrades-core': 1.41.0
       chalk: 4.1.2
       debug: 4.3.4(supports-color@8.1.1)
       ethereumjs-util: 7.1.5
@@ -7690,13 +7709,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@openzeppelin/upgrades-core@1.32.6':
+  '@openzeppelin/upgrades-core@1.41.0':
     dependencies:
+      '@nomicfoundation/slang': 0.18.3
       cbor: 9.0.2
       chalk: 4.1.2
       compare-versions: 6.1.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.7
       ethereumjs-util: 7.1.5
+      minimatch: 9.0.5
       minimist: 1.2.8
       proper-lockfile: 4.1.2
       solidity-ast: 0.4.56
@@ -11112,6 +11133,10 @@ snapshots:
       brace-expansion: 2.0.1
 
   minimatch@9.0.4:
+    dependencies:
+      brace-expansion: 2.0.1
+
+  minimatch@9.0.5:
     dependencies:
       brace-expansion: 2.0.1
 
