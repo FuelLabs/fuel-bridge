@@ -54,10 +54,15 @@ async function startL1ChainContainer(network: StartedNetwork) {
   // since the docker file is doing some copying operations from the host machine so first building the image
   const projectRoot = path.resolve(__dirname, '../../../');
   const dockerfilePath = path.join(projectRoot, 'docker/l1-chain');
-
-  const buildInstance = await GenericContainer.fromDockerfile(
+  
+  let buildInstance
+  try {
+  buildInstance = await GenericContainer.fromDockerfile(
     dockerfilePath
   ).build(IMAGE_NAME);
+} catch(error) {
+  console.log(error);
+}
 
   const container: StartedTestContainer = await buildInstance
     .withExposedPorts(
