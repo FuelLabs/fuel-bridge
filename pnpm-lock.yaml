@@ -51,7 +51,7 @@ importers:
         version: 1.13.2
     devDependencies:
       '@changesets/cli':
-        specifier: ^2.26.2
+        specifier: ^2.27.11
         version: 2.27.12
       '@fuel-ts/forc':
         specifier: 0.73.0
