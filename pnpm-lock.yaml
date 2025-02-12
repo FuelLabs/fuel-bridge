@@ -52,7 +52,7 @@ importers:
     devDependencies:
       '@changesets/cli':
         specifier: ^2.27.11
-        version: 2.27.11
+        version: 2.27.12
       '@fuel-ts/forc':
         specifier: 0.73.0
         version: 0.73.0
@@ -149,6 +149,9 @@ importers:
       '@openzeppelin/hardhat-upgrades':
         specifier: ^3.0.4
         version: 3.0.5(@nomicfoundation/hardhat-ethers@3.0.5(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(@nomicfoundation/hardhat-verify@1.1.1(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7)))(bufferutil@4.0.5)(ethers@6.13.1(bufferutil@4.0.5)(utf-8-validate@5.0.7))(hardhat@2.22.3(bufferutil@4.0.5)(ts-node@10.9.2(@types/node@18.19.31)(typescript@4.9.5))(typescript@4.9.5)(utf-8-validate@5.0.7))(utf-8-validate@5.0.7)
+      '@openzeppelin/upgrades-core':
+        specifier: 1.41.0
+        version: 1.41.0
       '@safe-global/api-kit':
         specifier: ^2.4.6
         version: 2.4.6(bufferutil@4.0.5)(typescript@4.9.5)(utf-8-validate@5.0.7)
@@ -450,8 +453,11 @@ packages:
     resolution: {integrity: sha512-dkxf7+hn8mFBwKjs9bvBlArzLVxVbS8usaPUDd5p2a9JCL9tB8OaOVN1isD4+Xyk4ns89/xeOmbQvgdK7IIVdA==}
     engines: {node: '>=6.9.0'}
 
-  '@changesets/apply-release-plan@7.0.7':
-    resolution: {integrity: sha512-qnPOcmmmnD0MfMg9DjU1/onORFyRpDXkMMl2IJg9mECY6RnxL3wN0TCCc92b2sXt1jt8DgjAUUsZYGUGTdYIXA==}
+  '@bytecodealliance/preview2-shim@0.17.0':
+    resolution: {integrity: sha512-JorcEwe4ud0x5BS/Ar2aQWOQoFzjq/7jcnxYXCvSMh0oRm0dQXzOA+hqLDBnOMks1LLBA7dmiLLsEBl09Yd6iQ==}
+
+  '@changesets/apply-release-plan@7.0.8':
+    resolution: {integrity: sha512-qjMUj4DYQ1Z6qHawsn7S71SujrExJ+nceyKKyI9iB+M5p9lCL55afuEd6uLBPRpLGWQwkwvWegDHtwHJb1UjpA==}
 
   '@changesets/assemble-release-plan@6.0.5':
     resolution: {integrity: sha512-IgvBWLNKZd6k4t72MBTBK3nkygi0j3t3zdC1zrfusYo0KpdsvnDjrMM9vPnTCLCMlfNs55jRL4gIMybxa64FCQ==}
@@ -459,8 +465,8 @@ packages:
   '@changesets/changelog-git@0.2.0':
     resolution: {integrity: sha512-bHOx97iFI4OClIT35Lok3sJAwM31VbUM++gnMBV16fdbtBhgYu4dxsphBF/0AZZsyAHMrnM0yFcj5gZM1py6uQ==}
 
-  '@changesets/cli@2.27.11':
-    resolution: {integrity: sha512-1QislpE+nvJgSZZo9+Lj3Lno5pKBgN46dAV8IVxKJy9wX8AOrs9nn5pYVZuDpoxWJJCALmbfOsHkyxujgetQSg==}
+  '@changesets/cli@2.27.12':
+    resolution: {integrity: sha512-9o3fOfHYOvBnyEn0mcahB7wzaA3P4bGJf8PNqGit5PKaMEFdsRixik+txkrJWd2VX+O6wRFXpxQL8j/1ANKE9g==}
     hasBin: true
 
   '@changesets/config@3.0.5':
@@ -1548,6 +1554,9 @@ packages:
     peerDependencies:
       hardhat: ^2.0.4
 
+  '@nomicfoundation/slang@0.18.3':
+    resolution: {integrity: sha512-YqAWgckqbHM0/CZxi9Nlf4hjk9wUNLC9ngWCWBiqMxPIZmzsVKYuChdlrfeBPQyvQQBoOhbx+7C1005kLVQDZQ==}
+
   '@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.1':
     resolution: {integrity: sha512-KcTodaQw8ivDZyF+D76FokN/HdpgGpfjc/gFCImdLUyqB6eSWVaZPazMbeAjmfhx3R0zm/NYVzxwAokFKgrc0w==}
     engines: {node: '>= 10'}
@@ -1647,8 +1656,8 @@ packages:
       '@nomicfoundation/hardhat-verify':
         optional: true
 
-  '@openzeppelin/upgrades-core@1.32.6':
-    resolution: {integrity: sha512-TS8596pD1iAOIJMKSeqfYM4likHs/qw+D11xF+l0OklJ4IGwZ5qE4qkuPuOhwj7R8gwhT4ryFVjOztx2HLwKpw==}
+  '@openzeppelin/upgrades-core@1.41.0':
+    resolution: {integrity: sha512-+oryinqZnxkiZvg7bWqWX4Ki/CNwVUZEqC6Elpi5PQoahpL3/6Sq9xjIozD5AiI2O61h8JHQ+A//5NtczyavJw==}
     hasBin: true
 
   '@pkgjs/parseargs@0.11.0':
@@ -4254,6 +4263,10 @@ packages:
     resolution: {integrity: sha512-KqWh+VchfxcMNRAJjj2tnsSJdNbHsVgnkBhTNrW7AjVo6OvLtxw8zfT9oLw1JSohlFzJ8jCoTgaoXvJ+kHt6fw==}
     engines: {node: '>=16 || 14 >=14.17'}
 
+  minimatch@9.0.5:
+    resolution: {integrity: sha512-G6T0ZX48xgozx7587koeX9Ys2NYy6Gmv//P89sEte9V9whIapMNF4idKxnW2QtCcLiTWlb/wfCabAtAFWhhBow==}
+    engines: {node: '>=16 || 14 >=14.17'}
+
   minimist@1.2.8:
     resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
@@ -4494,8 +4507,8 @@ packages:
   package-json-from-dist@1.0.1:
     resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
 
-  package-manager-detector@0.2.8:
-    resolution: {integrity: sha512-ts9KSdroZisdvKMWVAVCXiKqnqNfXz4+IbrBG8/BWx/TR5le+jfenvoBuIZ6UWM9nz47W7AbD9qYfAwfWMIwzA==}
+  package-manager-detector@0.2.9:
+    resolution: {integrity: sha512-+vYvA/Y31l8Zk8dwxHhL3JfTuHPm6tlxM2A3GeQyl7ovYnSp1+mzAxClxaOr0qO1TtPxbQxetI7v5XqKLJZk7Q==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -6112,7 +6125,9 @@ snapshots:
     dependencies:
       regenerator-runtime: 0.14.1
 
-  '@changesets/apply-release-plan@7.0.7':
+  '@bytecodealliance/preview2-shim@0.17.0': {}
+
+  '@changesets/apply-release-plan@7.0.8':
     dependencies:
       '@changesets/config': 3.0.5
       '@changesets/get-version-range-type': 0.4.0
@@ -6141,9 +6156,9 @@ snapshots:
     dependencies:
       '@changesets/types': 6.0.0
 
-  '@changesets/cli@2.27.11':
+  '@changesets/cli@2.27.12':
     dependencies:
-      '@changesets/apply-release-plan': 7.0.7
+      '@changesets/apply-release-plan': 7.0.8
       '@changesets/assemble-release-plan': 6.0.5
       '@changesets/changelog-git': 0.2.0
       '@changesets/config': 3.0.5
@@ -6165,7 +6180,7 @@ snapshots:
       fs-extra: 7.0.1
       mri: 1.2.0
       p-limit: 2.3.0
-      package-manager-detector: 0.2.8
+      package-manager-detector: 0.2.9
       picocolors: 1.1.0
       resolve-from: 5.0.0
       semver: 7.6.3
@@ -7361,6 +7376,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@nomicfoundation/slang@0.18.3':
+    dependencies:
+      '@bytecodealliance/preview2-shim': 0.17.0
+
   '@nomicfoundation/solidity-analyzer-darwin-arm64@0.1.1':
     optional: true
 
@@ -7465,7 +7484,7 @@ snapshots:
       '@openzeppelin/defender-sdk-base-client': 1.12.0
       '@openzeppelin/defender-sdk-deploy-client': 1.12.0(debug@4.3.4)
       '@openzeppelin/defender-sdk-network-client': 1.12.0(debug@4.3.4)
-      '@openzeppelin/upgrades-core': 1.32.6
+      '@openzeppelin/upgrades-core': 1.41.0
       chalk: 4.1.2
       debug: 4.3.4(supports-color@8.1.1)
       ethereumjs-util: 7.1.5
@@ -7481,13 +7500,15 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@openzeppelin/upgrades-core@1.32.6':
+  '@openzeppelin/upgrades-core@1.41.0':
     dependencies:
+      '@nomicfoundation/slang': 0.18.3
       cbor: 9.0.2
       chalk: 4.1.2
       compare-versions: 6.1.0
-      debug: 4.3.4(supports-color@8.1.1)
+      debug: 4.3.7
       ethereumjs-util: 7.1.5
+      minimatch: 9.0.5
       minimist: 1.2.8
       proper-lockfile: 4.1.2
       solidity-ast: 0.4.56
@@ -10797,6 +10818,10 @@ snapshots:
     dependencies:
       brace-expansion: 2.0.1
 
+  minimatch@9.0.5:
+    dependencies:
+      brace-expansion: 2.0.1
+
   minimist@1.2.8: {}
 
   minipass@7.0.4: {}
@@ -11046,7 +11071,7 @@ snapshots:
 
   package-json-from-dist@1.0.1: {}
 
-  package-manager-detector@0.2.8: {}
+  package-manager-detector@0.2.9: {}
 
   parent-module@1.0.1:
     dependencies:
