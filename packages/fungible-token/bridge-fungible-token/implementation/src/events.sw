@@ -13,12 +13,14 @@ pub struct DepositEvent {
     pub amount: u64,
     pub from: b256,
     pub to: Identity,
+    pub token_id: b256
 }
 
 pub struct WithdrawalEvent {
     pub amount: u64,
     pub from: Identity,
     pub to: b256,
+    pub token_id: b256
 }
 
 pub struct ClaimRefundEvent {
