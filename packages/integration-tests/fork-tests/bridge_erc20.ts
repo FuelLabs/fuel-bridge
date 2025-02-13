@@ -33,8 +33,7 @@ import type {
   Provider,
 } from 'fuels';
 
-import type { Containers } from '../docker-setup/docker';
-import { startContainers } from '../docker-setup/docker';
+import { startContainers, stopEnvironment } from '../docker-setup/docker';
 import { fundWithdrawalTransactionWithBaseAssetResource } from '../utils/utils';
 
 const { expect } = chai;
@@ -53,8 +52,6 @@ describe('Bridging ERC20 tokens', async function () {
   let fuel_bridgeImpl: BridgeFungibleToken;
   let fuel_bridgeContractId: string;
   let fuel_testAssetId: string;
-
-  let containers: Containers;
 
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -208,7 +205,7 @@ describe('Bridging ERC20 tokens', async function () {
 
   before(async () => {
     // spinning up all docker containers
-    containers = await startContainers(true);
+    await startContainers();
 
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
@@ -732,11 +729,6 @@ describe('Bridging ERC20 tokens', async function () {
 
   // stopping containers post the test
   after(async () => {
-    await containers.postGresContainer.stop();
-    await containers.l1_node.stop();
-
-    await containers.fuel_node.stop();
-
-    await containers.block_committer.stop();
+    await stopEnvironment()
   });
 });
