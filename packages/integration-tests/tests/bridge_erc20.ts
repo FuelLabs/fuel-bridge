@@ -883,6 +883,6 @@ describe('Bridging ERC20 tokens', async function () {
 
   // stopping containers post the test
   after(async () => {
-    await stopEnvironment()
+    await stopEnvironment();
   });
 });
