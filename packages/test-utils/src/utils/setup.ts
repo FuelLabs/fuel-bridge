@@ -53,10 +53,6 @@ const def_pk_eth_signer2: string = eth_private_keys[4];
 
 const def_pk_fuel_deployer: string =
   '0xde97d8624a438121b86a1956544bd72ed68cd69f2c99555b08b1e8c51ffd511c';
-const def_pk_fuel_signer1: string =
-  '0xa349d39f614a3085b7f7f8cef63fd5189136924fc1238e6d25ccdaa43a901cd0';
-const def_pk_fuel_signer2: string =
-  '0x139f2cd8db62a9d64c3ed4cdc804f1fb53be98d750cd1432a308b34a42d8dcc7';
 
 // Setup options
 export interface SetupOptions {
@@ -114,10 +110,6 @@ export async function setupEnvironment(
     opts.pk_fuel_deployer ||
     process.env.PK_FUEL_DEPLOYER ||
     def_pk_fuel_deployer;
-  const pk_fuel_signer1: string =
-    opts.pk_fuel_signer1 || process.env.PK_FUEL_SIGNER1 || def_pk_fuel_signer1;
-  const pk_fuel_signer2: string =
-    opts.pk_fuel_signer2 || process.env.PK_FUEL_SIGNER2 || def_pk_fuel_signer2;
   const fuel_chain_consensus_addr: string =
     process.env.FUEL_CHAIN_CONSENSUS_ADDRESS || '';
   const fuel_message_portal_addr: string =
@@ -149,21 +141,26 @@ export async function setupEnvironment(
         'ETH)'
     );
   }
-  const fuel_signer1 = Wallet.fromPrivateKey(pk_fuel_signer1, fuel_provider);
+
+  // not using snapshot when running fuel-core, so generating fresh wallets
+  const fuel_signer1 = Wallet.generate({ provider: fuel_provider });
+
   const fuel_signer1Balance = await fuel_signer1.getBalance();
   if (fuel_signer1Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
     const tx = await fuel_deployer.transfer(
       fuel_signer1.address,
-      fuels_parseEther('1').toHex()
+      fuels_parseEther('30').toHex()
     );
     await tx.wait();
   }
-  const fuel_signer2 = Wallet.fromPrivateKey(pk_fuel_signer2, fuel_provider);
+
+  const fuel_signer2 = Wallet.generate({ provider: fuel_provider });
+
   const fuel_signer2Balance = await fuel_signer2.getBalance();
   if (fuel_signer2Balance.lt(fuels_parseEther('1')) && skip_deployer_balance) {
     const tx = await fuel_deployer.transfer(
       fuel_signer2.address,
-      fuels_parseEther('1').toHex()
+      fuels_parseEther('30').toHex()
     );
     await tx.wait();
   }

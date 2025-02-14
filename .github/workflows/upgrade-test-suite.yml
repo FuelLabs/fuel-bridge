@@ -43,4 +43,4 @@ jobs:
         working-directory: docker/envs
       - name: Run integration tests on a L1 fork after upgrading contracts
         run: |
-          pnpm run test:fork
+          pnpm run test:integration:fork

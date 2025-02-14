@@ -28,6 +28,8 @@
     "fuels": "0.96.1",
     "mocha": "^10.0.0",
     "ts-node": "^10.9.1",
-    "typescript": "^5.1.6"
+    "typescript": "^5.1.6",
+    "testcontainers": "^10.16.0",
+    "@testcontainers/postgresql": "^10.16.0"
   }
 }

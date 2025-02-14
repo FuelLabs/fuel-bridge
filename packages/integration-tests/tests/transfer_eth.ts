@@ -23,6 +23,8 @@ import type {
   MessageProof,
 } from 'fuels';
 
+import { startContainers, stopEnvironment } from '../docker-setup/docker';
+
 const { expect } = chai;
 
 describe('Transferring ETH', async function () {
@@ -93,6 +95,9 @@ describe('Transferring ETH', async function () {
   }
 
   before(async () => {
+    // spinning up all docker containers
+    await startContainers();
+
     env = await setupEnvironment({});
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
@@ -522,5 +527,10 @@ describe('Transferring ETH', async function () {
 
       expect(currentWithdrawnAmountAfterSettingLimit == 0n).to.be.true;
     });
+  });
+
+  // stopping containers post the test
+  after(async () => {
+    await stopEnvironment();
   });
 });

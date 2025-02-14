@@ -83,9 +83,6 @@ services:
       COMMITTER__APP__BUNDLE__FRAGMENT_ACCUMULATION_TIMEOUT: '10m'
       COMMITTER__APP__BUNDLE__NEW_BUNDLE_CHECK_INTERVAL: '3s'
       DEPLOYMENTS_HTTP: http://l1_chain:8081/deployments.local.json
-    ports:
-      # expose the service to the host for integration testing
-      - ${COMMITTER_HTTP_PORT:-8888}:8888
     depends_on:
       db:
         condition: service_healthy

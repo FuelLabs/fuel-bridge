@@ -37,6 +37,7 @@ import type {
   MessageProof,
 } from 'fuels';
 
+import { startContainers, stopEnvironment } from '../docker-setup/docker';
 import { fundWithdrawalTransactionWithBaseAssetResource } from '../utils/utils';
 
 const { expect } = chai;
@@ -234,6 +235,9 @@ describe('Bridging ERC20 tokens', async function () {
   }
 
   before(async () => {
+    // spinning up all docker containers
+    await startContainers();
+
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
@@ -875,5 +879,10 @@ describe('Bridging ERC20 tokens', async function () {
         newReceiverBalance === ethereumTokenReceiverBalance + NUM_TOKENS * 2n
       ).to.be.true;
     });
+  });
+
+  // stopping containers post the test
+  after(async () => {
+    await stopEnvironment();
   });
 });
