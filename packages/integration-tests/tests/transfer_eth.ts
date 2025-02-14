@@ -362,7 +362,6 @@ describe('Transferring ETH', async function () {
     let ethereumETHReceiverAddress: string;
     let withdrawMessageProof: MessageProof;
     let rateLimitDuration: bigint;
-    // let fuel_signer2: FuelWallet;
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
