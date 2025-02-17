@@ -7,6 +7,11 @@
           "internalType": "uint256",
           "name": "_depositLimitGlobal",
           "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_rateLimitDuration",
+          "type": "uint256"
         }
       ],
       "stateMutability": "nonpayable",
@@ -60,6 +65,21 @@
     {
       "inputs": [],
       "name": "MessageRelayFailed",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotSupported",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "RateLimitExceeded",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "ReentrancyGuardReentrantCall",
       "type": "error"
     },
     {
@@ -221,6 +241,32 @@
         }
       ],
       "name": "Paused",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "status",
+          "type": "bool"
+        }
+      ],
+      "name": "RateLimitStatusUpdated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "ResetRateLimit",
       "type": "event"
     },
     {
@@ -403,6 +449,32 @@
       "type": "function"
     },
     {
+      "inputs": [],
+      "name": "RATE_LIMIT_DURATION",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "SET_RATE_LIMITER_ROLE",
+      "outputs": [
+        {
+          "internalType": "bytes32",
+          "name": "",
+          "type": "bytes32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
       "inputs": [
         {
           "internalType": "bytes32",
@@ -413,6 +485,32 @@
       "name": "addMessageToBlacklist",
       "outputs": [],
       "stateMutability": "payable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentPeriodAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "currentPeriodEnd",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -564,13 +662,44 @@
       "inputs": [
         {
           "internalType": "contract FuelChainState",
-          "name": "fuelChainState",
+          "name": "",
           "type": "address"
         }
       ],
       "name": "initialize",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "contract FuelChainState",
+          "name": "fuelChainState",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_limitAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "initializerV3",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "limitAmount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -643,6 +772,32 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "rateLimitEnabled",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_limitAmount",
+          "type": "uint256"
+        }
+      ],
+      "name": "reinitializeV3",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {
@@ -842,6 +997,19 @@
     {
       "inputs": [
         {
+          "internalType": "uint256",
+          "name": "_amount",
+          "type": "uint256"
+        }
+      ],
+      "name": "resetRateLimitAmount",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "bytes32",
           "name": "role",
           "type": "bytes32"
@@ -937,6 +1105,19 @@
     {
       "inputs": [
         {
+          "internalType": "bool",
+          "name": "value",
+          "type": "bool"
+        }
+      ],
+      "name": "updateRateLimitStatus",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
           "internalType": "address",
           "name": "newImplementation",
           "type": "address"
@@ -979,6 +1160,6 @@
       "type": "function"
     }
   ],
-  "numDeployments": 4,
-  "implementation": "0x6A541330221BE3df4aD6D696Cd3513c0cBFB4752"
+  "numDeployments": 5,
+  "implementation": "0xF8F2AEdde6AEBB164f804f78Cc95FBCCc3d642A1"
 }
