@@ -55,6 +55,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   return true;
 };
 
-func.tags = ['021_portal_upgrade'];
-func.id = '021_portal_upgrade';
+func.tags = ['019_portal_upgrade'];
+func.id = '019_portal_upgrade';
 export default func;
