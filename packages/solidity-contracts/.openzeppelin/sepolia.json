@@ -4501,7 +4501,12 @@
           }
         },
         "namespaces": {}
-      }
+      },
+      "allAddresses": [
+        "0xEBFB69C26067777b262Ab5Da74A47e44bfc78EA4",
+        "0xf96DD2dA09A67c37CE79671923af1999b3553414",
+        "0x5F9eAEB3b7ec396F01617e9BAd787D0A6f93B7a3"
+      ]
     }
   }
 }
