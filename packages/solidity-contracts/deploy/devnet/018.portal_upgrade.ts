@@ -23,6 +23,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     {
       constructorArgs,
       getTxResponse: true,
+      unsafeSkipStorageCheck: true,
     }
   )) as TransactionResponse;
   const receipt = await tx.wait();
@@ -40,6 +41,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       unsafeAllow: ['constructor'],
       constructorArgs,
       call: { fn: 'reinitializeV3', args: [RATE_LIMIT_AMOUNT] },
+      unsafeSkipStorageCheck: true,
     }
   );
 
