@@ -15,5 +15,6 @@
   "portal_set_chain_state": 1724078476,
   "gateway_redeploy": 1725380413,
   "set_asset_issuer_redeploy": 1725380833,
-  "gateway_upgrade": 1727974351
+  "gateway_upgrade": 1727974351,
+  "019_portal_upgrade": 1740045969
 }
