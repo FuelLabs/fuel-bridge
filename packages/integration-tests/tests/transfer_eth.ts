@@ -23,8 +23,7 @@ import type {
   MessageProof,
 } from 'fuels';
 
-import type { Containers } from '../docker-setup/docker';
-import { startContainers } from '../docker-setup/docker';
+import { stopEnvironment } from '../docker-setup/docker';
 
 const { expect } = chai;
 
@@ -35,8 +34,6 @@ describe('Transferring ETH', async function () {
   let BASE_ASSET_ID: string;
 
   let env: TestEnvironment;
-
-  let containers: Containers;
 
   // override the default test timeout of 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
@@ -98,15 +95,7 @@ describe('Transferring ETH', async function () {
   }
 
   before(async () => {
-    // spinning up all docker containers
-    containers = await startContainers(false, 9090, 7545, 3000);
-
-    env = await setupEnvironment({
-      http_ethereum_client: 'http://127.0.0.1:7545',
-      http_deployer: 'http://127.0.0.1:9090',
-      http_fuel_client: 'http://127.0.0.1:3000/v1/graphql',
-    });
-
+    env = await setupEnvironment({});
     BASE_ASSET_ID = env.fuel.provider.getBaseAssetId();
   });
 
@@ -370,7 +359,6 @@ describe('Transferring ETH', async function () {
     let ethereumETHReceiverAddress: string;
     let withdrawMessageProof: MessageProof;
     let rateLimitDuration: bigint;
-    // let fuel_signer2: FuelWallet;
 
     before(async () => {
       fuelETHSender = env.fuel.signers[1];
@@ -540,11 +528,6 @@ describe('Transferring ETH', async function () {
 
   // stopping containers post the test
   after(async () => {
-    await containers.postGresContainer.stop();
-    await containers.l1_node.stop();
-
-    await containers.fuel_node.stop();
-
-    await containers.block_committer.stop();
+    await stopEnvironment();
   });
 });

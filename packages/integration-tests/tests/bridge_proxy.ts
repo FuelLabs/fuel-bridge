@@ -4,9 +4,6 @@ import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
 
-import type { Containers } from '../docker-setup/docker';
-import { startContainers } from '../docker-setup/docker';
-
 const { expect } = chai;
 
 describe('Proxy', async function () {
@@ -18,17 +15,8 @@ describe('Proxy', async function () {
   let fuel_bridgeImpl: Contract;
   let fuel_proxy: Proxy;
 
-  let containers: Containers;
-
   before(async () => {
-    // spinning up all docker containers
-    containers = await startContainers(false, 5050, 4545, 6232);
-
-    env = await setupEnvironment({
-      http_ethereum_client: 'http://127.0.0.1:4545',
-      http_deployer: 'http://127.0.0.1:5050',
-      http_fuel_client: 'http://127.0.0.1:6232/v1/graphql',
-    });
+    env = await setupEnvironment({});
 
     const { proxy, implementation } = await getOrDeployL2Bridge(
       env,
@@ -188,15 +176,5 @@ describe('Proxy', async function () {
 
       expect(message).contains('NotOwner');
     });
-  });
-
-  // stopping containers post the test
-  after(async () => {
-    await containers.postGresContainer.stop();
-    await containers.l1_node.stop();
-
-    await containers.fuel_node.stop();
-
-    await containers.block_committer.stop();
   });
 });

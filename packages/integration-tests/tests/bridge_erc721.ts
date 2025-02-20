@@ -27,9 +27,6 @@ import type {
   MessageProof,
 } from 'fuels';
 
-import type { Containers } from '../docker-setup/docker';
-import { startContainers } from '../docker-setup/docker';
-
 const { expect } = chai;
 
 // TODO: develop new version of ERC721 gateway
@@ -47,21 +44,14 @@ describe.skip('Bridging ERC721 tokens', async function () {
   let fuel_testContractId: string;
   let fuel_testAssetId: string;
 
-  let containers: Containers;
-
   // override the default test timeout from 2000ms
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   before(async () => {
-    // spinning up all docker containers
-    containers = await startContainers(false, 7070, 6545, 2000);
+    // // spinning up all docker containers
+    // await startContainers();
 
-    env = await setupEnvironment({
-      http_ethereum_client: 'http://127.0.0.1:6545',
-      http_deployer: 'http://127.0.0.1:7070',
-      http_fuel_client: 'http://127.0.0.1:2000/v1/graphql',
-    });
-
+    env = await setupEnvironment({});
     eth_testToken = await getOrDeployERC721Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
     eth_erc721GatewayAddress = (
@@ -275,15 +265,5 @@ describe.skip('Bridging ERC721 tokens', async function () {
         ethereumTokenReceiverAddress
       );
     });
-  });
-
-  // stopping containers post the test
-  after(async () => {
-    await containers.postGresContainer.stop();
-    await containers.l1_node.stop();
-
-    await containers.fuel_node.stop();
-
-    await containers.block_committer.stop();
   });
 });
