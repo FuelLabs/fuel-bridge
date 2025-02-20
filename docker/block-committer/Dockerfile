@@ -17,5 +17,5 @@ ENV PORT="${COMMITER_PORT}"
 EXPOSE ${PORT}
 
 # copy over script and run
-COPY ./docker/block-committer/block-committer.sh .
+COPY ./block-committer.sh .
 ENTRYPOINT ["sh", "./block-committer.sh"]

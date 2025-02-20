@@ -33,6 +33,7 @@
     "@fuel-ts/merkle": "^0.21.2",
     "@inquirer/prompts": "^5.3.8",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.4",
+    "@openzeppelin/upgrades-core": "1.41.0",
     "@nomicfoundation/hardhat-ethers": "^3.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.10",
     "@nomicfoundation/hardhat-verify": "1.1.1",
