@@ -48,9 +48,6 @@ describe.skip('Bridging ERC721 tokens', async function () {
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   before(async () => {
-    // // spinning up all docker containers
-    // await startContainers();
-
     env = await setupEnvironment({});
     eth_testToken = await getOrDeployERC721Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
