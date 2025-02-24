@@ -43,7 +43,6 @@ import type {
   MessageProof,
 } from 'fuels';
 
-import { startContainers, stopEnvironment } from '../docker-setup/docker';
 import { fundWithdrawalTransactionWithBaseAssetResource } from '../utils/utils';
 
 const { expect } = chai;
@@ -161,9 +160,6 @@ describe('Bridge mainnet tokens', function () {
   }
 
   before(async () => {
-    // spinning up all docker containers
-    await startContainers();
-
     env = await setupEnvironment({});
     eth_erc20GatewayAddress = (
       await env.eth.fuelERC20Gateway.getAddress()
@@ -741,9 +737,4 @@ describe('Bridge mainnet tokens', function () {
       });
     });
   }
-
-  // stopping containers post the test
-  after(async () => {
-    await stopEnvironment();
-  });
 });

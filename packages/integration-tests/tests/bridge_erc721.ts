@@ -27,8 +27,6 @@ import type {
   MessageProof,
 } from 'fuels';
 
-import { startContainers, stopEnvironment } from '../docker-setup/docker';
-
 const { expect } = chai;
 
 // TODO: develop new version of ERC721 gateway
@@ -50,9 +48,6 @@ describe.skip('Bridging ERC721 tokens', async function () {
   this.timeout(DEFAULT_TIMEOUT_MS);
 
   before(async () => {
-    // spinning up all docker containers
-    await startContainers();
-
     env = await setupEnvironment({});
     eth_testToken = await getOrDeployERC721Contract(env);
     eth_testTokenAddress = (await eth_testToken.getAddress()).toLowerCase();
@@ -267,10 +262,5 @@ describe.skip('Bridging ERC721 tokens', async function () {
         ethereumTokenReceiverAddress
       );
     });
-  });
-
-  // stopping containers post the test
-  after(async () => {
-    await stopEnvironment();
   });
 });

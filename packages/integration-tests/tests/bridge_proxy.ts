@@ -4,8 +4,6 @@ import { setupEnvironment, getOrDeployL2Bridge } from '@fuel-bridge/test-utils';
 import chai from 'chai';
 import type { Contract, FuelError } from 'fuels';
 
-import { startContainers, stopEnvironment } from '../docker-setup/docker';
-
 const { expect } = chai;
 
 describe('Proxy', async function () {
@@ -18,9 +16,6 @@ describe('Proxy', async function () {
   let fuel_proxy: Proxy;
 
   before(async () => {
-    // spinning up all docker containers
-    await startContainers();
-
     env = await setupEnvironment({});
 
     const { proxy, implementation } = await getOrDeployL2Bridge(
@@ -181,10 +176,5 @@ describe('Proxy', async function () {
 
       expect(message).contains('NotOwner');
     });
-  });
-
-  // stopping containers post the test
-  after(async () => {
-    await stopEnvironment();
   });
 });
