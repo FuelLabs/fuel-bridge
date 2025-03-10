@@ -16,6 +16,7 @@
 - [Contribution Guide](./docs/CONTRIBUTING.md)
   - [Finding Something to Work On](./docs/CONTRIBUTING.md#finding-something-to-work-on)
   - [Contribution Flow](./docs/CONTRIBUTING.md#contribution-flow)
+- [Contract verification](./docs/sway/CONTRACT_VERIFICATION.md)
 - [License](#license)
 
 ## License
