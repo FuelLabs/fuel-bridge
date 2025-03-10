@@ -1,0 +1,90 @@
+[[package]]
+name = "base-asset-contract"
+source = "member"
+dependencies = [
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.6.0#65e09f95ea8b9476b171a66c8a47108f352fa32c",
+    "std",
+]
+
+[[package]]
+name = "bridge_fungible_token"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "interface",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.6.0#65e09f95ea8b9476b171a66c8a47108f352fa32c",
+    "std",
+    "sway_libs",
+]
+
+[[package]]
+name = "contract_message_receiver"
+source = "member"
+dependencies = ["std"]
+
+[[package]]
+name = "contract_message_test"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "std",
+]
+
+[[package]]
+name = "core"
+source = "path+from-root-EF1196EF955CE54B"
+
+[[package]]
+name = "interface"
+source = "member"
+dependencies = ["std"]
+
+[[package]]
+name = "proxy"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "interface",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.6.0#65e09f95ea8b9476b171a66c8a47108f352fa32c",
+    "std",
+]
+
+[[package]]
+name = "reentrancy-attacker"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.6.0#65e09f95ea8b9476b171a66c8a47108f352fa32c",
+    "std",
+]
+
+[[package]]
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.5.2#270350e69bd7455b7e99f0aae2e29a94d42324bd"
+dependencies = ["std"]
+
+[[package]]
+name = "standards"
+source = "git+https://github.com/FuelLabs/sway-standards?tag=v0.6.0#65e09f95ea8b9476b171a66c8a47108f352fa32c"
+dependencies = ["std"]
+
+[[package]]
+name = "std"
+source = "git+https://github.com/fuellabs/sway?tag=v0.63.3#f55c81cce61aac31913ac0e87306cbaed7da679a"
+dependencies = ["core"]
+
+[[package]]
+name = "sway_libs"
+source = "git+https://github.com/FuelLabs/sway-libs?tag=v0.23.1#50be622109e3c584efc29edac5390c96f1ccc43a"
+dependencies = [
+    "standards git+https://github.com/FuelLabs/sway-standards?tag=v0.5.2#270350e69bd7455b7e99f0aae2e29a94d42324bd",
+    "std",
+]
+
+[[package]]
+name = "test_deposit_recipient_contract"
+source = "member"
+dependencies = [
+    "contract_message_receiver",
+    "std",
+]
