@@ -9,7 +9,7 @@ contract FuelMessagePortalV3 is FuelMessagePortalV2 {
     using FuelBlockHeaderLiteLib for FuelBlockHeaderLite;
 
     /// @dev Emitted when fuel chain state is emitted
-    event FuelChainStateUpdated(address indexed sender, address indexed oldValue, address indexed newValue);
+    event FuelChainStateUpdated(address sender, address indexed oldValue, address indexed newValue);
 
     /// @dev Emitted when rate limit is reset
     event ResetRateLimit(uint256 amount);
