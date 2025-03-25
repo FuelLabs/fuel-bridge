@@ -1,5 +1,24 @@
 # @fuel-bridge/solidity-contracts
 
+## 1.1.0
+
+### Minor Changes
+
+- add manual ci for querying grant role events, by [@viraj124](https://github.com/viraj124) (See [#336](https://github.com/FuelLabs/fuel-bridge/pull/336))
+- update fuels package version to 0.96.1, by [@viraj124](https://github.com/viraj124) (See [#359](https://github.com/FuelLabs/fuel-bridge/pull/359))
+- ci for contract upgrade test suite, by [@viraj124](https://github.com/viraj124) (See [#381](https://github.com/FuelLabs/fuel-bridge/pull/381))
+- add support for permit tokens in the erc20 gateway, by [@viraj124](https://github.com/viraj124) (See [#329](https://github.com/FuelLabs/fuel-bridge/pull/329))
+- add transient storage version of the reentrancy guard, by [@viraj124](https://github.com/viraj124) (See [#324](https://github.com/FuelLabs/fuel-bridge/pull/324))
+
+### Patch Changes
+
+- 🐞 fix grant role event log generation ci, by [@viraj124](https://github.com/viraj124) (See [#353](https://github.com/FuelLabs/fuel-bridge/pull/353))
+- Build and publish docker images on arm, by [@arthurgeron](https://github.com/arthurgeron) (See [#348](https://github.com/FuelLabs/fuel-bridge/pull/348))
+- Removed mainnet deposit caps, by [@viraj124](https://github.com/viraj124) (See [#374](https://github.com/FuelLabs/fuel-bridge/pull/374))
+- update natspec doc for reset rate limit method, by [@viraj124](https://github.com/viraj124) (See [#357](https://github.com/FuelLabs/fuel-bridge/pull/357))
+- ts linting for test packages, by [@viraj124](https://github.com/viraj124) (See [#350](https://github.com/FuelLabs/fuel-bridge/pull/350))
+- update manual verify upgrade payload file path in ci, by [@viraj124](https://github.com/viraj124) (See [#356](https://github.com/FuelLabs/fuel-bridge/pull/356))
+
 ## 1.0.0
 
 ### Major Changes
