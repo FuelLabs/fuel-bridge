@@ -27,7 +27,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     new FuelChainState(deployer),
     {
       unsafeAllow: ['constructor'],
-      constructorArgs
+      constructorArgs,
     }
   );
   const address = await contract.getAddress();

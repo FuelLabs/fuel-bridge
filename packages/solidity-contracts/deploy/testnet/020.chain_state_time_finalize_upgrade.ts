@@ -13,7 +13,7 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const contractDeployment = await hre.deployments.get('FuelChainState');
 
   const BLOCKS_PER_COMMIT_INTERVAL = 10800;
-  const TIME_TO_FINALIZE = 3600 * 24; 
+  const TIME_TO_FINALIZE = 3600 * 24;
   const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
 
   const constructorArgs = [
