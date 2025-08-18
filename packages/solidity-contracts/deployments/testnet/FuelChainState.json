@@ -39,6 +39,11 @@
     },
     {
       "inputs": [],
+      "name": "InvalidTimeToFinalize",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "TimeToFinalizeTooLarge",
       "type": "error"
     },
@@ -572,6 +577,15 @@
       "type": "function"
     }
   ],
-  "numDeployments": 4,
-  "implementation": "0xdCF1bdBF5341c15e9C1285202f6F6bEA70Db6172"
+  "transactionHash": "0x868d8b03c461426d1e5e30a141831adc99e768d8623be83a65703b83a5bc52e9",
+  "numDeployments": 5,
+  "linkedData": {
+    "constructorArgs": [
+      86400,
+      10800,
+      86400
+    ],
+    "factory": "FuelChainState"
+  },
+  "implementation": "0x672313F262172Ed48Ac1d4df1fCB8D8154a93A9B"
 }
