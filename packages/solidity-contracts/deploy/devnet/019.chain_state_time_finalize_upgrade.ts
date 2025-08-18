@@ -1,3 +1,4 @@
+import type { TransactionResponse } from 'ethers';
 import type { HardhatRuntimeEnvironment } from 'hardhat/types';
 import type { DeployFunction } from 'hardhat-deploy/dist/types';
 
@@ -5,13 +6,13 @@ import { FuelChainState__factory as FuelChainState } from '../../typechain';
 
 const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   const {
-    ethers,
-    upgrades: { upgradeProxy, erc1967 },
-    deployments: { get, save },
+    upgrades: { prepareUpgrade },
+    deployments: { save },
   } = hre;
-  const [deployer] = await ethers.getSigners();
+  
+  console.log("Upgrading FuelChainState contract");
 
-  const fuelChainState = await get('FuelChainState');
+  const contractDeployment = await hre.deployments.get('FuelChainState');
 
   const BLOCKS_PER_COMMIT_INTERVAL = 10800;
   const TIME_TO_FINALIZE = 3600 * 24;
@@ -22,32 +23,40 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     BLOCKS_PER_COMMIT_INTERVAL,
     COMMIT_COOLDOWN,
   ];
-  const contract = await upgradeProxy(
-    fuelChainState.address,
-    new FuelChainState(deployer),
-    {
-      unsafeAllow: ['constructor'],
-      constructorArgs,
-    }
+
+  const factory = await hre.ethers.getContractFactory('FuelChainState');
+
+  const response = (await prepareUpgrade(contractDeployment.address, factory, {
+    kind: 'uups',
+    constructorArgs,
+    getTxResponse: true,
+    redeployImplementation: 'always',
+  })) as TransactionResponse;
+
+  const receipt = await hre.ethers.provider.getTransactionReceipt(
+    response.hash
   );
-  const address = await contract.getAddress();
 
-  const implementation = await erc1967.getImplementationAddress(address);
+  const implementation = receipt?.contractAddress ?? '';
 
-  console.log('Upgraded FuelChainState at', address);
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposal failed for FuelChainState proxy (${contractDeployment.address})`
+    );
+
   await save('FuelChainState', {
-    address,
+    address: contractDeployment.address,
     abi: [...FuelChainState.abi],
     implementation,
+    transactionHash: response.hash,
     linkedData: {
       constructorArgs,
       factory: 'FuelChainState',
     },
   });
-
-  return true;
+  console.log(`FuelChainState upgraded to ${implementation}`);
 };
 
-func.tags = ['chain_state_time_finalize_upgrade'];
-func.id = 'chain_state_time_finalize_upgrade';
+func.tags = ['prepare_upgrade_chain_state_time_finalize'];
+func.id = 'prepare_upgrade_chain_state_time_finalize';
 export default func;
