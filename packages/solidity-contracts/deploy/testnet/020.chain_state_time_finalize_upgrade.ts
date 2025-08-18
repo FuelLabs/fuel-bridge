@@ -10,6 +10,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
     deployments: { save },
   } = hre;
 
+  console.log("Upgrading FuelChainState contract");
+
   const contractDeployment = await hre.deployments.get('FuelChainState');
 
   const BLOCKS_PER_COMMIT_INTERVAL = 10800;
@@ -42,6 +44,8 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
       `Upgrade proposal failed for FuelChainState proxy (${contractDeployment.address})`
     );
 
+  console.log(`FuelChainState upgraded to ${implementation}`);
+
   await save('FuelChainState', {
     address: contractDeployment.address,
     abi: [...FuelChainState.abi],
@@ -54,6 +58,6 @@ const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
   });
 };
 
-func.tags = ['prepareUpgrade_chain_state_time_finalize'];
-func.id = 'prepareUpgrade_chain_state_time_finalize';
+func.tags = ['prepare_upgrade_chain_state_time_finalize'];
+func.id = 'prepare_upgrade_chain_state_time_finalize';
 export default func;
