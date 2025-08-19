@@ -18,5 +18,7 @@
   "rate_limit_proposal": 1727884066,
   "pausers_proposal": 1728386955,
   "20_upgrade_portal": 1730892055,
-  "21_deposit_caps_removal": 1730892323
+  "21_deposit_caps_removal": 1730892323,
+  "022.chain_state_prepare_upgrade.ts": 1755603304,
+  "023.chain_state_propose_upgrade.ts": 1755617982
 }
