@@ -1,0 +1,74 @@
+import path from 'path';
+import { password } from '@inquirer/prompts';
+import type { TransactionResponse } from 'ethers';
+import type { HardhatRuntimeEnvironment } from 'hardhat/types';
+import type { DeployFunction } from 'hardhat-deploy/dist/types';
+import { FuelChainState__factory as FuelChainState } from '../../typechain';
+
+const func: DeployFunction = async function (hre: HardhatRuntimeEnvironment) {
+  const {
+    ethers,
+    upgrades: { prepareUpgrade },
+    deployments: { save },
+  } = hre;
+
+  const privateKey = await password({ message: 'Enter private key' });
+  const deployer = new ethers.Wallet(privateKey, ethers.provider);
+
+  console.log('Upgrading FuelChainState contract');
+
+  const contractDeployment = await hre.deployments.get('FuelChainState');
+
+  const BLOCKS_PER_COMMIT_INTERVAL = 10800;
+  const TIME_TO_FINALIZE = 3600 * 24;
+  const COMMIT_COOLDOWN = TIME_TO_FINALIZE;
+
+  const constructorArgs = [
+    TIME_TO_FINALIZE,
+    BLOCKS_PER_COMMIT_INTERVAL,
+    COMMIT_COOLDOWN,
+  ];
+
+  const factory = await hre.ethers.getContractFactory(
+    'FuelChainState',
+    deployer
+  );
+
+  const response = (await prepareUpgrade(contractDeployment.address, factory, {
+    kind: 'uups',
+    constructorArgs,
+    getTxResponse: true,
+    redeployImplementation: 'always',
+  })) as TransactionResponse;
+  await response.wait();
+
+  const receipt = await hre.ethers.provider.getTransactionReceipt(
+    response.hash
+  );
+
+  const implementation = receipt?.contractAddress ?? '';
+
+  if (implementation === '')
+    throw new Error(
+      `Upgrade proposal failed for FuelChainState proxy (${contractDeployment.address})`
+    );
+
+  console.log(`Deployed FuelChainState ${implementation}`);
+
+  await save('FuelChainState', {
+    address: contractDeployment.address,
+    abi: [...FuelChainState.abi],
+    implementation,
+    transactionHash: response.hash,
+    linkedData: {
+      constructorArgs,
+      factory: 'FuelChainState',
+    },
+  });
+
+  return true;
+};
+
+func.tags = [path.basename(__filename)];
+func.id = path.basename(__filename);
+export default func;
